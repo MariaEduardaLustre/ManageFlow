@@ -1,37 +1,25 @@
 import React, { useState } from 'react';
+import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import './Login.css';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', senha: '' });
-  const [error, setError] = useState('');
   const navigate = useNavigate();
-
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
     try {
-      const response = await axios.post('http://localhost:3001/auth/login', formData);
+      const response = await api.post('/usuarios/login', formData);
       const { token } = response.data;
-
-      localStorage.setItem('authToken', token);
+      localStorage.setItem('token', token);
+      alert('Login realizado com sucesso!');
       navigate('/home');
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        setError(error.response.data.message);
-      } else {
-        setError('Erro ao fazer login. Verifique suas credenciais e tente novamente.');
-      }
+    } catch (err) {
+      alert('E-mail ou senha inválidos.');
     }
   };
 
@@ -43,7 +31,6 @@ const Login = () => {
       <div className="spacer"></div>
       <div className="form-container-login">
         <h2>Login</h2>
-        {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <input
