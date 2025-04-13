@@ -143,7 +143,11 @@ const handleSubmit = async (e) => {
 
           <button className='botao' type="submit">Cadastrar</button>
         </form>
+        <p className="link-login">
+          Já possui uma conta? <a href="/login">Faça Login Aqui!</a>
+        </p>
       </div>
+      
     </div>
   );
 };
