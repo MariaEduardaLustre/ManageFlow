@@ -11,7 +11,8 @@ const LandingPage = () => {
             <img src="/imagens/landing.png" alt="Imagem ilustrativa com computadores e celular" className="responsive-image" />
           </div>
           <div className="buttons">
-            <button className="btn">Entrar</button>
+            <a href='/login'><button className="btn">Entrar</button></a>
+            
             <a href="/cadastro" style={{ textDecoration: 'none' }}>
               <button className="btn">Cadastrar-se</button>
             </a>
