@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import para redirecionamento
-import './Login.css';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import './Login.css';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    senha: '',
-  });
+  const [formData, setFormData] = useState({ email: '', senha: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -20,17 +17,14 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Limpa qualquer erro anterior
+    setError('');
 
     try {
       const response = await axios.post('http://localhost:3001/auth/login', formData);
       const { token } = response.data;
 
-      // Salvar o token no localStorage ou sessionStorage
       localStorage.setItem('authToken', token);
-
-      // Redirecionar para a página principal ou outra página protegida
-      navigate('/Cadastro'); // Exemplo de rota após o login
+      navigate('/home');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       if (error.response && error.response.data && error.response.data.message) {

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import './Cadastro.css';
+import api from '../../services/api'; // adicione esse import no topo
 
 const Cadastro = () => {
   const [formData, setFormData] = useState({
+    nome: '',
     email: '',
     cpfCnpj: '',
     senha: '',
@@ -19,11 +21,24 @@ const Cadastro = () => {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Lógica de envio do formulário
-    console.log('Dados enviados:', formData);
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (formData.senha !== formData.confirmarSenha) {
+    alert('As senhas não coincidem!');
+    return;
+  }
+
+  try {
+    const response = await api.post('/usuarios', formData);
+    alert(response.data); // "Usuário cadastrado com sucesso!"
+    // Você pode também redirecionar ou limpar o formulário aqui
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao cadastrar usuário.');
+  }
+};
+
 
   return (
     <div className="cadastro-container">
@@ -34,6 +49,16 @@ const Cadastro = () => {
       <div className="form-container">
         <h2>Cadastro</h2>
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <input
+              type="text"
+              name="nome"
+              placeholder="Nome"
+              value={formData.nome}
+              onChange={handleChange}
+              required
+            />
+          </div>
           <div className="form-group">
             <input
               type="email"

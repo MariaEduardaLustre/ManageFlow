@@ -1,21 +1,27 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+
 import Cadastro from './components/Cadastro/Cadastro';
 import LandingPage from './components/Landing/Landing';
 import Login from './components/Login/Login';
+import Home from './components/Home/Home';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
-    
     <Router>
       <Routes>
         <Route path="/cadastro" element={<Cadastro />} />
-      </Routes>
-      <Routes>
         <Route path="/landing" element={<LandingPage />} />
-      </Routes>
-      <Routes>
-      <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/home"
+          element={
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </Router>
   );
