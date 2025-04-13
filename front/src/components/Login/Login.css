@@ -1,142 +1,142 @@
 /* Resetar margens e preenchimento padrões da página */
 body, html {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  height: 100%; /* Assegura que o container ocupe a altura total */
-}
-
-/* Alinhar o container da página corretamente */
-.login-container {
-  display: flex;
-  height: 100vh;
-  background-color: #f9f9f9;
-}
-
-/* Garantir que a imagem preencha 30% da tela */
-.image-container-login {
-  flex: 0 0 32%; /* Faz a imagem ocupar 32% */
-  display: flex;
-}
-
-.responsive-image-login {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Ajusta a imagem para preencher o espaço sem deformação */
-}
-
-/* Spacer para empurrar o formulário para a direita */
-.spacer {
-  margin-left: 20%; /* Espaço vazio para empurrar conteúdo adjacente */
-}
-
-/* Ajustar o formulário para ocupar 40% */
-.form-container-login {
-  flex: 0 0 40%; /* Faz o formulário ocupar 40% */
-  padding: 40px;
-  max-width: 800px; /* Definindo a largura máxima */
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* Centraliza o conteúdo verticalmente */
-}
-
-h2 {
-  text-align: center;
-  font-size: 2rem;
-  color: #1e73be;
-  margin-bottom: 30px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 25px;
-  font-size: 1rem;
-  margin-top: 5px;
-  outline: none;
-}
-
-input:focus {
-  border-color: #4254cb;
-  box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 12px;
-  font-size: 1rem;
-  background-color: #1e73be;
-  color: white;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-.btn-primary:hover {
-  background-color: #1e41a5;
-}
-
-.social-login {
-  display: grid;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.btn-google, .btn-apple {
-  padding: 12px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 25px;
-  cursor: pointer;
-  text-align: center;
-}
-
-.btn-google:hover {
-  background-color: #f5f5f5;
-}
-
-.btn-apple:hover {
-  background-color: #f3f3f3;
-}
-
-p {
-  text-align: center;
-  margin-top: 20px;
-  color: #555;
-}
-
-p a {
-  color: #4254cb;
-  text-decoration: none;
-}
-
-p a:hover {
-  text-decoration: underline;
-}
-
-@media (max-width: 768px) {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    height: 100%; /* Assegura que o container ocupe a altura total */
+  }
+  
+  /* Alinhar o container da página corretamente */
   .login-container {
-    flex-direction: column;
+    display: flex;
+    height: 100vh;
+    background-color: #f9f9f9;
   }
-
+  
+  /* Garantir que a imagem preencha 30% da tela */
   .image-container-login {
-    display: none; /* Esconde a imagem para telas pequenas */
+    flex: 0 0 32%; /* Faz a imagem ocupar 32% */
+    display: flex;
   }
-
+  
+  .responsive-image-login {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ajusta a imagem para preencher o espaço sem deformação */
+  }
+  
+  /* Spacer para empurrar o formulário para a direita */
+  .spacer {
+    margin-left: 20%; /* Espaço vazio para empurrar conteúdo adjacente */
+  }
+  
+  /* Ajustar o formulário para ocupar 40% */
   .form-container-login {
-    padding: 25px;
-    max-width: 90%; /* Ajustes para telas menores */
+    flex: 0 0 40%; /* Faz o formulário ocupar 40% */
+    padding: 40px;
+    max-width: 800px; /* Definindo a largura máxima */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centraliza o conteúdo verticalmente */
   }
-
-  .error-message {
-    color: red;
-    margin-top: 10px;
+  
+  h2 {
+    text-align: center;
+    font-size: 2rem;
+    color: #1e73be;
+    margin-bottom: 30px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    font-size: 1rem;
+    margin-top: 5px;
+    outline: none;
+  }
+  
+  input:focus {
+    border-color: #4254cb;
+    box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
+  }
+  
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    background-color: #1e73be;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+  
+  .btn-primary:hover {
+    background-color: #1e41a5;
+  }
+  
+  .social-login {
+    display: grid;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .btn-google, .btn-apple {
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    cursor: pointer;
     text-align: center;
   }
-}
+  
+  .btn-google:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .btn-apple:hover {
+    background-color: #f3f3f3;
+  }
+  
+  p {
+    text-align: center;
+    margin-top: 20px;
+    color: #555;
+  }
+  
+  p a {
+    color: #4254cb;
+    text-decoration: none;
+  }
+  
+  p a:hover {
+    text-decoration: underline;
+  }
+  
+  @media (max-width: 768px) {
+    .login-container {
+      flex-direction: column;
+    }
+  
+    .image-container-login {
+      display: none; /* Esconde a imagem para telas pequenas */
+    }
+  
+    .form-container-login {
+      padding: 25px;
+      max-width: 90%; /* Ajustes para telas menores */
+    }
+  
+    .error-message {
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+    }
+  }

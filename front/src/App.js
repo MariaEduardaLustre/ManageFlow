@@ -4,6 +4,7 @@ import Cadastro from './components/Cadastro/Cadastro';
 import LandingPage from './components/Landing/Landing';
 import Login from './components/Login/Login';
 
+
 function App() {
   return (
     

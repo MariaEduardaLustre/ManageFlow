@@ -1,43 +1,37 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import para redirecionamento
-import './Login.css';
-import axios from 'axios';
+import './Login.css'; // Certifique-se de que o arquivo CSS ainda está importado
 
-const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    senha: '',
-  });
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+function Login() {
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(''); // Limpa qualquer erro anterior
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErro('');
 
     try {
-      const response = await axios.post('http://localhost:3001/auth/login', formData);
-      const { token } = response.data;
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, senha }),
+      });
 
-      // Salvar o token no localStorage ou sessionStorage
-      localStorage.setItem('authToken', token);
+      const data = await response.json();
 
-      // Redirecionar para a página principal ou outra página protegida
-      navigate('/Cadastro'); // Exemplo de rota após o login
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        setError(error.response.data.message);
+      if (response.ok) {
+        console.log('Login realizado com sucesso!', data);
+        localStorage.setItem('accessToken', data.accessToken);
+        window.location.href = '/cadastro'; // Ajuste a rota conforme necessário
       } else {
-        setError('Erro ao fazer login. Verifique suas credenciais e tente novamente.');
+        console.error('Erro ao fazer login:', data.message);
+        setErro(data.message || 'Erro ao fazer login. Verifique suas credenciais.');
       }
+    } catch (error) {
+      console.error('Erro de conexão:', error);
+      setErro('Erro ao conectar com o servidor.');
     }
   };
 
@@ -49,43 +43,44 @@ const Login = () => {
       <div className="spacer"></div>
       <div className="form-container-login">
         <h2>Login</h2>
-        {error && <p className="error-message">{error}</p>}
+        {erro && <p className="error-message">{erro}</p>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <input
               type="email"
-              name="email"
+              id="email"
               placeholder="E-mail"
-              value={formData.email}
-              onChange={handleChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="form-group">
             <input
               type="password"
-              name="senha"
+              id="senha"
               placeholder="Senha"
-              value={formData.senha}
-              onChange={handleChange}
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
               required
             />
           </div>
-
-          <button className="btn-primary" type="submit">Entrar</button>
+          <button type="submit" className="btn-primary">Entrar</button>
         </form>
-
         <div className="social-login">
-          <button className="btn-google">Entrar com o Google</button>
-          <button className="btn-apple">Entrar com a Apple</button>
+          <button className="btn-google">
+            Entrar com o Google
+          </button>
+          <button className="btn-apple">
+            Entrar com a Apple
+          </button>
         </div>
-
-        <p>
+        <p className="signup-link">
           Ainda não possui uma conta? <a href="/cadastro">Cadastre-se</a>
         </p>
       </div>
     </div>
   );
-};
+}
 
 export default Login;
