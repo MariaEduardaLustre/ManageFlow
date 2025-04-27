@@ -87,6 +87,66 @@
   .esqueci-senha-container p a:hover {
     text-decoration: underline;
   }
+
+  /* Estilos para o overlay (fundo escurecido) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fundo preto com 50% de opacidade */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Garante que o modal fique acima de outros elementos */
+}
+
+/* Estilos para o overlay (fundo escurecido) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fundo preto com 50% de opacidade */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Garante que o modal fique acima de outros elementos */
+}
+
+/* Estilos para o modal (a janela em si) */
+.modal {
+  background-color: white;
+  padding: 25px; /* Aumentei um pouco o padding interno */
+  border-radius: 8px; /* Arredondei um pouco mais as bordas */
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4); /* Aumentei um pouco a sombra */
+  text-align: center;
+  max-width: 95%; /* Permite ocupar um pouco mais em telas menores */
+  width: 450px; /* Aumentei um pouco a largura desejada do modal */
+}
+
+.modal p.mensagem-sucesso {
+  color: black; /* Roxo escuro */
+  font-size: 1.5rem; /* Aumentei um pouco o tamanho da fonte */
+  margin-bottom: 20px; /* Aumentei um pouco a margem inferior */
+}
+
+/* Estilos para o botão de fechar */
+.btn-fechar-modal {
+  padding: 12px 18px; /* Aumentei um pouco o padding do botão */
+  background-color: #6a5acd; /* Roxo arroxeado */
+  color: white;
+  border: none;
+  border-radius: 8px; /* Arredondei as bordas do botão também */
+  cursor: pointer;
+  font-size: 1.05rem; /* Aumentei um pouco a fonte do botão */
+}
+
+.btn-fechar-modal:hover {
+  background-color: #483d8b; /* Tom mais escuro no hover */
+}
   
   @media (max-width: 768px) {
     .esqueci-senha-container form {

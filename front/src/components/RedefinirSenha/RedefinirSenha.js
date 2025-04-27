@@ -10,15 +10,17 @@ const RedefinirSenha = () => {
   const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
+  const [mostrarModal, setMostrarModal] = useState(false); // Novo estado para o modal de sucesso
 
   useEffect(() => {
-    // O token já está na URL, não precisamos fazer mais nada aqui por enquanto
+    // O token já está na URL
   }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensagem('');
     setErro('');
+    setMostrarModal(false); // Esconde o modal em caso de novas tentativas
 
     if (novaSenha !== confirmarNovaSenha) {
       setErro('As senhas não coincidem.');
@@ -28,17 +30,20 @@ const RedefinirSenha = () => {
     try {
       const response = await api.post('/usuarios/redefinir-senha', { token, novaSenha });
       setMensagem(response.data);
-      // Redirecionar para a página de login após um tempo
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      setMostrarModal(true); // Mostra o modal de sucesso
     } catch (error) {
       if (error.response && error.response.data) {
         setErro(error.response.data);
       } else {
         setErro('Ocorreu um erro ao redefinir a senha.');
       }
+      setMostrarModal(false); // Garante que o modal não apareça em caso de erro
     }
+  };
+
+  const fecharModal = () => {
+    setMostrarModal(false);
+    navigate('/login'); // Redireciona para a tela de login ao fechar o modal
   };
 
   return (
@@ -69,8 +74,17 @@ const RedefinirSenha = () => {
         </div>
         <button type="submit" className="btn-primary">Redefinir Senha</button>
       </form>
-      {mensagem && <p className="mensagem-sucesso">{mensagem}</p>}
       {erro && <p className="mensagem-erro">{erro}</p>}
+
+      {/* Renderização condicional do modal de sucesso */}
+      {mostrarModal && mensagem && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <p className="mensagem-sucesso">{mensagem}</p>
+            <button onClick={fecharModal} className="btn-fechar-modal">Ir para Login</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
