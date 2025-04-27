@@ -17,6 +17,7 @@ const Login = () => {
       const { token } = response.data;
       localStorage.setItem('token', token);
       alert('Login realizado com sucesso!');
+      setFormData({ email: '', senha: '' }); // Limpa os campos após o login
       navigate('/home');
     } catch (err) {
       alert('E-mail ou senha inválidos.');
@@ -33,20 +34,20 @@ const Login = () => {
         <h2>Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
+          <label htmlFor="email">E-mail:</label>
             <input
               type="email"
               name="email"
-              placeholder="E-mail"
               value={formData.email}
               onChange={handleChange}
               required
             />
           </div>
           <div className="form-group">
+          <label htmlFor="senha">Senha:</label>
             <input
               type="password"
               name="senha"
-              placeholder="Senha"
               value={formData.senha}
               onChange={handleChange}
               required
@@ -64,7 +65,12 @@ const Login = () => {
         <p>
           Ainda não possui uma conta? <a href="/cadastro">Cadastre-se</a>
         </p>
+        <p>
+          Esqueceu sua senha? <a href="/esqueci-senha">Clique aqui!</a>
+        </p>
       </div>
+      
+      
     </div>
   );
 };

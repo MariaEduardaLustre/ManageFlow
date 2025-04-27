@@ -120,9 +120,12 @@ p a:hover {
   text-decoration: underline;
 }
 
+/* Media query para telas menores (celulares) */
 @media (max-width: 768px) {
   .login-container {
-    flex-direction: column;
+    flex-direction: column; /* Coloca os itens em coluna */
+    justify-content: flex-start; /* Alinha o conteúdo ao topo */
+    padding: 20px;
   }
 
   .image-container-login {
@@ -130,13 +133,67 @@ p a:hover {
   }
 
   .form-container-login {
-    padding: 25px;
-    max-width: 90%; /* Ajustes para telas menores */
+    flex: 0 0 auto; /* O formulário ocupa o espaço necessário */
+    width: 95%; /* O formulário ocupa quase toda a largura */
+    max-width: none; /* Remove a largura máxima */
+    padding: 20px;
+    margin-top: 20px; /* Adiciona um pouco de espaço do topo */
   }
 
-  .error-message {
-    color: red;
-    margin-top: 10px;
-    text-align: center;
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+}
+
+/* Media query para telas médias (tablets - entre 769px e 1024px, ajuste conforme necessário) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .login-container {
+    padding: 30px;
+  }
+
+  .image-container-login {
+    flex: 0 0 40%; /* Aumenta um pouco o espaço da imagem em tablets */
+  }
+
+  .form-container-login {
+    flex: 0 0 55%; /* Aumenta um pouco o espaço do formulário em tablets */
+    max-width: none; /* Permite que o formulário se expanda mais */
+    padding: 30px;
+  }
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group input {
+    padding: 12px;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    padding: 12px;
+    font-size: 1.1rem;
+    margin-top: 20px;
+  }
+
+  .social-login {
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-google, .btn-apple {
+    padding: 12px;
+    font-size: 1rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+    margin-top: 20px;
   }
 }
