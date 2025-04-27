@@ -6,6 +6,8 @@ import LandingPage from './components/Landing/Landing';
 import Login from './components/Login/Login';
 import Home from './components/Home/Home';
 import PrivateRoute from './components/PrivateRoute';
+import EsqueciSenha from './components/EsqueciSenha/EsqueciSenha';
+import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
         <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+        <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
         <Route
           path="/home"
           element={
