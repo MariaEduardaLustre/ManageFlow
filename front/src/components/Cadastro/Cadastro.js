@@ -94,7 +94,7 @@ const Cadastro = () => {
     e.preventDefault();
 
     if (!validarSenhaSegura(formData.senha)) {
-      setMensagemErroModal('A senha deve conter pelo menos uma letra maiúscula e um caractere especial.');
+      setMensagemErroModal('A senha deve conter no mínimo 8 caracteres.');
       setMostrarModalErro(true);
       return;
     }
