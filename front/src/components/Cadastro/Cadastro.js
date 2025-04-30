@@ -10,9 +10,8 @@ const Cadastro = () => {
     senha: '',
     confirmarSenha: '',
     cep: '',
-    logradouro: '', // Renomeado de endereco
+    endereco: '', // Voltou a ser 'endereco'
     numero: '',
-    // endereco: '' - Removido
   });
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');
@@ -35,9 +34,8 @@ const Cadastro = () => {
       senha: '',
       confirmarSenha: '',
       cep: '',
-      logradouro: '',
+      endereco: '',
       numero: '',
-      // endereco: '' - Removido
     });
   };
 
@@ -58,9 +56,7 @@ const Cadastro = () => {
   };
 
   const validarSenhaSegura = (senha) => {
-    const temMaiuscula = /[A-Z]/.test(senha);
-    const temEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
-    return temMaiuscula && temEspecial;
+    return senha.length >= 8;
   };
 
   const buscarEndereco = async (cep) => {
@@ -76,7 +72,7 @@ const Cadastro = () => {
       if (!data.erro) {
         setFormData({
           ...formData,
-          logradouro: data.logradouro || '',
+          endereco: data.logradouro || '', // Usa data.logradouro para preencher o campo 'endereco'
           // bairro: data.bairro || '', // Você pode adicionar outros campos se precisar
           // cidade: data.localidade || '',
           // uf: data.uf || '',
@@ -84,13 +80,13 @@ const Cadastro = () => {
       } else {
         setMensagemErroModal('CEP não encontrado.');
         setMostrarModalErro(true);
-        setFormData({ ...formData, logradouro: '' }); // Limpa o campo de logradouro
+        setFormData({ ...formData, endereco: '' }); // Limpa o campo de endereco
       }
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
       setMensagemErroModal('Erro ao buscar CEP.');
       setMostrarModalErro(true);
-      setFormData({ ...formData, logradouro: '' }); // Limpa o campo de logradouro
+      setFormData({ ...formData, endereco: '' }); // Limpa o campo de endereco
     }
   };
 
@@ -98,7 +94,7 @@ const Cadastro = () => {
     e.preventDefault();
 
     if (!validarSenhaSegura(formData.senha)) {
-      setMensagemErroModal('A senha deve conter pelo menos uma letra maiúscula e um caractere especial.');
+      setMensagemErroModal('A senha deve conter no mínimo 8 caracteres.');
       setMostrarModalErro(true);
       return;
     }
@@ -158,7 +154,7 @@ const Cadastro = () => {
       <div className="image-container-cad">
         <img src="/imagens/cadastro.png" alt="Curva lateral" className="responsive-image-cad" />
       </div>
-
+      <div className="spacer"></div>
       <div className="form-container">
         <h2>Cadastro</h2>
         <form onSubmit={handleSubmit}>
@@ -199,7 +195,7 @@ const Cadastro = () => {
               id="senha"
             />
             <label className="senha-requisitos">
-              A senha deve conter pelo menos uma letra maiúscula e um caractere especial.
+              *A senha deve conter no mínimo 8 caracteres.
             </label>
           </div>
           <div className="form-group">
@@ -226,24 +222,20 @@ const Cadastro = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="logradouro">Logradouro:</label> {/* Campo de Logradouro */}
+            <label htmlFor="endereco">Endereço:</label> {/* Campo de Endereço */}
             <input
               type="text"
-              name="logradouro"
-              value={formData.logradouro}
+              name="endereco"
+              value={formData.endereco}
               onChange={handleChange}
               required
-              id="logradouro"
+              id="endereco"
             />
           </div>
           <div className="form-group">
             <label htmlFor="numero">Número:</label>
             <input type="text" name="numero" value={formData.numero} onChange={handleChange} required id="numero" />
           </div>
-          {/* <div className="form-group">
-            <label htmlFor="endereco">Endereço:</label>
-            <input type="text" name="endereco" value={formData.endereco} onChange={handleChange} required id="endereco" />
-          </div> */} {/* Campo de endereço removido */}
 
           <button className='botao' type="submit">Cadastrar</button>
         </form>
