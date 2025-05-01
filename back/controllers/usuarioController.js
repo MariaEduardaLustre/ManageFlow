@@ -3,8 +3,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-require('dotenv').config(); // Certifique-se de ter o dotenv configurado
+require('dotenv').config();
 
+// LOGIN DO USUÁRIO
 exports.loginUsuario = (req, res) => {
   const { email, senha } = req.body;
 
@@ -37,12 +38,20 @@ exports.loginUsuario = (req, res) => {
       { expiresIn: '2h' }
     );
 
-    res.json({ token, usuario: { id: usuario.ID, nome: usuario.NOME } });
+    res.json({
+      token,
+      usuario: {
+        id: usuario.ID,
+        nome: usuario.NOME,
+        complemento: usuario.COMPLEMENTO // Adicionado aqui
+      }
+    });
   });
 };
 
+// CADASTRO DO USUÁRIO
 exports.cadastrarUsuario = async (req, res) => {
-  const { nome, email, cpfCnpj, senha, numero, endereco } = req.body;
+  const { nome, email, cpfCnpj, senha, numero, endereco, complemento } = req.body;
 
   if (!nome || !email || !cpfCnpj || !senha) {
     return res.status(400).send('Preencha todos os campos obrigatórios.');
@@ -69,13 +78,13 @@ exports.cadastrarUsuario = async (req, res) => {
       const senhaCriptografada = await bcrypt.hash(senha, 10);
 
       const insertQuery = `
-        INSERT INTO Usuario (ID, NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO)
-        VALUES (NULL, ?, ?, ?, ?, ?, ?)
+        INSERT INTO Usuario (ID, NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO, COMPLEMENTO)
+        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       db.query(
         insertQuery,
-        [nome, email, cpfCnpj, senhaCriptografada, endereco, numero],
+        [nome, email, cpfCnpj, senhaCriptografada, endereco, numero, complemento],
         (insertErr) => {
           if (insertErr) {
             console.error('Erro ao inserir usuário:', insertErr);
@@ -92,6 +101,7 @@ exports.cadastrarUsuario = async (req, res) => {
   }
 };
 
+// SOLICITAÇÃO DE REDEFINIÇÃO DE SENHA
 exports.solicitarRedefinicaoSenha = (req, res) => {
   const { email } = req.body;
 
@@ -113,7 +123,7 @@ exports.solicitarRedefinicaoSenha = (req, res) => {
     const usuario = results[0];
 
     const token = crypto.randomBytes(20).toString('hex');
-    const expires = Date.now() + 3600000; // 1 hora de validade
+    const expires = Date.now() + 3600000; // 1 hora
 
     const updateQuery = `
       UPDATE Usuario
@@ -159,6 +169,7 @@ exports.solicitarRedefinicaoSenha = (req, res) => {
   });
 };
 
+// REDEFINIÇÃO DE SENHA
 exports.redefinirSenha = async (req, res) => {
   const { token, novaSenha } = req.body;
 

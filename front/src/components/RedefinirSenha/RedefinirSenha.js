@@ -22,6 +22,11 @@ const RedefinirSenha = () => {
     setErro('');
     setMostrarModal(false); // Esconde o modal em caso de novas tentativas
 
+    if (novaSenha.length < 8) {
+      setErro('A nova senha deve ter no mínimo 8 caracteres.');
+      return;
+    }
+
     if (novaSenha !== confirmarNovaSenha) {
       setErro('As senhas não coincidem.');
       return;
@@ -60,6 +65,9 @@ const RedefinirSenha = () => {
             onChange={(e) => setNovaSenha(e.target.value)}
             required
           />
+          {novaSenha.length < 8 && novaSenha.length > 0 && (
+            <p className="mensagem-alerta">A senha deve ter no mínimo 8 caracteres.</p>
+          )}
         </div>
         <div className="form-group">
           <label htmlFor="confirmarNovaSenha">Confirmar Nova Senha:</label>
@@ -71,6 +79,9 @@ const RedefinirSenha = () => {
             onChange={(e) => setConfirmarNovaSenha(e.target.value)}
             required
           />
+          {confirmarNovaSenha !== novaSenha && confirmarNovaSenha.length > 0 && (
+            <p className="mensagem-alerta">As senhas não coincidem.</p>
+          )}
         </div>
         <button type="submit" className="btn-primary">Redefinir Senha</button>
       </form>
