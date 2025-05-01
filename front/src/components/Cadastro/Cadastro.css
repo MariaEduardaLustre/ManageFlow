@@ -1,94 +1,166 @@
-/* src/components/Cadastro/Cadastro.css */
-.cadastro-container {
-    display: flex; /* Usando flexbox para dividir em duas colunas */
-    align-items: center; /* Alinha o conteúdo verticalmente no centro */
-    justify-content: center; /* Centraliza o conteúdo horizontalmente */
-    height: 100vh; /* Ocupa toda a altura da tela */
-    background-color: #f0f0f0;
-  }
-  
-  .image-container-cad {
-    display: flex;
-  }
-  
-  .responsive-image-cad {
-   margin-top: 150px;
-   width: 80%;
-  }
-  
-  .form-container {
-    flex: 1; /* O formulário ocupa 50% da largura */
-    padding: 40px;
-    width: 300px;
+/* Reset */
+body, html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  height: 100%;
+}
 
+/* Container principal */
+.cadastro-container {
+  display: flex;
+  background-color: #f9f9f9;
+}
+
+/* Imagem lateral */
+.image-container-cadastro {
+  flex: 0 0 32%;
+  display: flex;
+}
+
+.responsive-image-cadastro {
+  width: 100%;
+  height: 100%;
+}
+
+/* Espaçamento */
+.spacer-cadastro {
+  margin-left: 20%;
+}
+
+/* Formulário */
+.form-container-cadastro {
+  flex: 0 0 40%;
+  padding: 40px;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+h2 {
+  text-align: center;
+  font-size: 2rem;
+  color: #1e73be;
+  margin-bottom: 30px;
+}
+
+/* Grupos de formulário */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  font-size: 1rem;
+  margin-top: 5px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #4254cb;
+  box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
+}
+
+/* Botão principal */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  background-color: #1e73be;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.btn-primary:hover {
+  background-color: #1e41a5;
+}
+
+/* Link do login */
+p {
+  text-align: center;
+  margin-top: 20px;
+  color: #555;
+}
+
+p a {
+  color: #4254cb;
+  text-decoration: none;
+}
+
+p a:hover {
+  text-decoration: underline;
+}
+
+/* Responsividade */
+@media (max-width: 1006px) {
+  .cadastro-container {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 20px;
   }
-  
-  .form-container h2 {
-    text-align: center;
+
+  .image-container-cadastro {
+    display: none;
+  }
+
+  .form-container-cadastro {
+    flex: 0 0 auto;
+    width: 95%;
+    max-width: none;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .cadastro-container {
+    padding: 30px;
+  }
+
+  .image-container-cadastro {
+    flex: 0 0 40%;
+  }
+
+  .form-container-cadastro {
+    flex: 0 0 55%;
+    max-width: none;
+    padding: 30px;
+  }
+
+  h2 {
     font-size: 2rem;
     margin-bottom: 30px;
   }
-  
+
   .form-group {
     margin-bottom: 20px;
   }
-  
-  .form-group label {
-    display: block;
-    font-size: 1rem;
-    margin-bottom: 8px;
-  }
-  
+
   .form-group input {
-    width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-top: 5px;
-  }
-  
-  .botao {
-    width: 100%;
     padding: 12px;
-    font-size: 1.2rem;
-    background-color: #1e73be;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    padding: 12px;
+    font-size: 1.1rem;
     margin-top: 20px;
   }
-  
-  button:hover {
-    background-color: #006bb3;
-  }
-  
-  p {
-    text-align: center;
-    margin-top: 20px;
-  }
-  
-  a {
-    color: #1e73be;
-    text-decoration: none;
-  }
-  
-  a:hover {
-    text-decoration: underline;
-  }
-  
-  @media (max-width: 768px) {
-    .cadastro-container {
-      flex-direction: column; /* Para telas pequenas, coloca tudo em uma coluna */
-    }
-  
-    .image-container {
-      height: 200px; /* Ajuste a altura para telas pequenas */
-    }
-  
-    .form-container {
-      padding: 20px;
-    }
-  }
-  
+}
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}

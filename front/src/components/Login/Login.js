@@ -16,7 +16,6 @@ const Login = () => {
       const response = await api.post('/usuarios/login', formData);
       const { token } = response.data;
       localStorage.setItem('token', token);
-      alert('Login realizado com sucesso!');
       setFormData({ email: '', senha: '' }); // Limpa os campos após o login
       navigate('/home');
     } catch (err) {
