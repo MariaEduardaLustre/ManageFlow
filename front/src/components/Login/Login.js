@@ -15,22 +15,45 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+  
     try {
       const response = await api.post('/usuarios/login', formData);
-      const { token } = response.data;
+      const { token, idUsuario } = response.data;
+  
       localStorage.setItem('token', token);
-      setMensagemSucessoModal('Login realizado com sucesso!');
-      setMostrarModalSucesso(true);
-      setFormData({ email: '', senha: '' }); // Limpa os campos após o login
-      // navigate('/home'); // A navegação agora ocorrerá após fechar o modal de sucesso
+      localStorage.setItem('idUsuario', idUsuario);
+  
+      const empresasResponse = await api.get(`/empresas/empresas-do-usuario/${idUsuario}`);
+      const empresas = empresasResponse.data;
+  
+      setFormData({ email: '', senha: '' });
+  
+      if (empresas.length === 1) {
+        localStorage.setItem('empresaSelecionada', JSON.stringify(empresas[0]));
+        setMensagemSucessoModal('Login realizado com sucesso!');
+        setMostrarModalSucesso(true);
+      } else {
+        localStorage.removeItem('empresaSelecionada'); // <- ESSA LINHA NOVA É IMPORTANTE
+        setMensagemSucessoModal('Login realizado! Escolha a empresa.');
+        setMostrarModalSucesso(true);
+      }
+      
+  
     } catch (err) {
+      console.error(err);
       setMensagemErroModal('E-mail ou senha inválidos.');
       setMostrarModalErro(true);
+    } finally {
+      setLoading(false);
     }
   };
-
+  
   const fecharModalErro = () => {
     setMostrarModalErro(false);
     setMensagemErroModal('');
@@ -39,7 +62,9 @@ const Login = () => {
   const fecharModalSucesso = () => {
     setMostrarModalSucesso(false);
     setMensagemSucessoModal('');
-    navigate('/home'); // Navega para a home após fechar o modal de sucesso
+    const empresaSelecionada = localStorage.getItem('empresaSelecionada');
+    navigate(empresaSelecionada ? '/home' : '/escolher-empresa');
+
   };
 
   return (
@@ -72,7 +97,14 @@ const Login = () => {
             />
           </div>
 
-          <button className="btn-primary" type="submit">Entrar</button>
+          <button
+            className="btn-primary"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+
         </form>
 
         <div className="social-login">

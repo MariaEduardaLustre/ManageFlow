@@ -5,29 +5,32 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config(); // Certifique-se de ter o dotenv configurado
 
-exports.loginUsuario = (req, res) => {
+exports.loginUsuario = async (req, res) => {
   const { email, senha } = req.body;
 
   if (!email || !senha) {
     return res.status(400).send('Preencha todos os campos!');
   }
 
-  const sql = `SELECT * FROM Usuario WHERE EMAIL = ?`;
+  try {
+    const [results] = await db.query('SELECT * FROM Usuario WHERE EMAIL = ?', [email]);
 
-  db.query(sql, [email], async (err, results) => {
-    if (err) {
-      console.error('Erro ao buscar usuário:', err);
-      return res.status(500).send('Erro no servidor.');
-    }
 
     if (results.length === 0) {
+      console.log('[ERRO] Usuário não encontrado');
       return res.status(401).send('Usuário não encontrado.');
     }
 
     const usuario = results[0];
 
+    console.log('Senha digitada:', senha);
+    console.log('Hash no banco:', usuario.SENHA);
+
     const senhaValida = await bcrypt.compare(senha, usuario.SENHA);
+    console.log('Senha válida?', senhaValida);
+
     if (!senhaValida) {
+      console.log('[ERRO] Senha incorreta');
       return res.status(401).send('Senha incorreta.');
     }
 
@@ -37,9 +40,19 @@ exports.loginUsuario = (req, res) => {
       { expiresIn: '2h' }
     );
 
-    res.json({ token, usuario: { id: usuario.ID, nome: usuario.NOME } });
-  });
+    return res.json({
+      token,
+      idUsuario: usuario.ID,
+      nome: usuario.NOME
+    });
+
+  } catch (err) {
+    console.error('[ERRO] Erro interno no login:', err);
+    return res.status(500).send('Erro interno no servidor.');
+  }
 };
+
+
 
 exports.cadastrarUsuario = async (req, res) => {
   const { nome, email, cpfCnpj, senha, numero, endereco } = req.body;
