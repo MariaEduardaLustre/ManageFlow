@@ -1,12 +1,13 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 import Cadastro from './components/Cadastro/Cadastro';
+import FormularioConfiguracaoFila from './components/Configuracao/Configuracao';
+import EsqueciSenha from './components/EsqueciSenha/EsqueciSenha';
+import Home from './components/Home/Home';
 import LandingPage from './components/Landing/Landing';
 import Login from './components/Login/Login';
-import Home from './components/Home/Home';
 import PrivateRoute from './components/PrivateRoute';
-import EsqueciSenha from './components/EsqueciSenha/EsqueciSenha';
 import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
 
 function App() {
@@ -18,6 +19,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
+        <Route path="/configuracao" element={<FormularioConfiguracaoFila />} />
+        
         <Route
           path="/home"
           element={
