@@ -10,8 +10,8 @@ const Cadastro = () => {
     senha: '',
     confirmarSenha: '',
     cep: '',
-    endereco: '', // Voltou a ser 'endereco'
-    numero: '',
+    endereco: '',
+    numero: '', 
   });
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');
