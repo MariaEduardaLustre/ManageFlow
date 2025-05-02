@@ -11,8 +11,7 @@ const Cadastro = () => {
     confirmarSenha: '',
     cep: '',
     endereco: '',
-    numero: '',
-    complemento: '', // Campo adicionado
+    numero: '', 
   });
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');
@@ -37,7 +36,6 @@ const Cadastro = () => {
       cep: '',
       endereco: '',
       numero: '',
-      complemento: '', // Campo adicionado
     });
   };
 
@@ -237,17 +235,6 @@ const Cadastro = () => {
           <div className="form-group">
             <label htmlFor="numero">Número:</label>
             <input type="text" name="numero" value={formData.numero} onChange={handleChange} required id="numero" />
-          </div>
-          {/* Novo campo "Complemento" */}
-          <div className="form-group">
-            <label htmlFor="complemento">Complemento:</label>
-            <input
-              type="text"
-              name="complemento"
-              value={formData.complemento}
-              onChange={handleChange}
-              id="complemento"
-            />
           </div>
 
           <button className='botao' type="submit">Cadastrar</button>

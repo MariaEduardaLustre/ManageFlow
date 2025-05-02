@@ -43,7 +43,7 @@ exports.loginUsuario = (req, res) => {
       usuario: {
         id: usuario.ID,
         nome: usuario.NOME,
-        complemento: usuario.COMPLEMENTO // Adicionado aqui
+        //complemento: usuario.COMPLEMENTO // Adicionado aqui
       }
     });
   });
@@ -51,7 +51,7 @@ exports.loginUsuario = (req, res) => {
 
 // CADASTRO DO USUÁRIO
 exports.cadastrarUsuario = async (req, res) => {
-  const { nome, email, cpfCnpj, senha, numero, endereco, complemento } = req.body;
+  const { nome, email, cpfCnpj, senha, numero, endereco } = req.body;
 
   if (!nome || !email || !cpfCnpj || !senha) {
     return res.status(400).send('Preencha todos os campos obrigatórios.');
@@ -78,13 +78,13 @@ exports.cadastrarUsuario = async (req, res) => {
       const senhaCriptografada = await bcrypt.hash(senha, 10);
 
       const insertQuery = `
-        INSERT INTO Usuario (ID, NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO, COMPLEMENTO)
-        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO Usuario (ID, NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO)
+        VALUES (NULL, ?, ?, ?, ?, ?, ?)
       `;
 
       db.query(
         insertQuery,
-        [nome, email, cpfCnpj, senhaCriptografada, endereco, numero, complemento],
+        [nome, email, cpfCnpj, senhaCriptografada, endereco, numero],
         (insertErr) => {
           if (insertErr) {
             console.error('Erro ao inserir usuário:', insertErr);
