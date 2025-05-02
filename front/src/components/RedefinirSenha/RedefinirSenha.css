@@ -119,7 +119,11 @@
   background-color: #483d8b;
 }
 
-
+.mensagem-alerta {
+  color: red; /* Ou outra cor de sua preferência */
+  font-size: 0.9em;
+  margin-top: 5px;
+}
   
   @media (max-width: 768px) {
     .redefinir-senha-container form {

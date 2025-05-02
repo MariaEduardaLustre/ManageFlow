@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-require('dotenv').config(); // Certifique-se de ter o dotenv configurado
+require('dotenv').config();
 
 exports.loginUsuario = async (req, res) => {
   const { email, senha } = req.body;
@@ -14,7 +14,6 @@ exports.loginUsuario = async (req, res) => {
 
   try {
     const [results] = await db.query('SELECT * FROM Usuario WHERE EMAIL = ?', [email]);
-
 
     if (results.length === 0) {
       console.log('[ERRO] Usuário não encontrado');
@@ -51,8 +50,6 @@ exports.loginUsuario = async (req, res) => {
     return res.status(500).send('Erro interno no servidor.');
   }
 };
-
-
 
 exports.cadastrarUsuario = async (req, res) => {
   const { nome, email, cpfCnpj, senha, numero, endereco } = req.body;
@@ -126,7 +123,7 @@ exports.solicitarRedefinicaoSenha = (req, res) => {
     const usuario = results[0];
 
     const token = crypto.randomBytes(20).toString('hex');
-    const expires = Date.now() + 3600000; // 1 hora de validade
+    const expires = Date.now() + 3600000;
 
     const updateQuery = `
       UPDATE Usuario
