@@ -8,6 +8,7 @@ import Home from './components/Home/Home';
 import PrivateRoute from './components/PrivateRoute';
 import EsqueciSenha from './components/EsqueciSenha/EsqueciSenha';
 import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
+import Empresa from './components/Empresa/Empresa';
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
+        <Route path="/escolher-empresa" element={<Empresa />} />
+
         <Route
           path="/home"
           element={

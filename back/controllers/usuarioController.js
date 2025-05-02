@@ -5,30 +5,31 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// LOGIN DO USUÁRIO
-exports.loginUsuario = (req, res) => {
+exports.loginUsuario = async (req, res) => {
   const { email, senha } = req.body;
 
   if (!email || !senha) {
     return res.status(400).send('Preencha todos os campos!');
   }
 
-  const sql = `SELECT * FROM Usuario WHERE EMAIL = ?`;
-
-  db.query(sql, [email], async (err, results) => {
-    if (err) {
-      console.error('Erro ao buscar usuário:', err);
-      return res.status(500).send('Erro no servidor.');
-    }
+  try {
+    const [results] = await db.query('SELECT * FROM Usuario WHERE EMAIL = ?', [email]);
 
     if (results.length === 0) {
+      console.log('[ERRO] Usuário não encontrado');
       return res.status(401).send('Usuário não encontrado.');
     }
 
     const usuario = results[0];
 
+    console.log('Senha digitada:', senha);
+    console.log('Hash no banco:', usuario.SENHA);
+
     const senhaValida = await bcrypt.compare(senha, usuario.SENHA);
+    console.log('Senha válida?', senhaValida);
+
     if (!senhaValida) {
+      console.log('[ERRO] Senha incorreta');
       return res.status(401).send('Senha incorreta.');
     }
 
@@ -38,18 +39,18 @@ exports.loginUsuario = (req, res) => {
       { expiresIn: '2h' }
     );
 
-    res.json({
+    return res.json({
       token,
-      usuario: {
-        id: usuario.ID,
-        nome: usuario.NOME,
-        //complemento: usuario.COMPLEMENTO // Adicionado aqui
-      }
+      idUsuario: usuario.ID,
+      nome: usuario.NOME
     });
-  });
+
+  } catch (err) {
+    console.error('[ERRO] Erro interno no login:', err);
+    return res.status(500).send('Erro interno no servidor.');
+  }
 };
 
-// CADASTRO DO USUÁRIO
 exports.cadastrarUsuario = async (req, res) => {
   const { nome, email, cpfCnpj, senha, numero, endereco } = req.body;
 
@@ -101,7 +102,6 @@ exports.cadastrarUsuario = async (req, res) => {
   }
 };
 
-// SOLICITAÇÃO DE REDEFINIÇÃO DE SENHA
 exports.solicitarRedefinicaoSenha = (req, res) => {
   const { email } = req.body;
 
@@ -123,7 +123,7 @@ exports.solicitarRedefinicaoSenha = (req, res) => {
     const usuario = results[0];
 
     const token = crypto.randomBytes(20).toString('hex');
-    const expires = Date.now() + 3600000; // 1 hora
+    const expires = Date.now() + 3600000;
 
     const updateQuery = `
       UPDATE Usuario
@@ -169,7 +169,6 @@ exports.solicitarRedefinicaoSenha = (req, res) => {
   });
 };
 
-// REDEFINIÇÃO DE SENHA
 exports.redefinirSenha = async (req, res) => {
   const { token, novaSenha } = req.body;
 

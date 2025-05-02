@@ -1,0 +1,120 @@
+.empresa-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .empresa-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .empresa-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  
+  .empresa-item {
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    padding: 16px;
+    width: 220px;
+    text-align: center;
+    background-color: #f9f9f9;
+  }
+  
+  .empresa-item strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  
+  .empresa-item p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 12px;
+  }
+  
+  .empresa-item button {
+    background-color: #1e73be;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+  }
+  
+  .empresa-item button:hover {
+    background-color: #155b9b;
+  }
+  
+  .nova-empresa {
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  .nova-empresa button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .nova-empresa button:hover {
+    background-color: #3d8e41;
+  }
+  
+  .formulario-criacao {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .formulario-criacao input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  
+  .formulario-criacao button {
+    background-color: #1e73be;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .formulario-criacao button:hover {
+    background-color: #155b9b;
+  }
+  
+  @media (max-width: 600px) {
+    .empresa-lista {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .empresa-item {
+      width: 100%;
+    }
+  }
+  
