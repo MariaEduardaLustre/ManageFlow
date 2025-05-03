@@ -12,3 +12,6 @@ git commit -m "Sua mensagem descritiva aqui"
 
 ### Envie a branch para o GitHub: Agora é a hora de enviar a sua branch local esqueci-senha para o seu repositório remoto no GitHub. 
 git push origin nome-branch
+
+### Atualize a sua branch com as últimas mudanças do repositório remoto:
+git pull origin nome-branch
