@@ -1,94 +1,219 @@
-/* src/components/Cadastro/Cadastro.css */
-.cadastro-container {
-    display: flex; /* Usando flexbox para dividir em duas colunas */
-    align-items: center; /* Alinha o conteúdo verticalmente no centro */
-    justify-content: center; /* Centraliza o conteúdo horizontalmente */
-    height: 100vh; /* Ocupa toda a altura da tela */
-    background-color: #f0f0f0;
-  }
-  
-  .image-container-cad {
-    display: flex;
-  }
-  
-  .responsive-image-cad {
-   margin-top: 150px;
-   width: 80%;
-  }
-  
-  .form-container {
-    flex: 1; /* O formulário ocupa 50% da largura */
-    padding: 40px;
-    width: 300px;
+body, html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  height: 100%; /* Assegura que o container ocupe a altura total */
+}
 
+.cadastro-container {
+  display: flex;
+  height: 100vh;
+  background-color: #f9f9f9;
+}
+
+.image-container-cad {
+  flex: 0 0 32%; /* Faz a imagem ocupar 32% */
+  display: flex;
+}
+
+.responsive-image-cad {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spacer {
+  margin-left: 20%; /* Espaço vazio para empurrar conteúdo adjacente */
+}
+
+.form-container {
+  flex: 0 0 40%; /* Faz o formulário ocupar 40% */
+  padding: 40px;
+  max-width: 800px; /* Definindo a largura máxima */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+}
+
+.form-container h2 {
+  text-align: center;
+  font-size: 2rem;
+  color: #1e73be;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  font-size: 1rem;
+  margin-top: 5px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #4254cb;
+  box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
+}
+
+.botao {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.2rem;
+  background-color: #1e73be;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+button:hover {
+  background-color: #006bb3;
+}
+
+p {
+  text-align: center;
+  margin-top: 20px;
+}
+
+a {
+  color: #1e73be;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Estilos para o modal (a janela em si) */
+.modal {
+background-color: white;
+padding: 25px; /* Aumentei um pouco o padding interno */
+border-radius: 8px; /* Arredondei um pouco mais as bordas */
+box-shadow: 0 0 12px rgba(0, 0, 0, 0.4); /* Aumentei um pouco a sombra */
+text-align: center;
+max-width: 95%; /* Permite ocupar um pouco mais em telas menores */
+width: 450px; /* Aumentei um pouco a largura desejada do modal */
+}
+
+.modal p.mensagem-sucesso {
+color: black; /* Roxo escuro */
+font-size: 1.5rem; /* Aumentei um pouco o tamanho da fonte */
+margin-bottom: 20px; /* Aumentei um pouco a margem inferior */
+}
+
+/* Estilos para o botão de fechar */
+.btn-fechar-modal {
+padding: 12px 18px; /* Aumentei um pouco o padding do botão */
+background-color: #6a5acd; /* Roxo arroxeado */
+color: white;
+border: none;
+border-radius: 8px; /* Arredondei as bordas do botão também */
+cursor: pointer;
+font-size: 1.05rem; /* Aumentei um pouco a fonte do botão */
+}
+
+.btn-fechar-modal:hover {
+background-color: #483d8b; /* Tom mais escuro no hover */
+}
+
+/* ... outros estilos ... */
+
+.modal.erro {
+background-color: #ffe0e0; /* Fundo levemente vermelho para indicar erro */
+border: 1px solid #ffaaaa;
+}
+
+.modal.erro p.mensagem-erro {
+color: #cc0000; /* Texto vermelho para a mensagem de erro */
+font-size: 1.1rem;
+margin-bottom: 20px;
+}
+
+/* ... outros estilos ... */
+
+.modal.confirmacao {
+background-color: white;
+padding: 25px;
+border-radius: 8px;
+box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+text-align: center;
+max-width: 95%;
+width: 400px;
+}
+
+.modal.confirmacao p.mensagem-confirmacao {
+font-size: 1.1rem;
+margin-bottom: 20px;
+color: #333;
+}
+
+.botoes-confirmacao {
+display: flex;
+justify-content: center;
+gap: 15px;
+}
+
+.btn-confirmar,
+.btn-cancelar {
+padding: 10px 15px;
+border-radius: 5px;
+cursor: pointer;
+font-size: 1rem;
+}
+
+.btn-confirmar {
+background-color: #483d8b; /* Cor verde para confirmar */
+color: white;
+border: none;
+}
+
+.btn-confirmar:hover {
+background-color: #483d8b;
+}
+
+.btn-cancelar {
+background-color: #dc3545; /* Cor vermelha para cancelar */
+color: white;
+border: none;
+}
+
+.btn-cancelar:hover {
+background-color: #c82333;
+}
+
+
+
+.form-group label.senha-requisitos {
+display: block;
+font-size: 0.8rem;
+color: red;
+margin-top: 5px;
+}
+
+@media (max-width: 768px) {
+  .cadastro-container {
+    flex-direction: column; /* Para telas pequenas, coloca tudo em uma coluna */
   }
-  
-  .form-container h2 {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 30px;
+
+  .image-container {
+    height: 200px; /* Ajuste a altura para telas pequenas */
   }
-  
-  .form-group {
-    margin-bottom: 20px;
+
+  .form-container {
+    padding: 20px;
   }
-  
-  .form-group label {
-    display: block;
-    font-size: 1rem;
-    margin-bottom: 8px;
-  }
-  
-  .form-group input {
-    width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-top: 5px;
-  }
-  
-  .botao {
-    width: 100%;
-    padding: 12px;
-    font-size: 1.2rem;
-    background-color: #1e73be;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-  }
-  
-  button:hover {
-    background-color: #006bb3;
-  }
-  
-  p {
-    text-align: center;
-    margin-top: 20px;
-  }
-  
-  a {
-    color: #1e73be;
-    text-decoration: none;
-  }
-  
-  a:hover {
-    text-decoration: underline;
-  }
-  
-  @media (max-width: 768px) {
-    .cadastro-container {
-      flex-direction: column; /* Para telas pequenas, coloca tudo em uma coluna */
-    }
-  
-    .image-container {
-      height: 200px; /* Ajuste a altura para telas pequenas */
-    }
-  
-    .form-container {
-      padding: 20px;
-    }
-  }
-  
+}

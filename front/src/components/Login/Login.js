@@ -6,6 +6,11 @@ import './Login.css';
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', senha: '' });
   const navigate = useNavigate();
+  const [mostrarModalErro, setMostrarModalErro] = useState(false);
+  const [mensagemErroModal, setMensagemErroModal] = useState('');
+  const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
+  const [mensagemSucessoModal, setMensagemSucessoModal] = useState('');
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -16,12 +21,25 @@ const Login = () => {
       const response = await api.post('/usuarios/login', formData);
       const { token } = response.data;
       localStorage.setItem('token', token);
-      alert('Login realizado com sucesso!');
+      setMensagemSucessoModal('Login realizado com sucesso!');
+      setMostrarModalSucesso(true);
       setFormData({ email: '', senha: '' }); // Limpa os campos após o login
-      navigate('/home');
+      // navigate('/home'); // A navegação agora ocorrerá após fechar o modal de sucesso
     } catch (err) {
-      alert('E-mail ou senha inválidos.');
+      setMensagemErroModal('E-mail ou senha inválidos.');
+      setMostrarModalErro(true);
     }
+  };
+
+  const fecharModalErro = () => {
+    setMostrarModalErro(false);
+    setMensagemErroModal('');
+  };
+
+  const fecharModalSucesso = () => {
+    setMostrarModalSucesso(false);
+    setMensagemSucessoModal('');
+    navigate('/home'); // Navega para a home após fechar o modal de sucesso
   };
 
   return (
@@ -34,7 +52,7 @@ const Login = () => {
         <h2>Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-          <label htmlFor="email">E-mail:</label>
+            <label htmlFor="email">E-mail:</label>
             <input
               type="email"
               name="email"
@@ -44,7 +62,7 @@ const Login = () => {
             />
           </div>
           <div className="form-group">
-          <label htmlFor="senha">Senha:</label>
+            <label htmlFor="senha">Senha:</label>
             <input
               type="password"
               name="senha"
@@ -69,8 +87,26 @@ const Login = () => {
           Esqueceu sua senha? <a href="/esqueci-senha">Clique aqui!</a>
         </p>
       </div>
-      
-      
+
+      {/* Modal de Erro */}
+      {mostrarModalErro && mensagemErroModal && (
+        <div className="modal-overlay">
+          <div className="modal erro">
+            <p className="mensagem-erro">{mensagemErroModal}</p>
+            <button onClick={fecharModalErro} className="btn-fechar-modal">Fechar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Sucesso */}
+      {mostrarModalSucesso && mensagemSucessoModal && (
+        <div className="modal-overlay">
+          <div className="modal sucesso">
+            <p className="mensagem-sucesso">{mensagemSucessoModal}</p>
+            <button onClick={fecharModalSucesso} className="btn-fechar-modal">OK</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
