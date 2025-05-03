@@ -15,3 +15,7 @@ git push origin nome-branch
 
 ### Atualize a sua branch com as últimas mudanças do repositório remoto:
 git pull origin nome-branch
+
+### Mude para a branch
+git checkout nome-branch
+
