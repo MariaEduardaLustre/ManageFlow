@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { FaUsers, FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import {  FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaTrash, FaPlus } from 'react-icons/fa';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
 
 const Home = () => {
   const [usuarios, setUsuarios] = useState([]);
+  const [novoUsuario, setNovoUsuario] = useState('');
   const navigate = useNavigate();
 
   const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
+  const idEmpresa = empresaSelecionada?.ID_EMPRESA;
+  const nivel = Number(empresaSelecionada?.NIVEL);
+
 
   useEffect(() => {
     async function fetchUsuarios() {
       try {
-        const idEmpresa = empresaSelecionada?.ID_EMPRESA;
         if (!idEmpresa) return;
-
-        const response = await api.get(`/usuarios/empresa/${idEmpresa}`);
+        const response = await api.get(`/empresa/${idEmpresa}`);
         setUsuarios(response.data);
       } catch (error) {
         console.error('Erro ao buscar usuários:', error);
@@ -24,13 +26,40 @@ const Home = () => {
     }
 
     fetchUsuarios();
-  }, [empresaSelecionada]);
+  }, [idEmpresa]);
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('idUsuario');
     localStorage.removeItem('empresaSelecionada');
     navigate('/');
+  };
+
+  const adicionarUsuario = async () => {
+    if (!novoUsuario) return;
+    try {
+      await api.post(`/empresa/${idEmpresa}/adicionar-usuario`, {
+        cpfOuEmail: novoUsuario,
+      });
+      
+      setNovoUsuario('');
+      const response = await api.get(`/empresa/${idEmpresa}`);
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error('Erro ao adicionar usuário:', error);
+    }
+  };
+
+  const removerUsuario = async (idUsuario) => {
+    try {
+      await api.post('/remover-da-empresa', {
+        idUsuario,
+        idEmpresa,
+      });
+      setUsuarios((prev) => prev.filter((u) => u.ID !== idUsuario));
+    } catch (error) {
+      console.error('Erro ao remover usuário:', error);
+    }
   };
 
   return (
@@ -55,36 +84,28 @@ const Home = () => {
       </aside>
 
       <main className="main-content">
-        <header>
+        {/* <header>
           <h1>Olá 👋</h1>
-          {/* <div className="cards">
-            <div className="card">
-              <FaUsers size={24} />
-              <div>
-                <h3>{usuarios.length}</h3>
-                <p>Total Membros</p>
-              </div>
-            </div>
-            <div className="card">
-              <FaUser size={24} />
-              <div>
-                <h3>Adicionar membro</h3>
-              </div>
-            </div>
-            <div className="card">
-              <FaCog size={24} />
-              <div>
-                <h3>Configurar perfil</h3>
-              </div>
-            </div>
-          </div> */}
-        </header>
+        </header> */}
 
         <section className="usuarios-section">
-          <div className="usuarios-header">
+          {/* <div className="usuarios-header">
             <h2>Usuários</h2>
             <input type="text" placeholder="Pesquisar" />
-          </div>
+          </div> */}
+
+          {nivel === 1 && (
+            <div className="adicionar-usuario">
+              <input
+                type="text"
+                placeholder="CPF ou E-mail do usuário"
+                value={novoUsuario}
+                onChange={(e) => setNovoUsuario(e.target.value)}
+              />
+              <button onClick={adicionarUsuario}><FaPlus /> Adicionar</button>
+            </div>
+          )}
+
           <table className="usuarios-table">
             <thead>
               <tr>
@@ -93,6 +114,7 @@ const Home = () => {
                 <th>CPF</th>
                 <th>Endereço</th>
                 <th>Número</th>
+                {nivel === 1 && <th>Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -103,6 +125,13 @@ const Home = () => {
                   <td>{user.CPF}</td>
                   <td>{user.ENDERECO}</td>
                   <td>{user.NUMERO}</td>
+                  {nivel === 1 && (
+                    <td>
+                      <button onClick={() => removerUsuario(user.ID)} className="btn-remover">
+                        <FaTrash /> Remover
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -54,53 +54,46 @@ exports.loginUsuario = async (req, res) => {
 exports.cadastrarUsuario = async (req, res) => {
   const { nome, email, cpfCnpj, senha, numero, endereco } = req.body;
 
+  console.log('[CADASTRO] Dados recebidos:', req.body);
+
   if (!nome || !email || !cpfCnpj || !senha) {
     return res.status(400).send('Preencha todos os campos obrigatórios.');
   }
 
   try {
-    const checkQuery = `SELECT * FROM Usuario WHERE EMAIL = ? OR CPF = ?`;
-    db.query(checkQuery, [email, cpfCnpj], async (err, results) => {
-      if (err) {
-        console.error('Erro ao verificar e-mail/CPF:', err);
-        return res.status(500).send('Erro interno ao verificar dados.');
+    // Verifica se já existe usuário com esse e-mail ou CPF
+    const [usuariosExistentes] = await db.query(
+      'SELECT * FROM Usuario WHERE EMAIL = ? OR CPF = ?',
+      [email, cpfCnpj]
+    );
+
+    if (usuariosExistentes.length > 0) {
+      const existente = usuariosExistentes[0];
+      if (existente.EMAIL === email) {
+        return res.status(409).send('E-mail já cadastrado.');
       }
-
-      if (results.length > 0) {
-        const jaExiste = results[0];
-        if (jaExiste.EMAIL === email) {
-          return res.status(409).send('E-mail já cadastrado.');
-        }
-        if (jaExiste.CPF === cpfCnpj) {
-          return res.status(409).send('CPF já cadastrado.');
-        }
+      if (existente.CPF === cpfCnpj) {
+        return res.status(409).send('CPF já cadastrado.');
       }
+    }
 
-      const senhaCriptografada = await bcrypt.hash(senha, 10);
+    // Criptografa a senha
+    const senhaCriptografada = await bcrypt.hash(senha, 10);
 
-      const insertQuery = `
-        INSERT INTO Usuario (ID, NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO)
-        VALUES (NULL, ?, ?, ?, ?, ?, ?)
-      `;
+    // Insere o novo usuário
+    await db.query(
+      `INSERT INTO Usuario (NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [nome, email, cpfCnpj, senhaCriptografada, endereco, numero]
+    );
 
-      db.query(
-        insertQuery,
-        [nome, email, cpfCnpj, senhaCriptografada, endereco, numero],
-        (insertErr) => {
-          if (insertErr) {
-            console.error('Erro ao inserir usuário:', insertErr);
-            return res.status(500).send('Erro ao cadastrar usuário.');
-          }
-
-          res.status(201).send('Usuário cadastrado com sucesso!');
-        }
-      );
-    });
+    return res.status(201).send('Usuário cadastrado com sucesso!');
   } catch (error) {
-    console.error('Erro geral no cadastro:', error);
-    res.status(500).send('Erro interno ao cadastrar.');
+    console.error('[ERRO] Erro ao cadastrar usuário:', error);
+    return res.status(500).send('Erro interno ao cadastrar usuário.');
   }
 };
+
 
 exports.solicitarRedefinicaoSenha = (req, res) => {
   const { email } = req.body;

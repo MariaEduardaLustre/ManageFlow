@@ -81,7 +81,8 @@ router.get('/empresas-do-usuario/:idUsuario', async (req, res) => {
       SELECT 
         e.ID_EMPRESA,
         e.NOME_EMPRESA,
-        p.NOME_PERFIL
+        p.NOME_PERFIL,
+        p.NIVEL
       FROM permissoes pe
       JOIN empresa e ON e.ID_EMPRESA = pe.ID_EMPRESA
       JOIN perfil p ON p.ID_PERFIL = pe.ID_PERFIL
