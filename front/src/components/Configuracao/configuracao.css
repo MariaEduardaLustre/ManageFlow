@@ -1,0 +1,147 @@
+/* configuracao.css */
+.form-container-config {
+    padding: 30px;
+    max-width: 600px; /* Ajustei a largura máxima para o formulário */
+    margin: 30px auto; /* Centraliza o formulário na página */
+    display: flex;
+    flex-direction: column;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .form-container-config h2 {
+    text-align: center;
+    font-size: 2rem;
+    color: #1e73be;
+    margin-bottom: 25px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 5px;
+    color: #333;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 1rem;
+    margin-top: 3px;
+    outline: none;
+  }
+  
+  .form-group input[type="checkbox"] {
+    margin-right: 5px;
+  }
+  
+  .form-group fieldset {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .form-group fieldset legend {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #555;
+    padding: 0 10px;
+  }
+  
+  .form-group fieldset label {
+    display: inline-block;
+    margin-right: 15px;
+  }
+  
+  .botao {
+    width: 100%;
+    padding: 10px;
+    font-size: 1.1rem;
+    background-color: #1e73be;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 15px;
+  }
+  
+  .botao:hover {
+    background-color: #006bb3;
+  }
+  
+  /* Estilos para o modal de sucesso e erro (mantidos) */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal {
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    max-width: 95%;
+    width: 400px;
+  }
+  
+  .modal p.mensagem-sucesso {
+    color: green;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+  
+  .modal p.mensagem-erro {
+    color: red;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+  
+  .btn-fechar-modal {
+    padding: 10px 15px;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+  }
+  
+  .modal.erro .btn-fechar-modal {
+    background-color: #d9534f;
+  }
+  
+  .btn-fechar-modal:hover {
+    opacity: 0.9;
+  }
+  
+  @media (max-width: 768px) {
+    .form-container-config {
+      width: 95%;
+      margin: 20px auto;
+      padding: 20px;
+    }
+  
+    .form-container-config h2 {
+      text-align: center;
+    }
+  }
