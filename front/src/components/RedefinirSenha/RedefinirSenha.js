@@ -33,7 +33,7 @@ const RedefinirSenha = () => {
     }
 
     try {
-      const response = await api.post('/usuarios/redefinir-senha', { token, novaSenha });
+      const response = await api.post('/redefinir-senha', { token, novaSenha });
       setMensagem(response.data);
       setMostrarModal(true); // Mostra o modal de sucesso
     } catch (error) {

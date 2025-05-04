@@ -10,10 +10,8 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/usuarios', usuarioRoutes);
-
-// nova rota
-app.use('/api/empresas', empresaRoutes); // <<< MONTA A ROTA /api/empresas
+app.use('/api', usuarioRoutes);
+app.use('/api/empresas', empresaRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);

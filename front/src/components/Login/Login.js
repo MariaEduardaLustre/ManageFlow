@@ -23,7 +23,8 @@ const Login = () => {
     setLoading(true);
   
     try {
-      const response = await api.post('/usuarios/login', formData);
+      const response = await api.post('/login', formData); // ✅ Correto
+
       const { token, idUsuario } = response.data;
   
       localStorage.setItem('token', token);

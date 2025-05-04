@@ -151,3 +151,27 @@ header h1 {
   background-color: #1e73be;
   color: white;
 }
+.adicionar-usuario {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.adicionar-usuario input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.adicionar-usuario button {
+  background-color: #1e73be;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}

@@ -123,6 +123,7 @@ const Cadastro = () => {
 
     try {
       const response = await api.post('/usuarios', formData);
+
       setMensagemSucessoModal(response.data);
       setMostrarModalSucesso(true);
       limparCampos();
