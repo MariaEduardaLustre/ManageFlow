@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {  FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaTrash, FaPlus } from 'react-icons/fa';
 import api from '../../services/api';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Home.css';
+
+ 
+
 
 const Home = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -63,11 +66,16 @@ const Home = () => {
   return (
     <div className="home-container">
       <aside className="sidebar">
-        <div className="logo">ManageFlow</div>
+        <div className="logo"><img src="/imagens/logoManageflow.png" alt="Curva lateral" className="responsive-image" /></div>
+        
         <nav>
           <ul>
-            <li><FaTv /> Dashboard</li>
-            <li><FaCog /> Configuração de fila</li>
+            <li><FaTv />Dashboard</li>
+            <li>
+              <Link to="/configuracao" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <FaCog /> Configuração de fila
+              </Link>
+            </li>
             <li><FaTv /> Painel de TV</li>
             <li><FaClipboardList /> Gestão da Fila</li>
             <li><FaChartBar /> Relatórios</li>
