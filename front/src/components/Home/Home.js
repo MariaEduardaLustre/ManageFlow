@@ -52,10 +52,8 @@ const Home = () => {
 
   const removerUsuario = async (idUsuario) => {
     try {
-      await api.post('/remover-da-empresa', {
-        idUsuario,
-        idEmpresa,
-      });
+      await api.delete(`/empresa/${idEmpresa}/remover-usuario/${idUsuario}`);
+
       setUsuarios((prev) => prev.filter((u) => u.ID !== idUsuario));
     } catch (error) {
       console.error('Erro ao remover usuário:', error);
