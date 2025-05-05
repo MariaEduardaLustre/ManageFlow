@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import './configuracao.css'; // Certifique-se de ter esse arquivo de estilo
+import './configuracao.css';
 
 const FormularioConfiguracaoFila = () => {
+  const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
+  const idEmpresa = empresaSelecionada?.ID_EMPRESA || null;
+
   const [formData, setFormData] = useState({
-    id_empresa: 16,
+    id_empresa: idEmpresa,
     nome_fila: '',
     ini_vig: '',
     fim_vig: '',
@@ -49,6 +52,12 @@ const FormularioConfiguracaoFila = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.id_empresa) {
+      setMensagemErroModal('Empresa não identificada. Faça login novamente.');
+      setMostrarModalErro(true);
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:3001/api/configuracao/configuracao-fila', {
         method: 'POST',
@@ -61,8 +70,8 @@ const FormularioConfiguracaoFila = () => {
       if (response.ok) {
         setMensagemSucessoModal('Configuração de fila cadastrada com sucesso! Token: ' + data.token_fila);
         setMostrarModalSucesso(true);
-        setFormData({ // Limpa o formulário após o sucesso
-          id_empresa: 16,
+        setFormData({
+          id_empresa: idEmpresa,
           nome_fila: '',
           ini_vig: '',
           fim_vig: '',
@@ -87,13 +96,8 @@ const FormularioConfiguracaoFila = () => {
     }
   };
 
-  const fecharModalSucesso = () => {
-    setMostrarModalSucesso(false);
-  };
-
-  const fecharModalErro = () => {
-    setMostrarModalErro(false);
-  };
+  const fecharModalSucesso = () => setMostrarModalSucesso(false);
+  const fecharModalErro = () => setMostrarModalErro(false);
 
   return (
     <div className="form-container-config">
@@ -101,145 +105,68 @@ const FormularioConfiguracaoFila = () => {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="nome_fila">Nome da Fila:</label>
-          <input
-            type="text"
-            name="nome_fila"
-            value={formData.nome_fila}
-            onChange={handleChange}
-            required
-            id="nome_fila"
-          />
+          <input type="text" name="nome_fila" value={formData.nome_fila} onChange={handleChange} required id="nome_fila" />
         </div>
 
         <div className="form-group">
           <label htmlFor="ini_vig">Início Vigência (ex: 20250101):</label>
-          <input
-            type="number"
-            name="ini_vig"
-            value={formData.ini_vig}
-            onChange={handleChange}
-            id="ini_vig"
-          />
+          <input type="number" name="ini_vig" value={formData.ini_vig} onChange={handleChange} id="ini_vig" />
         </div>
 
         <div className="form-group">
           <label htmlFor="fim_vig">Fim Vigência (ex: 20251231):</label>
-          <input
-            type="number"
-            name="fim_vig"
-            value={formData.fim_vig}
-            onChange={handleChange}
-            id="fim_vig"
-          />
+          <input type="number" name="fim_vig" value={formData.fim_vig} onChange={handleChange} id="fim_vig" />
         </div>
 
         <div className="form-group">
           <label htmlFor="mensagem">Mensagem:</label>
-          <input
-            type="text"
-            name="mensagem"
-            value={formData.mensagem}
-            onChange={handleChange}
-            id="mensagem"
-          />
+          <input type="text" name="mensagem" value={formData.mensagem} onChange={handleChange} id="mensagem" />
         </div>
 
         <div className="form-group">
           <label htmlFor="img_banner_url">URL do Banner:</label>
-          <input
-            type="text"
-            name="img_banner_url"
-            value={formData.img_banner.url}
-            onChange={(e) => setFormData({ ...formData, img_banner: { url: e.target.value } })}
-            id="img_banner_url"
-          />
+          <input type="text" name="img_banner_url" value={formData.img_banner.url} onChange={(e) => setFormData({ ...formData, img_banner: { url: e.target.value } })} id="img_banner_url" />
         </div>
 
         <fieldset className="form-group">
           <legend>Campos do Formulário:</legend>
           <label>
-            <input
-              type="checkbox"
-              name="cpf"
-              checked={formData.campos.cpf}
-              onChange={handleCamposChange}
-            />
-            CPF
+            <input type="checkbox" name="cpf" checked={formData.campos.cpf} onChange={handleCamposChange} /> CPF
           </label>
           <label>
-            <input
-              type="checkbox"
-              name="nome"
-              checked={formData.campos.nome}
-              onChange={handleCamposChange}
-            />
-            Nome
+            <input type="checkbox" name="nome" checked={formData.campos.nome} onChange={handleCamposChange} /> Nome
           </label>
           <label>
-            <input
-              type="checkbox"
-              name="telefone"
-              checked={formData.campos.telefone}
-              onChange={handleCamposChange}
-            />
-            Telefone
+            <input type="checkbox" name="telefone" checked={formData.campos.telefone} onChange={handleCamposChange} /> Telefone
           </label>
         </fieldset>
 
         <div className="form-group">
           <label htmlFor="temp_tol">Tempo de Tolerância (min):</label>
-          <input
-            type="number"
-            name="temp_tol"
-            value={formData.temp_tol}
-            onChange={handleChange}
-            id="temp_tol"
-          />
+          <input type="number" name="temp_tol" value={formData.temp_tol} onChange={handleChange} id="temp_tol" />
         </div>
 
         <div className="form-group">
           <label htmlFor="qtde_min">Quantidade Mínima:</label>
-          <input
-            type="number"
-            name="qtde_min"
-            value={formData.qtde_min}
-            onChange={handleChange}
-            id="qtde_min"
-          />
+          <input type="number" name="qtde_min" value={formData.qtde_min} onChange={handleChange} id="qtde_min" />
         </div>
 
         <div className="form-group">
           <label htmlFor="qtde_max">Quantidade Máxima:</label>
-          <input
-            type="number"
-            name="qtde_max"
-            value={formData.qtde_max}
-            onChange={handleChange}
-            id="qtde_max"
-          />
+          <input type="number" name="qtde_max" value={formData.qtde_max} onChange={handleChange} id="qtde_max" />
         </div>
 
         <div className="form-group">
           <label>
             Permite Sair da Fila:
-            <input
-              type="checkbox"
-              name="per_sair"
-              checked={formData.per_sair}
-              onChange={handleChange}
-            />
+            <input type="checkbox" name="per_sair" checked={formData.per_sair} onChange={handleChange} />
           </label>
         </div>
 
         <div className="form-group">
           <label>
             Permite Localização:
-            <input
-              type="checkbox"
-              name="per_loc"
-              checked={formData.per_loc}
-              onChange={handleChange}
-            />
+            <input type="checkbox" name="per_loc" checked={formData.per_loc} onChange={handleChange} />
           </label>
         </div>
 
@@ -254,7 +181,7 @@ const FormularioConfiguracaoFila = () => {
         <button className="botao" type="submit">Cadastrar Fila</button>
       </form>
 
-      {/* Modal de Sucesso */}
+      {/* Modal Sucesso */}
       {mostrarModalSucesso && mensagemSucessoModal && (
         <div className="modal-overlay">
           <div className="modal sucesso">
@@ -264,7 +191,7 @@ const FormularioConfiguracaoFila = () => {
         </div>
       )}
 
-      {/* Modal de Erro */}
+      {/* Modal Erro */}
       {mostrarModalErro && mensagemErroModal && (
         <div className="modal-overlay">
           <div className="modal erro">
