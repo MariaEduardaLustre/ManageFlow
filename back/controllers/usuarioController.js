@@ -95,72 +95,66 @@ exports.cadastrarUsuario = async (req, res) => {
 };
 
 
-exports.solicitarRedefinicaoSenha = (req, res) => {
+exports.solicitarRedefinicaoSenha = async (req, res) => {
+  console.log('📩 Rota /esqueci-senha chamada com:', req.body);
   const { email } = req.body;
 
   if (!email) {
     return res.status(400).send('Por favor, informe seu e-mail.');
   }
 
-  const sql = `SELECT * FROM Usuario WHERE EMAIL = ?`;
-  db.query(sql, [email], (err, results) => {
-    if (err) {
-      console.error('Erro ao buscar usuário:', err);
-      return res.status(500).send('Erro no servidor.');
-    }
+  try {
+    console.log('🔍 Buscando usuário com email:', email);
+    const [results] = await db.query('SELECT * FROM Usuario WHERE EMAIL = ?', [email]);
 
     if (results.length === 0) {
+      console.warn('⚠️ Nenhum usuário encontrado com esse e-mail');
       return res.status(404).send('E-mail não encontrado.');
     }
 
     const usuario = results[0];
 
     const token = crypto.randomBytes(20).toString('hex');
-    const expires = Date.now() + 3600000;
+    const expires = new Date(Date.now() + 3600000); // 1 hora a partir de agora
 
-    const updateQuery = `
-      UPDATE Usuario
-      SET resetPasswordToken = ?, resetPasswordExpires = ?
-      WHERE ID = ?
-    `;
+    console.log('🔐 Gerando token para usuário ID:', usuario.ID);
 
-    db.query(updateQuery, [token, new Date(expires), usuario.ID], (updateErr) => {
-      if (updateErr) {
-        console.error('Erro ao salvar token de redefinição:', updateErr);
-        return res.status(500).send('Erro ao gerar token de redefinição.');
-      }
+    await db.query(
+      'UPDATE Usuario SET resetPasswordToken = ?, resetPasswordExpires = ? WHERE ID = ?',
+      [token, expires, usuario.ID]
+    );
 
-      const transporter = nodemailer.createTransport({
-        service: process.env.EMAIL_SERVICE,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD,
-        },
-      });
-
-      const mailOptions = {
-        to: usuario.EMAIL,
-        subject: 'Link para redefinição de senha',
-        html: `
-          <p>Você solicitou a redefinição da sua senha.</p>
-          <p>Clique no link abaixo para criar uma nova senha:</p>
-          <a href="${req.headers.origin}/redefinir-senha/${token}">Redefinir senha</a>
-          <p>Este link é válido por 1 hora.</p>
-          <p>Se você não solicitou esta redefinição, ignore este e-mail.</p>
-        `,
-      };
-
-      transporter.sendMail(mailOptions, (mailErr) => {
-        if (mailErr) {
-          console.error('Erro ao enviar e-mail de redefinição:', mailErr);
-          return res.status(500).send('Erro ao enviar e-mail de redefinição.');
-        }
-
-        res.send('Um link para redefinição de senha foi enviado para o seu e-mail.');
-      });
+    const transporter = nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
     });
-  });
+
+    const mailOptions = {
+      to: usuario.EMAIL,
+      subject: 'Link para redefinição de senha',
+      html: `
+        <p>Você solicitou a redefinição da sua senha.</p>
+        <p>Clique no link abaixo para criar uma nova senha:</p>
+        <a href="${req.headers.origin}/redefinir-senha/${token}">Redefinir senha</a>
+        <p>Este link é válido por 1 hora.</p>
+        <p>Se você não solicitou esta redefinição, ignore este e-mail.</p>
+      `,
+    };
+
+    console.log('📤 Enviando e-mail para:', usuario.EMAIL);
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ E-mail enviado:', info.messageId);
+
+    res.send('Um link para redefinição de senha foi enviado para o seu e-mail.');
+  } catch (err) {
+    console.error('❌ Erro geral em solicitarRedefinicaoSenha:', err);
+    res.status(500).send('Erro interno ao processar solicitação de senha.');
+  }
 };
+
 
 exports.redefinirSenha = async (req, res) => {
   const { token, novaSenha } = req.body;
