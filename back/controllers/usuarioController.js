@@ -163,38 +163,30 @@ exports.redefinirSenha = async (req, res) => {
     return res.status(400).send('Token e nova senha são obrigatórios.');
   }
 
-  const sql = `SELECT * FROM Usuario WHERE resetPasswordToken = ? AND resetPasswordExpires > ?`;
-  db.query(sql, [token, new Date()], async (err, results) => {
-    if (err) {
-      console.error('Erro ao verificar token:', err);
-      return res.status(500).send('Erro no servidor.');
-    }
+  try {
+    const [results] = await db.query(
+      'SELECT * FROM Usuario WHERE resetPasswordToken = ? AND resetPasswordExpires > ?',
+      [token, new Date()]
+    );
 
     if (results.length === 0) {
       return res.status(400).send('Token inválido ou expirado.');
     }
 
     const usuario = results[0];
+    const senhaCriptografada = await bcrypt.hash(novaSenha, 10);
 
-    try {
-      const senhaCriptografada = await bcrypt.hash(novaSenha, 10);
-      const updateQuery = `
-        UPDATE Usuario
-        SET SENHA = ?, resetPasswordToken = NULL, resetPasswordExpires = NULL
-        WHERE ID = ?
-      `;
+    await db.query(
+      `UPDATE Usuario
+       SET SENHA = ?, resetPasswordToken = NULL, resetPasswordExpires = NULL
+       WHERE ID = ?`,
+      [senhaCriptografada, usuario.ID]
+    );
 
-      db.query(updateQuery, [senhaCriptografada, usuario.ID], (updateErr) => {
-        if (updateErr) {
-          console.error('Erro ao atualizar senha:', updateErr);
-          return res.status(500).send('Erro ao redefinir a senha.');
-        }
-
-        res.send('Senha redefinida com sucesso!');
-      });
-    } catch (error) {
-      console.error('Erro ao criptografar nova senha:', error);
-      return res.status(500).send('Erro interno ao redefinir a senha.');
-    }
-  });
+    res.send('Senha redefinida com sucesso!');
+  } catch (error) {
+    console.error('Erro ao redefinir senha:', error);
+    res.status(500).send('Erro interno ao redefinir a senha.');
+  }
 };
+
