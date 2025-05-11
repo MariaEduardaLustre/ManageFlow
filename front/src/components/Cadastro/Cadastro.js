@@ -12,6 +12,7 @@ const Cadastro = () => {
     cep: '',
     endereco: '',
     numero: '', 
+    complemento: '',
   });
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');
@@ -36,6 +37,7 @@ const Cadastro = () => {
       cep: '',
       endereco: '',
       numero: '',
+      complemento: '',
     });
   };
 
@@ -161,7 +163,7 @@ const Cadastro = () => {
         <form onSubmit={handleSubmit}>
           {/* Campos do formulário */}
           <div className="form-group">
-            <label htmlFor="nome">Nome:</label>
+            <label htmlFor="nome">Nome Completo:</label>
             <input type="text" name="nome" value={formData.nome} onChange={handleChange} required id="nome" />
           </div>
           <div className="form-group">
@@ -223,7 +225,7 @@ const Cadastro = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="endereco">Endereço:</label> {/* Campo de Endereço */}
+            <label htmlFor="endereco">Logradouro:</label> {/* Campo de Endereço */}
             <input
               type="text"
               name="endereco"
@@ -236,6 +238,16 @@ const Cadastro = () => {
           <div className="form-group">
             <label htmlFor="numero">Número:</label>
             <input type="text" name="numero" value={formData.numero} onChange={handleChange} required id="numero" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="complemento">Complemento:</label> 
+            <input
+              type="text"
+              name="complemento"
+              value={formData.complemento}
+              onChange={handleChange}
+              id="complemento"
+            />
           </div>
 
           <button className='botao' type="submit">Cadastrar</button>

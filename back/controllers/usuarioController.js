@@ -52,7 +52,7 @@ exports.loginUsuario = async (req, res) => {
 };
 
 exports.cadastrarUsuario = async (req, res) => {
-  const { nome, email, cpfCnpj, senha, numero, endereco } = req.body;
+  const { nome, email, cpfCnpj, senha, numero, endereco, complemento } = req.body;
 
   console.log('[CADASTRO] Dados recebidos:', req.body);
 
@@ -82,9 +82,9 @@ exports.cadastrarUsuario = async (req, res) => {
 
     // Insere o novo usuário
     await db.query(
-      `INSERT INTO Usuario (NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [nome, email, cpfCnpj, senhaCriptografada, endereco, numero]
+      `INSERT INTO Usuario (NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO, COMPLEMENTO,)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [nome, email, cpfCnpj, senhaCriptografada, endereco, numero, complemento]
     );
 
     return res.status(201).send('Usuário cadastrado com sucesso!');

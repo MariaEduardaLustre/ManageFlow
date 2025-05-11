@@ -67,7 +67,6 @@ const Home = () => {
     <div className="home-container">
       <aside className="sidebar">
         <div className="logo"><img src="/imagens/logoManageflow.png" alt="Curva lateral" className="responsive-image" /></div>
-        
         <nav>
           <ul>
             <li><FaTv />Dashboard</li>
@@ -120,6 +119,7 @@ const Home = () => {
                 <th>CPF</th>
                 <th>Endereço</th>
                 <th>Número</th>
+                <th>Complemento</th>
                 {nivel === 1 && <th>Ações</th>}
               </tr>
             </thead>
@@ -131,6 +131,7 @@ const Home = () => {
                   <td>{user.CPF}</td>
                   <td>{user.ENDERECO}</td>
                   <td>{user.NUMERO}</td>
+                  <td>{user.COMPLEMENTO}</td>
                   {nivel === 1 && (
                     <td>
                       <button onClick={() => removerUsuario(user.ID)} className="btn-remover">
