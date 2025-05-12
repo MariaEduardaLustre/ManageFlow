@@ -35,7 +35,7 @@ router.get('/empresa/:idEmpresa', async (req, res) => {
         u.CPF,
         u.ENDERECO,
         u.NUMERO,
-        u.COMPLEMENTO,
+        u.COMPLEMENTO
       FROM usuario u
       INNER JOIN permissoes p ON p.ID_USUARIO = u.ID
       WHERE p.ID_EMPRESA = ?
