@@ -239,6 +239,7 @@ body {
   .flow-nav-links .nav-item {
     width: 100%;
     text-align: center;
+    color: white;
   }
   .flow-nav-links .nav-link {
     padding: 0.5rem 1rem;

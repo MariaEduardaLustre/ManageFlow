@@ -1,0 +1,156 @@
+.esqueci-senha-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f9f9f9;
+    padding: 20px;
+  }
+  
+  .esqueci-senha-container h2 {
+    text-align: center;
+    font-size: 2rem;
+    color: #1e73be;
+    margin-bottom: 30px;
+  }
+  
+  .esqueci-senha-container form {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .esqueci-senha-container .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .esqueci-senha-container .form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    font-size: 1rem;
+    margin-top: 5px;
+    outline: none;
+  }
+  
+  .esqueci-senha-container .form-group input:focus {
+    border-color: #4254cb;
+    box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
+  }
+  
+  .esqueci-senha-container button.btn-primary {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    background-color: #1e73be;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+  
+  .esqueci-senha-container button.btn-primary:hover {
+    background-color: #1e41a5;
+  }
+  
+  .esqueci-senha-container .mensagem-sucesso {
+    color: green;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .esqueci-senha-container .mensagem-erro {
+    color: red;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .esqueci-senha-container p {
+    text-align: center;
+    margin-top: 20px;
+    color: #555;
+  }
+  
+  .esqueci-senha-container p a {
+    color: #4254cb;
+    text-decoration: none;
+  }
+  
+  .esqueci-senha-container p a:hover {
+    text-decoration: underline;
+  }
+
+  /* Estilos para o overlay (fundo escurecido) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fundo preto com 50% de opacidade */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Garante que o modal fique acima de outros elementos */
+}
+
+/* Estilos para o overlay (fundo escurecido) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fundo preto com 50% de opacidade */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Garante que o modal fique acima de outros elementos */
+}
+
+/* Estilos para o modal (a janela em si) */
+.modal {
+  background-color: white;
+  padding: 25px; /* Aumentei um pouco o padding interno */
+  border-radius: 8px; /* Arredondei um pouco mais as bordas */
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4); /* Aumentei um pouco a sombra */
+  text-align: center;
+  max-width: 95%; /* Permite ocupar um pouco mais em telas menores */
+  width: 450px; /* Aumentei um pouco a largura desejada do modal */
+}
+
+.modal p.mensagem-sucesso {
+  color: black; /* Roxo escuro */
+  font-size: 1.5rem; /* Aumentei um pouco o tamanho da fonte */
+  margin-bottom: 20px; /* Aumentei um pouco a margem inferior */
+}
+
+/* Estilos para o botão de fechar */
+.btn-fechar-modal {
+  padding: 12px 18px; /* Aumentei um pouco o padding do botão */
+  background-color: #6a5acd; /* Roxo arroxeado */
+  color: white;
+  border: none;
+  border-radius: 8px; /* Arredondei as bordas do botão também */
+  cursor: pointer;
+  font-size: 1.05rem; /* Aumentei um pouco a fonte do botão */
+}
+
+.btn-fechar-modal:hover {
+  background-color: #483d8b; /* Tom mais escuro no hover */
+}
+  
+  @media (max-width: 768px) {
+    .esqueci-senha-container form {
+      padding: 25px;
+      max-width: 90%;
+    }
+  }
