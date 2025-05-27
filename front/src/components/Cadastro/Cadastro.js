@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './Cadastro.css';
 import api from '../../services/api';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 
 const Cadastro = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +12,7 @@ const Cadastro = () => {
     confirmarSenha: '',
     cep: '',
     endereco: '',
-    numero: '', 
+    numero: '',
     complemento: '',
   });
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
@@ -19,12 +20,29 @@ const Cadastro = () => {
   const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
   const [mensagemSucessoModal, setMensagemSucessoModal] = useState('');
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+  const [senhaValida, setSenhaValida] = useState(true);
+  const [senhasCoincidem, setSenhasCoincidem] = useState(true);
+  const [cpfCnpjValido, setCpfCnpjValido] = useState(true);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value,
     });
+
+    if (name === 'senha') {
+      setSenhaValida(validarSenhaSegura(value));
+      if (formData.confirmarSenha) {
+        setSenhasCoincidem(value === formData.confirmarSenha);
+      }
+    } else if (name === 'confirmarSenha') {
+      setSenhasCoincidem(value === formData.senha);
+    } else if (name === 'cpfCnpj') {
+      setCpfCnpjValido(value ? validarCPF(value) : true);
+    }
   };
 
   const limparCampos = () => {
@@ -58,37 +76,32 @@ const Cadastro = () => {
   };
 
   const validarSenhaSegura = (senha) => {
-    return senha.length >= 8;
+    const temOitoCaracteres = senha.length >= 8;
+    const temLetraMaiuscula = /[A-Z]/.test(senha);
+    const temCaractereEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
+    return temOitoCaracteres && temLetraMaiuscula && temCaractereEspecial;
   };
 
   const buscarEndereco = async (cep) => {
-    cep = cep.replace(/\D/g, ''); // Remove caracteres não numéricos do CEP
-    if (cep.length !== 8) {
-      return; // CEP inválido, não faz a busca
-    }
+    cep = cep.replace(/\D/g, '');
+    if (cep.length !== 8) return;
 
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
 
       if (!data.erro) {
-        setFormData({
-          ...formData,
-          endereco: data.logradouro || '', // Usa data.logradouro para preencher o campo 'endereco'
-          // bairro: data.bairro || '', // Você pode adicionar outros campos se precisar
-          // cidade: data.localidade || '',
-          // uf: data.uf || '',
-        });
+        setFormData({ ...formData, endereco: data.logradouro || '' });
       } else {
         setMensagemErroModal('CEP não encontrado.');
         setMostrarModalErro(true);
-        setFormData({ ...formData, endereco: '' }); // Limpa o campo de endereco
+        setFormData({ ...formData, endereco: '' });
       }
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
       setMensagemErroModal('Erro ao buscar CEP.');
       setMostrarModalErro(true);
-      setFormData({ ...formData, endereco: '' }); // Limpa o campo de endereco
+      setFormData({ ...formData, endereco: '' });
     }
   };
 
@@ -96,7 +109,7 @@ const Cadastro = () => {
     e.preventDefault();
 
     if (!validarSenhaSegura(formData.senha)) {
-      setMensagemErroModal('A senha deve conter no mínimo 8 caracteres.');
+      setMensagemErroModal('A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.');
       setMostrarModalErro(true);
       return;
     }
@@ -125,7 +138,6 @@ const Cadastro = () => {
 
     try {
       const response = await api.post('/usuarios', formData);
-
       setMensagemSucessoModal(response.data);
       setMostrarModalSucesso(true);
       limparCampos();
@@ -152,6 +164,14 @@ const Cadastro = () => {
     setMostrarModalErro(false);
   };
 
+  const alternarMostrarSenha = () => {
+    setMostrarSenha(!mostrarSenha);
+  };
+
+  const alternarMostrarConfirmarSenha = () => {
+    setMostrarConfirmarSenha(!mostrarConfirmarSenha);
+  };
+
   return (
     <div className="cadastro-container">
       <div className="image-container-cad">
@@ -161,7 +181,6 @@ const Cadastro = () => {
       <div className="form-container">
         <h2>Cadastro</h2>
         <form onSubmit={handleSubmit}>
-          {/* Campos do formulário */}
           <div className="form-group">
             <label htmlFor="nome">Nome Completo:</label>
             <input type="text" name="nome" value={formData.nome} onChange={handleChange} required id="nome" />
@@ -181,37 +200,63 @@ const Cadastro = () => {
               id="cpfCnpj"
               onBlur={(e) => {
                 if (e.target.value && !validarCPF(e.target.value)) {
-                  setMensagemErroModal('CPF inválido!');
+                  setMensagemErroModal('CPF ou CNPJ inválidos!');
                   setMostrarModalErro(true);
                 }
               }}
             />
+            {!cpfCnpjValido && formData.cpfCnpj.length > 0 && (
+              <p className="mensagem-alerta">CPF ou CNPJ inválidos!</p>
+            )}
           </div>
-          <div className="form-group">
-            <label htmlFor="senha">Senha:</label>
-            <input
-              type="password"
-              name="senha"
-              value={formData.senha}
-              onChange={handleChange}
-              required
-              id="senha"
-            />
-            <label className="senha-requisitos">
-              *A senha deve conter no mínimo 8 caracteres.
-            </label>
-          </div>
-          <div className="form-group">
-            <label htmlFor="confirmarSenha">Confirmar Senha:</label>
-            <input
-              type="password"
-              name="confirmarSenha"
-              value={formData.confirmarSenha}
-              onChange={handleChange}
-              required
-              id="confirmarSenha"
-            />
-          </div>
+          <div className="form-group senha-container">
+          <label htmlFor="senha">Senha:</label>
+          <input
+            type={mostrarSenha ? 'text' : 'password'}
+            name="senha"
+            value={formData.senha}
+            onChange={handleChange}
+            required
+            id="senha"
+          />
+          <button
+            type="button"
+            className="mostrar-senha-btn"
+            onClick={alternarMostrarSenha}
+            tabIndex={-1}
+          >
+            {mostrarSenha ? <AiFillEyeInvisible /> : <AiFillEye />}
+          </button>
+          {!senhaValida && formData.senha.length > 0 && (
+            <p className="mensagem-alerta">
+              A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caracter especial.
+            </p>
+          )}
+        </div>
+
+        <div className="form-group senha-container">
+          <label htmlFor="confirmarSenha">Confirmar Senha:</label>
+          <input
+            type={mostrarConfirmarSenha ? 'text' : 'password'}
+            name="confirmarSenha"
+            value={formData.confirmarSenha}
+            onChange={handleChange}
+            required
+            id="confirmarSenha"
+          />
+          <button
+            type="button"
+            className="mostrar-senha-btn"
+            onClick={alternarMostrarConfirmarSenha}
+            tabIndex={-1}
+          >
+            {mostrarConfirmarSenha ? <AiFillEyeInvisible /> : <AiFillEye />}
+          </button>
+          {!senhasCoincidem && formData.confirmarSenha.length > 0 && (
+            <p className="mensagem-alerta">As senhas não coincidem!</p>
+          )}
+        </div>
+
           <div className="form-group">
             <label htmlFor="cep">CEP:</label>
             <input
@@ -221,11 +266,11 @@ const Cadastro = () => {
               onChange={handleChange}
               required
               id="cep"
-              onBlur={(e) => buscarEndereco(e.target.value)} // Chama a função ao perder o foco
+              onBlur={(e) => buscarEndereco(e.target.value)}
             />
           </div>
           <div className="form-group">
-            <label htmlFor="endereco">Logradouro:</label> {/* Campo de Endereço */}
+            <label htmlFor="endereco">Logradouro:</label>
             <input
               type="text"
               name="endereco"
@@ -240,7 +285,7 @@ const Cadastro = () => {
             <input type="text" name="numero" value={formData.numero} onChange={handleChange} required id="numero" />
           </div>
           <div className="form-group">
-            <label htmlFor="complemento">Complemento:</label> 
+            <label htmlFor="complemento">Complemento:</label>
             <input
               type="text"
               name="complemento"
@@ -250,14 +295,13 @@ const Cadastro = () => {
             />
           </div>
 
-          <button className='botao' type="submit">Cadastrar</button>
+          <button className="botao" type="submit">Cadastrar</button>
         </form>
         <p className="link-login">
           Já possui uma conta? <a href="/login">Faça Login Aqui!</a>
         </p>
       </div>
 
-      {/* Janela de Confirmação */}
       {mostrarConfirmacao && (
         <div className="modal-overlay">
           <div className="modal confirmacao">
@@ -270,7 +314,6 @@ const Cadastro = () => {
         </div>
       )}
 
-      {/* Modal de Sucesso */}
       {mostrarModalSucesso && mensagemSucessoModal && (
         <div className="modal-overlay">
           <div className="modal sucesso">
@@ -280,7 +323,6 @@ const Cadastro = () => {
         </div>
       )}
 
-      {/* Modal de Erro */}
       {mostrarModalErro && mensagemErroModal && (
         <div className="modal-overlay">
           <div className="modal erro">
