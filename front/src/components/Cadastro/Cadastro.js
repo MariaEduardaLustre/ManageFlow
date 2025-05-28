@@ -159,7 +159,7 @@ const Cadastro = () => {
           <form onSubmit={handleSubmit} noValidate>
             <div className="form-group">
               <FaUser className="input-icon" />
-              <input type="text" name="nome" placeholder="Nome Completo" value={formData.nome} onChange={handleChange} required id="nome" />
+              <input name="nome" placeholder="Nome Completo" value={formData.nome} onChange={handleChange} required id="nome" />
             </div>
             <div className="form-group">
               <FaEnvelope className="input-icon" />
@@ -167,7 +167,7 @@ const Cadastro = () => {
             </div>
             <div className="form-group">
               <FaIdCard className="input-icon" />
-              <input type="text" name="cpfCnpj" placeholder="CPF/CNPJ" value={formData.cpfCnpj} onChange={handleChange} required id="cpfCnpj" />
+              <input name="cpfCnpj" placeholder="CPF/CNPJ" value={formData.cpfCnpj} onChange={handleChange} required id="cpfCnpj" />
             </div>
             <div className="form-group password-group">
               <FaLock className="input-icon" />
@@ -219,7 +219,7 @@ const Cadastro = () => {
               <div className="form-group form-ddd">
                 <FaMapPin className="input-icon" />
                 <input
-                  type="text"
+                
                   name="ddd"
                   placeholder="DDD"
                   value={formData.ddd}
@@ -231,7 +231,7 @@ const Cadastro = () => {
               <div className="form-group form-telefone">
                 <FaPhone className="input-icon" />
                 <input
-                  type="text"
+                
                   name="telefone"
                   placeholder="Telefone"
                   value={formData.telefone}
@@ -244,22 +244,22 @@ const Cadastro = () => {
             <div className="form-row">
               <div className="form-group">
                 <FaMapMarkerAlt className="input-icon" />
-                <input type="text" name="cep" placeholder="CEP" value={formData.cep} onChange={handleChange} onBlur={(e) => buscarEndereco(e.target.value)} required id="cep" />
+                <input name="cep" placeholder="CEP" value={formData.cep} onChange={handleChange} onBlur={(e) => buscarEndereco(e.target.value)} required id="cep" />
               </div>
               <div className="form-group">
                 <MdConfirmationNumber className="input-icon" /> {/* Exemplo de ícone para número */}
-                <input type="text" name="numero" placeholder="Número" value={formData.numero} onChange={handleChange} required id="numero" />
+                <input name="numero" placeholder="Número" value={formData.numero} onChange={handleChange} required id="numero" />
               </div>
             </div>
 
             <div className="form-group">
               <FaHome className="input-icon" /> {/* Ou FaRoad, dependendo do que "Endereço" significa aqui */}
-              <input type="text" name="endereco" placeholder="Endereço (Logradouro)" value={formData.endereco} onChange={handleChange} required id="endereco" />
+              <input name="endereco" placeholder="Endereço (Logradouro)" value={formData.endereco} onChange={handleChange} required id="endereco" />
             </div>
 
             <div className="form-group">
               <FaBuilding className="input-icon" />
-              <input type="text" name="complemento" placeholder="Complemento (Opcional)" value={formData.complemento} onChange={handleChange} id="complemento" />
+              <input name="complemento" placeholder="Complemento (Opcional)" value={formData.complemento} onChange={handleChange} id="complemento" />
             </div> 
 
             <button className='btn-submit-cadastro' type="submit">Cadastrar</button>

@@ -1,85 +1,141 @@
-/* Resetar margens e preenchimento padrões da página */
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap');
+
+:root {
+  --cor-primaria: #3A5AFE;
+  --cor-texto-principal: #333A47;
+  --cor-texto-secundario: #717885;
+  --cor-borda-input: #E2E8F0;
+  --cor-fundo-input: #F7F8FC;
+  --cor-fundo-pagina: #FFFFFF;
+}
+
 body, html {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  height: 100%; /* Assegura que o container ocupe a altura total */
-}
-
-/* Alinhar o container da página corretamente */
-.login-container {
-  display: flex;
-  height: 100vh;
-  background-color: #f9f9f9;
-}
-
-/* Garantir que a imagem preencha 30% da tela */
-.image-container-login {
-  flex: 0 0 32%; /* Faz a imagem ocupar 32% */
-  display: flex;
-}
-
-.responsive-image-login {
-  width: 100%;
   height: 100%;
-  object-fit: cover; /* Ajusta a imagem para preencher o espaço sem deformação */
+  font-family: 'Mulish', sans-serif;
+  background-color: var(--cor-fundo-pagina);
 }
 
-/* Spacer para empurrar o formulário para a direita */
-.spacer {
-  margin-left: 20%; /* Espaço vazio para empurrar conteúdo adjacente */
-}
-
-/* Ajustar o formulário para ocupar 40% */
-.form-container-login {
-  flex: 0 0 40%; /* Faz o formulário ocupar 40% */
-  padding: 40px;
-  max-width: 800px; /* Definindo a largura máxima */
+.login-page-container {
   display: flex;
-  flex-direction: column;
-  justify-content: center; /* Centraliza o conteúdo verticalmente */
+  min-height: 100vh;
+  width: 100%;
 }
 
-h2 {
-  text-align: center;
-  font-size: 2rem;
-  color: #1e73be;
+.login-image-panel {
+  flex: 0 0 40%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.login-form-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.cadastro-form-wrapper {
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-title {
+  text-align: left;
+  font-size: 2.1rem;
+  color: var(--cor-primaria);
   margin-bottom: 30px;
+  font-weight: 800;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  position: relative;
+  margin-bottom: 18px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 12px;
+  padding: 13px 18px 13px 50px;
+  border: 1px solid var(--cor-borda-input);
+  border-radius: 10px;
+  background-color: var(--cor-fundo-input);
+  font-size: 0.9rem;
+  color: var(--cor-texto-principal);
+  box-sizing: border-box;
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  color: var(--cor-texto-secundario);
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.btn-google, .btn-apple {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* espaço entre ícone e texto */
+  padding: 13px;
+  font-size: 0.95rem;
   border: 1px solid #ccc;
-  border-radius: 25px;
-  font-size: 1rem;
-  margin-top: 5px;
-  outline: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: white;
+  transition: background-color 0.2s ease;
 }
 
-input:focus {
-  border-color: #4254cb;
-  box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
+.btn-google:hover, .btn-apple:hover {
+  background-color: #f3f3f3;
 }
 
-.btn-primary {
+.social-icon {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+
+.password-group input {
+  padding-right: 45px;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--cor-texto-secundario);
+  font-size: 1.1rem;
+  z-index: 2;
+}
+
+.btn-submit-cadastro {
   width: 100%;
-  padding: 12px;
-  font-size: 1rem;
-  background-color: #1e73be;
+  padding: 13px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background-color: var(--cor-primaria);
   color: white;
   border: none;
-  border-radius: 25px;
+  border-radius: 10px;
   cursor: pointer;
-  margin-top: 20px;
+  margin-top: 25px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btn-primary:hover {
-  background-color: #1e41a5;
+.btn-submit-cadastro:hover {
+  background-color: #2a48d8;
+  box-shadow: 0 4px 12px rgba(58, 90, 254, 0.25);
 }
 
 .social-login {
@@ -89,77 +145,47 @@ input:focus {
 }
 
 .btn-google, .btn-apple {
-  padding: 12px;
-  font-size: 1rem;
+  padding: 13px;
+  font-size: 0.95rem;
   border: 1px solid #ccc;
-  border-radius: 25px;
+  border-radius: 10px;
   cursor: pointer;
-  text-align: center;
+  background-color: white;
 }
 
-.btn-google:hover {
-  background-color: #f5f5f5;
-}
-
-.btn-apple:hover {
+.btn-google:hover, .btn-apple:hover {
   background-color: #f3f3f3;
 }
 
-p {
-  text-align: center;
-  margin-top: 20px;
-  color: #555;
+.login-link {
+  text-align: left;
+  margin-top: 25px;
+  font-size: 0.875rem;
+  color: var(--cor-texto-secundario);
 }
 
-p a {
-  color: #4254cb;
+.login-link a {
+  color: var(--cor-primaria);
   text-decoration: none;
+  font-weight: 700;
 }
 
-p a:hover {
+.login-link a:hover {
   text-decoration: underline;
 }
 
-/* Media query para telas menores (celulares) */
-@media (max-width: 768px) {
-  .login-container {
-    flex-direction: column; /* Coloca os itens em coluna */
-    justify-content: flex-start; /* Alinha o conteúdo ao topo */
-    padding: 20px;
-  }
-
-  .image-container-login {
-    display: none; /* Esconde a imagem para telas pequenas */
-  }
-
-  .form-container-login {
-    flex: 0 0 auto; /* O formulário ocupa o espaço necessário */
-    width: 95%; /* O formulário ocupa quase toda a largura */
-    max-width: none; /* Remove a largura máxima */
-    padding: 20px;
-    margin-top: 20px; /* Adiciona um pouco de espaço do topo */
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-  }
-}
-
-/* ... outros estilos do Login.css ... */
-
-/* Estilos para o modal de erro */
+/* Modal comum */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Garante que o modal fique acima de outros elementos */
+  z-index: 1000;
 }
 
 .modal {
@@ -171,32 +197,17 @@ p a:hover {
 }
 
 .modal.erro {
-  border: 2px solid #dc3545; /* Vermelho para indicar erro */
+  border: 2px solid #dc3545;
+}
+
+.modal.sucesso {
+  border: 2px solid #28a745;
 }
 
 .mensagem-erro {
   color: #dc3545;
   margin-bottom: 15px;
   font-weight: bold;
-}
-
-.btn-fechar-modal {
-  padding: 10px 20px;
-  font-size: 1rem;
-  background-color: #007bff; /* Azul padrão para botão */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.btn-fechar-modal:hover {
-  background-color: #0056b3;
-}
-
-/* Estilos para o modal de sucesso  */
-.modal.sucesso {
-  border: 2px solid #28a745; /* Verde para indicar sucesso */
 }
 
 .mensagem-sucesso {
@@ -208,7 +219,7 @@ p a:hover {
 .btn-fechar-modal {
   padding: 10px 20px;
   font-size: 1rem;
-  background-color: #007bff; /* Azul padrão para botão */
+  background-color: var(--cor-primaria);
   color: white;
   border: none;
   border-radius: 5px;
@@ -216,57 +227,55 @@ p a:hover {
 }
 
 .btn-fechar-modal:hover {
-  background-color: #0056b3;
+  background-color: #2a48d8;
 }
 
-/* Media query para telas médias (tablets - entre 769px e 1024px, ajuste conforme necessário) */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .login-container {
-    padding: 30px;
+/* Responsivo */
+@media (max-width: 992px) {
+  .login-image-panel {
+    display: none;
   }
 
-  .image-container-login {
-    flex: 0 0 40%; /* Aumenta um pouco o espaço da imagem em tablets */
+  .login-form-section {
+    padding: 30px 20px;
   }
 
-  .form-container-login {
-    flex: 0 0 55%; /* Aumenta um pouco o espaço do formulário em tablets */
-    max-width: none; /* Permite que o formulário se expanda mais */
-    padding: 30px;
+  .cadastro-form-wrapper {
+    max-width: 420px;
   }
 
-  h2 {
-    font-size: 2rem;
-    margin-bottom: 30px;
+  .form-title {
+    text-align: center;
   }
 
-  .form-group {
-    margin-bottom: 20px;
+  .login-link {
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-form-section {
+    padding: 20px;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
   }
 
   .form-group input {
-    padding: 12px;
-    font-size: 1rem;
+    padding-left: 40px;
   }
 
-  .btn-primary {
-    padding: 12px;
-    font-size: 1.1rem;
-    margin-top: 20px;
-  }
-
-  .social-login {
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  .btn-google, .btn-apple {
-    padding: 12px;
-    font-size: 1rem;
-  }
-
-  p {
+  .input-icon {
+    left: 12px;
     font-size: 0.9rem;
-    margin-top: 20px;
+  }
+
+  .password-group input {
+    padding-right: 40px;
+  }
+
+  .password-toggle-icon {
+    right: 12px;
+    font-size: 1rem;
   }
 }

@@ -10,7 +10,7 @@
   --flow-testimonial-title-color: #D0D0FF; /* Cor clara para o título do founder no testimonial */
 }
 
-body {
+body.landing {
   font-family: var(--bs-body-font-family);
   color: var(--bs-body-color);
   padding-top: 70px; /* Altura aproximada do navbar fixo */
