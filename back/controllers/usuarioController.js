@@ -82,7 +82,7 @@ exports.cadastrarUsuario = async (req, res) => {
 
     // Insere o novo usuário
     await db.query(
-      `INSERT INTO Usuario (NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO, COMPLEMENTO,)
+      `INSERT INTO Usuario (NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO, COMPLEMENTO)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [nome, email, cpfCnpj, senhaCriptografada, endereco, numero, complemento]
     );
