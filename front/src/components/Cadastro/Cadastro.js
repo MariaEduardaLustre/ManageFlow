@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import './Cadastro.css';
-import api from '../../services/api'; // Certifique-se que este caminho está correto
+import api from '../../services/api';
 import { paisesComDdi } from '../../utils/paisesComDdi';
-
-// Importando ícones da biblioteca react-icons
+// Importando ícones
 import { FaUser, FaEnvelope, FaIdCard, FaLock, FaMapMarkerAlt, FaHome, FaBuilding, FaPhone, FaGlobe, FaMapPin } from 'react-icons/fa'; // Ícones gerais
-import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs'; // Ícones de olho para senha
-import { MdConfirmationNumber } from "react-icons/md"; // Ícone para número (exemplo)
+import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs'; 
+import { MdConfirmationNumber } from "react-icons/md"; 
 
 const Cadastro = () => {
   const [formData, setFormData] = useState({
@@ -26,8 +25,6 @@ const Cadastro = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // ... (resto dos seus states: mostrarModalErro, mensagemErroModal, etc.)
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');
   const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
@@ -49,7 +46,6 @@ const Cadastro = () => {
     });
   };
 
-  // ... (suas funções validarCPF, validarSenhaSegura, buscarEndereco, etc. permanecem as mesmas)
   const validarCPF = (cpf) => {
     cpf = cpf.replace(/\D/g, '');
     if (cpf.length !== 11 || Array.from(cpf).every(char => char === cpf[0])) return false;
@@ -73,7 +69,6 @@ const Cadastro = () => {
   const buscarEndereco = async (cep) => {
     cep = cep.replace(/\D/g, '');
     if (cep.length !== 8) {
-      // Limpar campos de endereço se o CEP for inválido ou incompleto
       setFormData(prev => ({ ...prev, endereco: '', numero: '', complemento: '' }));
       return;
     }
@@ -84,7 +79,6 @@ const Cadastro = () => {
         setFormData(prev => ({
           ...prev,
           endereco: data.logradouro || '',
-          // Poderia adicionar bairro: data.bairro || '', etc.
         }));
       } else {
         setMensagemErroModal('CEP não encontrado.');
@@ -116,7 +110,7 @@ const Cadastro = () => {
       setMostrarModalErro(true);
       return;
     }
-    if (formData.cpfCnpj && !validarCPF(formData.cpfCnpj)) { // Assumindo que é sempre CPF por enquanto
+    if (formData.cpfCnpj && !validarCPF(formData.cpfCnpj)) { 
       setMensagemErroModal('CPF inválido!');
       setMostrarModalErro(true);
       return;
@@ -126,10 +120,9 @@ const Cadastro = () => {
 
   const confirmarCadastro = async () => {
     setMostrarConfirmacao(false);
-    // ... (resetar modais de erro/sucesso)
     try {
-      const response = await api.post('/usuarios', formData); // Verifique o endpoint
-      setMensagemSucessoModal(response.data.message || "Cadastro realizado com sucesso!"); // Ajuste para pegar a mensagem correta
+      const response = await api.post('/usuarios', formData);
+      setMensagemSucessoModal(response.data.message || "Cadastro realizado com sucesso!");
       setMostrarModalSucesso(true);
       limparCampos();
     } catch (error) {
@@ -149,7 +142,7 @@ const Cadastro = () => {
 
 
   return (
-    <div className="cadastro-page-container"> {/* Renomeado para evitar conflito com .cadastro-container do Bootstrap se usado */}
+    <div className="cadastro-page-container">
       <div className="cadastro-image-panel">
         <img src="/imagens/cadastro.png" alt="Decoração cadastro" className="responsive-image-cad"/>
       </div>
@@ -177,8 +170,7 @@ const Cadastro = () => {
                 placeholder="Senha"
                 value={formData.senha}
                 onChange={handleChange}
-                required id="senha"
-              />
+                required id="senha"/>
               <span onClick={() => setShowPassword(!showPassword)} className="password-toggle-icon">
                 {showPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
               </span>
@@ -191,8 +183,7 @@ const Cadastro = () => {
                 placeholder="Confirme sua senha"
                 value={formData.confirmarSenha}
                 onChange={handleChange}
-                required id="confirmarSenha"
-              />
+                required id="confirmarSenha"/>
               <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="password-toggle-icon">
                 {showConfirmPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
               </span>
@@ -206,8 +197,7 @@ const Cadastro = () => {
                   value={formData.ddi}
                   onChange={handleChange}
                   required
-                  id="ddi"
-                >
+                  id="ddi">
                   <option value="">Selecione o país</option>
                   {paisesComDdi.map((pais) => (
                     <option key={pais.ddi} value={pais.ddi}>
@@ -219,26 +209,22 @@ const Cadastro = () => {
               <div className="form-group form-ddd">
                 <FaMapPin className="input-icon" />
                 <input
-                
                   name="ddd"
                   placeholder="DDD"
                   value={formData.ddd}
                   onChange={handleChange}
                   required
-                  id="ddd"
-                />
+                  id="ddd"/>
               </div>
               <div className="form-group form-telefone">
                 <FaPhone className="input-icon" />
                 <input
-                
                   name="telefone"
                   placeholder="Telefone"
                   value={formData.telefone}
                   onChange={handleChange}
                   required
-                  id="telefone"
-                />
+                  id="telefone"/>
               </div>
             </div>
             <div className="form-row">
@@ -247,13 +233,13 @@ const Cadastro = () => {
                 <input name="cep" placeholder="CEP" value={formData.cep} onChange={handleChange} onBlur={(e) => buscarEndereco(e.target.value)} required id="cep" />
               </div>
               <div className="form-group">
-                <MdConfirmationNumber className="input-icon" /> {/* Exemplo de ícone para número */}
+                <MdConfirmationNumber className="input-icon" />
                 <input name="numero" placeholder="Número" value={formData.numero} onChange={handleChange} required id="numero" />
               </div>
             </div>
 
             <div className="form-group">
-              <FaHome className="input-icon" /> {/* Ou FaRoad, dependendo do que "Endereço" significa aqui */}
+              <FaHome className="input-icon" />
               <input name="endereco" placeholder="Endereço (Logradouro)" value={formData.endereco} onChange={handleChange} required id="endereco" />
             </div>
 
@@ -270,7 +256,6 @@ const Cadastro = () => {
         </div>
       </div>
 
-      {/* Seus Modais (Confirmacao, Sucesso, Erro) aqui - estrutura deles permanece */}
       {mostrarConfirmacao && (
         <div className="modal-overlay">
           <div className="modal confirmacao">

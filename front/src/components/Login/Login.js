@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
-import { FaEnvelope, FaLock, FaGoogle, FaApple } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaApple } from 'react-icons/fa';
 import { FcGoogle } from "react-icons/fc";
 import { BsEyeFill, BsEyeSlashFill } from 'react-icons/bs';
 import './Login.css';
@@ -81,8 +81,7 @@ const Login = () => {
                 placeholder="E-mail"
                 value={formData.email}
                 onChange={handleChange}
-                required
-              />
+                required/>
             </div>
 
             <div className="form-group password-group">
@@ -92,13 +91,10 @@ const Login = () => {
                 name="senha"
                 placeholder="Senha"
                 value={formData.senha}
-                onChange={handleChange}
-                required
-              />
+                onChange={handleChange}/>
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="password-toggle-icon"
-              >
+                className="password-toggle-icon">
                 {showPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
               </span>
             </div>
@@ -109,8 +105,7 @@ const Login = () => {
             <button
               type="submit"
               className="btn-submit-cadastro"
-              disabled={loading}
-            >
+              disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
@@ -129,11 +124,9 @@ const Login = () => {
           <p className="login-link">
             Ainda não possui uma conta? <a href="/cadastro">Cadastre-se</a>
           </p>
-    
         </div>
       </div>
 
-      {/* Modais */}
       {mostrarModalErro && mensagemErroModal && (
         <div className="modal-overlay">
           <div className="modal erro">

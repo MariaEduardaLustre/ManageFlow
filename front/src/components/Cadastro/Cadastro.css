@@ -6,7 +6,7 @@
   --cor-texto-secundario: #717885;
   --cor-borda-input: #E2E8F0;
   --cor-fundo-input: #F7F8FC;
-  --cor-fundo-pagina: #FFFFFF; /* Fundo da página/seção do formulário será branco */
+  --cor-fundo-pagina: #FFFFFF;
 }
 
 body, html {
@@ -15,7 +15,7 @@ body, html {
   box-sizing: border-box;
   height: 100%;
   font-family: 'Mulish', sans-serif;
-  background-color: var(--cor-fundo-pagina); /* Fundo branco para toda a página */
+  background-color: var(--cor-fundo-pagina); 
 }
 
 .cadastro-page-container {
@@ -25,7 +25,7 @@ body, html {
 }
 
 .cadastro-image-panel {
-  flex: 0 0 40%; /* Ou 42%, ajuste conforme a imagem e o design */
+  flex: 0 0 40%; 
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
@@ -34,30 +34,27 @@ body, html {
 .cadastro-form-section {
   flex: 1;
   display: flex;
-  justify-content: center; /* Centraliza o .form-content-area horizontalmente */
-  align-items: center;    /* Centraliza o .form-content-area verticalmente */
+  justify-content: center;
+  align-items: center;    
   padding: 40px;
   box-sizing: border-box;
-  /* O fundo já é branco por causa do body/html ou .cadastro-page-container */
 }
 
-/* Wrapper para o conteúdo do formulário (título, form, link) */
 .form-content-area {
   width: 100%;
-  max-width: 400px; /* Largura máxima para o bloco do formulário */
+  max-width: 400px;
 }
 
 .form-title {
   text-align: left;
-  font-size: 2.1rem; /* Ajuste conforme protótipo */
+  font-size: 2.1rem; 
   color: var(--cor-primaria);
   margin-bottom: 30px;
-  font-weight: 800; /* Mais peso no título */
+  font-weight: 800;
 }
 
-/* .cadastro-form-actual não é estritamente necessário se .form-content-area já define max-width */
 .cadastro-form-actual {
-  width: 100%; /* Ocupa a largura do .form-content-area */
+  width: 100%; 
 }
 
 .form-group {
@@ -67,9 +64,9 @@ body, html {
 
 .form-group input {
   width: 100%;
-  padding: 13px 18px 13px 50px; /* Deixa espaço pro ícone à esquerda */
+  padding: 13px 18px 13px 50px; 
   border: 1px solid #E2E8F0;
-  border-radius: 20px !important;
+  border-radius: 30px !important;
   background-color: #F7F8FC;
   font-size: 0.9rem;
   box-sizing: border-box;
@@ -88,17 +85,16 @@ body, html {
   z-index: 2;
 }
 
-
 .form-group.input-filled .input-icon {
   opacity: 0;
 }
 
 .password-group input {
-  padding-right: 45px; /* Espaço para o ícone de olho */
+  padding-right: 45px;
 }
 .password-toggle-icon {
   position: absolute;
-  right: 15px; /* Ícone de olho mais à direita */
+  right: 15px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
@@ -125,7 +121,7 @@ body, html {
   background-color: var(--cor-primaria);
   color: white;
   border: none;
-  border-radius: 10px; /* Mesmo border-radius dos inputs */
+  border-radius: 30px;
   cursor: pointer;
   margin-top: 25px;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
@@ -137,7 +133,7 @@ body, html {
 }
 
 .login-link {
-  text-align: left; /* Alinhado à esquerda com o título */
+  text-align: left;
   margin-top: 25px;
   font-size: 0.875rem;
   color: var(--cor-texto-secundario);
@@ -153,10 +149,10 @@ body, html {
   text-decoration: underline;
 }
 
-/* Formatação proporcional */
 .form-ddi {
   flex: 0 0 30% !important;
 }
+
 .form-ddi select{
   padding-left: 30px !important;
 }
@@ -172,26 +168,21 @@ body, html {
   }
   .cadastro-form-section {
     padding: 30px 20px;
-    /* justify-content e align-items já centralizam o .form-content-area */
   }
   .form-content-area {
-    max-width: 420px; /* Pode manter ou ajustar */
+    max-width: 420px;
   }
 }
 
 @media (max-width: 576px) {
-  .cadastro-page-container {
-     /* Em vez de flex-start, vamos manter o centro se possível,
-        ou permitir scroll se o conteúdo for maior que a tela */
-  }
   .cadastro-form-section {
-    padding: 20px; /* Um padding mínimo para não colar nas bordas */
-    align-items: stretch; /* Permite que o form-content-area defina sua altura */
-    justify-content: flex-start; /* Começa do topo */
-    overflow-y: auto; /* Permite scroll se o formulário for muito grande */
+    padding: 20px;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
   }
   .form-content-area {
-    padding-top: 20px; /* Um espaço no topo no mobile */
+    padding-top: 20px;
     padding-bottom: 20px;
   }
   .form-title {
@@ -208,9 +199,8 @@ body, html {
   .login-link {
     text-align: center;
   }
-  /* Ajustes de padding e ícone para mobile podem ser herdados ou refinados aqui se necessário */
   .form-group input {
-    padding-left: 40px; /* Ícone um pouco menor -> padding menor */
+    padding-left: 40px; 
   }
   .input-icon {
     left: 12px;
@@ -224,5 +214,3 @@ body, html {
     font-size: 1rem;
   }
 }
-
-/* Estilos dos Modais ... (mantenha como antes) ... */

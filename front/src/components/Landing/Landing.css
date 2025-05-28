@@ -1,19 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&display=swap');
 
-/* Variáveis Globais e Overrides do Bootstrap (Opcional, mas útil) */
 :root {
-  --bs-primary: #3A5AFE; /* Cor primária para Bootstrap */
+  --bs-primary: #3A5AFE; 
   --bs-primary-rgb: 58, 90, 254;
   --bs-body-font-family: 'Mulish', sans-serif;
   --bs-body-color: #4F4F4F;
-  --flow-footer-bg: #0A2540; /* Azul escuro do rodapé */
-  --flow-testimonial-title-color: #D0D0FF; /* Cor clara para o título do founder no testimonial */
+  --flow-footer-bg: #0A2540;
+  --flow-testimonial-title-color: #D0D0FF;
 }
 
 body.landing {
   font-family: var(--bs-body-font-family);
   color: var(--bs-body-color);
-  padding-top: 70px; /* Altura aproximada do navbar fixo */
+  padding-top: 70px;
 }
 
 .landing-page-flow {
@@ -22,58 +21,56 @@ body.landing {
   position: relative;
 }
 
-/* Elementos Decorativos de Pontos (Mantidos) */
 .decorative-dots {
   position: absolute;
   width: 80px;
   height: 80px;
   background-repeat: no-repeat;
   background-size: contain;
-  z-index: 0; /* Atrás do conteúdo, mas acima do fundo base da página */
+  z-index: 0; 
   opacity: 0.3;
 }
 .top-left-dots { top: 80px; left: 20px; }
 .bottom-right-dots { bottom: 20px; right: 20px; }
 
-
-/* Header Customizações */
 .flow-header {
-  /* O Bootstrap já faz o .bg-white e .shadow-sm */
-  border-bottom: 1px solid #e9ecef; /* Linha sutil abaixo do header */
+  border-bottom: 1px solid #e9ecef;
 }
-.flow-logo { height: 35px; }
+.flow-logo { 
+  height: 35px; 
+}
 
 .flow-nav-links .nav-link {
-  font-weight: 600; /* Mulish semi-bold */
+  font-weight: 600;
   font-size: 0.95rem;
   color: #4F4F4F;
   padding-left: 1rem;
   padding-right: 1rem;
 }
-.flow-nav-links .nav-link:hover,
-.flow-nav-links .nav-link.active { /* .active para link ativo */
+
+.flow-nav-links .nav-link.active { 
   color: var(--bs-primary);
 }
 
-/* Botões Customizados (para manter o estilo do protótipo) */
-.flow-btn-primary { /* Botão "Comece Agora" e "Cadastrar-se" (se for primário) */
+.flow-btn-primary { 
   background-color: var(--bs-primary);
   color: white;
   border-color: var(--bs-primary);
-  padding: 0.6rem 1.5rem; /* Ajuste de padding */
+  padding: 0.6rem 1.5rem;
   font-weight: 700;
   border-radius: 5px;
   transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
+
 .flow-btn-primary:hover {
   background-color: #2a48d8;
   border-color: #2a48d8;
-  color: white; /* Garante que a cor do texto permaneça branca */
+  color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(58, 90, 254, 0.3);
 }
 
-.flow-btn-signup { /* Estilo específico para o botão de signup no header */
+.flow-btn-signup {
   background-color: var(--bs-primary);
   color: white;
   border-color: var(--bs-primary);
@@ -81,13 +78,14 @@ body.landing {
   border-radius: 5px;
   padding: 0.45rem 1.2rem;
 }
+
 .flow-btn-signup:hover {
   background-color: #2a48d8;
   border-color: #2a48d8;
   color: white;
 }
 
-.flow-btn-login { /* Botão "Entrar" no header */
+.flow-btn-login {
   background-color: transparent;
   color: var(--bs-primary);
   border: 1px solid var(--bs-primary);
@@ -95,81 +93,103 @@ body.landing {
   border-radius: 5px;
   padding: 0.45rem 1.2rem;
 }
+
 .flow-btn-login:hover {
   background-color: rgba(58, 90, 254, 0.1);
   color: #2a48d8;
 }
 
-/* Hero Section Customizações */
 .flow-hero {
-  background-color: #FFFFFF; /* Fundo branco no topo */
+  background-color: #FFFFFF; 
   position: relative;
   overflow: hidden;
 }
-.flow-hero::before { /* Background curvo */
+
+.flow-hero::before {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 65%; /* Ajuste a altura da forma */
+  height: 65%;
   background-repeat: no-repeat;
   background-position: bottom center;
-  background-size: cover; /* Tente 'cover' ou '100% auto' */
+  background-size: cover;
   z-index: 0;
 }
+
 .hero-container {
-  position: relative; /* Para conteúdo ficar sobre o ::before */
+  position: relative;
   z-index: 1;
 }
+
 .hero-content h1 {
   font-size: 2.6rem;
   color: #1F2D3D;
-  font-weight: 800; /* Mulish extra-bold */
+  font-weight: 800;
   line-height: 1.3;
 }
-.hero-content .lead { /* Subtítulo do Hero */
+
+.hero-content .lead { 
   font-size: 1.1rem;
   color: #5a6776;
   line-height: 1.7;
 }
-.hero-image { max-width: 100%; height: auto; }
 
-/* Services Section Customizações */
-.flow-services { background-color: #F9FAFF; }
-.services-subtitle { max-width: 600px; } /* Para centralizar melhor */
+.hero-image { 
+  max-width: 100%; 
+  height: auto; 
+}
 
-.service-card-flow { /* Card customizado, usando a base do .card do Bootstrap */
+.flow-services { 
+  background-color: #F9FAFF; 
+}
+
+.services-subtitle { 
+  max-width: 600px; 
+} 
+
+.service-card-flow { 
   border-radius: 8px;
   border: 1px solid #EAEFF7;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .service-card-flow:hover {
   transform: translateY(-5px);
   box-shadow: 0 6px 20px rgba(58, 90, 254, 0.1);
 }
+
 .service-icon {
   width: 40px;
   height: 40px;
-  /* color: var(--bs-primary); Se usar SVGs como fonte ou com currentColor */
 }
-.service-card-flow .card-title { color: #1F2D3D; }
-.service-card-flow .card-text { font-size: 0.88rem; }
 
+.service-card-flow .card-title { 
+  color: #1F2D3D; 
+}
 
-/* Testimonials Section Customizações */
-.flow-testimonials { background-color: var(--bs-primary); }
+.service-card-flow .card-text { 
+  font-size: 0.88rem; 
+}
+
+.flow-testimonials { 
+  background-color: var(--bs-primary); 
+}
+
 .testimonial-card-wrapper {
-  max-width: 800px; /* Largura máxima do container do testemunho + setas */
+  max-width: 800px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 15px;
 }
+
 .text-center.mb-5.fw-bold{
   color: white !important;
 }
+
 .testimonial-card-flow {
   background-color: white;
   color: var(--bs-body-color);
@@ -178,6 +198,7 @@ body.landing {
   box-shadow: 0 8px 25px rgba(0,0,0,0.08);
   flex-grow: 1;
 }
+
 .testimonial-avatar {
   width: 70px;
   height: 70px;
@@ -185,16 +206,23 @@ body.landing {
   border: 3px solid var(--bs-primary);
   object-fit: cover;
 }
+
 .testimonial-quote {
   font-size: 1.05rem;
   font-weight: 500;
   line-height: 1.6;
   color: #4F4F4F;
 }
-.testimonial-text .h5 { color: #1F2D3D; } /* Nome do cliente */
-.text-testimonial-title { color: #5a6776; font-weight: 600; } /* Título do founder */
 
-.arrow-btn { /* Setas do Testimonial */
+.testimonial-text .h5 { 
+  color: #1F2D3D; 
+}
+
+.text-testimonial-title { 
+  color: #5a6776; font-weight: 600; 
+} 
+
+.arrow-btn { 
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.7);
   color: white;
@@ -208,33 +236,45 @@ body.landing {
   transition: background-color 0.3s ease, border-color 0.3s ease;
   flex-shrink: 0;
 }
+
 .arrow-btn:hover {
   background-color: rgba(255, 255, 255, 0.15);
   border-color: white;
 }
 
-/* Footer Customizações */
 .flow-footer {
   background-color: var(--flow-footer-bg);
   color: #BDC4D1;
 }
-.flow-logo-footer { height: 30px; }
-.flow-footer .h6 { font-weight: 700; font-size: 0.95rem; }
+
+.flow-logo-footer { 
+  height: 30px; 
+}
+
+.flow-footer .h6 { 
+  font-weight: 700; 
+  font-size: 0.95rem; 
+}
+
 .footer-link {
   color: #9FB0C7;
   text-decoration: none;
   transition: color 0.3s ease;
 }
-.footer-link:hover { color: white; }
 
-/* Ajustes para o Navbar Fixo */
+.footer-link:hover { 
+  color: white; 
+}
+
 @media (max-width: 991.98px) {
-  body { padding-top: 60px; } /* Altura do navbar colapsado */
+  body { 
+    padding-top: 60px; 
+  } 
   .flow-header .navbar-collapse {
-    background-color: white; /* Fundo para o menu colapsado */
+    background-color: white; 
     padding: 10px;
     border-top: 1px solid #e9ecef;
-    margin-top:1px; /* Para não sobrepor a borda do header */
+    margin-top:1px; 
   }
   .flow-nav-links .nav-item {
     width: 100%;
@@ -254,12 +294,19 @@ body.landing {
     width: 100%;
     margin-bottom: 5px;
   }
-  .flow-auth-buttons .btn:last-child { margin-bottom: 0; }
-
-  .decorative-dots.top-left-dots { top: 70px; } /* Ajustar posição dos pontos com navbar menor */
-
-  .hero-content h1 { font-size: 2rem; }
-  .hero-content .lead { font-size: 1rem; }
-
-  .testimonial-card-wrapper { max-width: 95%; }
+  .flow-auth-buttons .btn:last-child { 
+    margin-bottom: 0; 
+  }
+  .decorative-dots.top-left-dots { 
+    top: 70px; 
+  } 
+  .hero-content h1 { 
+    font-size: 2rem; 
+  }
+  .hero-content .lead { 
+    font-size: 1rem; 
+  }
+  .testimonial-card-wrapper { 
+    max-width: 95%; 
+  }
 }

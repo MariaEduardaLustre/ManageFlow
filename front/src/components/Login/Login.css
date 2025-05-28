@@ -62,7 +62,7 @@ body, html {
   width: 100%;
   padding: 13px 18px 13px 50px;
   border: 1px solid var(--cor-borda-input);
-  border-radius: 10px;
+  border-radius: 30px;
   background-color: var(--cor-fundo-input);
   font-size: 0.9rem;
   color: var(--cor-texto-principal);
@@ -84,11 +84,11 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px; /* espaço entre ícone e texto */
+  gap: 10px; 
   padding: 13px;
   font-size: 0.95rem;
   border: 1px solid #ccc;
-  border-radius: 10px;
+  border-radius: 30px;
   cursor: pointer;
   background-color: white;
   transition: background-color 0.2s ease;
@@ -102,7 +102,6 @@ body, html {
   font-size: 1.1rem;
   color: #333;
 }
-
 
 .password-group input {
   padding-right: 45px;
@@ -127,7 +126,7 @@ body, html {
   background-color: var(--cor-primaria);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 30px;
   cursor: pointer;
   margin-top: 25px;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
@@ -148,7 +147,7 @@ body, html {
   padding: 13px;
   font-size: 0.95rem;
   border: 1px solid #ccc;
-  border-radius: 10px;
+  border-radius: 30px;
   cursor: pointer;
   background-color: white;
 }
@@ -174,7 +173,6 @@ body, html {
   text-decoration: underline;
 }
 
-/* Modal comum */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -230,24 +228,19 @@ body, html {
   background-color: #2a48d8;
 }
 
-/* Responsivo */
 @media (max-width: 992px) {
   .login-image-panel {
     display: none;
   }
-
   .login-form-section {
     padding: 30px 20px;
   }
-
   .cadastro-form-wrapper {
     max-width: 420px;
   }
-
   .form-title {
     text-align: center;
   }
-
   .login-link {
     text-align: center;
   }
@@ -260,20 +253,16 @@ body, html {
     justify-content: flex-start;
     overflow-y: auto;
   }
-
   .form-group input {
     padding-left: 40px;
   }
-
   .input-icon {
     left: 12px;
     font-size: 0.9rem;
   }
-
   .password-group input {
     padding-right: 40px;
   }
-
   .password-toggle-icon {
     right: 12px;
     font-size: 1rem;
