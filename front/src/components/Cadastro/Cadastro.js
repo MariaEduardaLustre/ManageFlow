@@ -13,7 +13,7 @@ const Cadastro = () => {
     cep: '',
     endereco: '',
     numero: '',
-    complemento: '',
+    complemento: ''
   });
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');

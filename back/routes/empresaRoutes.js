@@ -1,3 +1,4 @@
+// routes/empresaRoutes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/connection');
@@ -24,14 +25,14 @@ router.post('/criar-empresa', async (req, res) => {
     await connection.beginTransaction();
 
     // 1. Cria a empresa
-    const [empresaResult] = await connection.query(`
-      INSERT INTO empresa (
-        NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO
+     const [empresaResult] = await connection.query(`
+       INSERT INTO empresa (
+         NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [nomeEmpresa, cnpj, email, ddi, ddd, telefone, endereco, numero, logo]);
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+     `, [nomeEmpresa, cnpj, email, ddi, ddd, telefone, endereco, numero, logo]);
 
-    const idEmpresa = empresaResult.insertId;
+     const idEmpresa = empresaResult.insertId;
 
     // 2. Cria os 3 perfis padrão
     const perfis = [
@@ -77,17 +78,18 @@ router.get('/empresas-do-usuario/:idUsuario', async (req, res) => {
   const { idUsuario } = req.params;
 
   try {
-    const [results] = await db.query(`
-      SELECT 
-        e.ID_EMPRESA,
-        e.NOME_EMPRESA,
-        p.NOME_PERFIL,
-        p.NIVEL
-      FROM permissoes pe
-      JOIN empresa e ON e.ID_EMPRESA = pe.ID_EMPRESA
-      JOIN perfil p ON p.ID_PERFIL = pe.ID_PERFIL
-      WHERE pe.ID_USUARIO = ?
-    `, [idUsuario]);
+  const [results] = await db.query(`
+    SELECT 
+      e.ID_EMPRESA,
+      e.NOME_EMPRESA,
+      p.NOME_PERFIL,
+      p.NIVEL
+    FROM permissoes pe
+    JOIN empresa e ON e.ID_EMPRESA = pe.ID_EMPRESA
+    JOIN perfil p ON p.ID_PERFIL = pe.ID_PERFIL
+    WHERE pe.ID_USUARIO = ?
+  `, [idUsuario]);
+
 
     res.json(results);
   } catch (err) {
@@ -95,5 +97,38 @@ router.get('/empresas-do-usuario/:idUsuario', async (req, res) => {
     res.status(500).json({ error: 'Erro interno ao buscar empresas.' });
   }
 });
+
+// >>> INÍCIO DA NOVA ROTA PARA DETALHES DA EMPRESA <<<
+router.get('/detalhes/:idEmpresa', async (req, res) => {
+    const { idEmpresa } = req.params;
+
+    try {
+        const [empresa] = await db.query(
+            `SELECT
+                ID_EMPRESA,
+                NOME_EMPRESA,
+                CNPJ,
+                EMAIL,
+                DDI,
+                DDD,
+                TELEFONE,
+                ENDERECO,
+                NUMERO,
+                LOGO
+            FROM empresa
+            WHERE ID_EMPRESA = ?
+            `, [idEmpresa]);
+
+        if (empresa.length === 0) {
+            return res.status(404).json({ error: 'Empresa não encontrada.' });
+        }
+
+        res.json(empresa[0]); // Retorna apenas o primeiro resultado, pois é por ID
+    } catch (err) {
+        console.error('Erro ao buscar detalhes da empresa:', err);
+        res.status(500).json({ error: 'Erro interno ao buscar detalhes da empresa.' });
+    }
+});
+// >>> FIM DA NOVA ROTA PARA DETALHES DA EMPRESA <<<
 
 module.exports = router;
