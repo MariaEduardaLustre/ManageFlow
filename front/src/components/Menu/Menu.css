@@ -8,7 +8,11 @@
   transition: width 0.3s ease;
   overflow: hidden;
   box-sizing: border-box;
+  padding: 20px;
+}
+.sidebar.sidebar.collapsed {
   padding: 0 !important;
+  align-items: center;
 }
 
 .sidebar.collapsed {
