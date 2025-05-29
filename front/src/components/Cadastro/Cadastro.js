@@ -30,13 +30,30 @@ const Cadastro = () => {
   const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
   const [mensagemSucessoModal, setMensagemSucessoModal] = useState('');
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+  const [senhaValida, setSenhaValida] = useState(true);
+  const [senhasCoincidem, setSenhasCoincidem] = useState(true);
+  const [cpfCnpjValido, setCpfCnpjValido] = useState(true);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value,
     });
+
+    if (name === 'senha') {
+      setSenhaValida(validarSenhaSegura(value));
+      if (formData.confirmarSenha) {
+        setSenhasCoincidem(value === formData.confirmarSenha);
+      }
+    } else if (name === 'confirmarSenha') {
+      setSenhasCoincidem(value === formData.senha);
+    } else if (name === 'cpfCnpj') {
+      setCpfCnpjValido(value ? validarCPF(value) : true);
+    }
   };
 
   const limparCampos = () => {
@@ -63,33 +80,31 @@ const Cadastro = () => {
   };
 
   const validarSenhaSegura = (senha) => {
-    return senha.length >= 8;
+    const temOitoCaracteres = senha.length >= 8;
+    const temLetraMaiuscula = /[A-Z]/.test(senha);
+    const temCaractereEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
+    return temOitoCaracteres && temLetraMaiuscula && temCaractereEspecial;
   };
 
   const buscarEndereco = async (cep) => {
     cep = cep.replace(/\D/g, '');
-    if (cep.length !== 8) {
-      setFormData(prev => ({ ...prev, endereco: '', numero: '', complemento: '' }));
-      return;
-    }
+    if (cep.length !== 8) return;
+
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
       if (!data.erro) {
-        setFormData(prev => ({
-          ...prev,
-          endereco: data.logradouro || '',
-        }));
+        setFormData({ ...formData, endereco: data.logradouro || '' });
       } else {
         setMensagemErroModal('CEP não encontrado.');
         setMostrarModalErro(true);
-        setFormData(prev => ({ ...prev, endereco: '', numero: '', complemento: '' }));
+        setFormData({ ...formData, endereco: '' });
       }
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
       setMensagemErroModal('Erro ao buscar CEP.');
       setMostrarModalErro(true);
-      setFormData(prev => ({ ...prev, endereco: '', numero: '', complemento: '' }));
+      setFormData({ ...formData, endereco: '' });
     }
   };
 
@@ -101,7 +116,7 @@ const Cadastro = () => {
       return;
     }
     if (!validarSenhaSegura(formData.senha)) {
-      setMensagemErroModal('A senha deve conter no mínimo 8 caracteres.');
+      setMensagemErroModal('A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.');
       setMostrarModalErro(true);
       return;
     }
@@ -122,7 +137,7 @@ const Cadastro = () => {
     setMostrarConfirmacao(false);
     try {
       const response = await api.post('/usuarios', formData);
-      setMensagemSucessoModal(response.data.message || "Cadastro realizado com sucesso!");
+      setMensagemSucessoModal(response.data);
       setMostrarModalSucesso(true);
       limparCampos();
     } catch (error) {
@@ -140,6 +155,14 @@ const Cadastro = () => {
   const fecharModalSucesso = () => setMostrarModalSucesso(false);
   const fecharModalErro = () => setMostrarModalErro(false);
 
+
+  const alternarMostrarSenha = () => {
+    setMostrarSenha(!mostrarSenha);
+  };
+
+  const alternarMostrarConfirmarSenha = () => {
+    setMostrarConfirmarSenha(!mostrarConfirmarSenha);
+  };
 
   return (
     <div className="cadastro-page-container">
@@ -160,7 +183,16 @@ const Cadastro = () => {
             </div>
             <div className="form-group">
               <FaIdCard className="input-icon" />
-              <input name="cpfCnpj" placeholder="CPF/CNPJ" value={formData.cpfCnpj} onChange={handleChange} required id="cpfCnpj" />
+              <input name="cpfCnpj" placeholder="CPF/CNPJ" value={formData.cpfCnpj} onChange={handleChange} required id="cpfCnpj" onBlur={(e) => {
+                if (e.target.value && !validarCPF(e.target.value)) {
+                  setMensagemErroModal('CPF ou CNPJ inválidos!');
+                  setMostrarModalErro(true);
+                }
+              }}
+            />
+            {!cpfCnpjValido && formData.cpfCnpj.length > 0 && (
+              <p className="mensagem-alerta">CPF ou CNPJ inválidos!</p>
+            )} 
             </div>
             <div className="form-group password-group">
               <FaLock className="input-icon" />
@@ -174,6 +206,11 @@ const Cadastro = () => {
               <span onClick={() => setShowPassword(!showPassword)} className="password-toggle-icon">
                 {showPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
               </span>
+              {!senhaValida && formData.senha.length > 0 && (
+                <p className="mensagem-alerta">
+                  A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caracter especial.
+                </p>
+              )}
             </div>
             <div className="form-group password-group">
               <FaLock className="input-icon" />
@@ -187,6 +224,9 @@ const Cadastro = () => {
               <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="password-toggle-icon">
                 {showConfirmPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
               </span>
+              {!senhasCoincidem && formData.confirmarSenha.length > 0 && (
+                <p className="mensagem-alerta">As senhas não coincidem!</p>
+              )}
             </div>
 
             <div className="form-row">

@@ -46,6 +46,22 @@
   color: #1e73be;
 }
 
+/* REMOVIDO: O estilo .empresa-nome-header não é mais necessário aqui */
+/* .empresa-nome-header {
+    padding: 10px 0;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    color: #666;
+    transition: color 0.2s ease-in-out;
+}
+
+.empresa-nome-header:hover {
+    color: #1e73be;
+} */
+
+
 .user-info {
   display: flex;
   align-items: center;
@@ -62,6 +78,24 @@
   padding: 30px;
   overflow-y: auto;
 }
+
+/* NOVO ESTILO: Título da Empresa no Conteúdo Principal */
+.main-content-empresa-titulo {
+    font-size: 2.5rem; /* Um pouco maior para um título de destaque */
+    color: #333; /* Cor escura para o título */
+    margin-bottom: 30px; /* Espaçamento maior abaixo */
+    font-weight: bold;
+    cursor: pointer; /* Indica que é clicável */
+    transition: color 0.2s ease-in-out;
+    text-align: center; /* Centraliza o título */
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee; /* Linha sutil abaixo do título */
+}
+
+.main-content-empresa-titulo:hover {
+    color: #1e73be; /* Destaca ao passar o mouse */
+}
+
 
 header h1 {
   font-size: 2rem;
@@ -177,6 +211,115 @@ header h1 {
   gap: 5px;
 }
 
-.responsive-image{
-  width: 10px;
+.btn-remover { /* Estilo para o botão de remover usuário */
+    background-color: #dc3545; /* Vermelho padrão para ações de exclusão */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s ease;
 }
+
+.btn-remover:hover {
+    background-color: #c82333;
+}
+
+
+.responsive-image{
+  width: 10px; /* Você pode querer ajustar este valor para o logo */
+}
+
+/* --- ESTILOS DO MODAL --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    max-width: 550px;
+    width: 90%;
+    position: relative;
+    animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #1e73be;
+    border-bottom: 2px solid #f0f4ff;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.modal-content p {
+    margin-bottom: 12px;
+    font-size: 0.95em;
+    color: #555;
+    line-height: 1.5;
+    display: flex;
+    align-items: baseline;
+}
+
+.modal-content strong {
+    color: #333;
+    min-width: 90px;
+    display: inline-block;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.modal-content p img {
+    margin-top: 15px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.modal-content button {
+    background-color: #1e73be;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 30px;
+    font-size: 1.05em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: block;
+    width: 100%;
+}
+
+.modal-content button:hover {
+    background-color: #165a94;
+    transform: translateY(-2px);
+}
+/* --- FIM DOS ESTILOS DO MODAL --- */
