@@ -52,6 +52,49 @@ body, html {
   margin-bottom: 30px;
   font-weight: 800;
 }
+.password-group {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.wrapper-password {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wrapper-password input {
+  width: 100%;
+  padding-right: 45px;
+  padding-left: 40px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #717885;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--cor-texto-secundario);
+  font-size: 1.1rem;
+  z-index: 2;
+}
+
+.mensagem-alerta {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: red;
+}
 
 .cadastro-form-actual {
   width: 100%; 
