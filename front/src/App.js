@@ -10,6 +10,8 @@ import Login from './components/Login/Login';
 import PrivateRoute from './components/PrivateRoute';
 import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
 import Empresa from './components/Empresa/Empresa';
+import Dashboard from './components/Dashboard/Dashboard';
+import Relatorio from './components/Relatorio/Relatorio'
 
 function App() {
   return (
@@ -22,13 +24,15 @@ function App() {
         <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
         <Route path="/escolher-empresa" element={<Empresa />} />
         <Route path="/configuracao" element={<FormularioConfiguracaoFila />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/relatorio" element={<Relatorio />} />
 
         <Route
           path="/home"
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <Home />
-            </PrivateRoute>
+            // </PrivateRoute>
           }
         />
       </Routes>

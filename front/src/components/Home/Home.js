@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaTrash, FaPlus } from 'react-icons/fa';
+import Menu from '../Menu/Menu';
+import {  FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaTrash, FaPlus } from 'react-icons/fa';
 import api from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import './Home.css';
-
-
+ 
 const Home = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [novoUsuario, setNovoUsuario] = useState('');
@@ -96,29 +96,7 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <aside className="sidebar">
-        <div className="logo"><img src="/imagens/logoManageflow.png" alt="Curva lateral" className="responsive-image" /></div>
-        <nav>
-          <ul>
-            {/* REMOVIDO: O nome da empresa NÃO ESTARÁ mais aqui no sidebar */}
-            <li><FaTv />Dashboard</li>
-            <li>
-              <Link to="/configuracao" style={{ textDecoration: 'none', color: 'inherit' }}>
-                <FaCog /> Configuração de fila
-              </Link>
-            </li>
-            <li><FaTv /> Painel de TV</li>
-            <li><FaClipboardList /> Gestão da Fila</li>
-            <li><FaChartBar /> Relatórios</li>
-            <li className="active"><FaUser /> Usuários</li>
-            <li onClick={logout} style={{ cursor: 'pointer', color: 'red', marginTop: '20px' }}><FaSignOutAlt /> Sair</li>
-          </ul>
-        </nav>
-        <div className="user-info">
-          <img src="https://i.pravatar.cc/40" alt="Evano" />
-          <div>Evano<br /><small>Project Manager</small></div>
-        </div>
-      </aside>
+       <Menu />
 
 
       <main className="main-content">
