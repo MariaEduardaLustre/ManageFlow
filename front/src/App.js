@@ -9,7 +9,7 @@ import LandingPage from './components/Landing/Landing';
 import Login from './components/Login/Login';
 import PrivateRoute from './components/PrivateRoute';
 import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
-
+import ConfiguracaoFila from './components/ConfiguracaoFila/ConfiguracaoFila';
 function App() {
   return (
     <Router>
@@ -20,7 +20,7 @@ function App() {
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
         <Route path="/configuracao" element={<FormularioConfiguracaoFila />} />
-        
+         <Route path="/configuracaofila" element={<ConfiguracaoFila />} />
         <Route
           path="/home"
           element={
