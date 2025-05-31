@@ -7,8 +7,9 @@ import FormularioConfiguracaoFila from '../Configuracao/Configuracao';
 const ConfiguracaoFila = () => {
   return (
     <div className="container-configuracao">
-      <FormularioConfiguracaoFila></FormularioConfiguracaoFila>
-    </div>
+         <FormularioConfiguracaoFila></FormularioConfiguracaoFila>
+   </div>
+   
   );
 };
 

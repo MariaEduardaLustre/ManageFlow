@@ -12,19 +12,6 @@
     --white: #FFFFFF;
     --red-error: #FF0000;
 }
-.container-configuracao {
-  width: 100%;
-  min-height: 100vh;
-  padding: 40px;
-  display: flex;
-  justify-content: center;
-  background-color: #f9f9f9; /* opcional para manter um fundo leve */
-}
-
-.container-configuracao > * {
-  max-width: 800px; /* define a largura máxima do formulário */
-  width: 100%;
-}
 
 
 .header {
@@ -390,6 +377,20 @@ input:checked + .slider:before {
     font-size: 20px;
     font-weight: bold;
 }
+
+/* Ajustando o tamanho dos ícones na seção de campos */
+.campo-icon {
+    width: 20px;  /* Ajuste o tamanho conforme necessário */
+    height: 20px; /* Ajuste o tamanho conforme necessário */
+    object-fit: contain; /* Garante que a imagem não distorça */
+}
+
+/* Opcional: se quiser que o ícone tenha um tamanho diferente ao passar o mouse por cima */
+.campo-box:hover .campo-icon {
+    width: 25px;  /* Tamanho maior ao passar o mouse, se necessário */
+    height: 25px; /* Tamanho maior ao passar o mouse, se necessário */
+}
+
 
 
 /* Buttons */
