@@ -131,4 +131,48 @@ router.get('/detalhes/:idEmpresa', async (req, res) => {
 });
 // >>> FIM DA NOVA ROTA PARA DETALHES DA EMPRESA <<<
 
+// >>> INÍCIO DA NOVA ROTA PARA BUSCAR FILAS DA EMPRESA <<<
+router.get('/filas/:idEmpresa', async (req, res) => {
+  const { idEmpresa } = req.params; // Captura o ID_EMPRESA da URL
+
+  try {
+      // Consulta SQL para buscar as filas da empresa
+      // Faz um JOIN com ConfiguracaoFila para obter o NOME_FILA e outros detalhes
+      // e com Empresa, embora o ID_EMPRESA já seja a condição, pode ser útil para confirmar
+      const [filas] = await db.query(`
+          SELECT
+              f.ID_FILA,
+              f.DT_MOVTO,
+              f.DT_INI,
+              f.DT_FIM,
+              f.DT_INATIV,
+              f.BLOCK,
+              f.SITUACAO,
+              cf.NOME_FILA,
+              cf.TOKEN_FILA,
+              cf.MENSAGEM,
+              cf.TEMP_TOL,
+              cf.QDTE_MIN,
+              cf.QTDE_MAX
+          FROM Fila f
+          JOIN ConfiguracaoFila cf ON f.ID_CONF_FILA = cf.ID_CONF_FILA AND f.ID_EMPRESA = cf.ID_EMPRESA
+          WHERE f.ID_EMPRESA = ?
+          ORDER BY f.DT_INI DESC, cf.NOME_FILA ASC
+      `, [idEmpresa]);
+
+      // Verifica se encontrou filas
+      if (filas.length === 0) {
+          return res.status(404).json({ message: 'Nenhuma fila encontrada para esta empresa.' });
+      }
+
+      // Retorna as filas como JSON
+      res.json(filas);
+
+  } catch (err) {
+      console.error('Erro ao buscar filas da empresa:', err);
+      res.status(500).json({ error: 'Erro interno ao buscar filas da empresa.' });
+  }
+});
+// >>> FIM DA NOVA ROTA PARA BUSCAR FILAS DA EMPRESA <<<
+
 module.exports = router;

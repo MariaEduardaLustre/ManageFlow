@@ -100,7 +100,7 @@ const Home = () => {
         <div className="logo"><img src="/imagens/logoManageflow.png" alt="Curva lateral" className="responsive-image" /></div>
         <nav>
           <ul>
-            {/* REMOVIDO: O nome da empresa NÃO ESTARÁ mais aqui no sidebar */}
+            
             <li><FaTv />Dashboard</li>
             <li>
               <Link to="/configuracao" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -108,7 +108,11 @@ const Home = () => {
               </Link>
             </li>
             <li><FaTv /> Painel de TV</li>
-            <li><FaClipboardList /> Gestão da Fila</li>
+            <li>
+              <Link to="/filas" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <FaCog /> Gestão da fila
+              </Link>
+            </li>
             <li><FaChartBar /> Relatórios</li>
             <li className="active"><FaUser /> Usuários</li>
             <li onClick={logout} style={{ cursor: 'pointer', color: 'red', marginTop: '20px' }}><FaSignOutAlt /> Sair</li>
