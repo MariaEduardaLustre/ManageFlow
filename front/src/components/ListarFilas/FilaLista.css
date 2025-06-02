@@ -1,52 +1,42 @@
 /* src/pages/FilaLista/FilaLista.css */
 
-/* Estrutura geral */
+/* Estilos gerais do contêiner e sidebar (mantidos como antes) */
 .home-container {
     display: flex;
-    height: 100vh;
-    background-color: #f8f9fd;
-    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    background-color: #f4f7f6;
 }
 
 /* Sidebar */
 .sidebar {
     width: 250px;
-    background-color: #ffffff;
+    background-color: #ffffff; /* Certifique-se que está branco aqui! */
     padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    border-right: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0; /* Para a borda que você mencionou na imagem de exemplo */
+    /* Remova box-shadow se não quiser sombra no menu branco */
+    /* box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2); */
 }
 
-.sidebar .logo {
-    font-weight: bold;
-    font-size: 1.5rem;
-    margin-bottom: 40px;
-}
-
-.sidebar nav ul {
-    list-style: none;
-    padding: 0;
-}
-
+/* Ajuste a cor do texto para ser visível no fundo branco */
 .sidebar nav ul li {
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #9197B3;
+    color: #9197B3; /* Um cinza que deve ser visível no branco */
     cursor: pointer;
 }
 
 .sidebar nav ul li.active {
-    background-color: #f0f4ff;
+    background-color: #f0f4ff; /* Um azul bem claro para o item ativo */
     padding: 10px;
     border-radius: 8px;
     font-weight: bold;
-    color: #1e73be;
+    color: #1e73be; /* Azul mais forte para o texto ativo */
 }
-
 .user-info {
     display: flex;
     align-items: center;
@@ -61,167 +51,119 @@
     width: 150px; /* Ajuste o tamanho do seu logo aqui */
     height: auto;
 }
-
-/* Main Content */
+/* Estilos do conteúdo principal */
 .main-content {
-    flex: 1;
+    flex-grow: 1;
     padding: 30px;
-    overflow-y: auto;
+    background-color: #f4f7f6; /* Fundo claro para o conteúdo principal */
 }
 
-/* REINTRODUZINDO: Título da Empresa no Conteúdo Principal */
+/* Título da empresa no conteúdo principal */
 .main-content-empresa-titulo {
-    font-size: 2rem; /* Um pouco maior para um título de destaque */
-    color: #333; /* Cor escura para o título */
-    margin-bottom: 30px; /* Espaçamento maior abaixo */
-    font-weight: bold;
-    cursor: pointer; /* Indica que é clicável */
-    transition: color 0.2s ease-in-out;
-    text-align: center; /* Centraliza o título */
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee; /* Linha sutil abaixo do título */
+    font-size: 2em;
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+    /* Removido 'cursor: pointer;' para desativar a funcionalidade de modal aqui */
 }
 
-.main-content-empresa-titulo:hover {
-    color: #1e73be; /* Destaca ao passar o mouse */
-}
-
-
-/* Seção da Tabela de Filas */
+/* Seção da lista de filas */
 .filas-section {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    background-color: #ffffff; /* Fundo branco para a seção da tabela */
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Sombra suave */
 }
 
 .section-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 20px;
+    font-size: 1.8em;
     color: #333;
-    text-align: center; /* Centraliza o título "Fila da Empresa" */
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
 }
 
-/* Estilos da Tabela de Filas */
+/* Estilos da tabela de filas */
 .filas-table {
     width: 100%;
-    border-collapse: collapse;
-}
-
-.filas-table th, .filas-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.filas-table th {
-    background-color: #1e73be;
-    color: white;
-    font-weight: 600;
-}
-
-.filas-table tr:last-child td {
-    border-bottom: none;
-}
-
-.filas-table tbody tr:hover {
-    background-color: #f5f5f5;
-}
-
-/* Mensagens de estado */
-.fila-lista-error {
-    color: #dc3545;
-    text-align: center;
+    border-collapse: collapse; /* Colapsa as bordas da tabela */
     margin-top: 20px;
 }
 
-/* REINTRODUZINDO: Estilos do Modal */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+.filas-table th,
+.filas-table td {
+    border: 1px solid #ddd; /* Borda leve para células */
+    padding: 12px;
+    text-align: left;
 }
 
-.modal-content {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    max-width: 550px;
-    width: 90%;
-    position: relative;
-    animation: fadeInScale 0.3s ease-out;
-}
-
-@keyframes fadeInScale {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.modal-content h2 {
-    margin-top: 0;
-    color: #1e73be;
-    border-bottom: 2px solid #f0f4ff;
-    padding-bottom: 15px;
-    margin-bottom: 25px;
-    text-align: center;
-}
-
-.modal-content p {
-    margin-bottom: 12px;
-    font-size: 0.95em;
-    color: #555;
-    line-height: 1.5;
-    display: flex;
-    align-items: baseline;
-}
-
-.modal-content strong {
+.filas-table th {
+    background-color: #e2eafc; /* Cor de fundo para o cabeçalho da tabela */
     color: #333;
-    min-width: 90px;
-    display: inline-block;
-    flex-shrink: 0;
-    margin-right: 8px;
+    font-weight: bold;
 }
 
-.modal-content p img {
-    margin-top: 15px;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+.filas-table tr:nth-child(even) {
+    background-color: #f9f9f9; /* Linhas pares com fundo levemente diferente */
 }
 
-.modal-content button {
-    background-color: #1e73be;
+.filas-table tr:hover {
+    background-color: #f1f1f1; /* Fundo ao passar o mouse sobre as linhas */
+}
+
+.btn-gerenciar-fila {
+    background-color: #007bff; /* Azul padrão */
     color: white;
-    padding: 12px 25px;
+    padding: 8px 12px;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
     cursor: pointer;
-    margin-top: 30px;
-    font-size: 1.05em;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    display: block;
-    width: 100%;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Espaço entre o ícone e o texto */
+    transition: background-color 0.2s ease;
 }
 
-.modal-content button:hover {
-    background-color: #165a94;
-    transform: translateY(-2px);
+.btn-gerenciar-fila:hover {
+    background-color: #0056b3; /* Azul mais escuro ao passar o mouse */
+}
+/* Estilos de responsividade */
+@media (max-width: 768px) {
+    .home-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 15px;
+    }
+
+    .sidebar nav ul {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .sidebar nav ul li {
+        margin-bottom: 0;
+        padding: 8px 12px;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    .filas-table th,
+    .filas-table td {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    .filas-table .btn-gerenciar-clientes {
+        padding: 6px 8px;
+        font-size: 0.8em;
+    }
 }

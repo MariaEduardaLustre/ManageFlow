@@ -1,5 +1,4 @@
 // src/pages/FilaLista/FilaLista.js
-
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
@@ -12,20 +11,45 @@ const FilaLista = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    // REINTRODUZINDO: Estados para controlar o modal da empresa
     const [mostrarModalEmpresa, setMostrarModalEmpresa] = useState(false);
     const [detalhesEmpresa, setDetalhesEmpresa] = useState(null);
 
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const idEmpresa = empresaSelecionada?.ID_EMPRESA;
-    const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA; // Necessário para exibir o nome
+    const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
 
-    const nomeUsuario = "Usuário";
-    const cargoUsuario = "Gerente de Projeto";
+    const nomeUsuario = "Usuário"; // Isso pode vir do localStorage ou de um contexto de autenticação
+    const cargoUsuario = "Gerente de Projeto"; // Isso também
+
+    // Função para formatar a data para a URL (YYYYMMDD)
+    const formatarDataParaURL = (dataSQL) => {
+        if (!dataSQL) return '';
+
+        // Tenta criar um objeto Date
+        const date = new Date(dataSQL);
+
+        // Se a data for inválida, e for uma string numérica de 8 dígitos, usa-a diretamente
+        // Isso cobre o caso de DT_MOVTO já vir como DECIMAL(8,0) (ex: 20240530)
+        if (isNaN(date.getTime())) {
+            const dataStr = String(dataSQL);
+            if (dataStr.length === 8 && /^\d+$/.test(dataStr)) {
+                return dataStr; // Já está no formato YYYYMMDD
+            }
+            console.warn("Data inválida ou em formato inesperado para URL:", dataSQL);
+            return ''; // Retorna vazio para evitar URL quebrada
+        }
+
+        // Caso seja um objeto Date válido (ex: de 'YYYY-MM-DDTHH:MM:SS.sssZ' ou 'YYYY-MM-DD')
+        const ano = date.getFullYear();
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const dia = String(date.getDate()).padStart(2, '0');
+        return `${ano}${mes}${dia}`; // Retorna YYYYMMDD
+    };
 
     useEffect(() => {
         if (!idEmpresa) {
-            navigate('/empresas');
+            // Se não houver empresa selecionada, redireciona para a tela de escolha de empresas
+            navigate('/escolher-empresa');
             return;
         }
 
@@ -38,7 +62,7 @@ const FilaLista = () => {
             } catch (err) {
                 if (err.response && err.response.status === 404) {
                     console.log('Nenhuma fila encontrada para esta empresa.');
-                    setFilas([]);
+                    setFilas([]); // Limpa as filas se não houver nenhuma
                 } else {
                     console.error('Erro ao buscar filas:', err);
                     setError('Não foi possível carregar as filas. Tente novamente mais tarde.');
@@ -49,20 +73,22 @@ const FilaLista = () => {
         }
 
         fetchFilas();
-    }, [idEmpresa, navigate]);
+    }, [idEmpresa, navigate]); // Dependências do useEffect
 
-    const formatarData = (dataSQL) => {
+    // Função para formatar a data para exibição na tabela (DD/MM/YYYY)
+    const formatarDataParaExibicao = (dataSQL) => {
         if (!dataSQL) return 'N/A';
         const date = new Date(dataSQL);
         if (isNaN(date.getTime())) {
+            // Se a data já for uma string YYYYMMDD (decimal), formata
             const dataStr = String(dataSQL);
-            if (dataStr.length === 8) {
+            if (dataStr.length === 8 && /^\d+$/.test(dataStr)) {
                 const ano = dataStr.substring(0, 4);
                 const mes = dataStr.substring(4, 6);
                 const dia = dataStr.substring(6, 8);
                 return `${dia}/${mes}/${ano}`;
             }
-            return dataSQL;
+            return dataSQL; // Retorna como está se não for um formato esperado
         }
         const dia = String(date.getDate()).padStart(2, '0');
         const mes = String(date.getMonth() + 1).padStart(2, '0');
@@ -77,7 +103,6 @@ const FilaLista = () => {
         navigate('/');
     };
 
-    // REINTRODUZINDO: Função para exibir os detalhes da empresa no modal
     const exibirDetalhesEmpresa = async () => {
         try {
             const response = await api.get(`/empresas/detalhes/${idEmpresa}`);
@@ -129,13 +154,12 @@ const FilaLista = () => {
             </aside>
 
             <main className="main-content">
-                {/* REINTRODUZINDO: Título da Empresa com funcionalidade de modal */}
                 <h1 className="main-content-empresa-titulo" onClick={exibirDetalhesEmpresa}>
                     {nomeEmpresa || 'Empresa Carregando...'}
                 </h1>
 
                 <section className="filas-section">
-                    <h2 className="section-title">Filas</h2> {/* Este é o subtítulo da seção de filas */}
+                    <h2 className="section-title">Filas</h2>
 
                     {loading && <p>Carregando filas...</p>}
                     {error && <p className="fila-lista-error">{error}</p>}
@@ -149,6 +173,7 @@ const FilaLista = () => {
                             <thead>
                                 <tr>
                                     <th>Nome da Fila</th>
+                                    <th>Data Movimento</th> {/* Adicionei esta coluna para melhor visualização */}
                                     <th>Bloqueada</th>
                                     <th>Situação</th>
                                     <th>Mensagem</th>
@@ -156,8 +181,12 @@ const FilaLista = () => {
                             </thead>
                             <tbody>
                                 {filas.map((fila) => (
-                                    <tr key={fila.ID_FILA}>
+                                    <tr key={`${fila.ID_FILA}-${fila.DT_MOVTO}`}
+                                        onClick={() => navigate(`/gestao-fila/${fila.ID_EMPRESA}/${formatarDataParaURL(fila.DT_MOVTO)}/${fila.ID_FILA}`)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
                                         <td>{fila.NOME_FILA}</td>
+                                        <td>{formatarDataParaExibicao(fila.DT_MOVTO)}</td> {/* Exibindo a data formatada */}
                                         <td>{fila.BLOCK === 1 ? 'Sim' : 'Não'}</td>
                                         <td>{fila.SITUACAO}</td>
                                         <td>{fila.MENSAGEM}</td>
@@ -169,7 +198,6 @@ const FilaLista = () => {
                 </section>
             </main>
 
-            {/* REINTRODUZINDO: O Modal de Detalhes da Empresa */}
             {mostrarModalEmpresa && detalhesEmpresa && (
                 <div className="modal-overlay">
                     <div className="modal-content">
@@ -189,3 +217,7 @@ const FilaLista = () => {
 };
 
 export default FilaLista;
+
+
+
+
