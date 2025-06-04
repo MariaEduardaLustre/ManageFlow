@@ -48,7 +48,6 @@ const FilaLista = () => {
 
     useEffect(() => {
         if (!idEmpresa) {
-            // Se não houver empresa selecionada, redireciona para a tela de escolha de empresas
             navigate('/escolher-empresa');
             return;
         }
@@ -62,7 +61,7 @@ const FilaLista = () => {
             } catch (err) {
                 if (err.response && err.response.status === 404) {
                     console.log('Nenhuma fila encontrada para esta empresa.');
-                    setFilas([]); // Limpa as filas se não houver nenhuma
+                    setFilas([]);
                 } else {
                     console.error('Erro ao buscar filas:', err);
                     setError('Não foi possível carregar as filas. Tente novamente mais tarde.');
@@ -73,14 +72,13 @@ const FilaLista = () => {
         }
 
         fetchFilas();
-    }, [idEmpresa, navigate]); // Dependências do useEffect
+    }, [idEmpresa, navigate]);
 
     // Função para formatar a data para exibição na tabela (DD/MM/YYYY)
     const formatarDataParaExibicao = (dataSQL) => {
         if (!dataSQL) return 'N/A';
         const date = new Date(dataSQL);
         if (isNaN(date.getTime())) {
-            // Se a data já for uma string YYYYMMDD (decimal), formata
             const dataStr = String(dataSQL);
             if (dataStr.length === 8 && /^\d+$/.test(dataStr)) {
                 const ano = dataStr.substring(0, 4);
@@ -88,7 +86,7 @@ const FilaLista = () => {
                 const dia = dataStr.substring(6, 8);
                 return `${dia}/${mes}/${ano}`;
             }
-            return dataSQL; // Retorna como está se não for um formato esperado
+            return dataSQL;
         }
         const dia = String(date.getDate()).padStart(2, '0');
         const mes = String(date.getMonth() + 1).padStart(2, '0');
@@ -154,9 +152,10 @@ const FilaLista = () => {
             </aside>
 
             <main className="main-content">
-                <h1 className="main-content-empresa-titulo" onClick={exibirDetalhesEmpresa}>
-                    {nomeEmpresa || 'Empresa Carregando...'}
-                </h1>
+                {/* ALTERAÇÃO AQUI: Remover o span da label "Empresa" */}
+                <div className="empresa-titulo-container" onClick={exibirDetalhesEmpresa} style={{ cursor: 'pointer' }}>
+                    <span className="empresa-nome">{nomeEmpresa || 'Carregando...'}</span>
+                </div>
 
                 <section className="filas-section">
                     <h2 className="section-title">Filas</h2>
@@ -173,10 +172,10 @@ const FilaLista = () => {
                             <thead>
                                 <tr>
                                     <th>Nome da Fila</th>
-                                    <th>Data Movimento</th> {/* Adicionei esta coluna para melhor visualização */}
-                                    <th>Bloqueada</th>
-                                    <th>Situação</th>
+                                    <th>Data Início Fila</th>
+                                    <th>Data Fim Fila</th>
                                     <th>Mensagem</th>
+                                    <th>Bloqueada</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -186,10 +185,10 @@ const FilaLista = () => {
                                         style={{ cursor: 'pointer' }}
                                     >
                                         <td>{fila.NOME_FILA}</td>
-                                        <td>{formatarDataParaExibicao(fila.DT_MOVTO)}</td> {/* Exibindo a data formatada */}
-                                        <td>{fila.BLOCK === 1 ? 'Sim' : 'Não'}</td>
-                                        <td>{fila.SITUACAO}</td>
+                                        <td>{formatarDataParaExibicao(fila.DT_INI)}</td>
+                                        <td>{formatarDataParaExibicao(fila.DT_FIM)}</td>
                                         <td>{fila.MENSAGEM}</td>
+                                        <td>{fila.BLOCK === 1 ? 'Sim' : 'Não'}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -217,7 +216,3 @@ const FilaLista = () => {
 };
 
 export default FilaLista;
-
-
-
-

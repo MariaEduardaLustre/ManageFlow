@@ -1,169 +1,411 @@
 /* src/pages/FilaLista/FilaLista.css */
 
-/* Estilos gerais do contêiner e sidebar (mantidos como antes) */
+/* Estilos gerais do contêiner e sidebar */
 .home-container {
     display: flex;
     min-height: 100vh;
-    background-color: #f4f7f6;
+    background-color: #f4f7f6; /* Fundo mais claro e suave */
 }
 
 /* Sidebar */
 .sidebar {
     width: 250px;
-    background-color: #ffffff; /* Certifique-se que está branco aqui! */
+    background-color: #ffffff;
     padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    border-right: 1px solid #e0e0e0; /* Para a borda que você mencionou na imagem de exemplo */
-    /* Remova box-shadow se não quiser sombra no menu branco */
-    /* box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2); */
+    border-right: 1px solid #e0e0e0;
+    flex-shrink: 0; /* Impede que a sidebar encolha mais que o necessário */
 }
 
-/* Ajuste a cor do texto para ser visível no fundo branco */
+.sidebar .logo {
+    text-align: center; /* Centraliza o logo */
+    margin-bottom: 30px;
+}
+
+.sidebar .responsive-image {
+    width: 150px;
+    height: auto;
+}
+
+.sidebar nav ul {
+    list-style: none; /* Remove marcadores de lista */
+    padding: 0;
+    margin: 0;
+}
+
 .sidebar nav ul li {
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #9197B3; /* Um cinza que deve ser visível no branco */
+    color: #9197B3;
     cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-size: 1.05em; /* Ligeiramente maior para legibilidade */
+}
+
+.sidebar nav ul li:hover {
+    background-color: #f0f4ff;
+    color: #1e73be;
 }
 
 .sidebar nav ul li.active {
-    background-color: #f0f4ff; /* Um azul bem claro para o item ativo */
-    padding: 10px;
-    border-radius: 8px;
+    background-color: #e2eafc;
     font-weight: bold;
-    color: #1e73be; /* Azul mais forte para o texto ativo */
+    color: #1e73be;
 }
 .user-info {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-top: auto; /* Empurra para o final da sidebar */
+    padding-top: 20px; /* Espaçamento do topo */
+    border-top: 1px solid #e0e0e0; /* Linha divisória */
 }
 
 .user-info img {
     border-radius: 50%;
+    width: 40px; /* Tamanho do avatar */
+    height: 40px;
+    object-fit: cover; /* Garante que a imagem preencha o círculo */
 }
 
-.responsive-image {
-    width: 150px; /* Ajuste o tamanho do seu logo aqui */
-    height: auto;
-}
 /* Estilos do conteúdo principal */
 .main-content {
     flex-grow: 1;
     padding: 30px;
-    background-color: #f4f7f6; /* Fundo claro para o conteúdo principal */
+    background-color: #f4f7f6;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Alinha o nome da empresa à direita */
 }
 
-/* Título da empresa no conteúdo principal */
-.main-content-empresa-titulo {
-    font-size: 2em;
-    color: #333;
-    margin-bottom: 30px;
+/* ESTILOS DO CABEÇALHO DA EMPRESA (BADGE) */
+.empresa-titulo-container {
+    background-color: #3A5AFE;
+    border-radius: 8px;
+    padding: 8px 15px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    color: white;
+    width: fit-content;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.empresa-titulo-container:hover {
+    background-color: #2b45e0;
+    transform: none;
+}
+
+.empresa-nome {
+    font-size: 1.1em;
+    font-weight: bold;
+    line-height: 1;
+    white-space: nowrap;
     text-align: center;
-    /* Removido 'cursor: pointer;' para desativar a funcionalidade de modal aqui */
 }
 
 /* Seção da lista de filas */
 .filas-section {
-    background-color: #ffffff; /* Fundo branco para a seção da tabela */
+    background-color: #ffffff;
     padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Sombra suave */
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    margin-top: 0; /* Resetando margin-top para ser controlado pelo espaçamento acima */
+    align-self: flex-start; /* Garante que a seção de filas alinhe à esquerda */
+    width: 100%; /* Garante que a seção de filas ocupe a largura total disponível */
 }
 
 .section-title {
     font-size: 1.8em;
     color: #333;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 25px;
     padding-bottom: 10px;
+    text-align: left;
+    padding-left: 10px;
 }
 
 /* Estilos da tabela de filas */
 .filas-table {
     width: 100%;
-    border-collapse: collapse; /* Colapsa as bordas da tabela */
-    margin-top: 20px;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    margin-top: 0;
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    /* Adicionado para responsividade da tabela */
+    table-layout: fixed; /* Ajuda a controlar a largura das colunas */
 }
 
 .filas-table th,
 .filas-table td {
-    border: 1px solid #ddd; /* Borda leve para células */
-    padding: 12px;
+    border: none;
+    padding: 15px 20px;
     text-align: left;
+    background-color: #ffffff;
+    white-space: nowrap; /* Impede que o conteúdo da célula quebre linha */
+    overflow: hidden; /* Oculta o conteúdo que excede a largura */
+    text-overflow: ellipsis; /* Adiciona "..." ao conteúdo truncado */
 }
 
 .filas-table th {
-    background-color: #e2eafc; /* Cor de fundo para o cabeçalho da tabela */
-    color: #333;
-    font-weight: bold;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
 }
 
-.filas-table tr:nth-child(even) {
-    background-color: #f9f9f9; /* Linhas pares com fundo levemente diferente */
+.filas-table tr {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .filas-table tr:hover {
-    background-color: #f1f1f1; /* Fundo ao passar o mouse sobre as linhas */
+    background-color: #fcfcfc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-.btn-gerenciar-fila {
-    background-color: #007bff; /* Azul padrão */
+/* Arredondamento de bordas da tabela */
+.filas-table th:first-child { border-top-left-radius: 10px; }
+.filas-table th:last-child { border-top-right-radius: 10px; }
+.filas-table tbody tr td:first-child { border-bottom-left-radius: 10px; border-top-left-radius: 10px; }
+.filas-table tbody tr td:last-child { border-bottom-right-radius: 10px; border-top-right-radius: 10px; }
+
+
+.fila-lista-error {
+    color: #dc3545;
+    font-weight: bold;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Modal de detalhes da empresa (mantido como está) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.modal-content h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.modal-content p {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.modal-content button {
+    background-color: #007bff;
     color: white;
-    padding: 8px 12px;
+    padding: 10px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 0.9em;
-    display: flex;
-    align-items: center;
-    gap: 5px; /* Espaço entre o ícone e o texto */
-    transition: background-color 0.2s ease;
+    font-size: 1em;
+    margin-top: 20px;
 }
 
-.btn-gerenciar-fila:hover {
-    background-color: #0056b3; /* Azul mais escuro ao passar o mouse */
+.modal-content button:hover {
+    background-color: #0056b3;
 }
-/* Estilos de responsividade */
-@media (max-width: 768px) {
-    .home-container {
-        flex-direction: column;
-    }
 
+/* ----------------------------------------------------------------------- */
+/* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
+/* ----------------------------------------------------------------------- */
+
+/* Ajustes para telas de Tablet (e desktops menores) - Até 1024px */
+@media (max-width: 1024px) {
     .sidebar {
-        width: 100%;
-        height: auto;
+        width: 200px; /* Reduz a largura da sidebar */
         padding: 15px;
     }
 
-    .sidebar nav ul {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
+    .sidebar .responsive-image {
+        width: 120px; /* Reduz o logo */
     }
 
     .sidebar nav ul li {
-        margin-bottom: 0;
-        padding: 8px 12px;
+        font-size: 1em; /* Reduz ligeiramente o tamanho da fonte do menu */
+        margin-bottom: 15px;
     }
 
     .main-content {
-        padding: 20px;
+        padding: 20px; /* Reduz o padding do conteúdo principal */
+    }
+
+    .empresa-titulo-container {
+        padding: 7px 12px; /* Ajusta o padding do badge */
+    }
+
+    .empresa-nome {
+        font-size: 1em; /* Ajusta a fonte do nome da empresa */
+    }
+
+    .section-title {
+        font-size: 1.6em; /* Reduz o título da seção */
+        margin-bottom: 20px;
     }
 
     .filas-table th,
     .filas-table td {
-        padding: 8px;
-        font-size: 0.9em;
+        padding: 12px 15px; /* Reduz o padding das células da tabela */
+        font-size: 0.85em; /* Reduz o tamanho da fonte da tabela */
+    }
+}
+
+/* Ajustes para telas de Tablet (retrato) e Celulares grandes - Até 768px */
+@media (max-width: 768px) {
+    .home-container {
+        flex-direction: column; /* Coloca sidebar no topo e conteúdo abaixo */
     }
 
-    .filas-table .btn-gerenciar-clientes {
-        padding: 6px 8px;
-        font-size: 0.8em;
+    .sidebar {
+        width: 100%; /* Sidebar ocupa toda a largura */
+        height: auto; /* Altura automática */
+        padding: 15px 20px; /* Padding ajustado */
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0; /* Adiciona borda inferior */
+        flex-direction: row; /* Itens da sidebar em linha */
+        justify-content: space-between; /* Espaço entre logo/menu e user-info */
+        align-items: center; /* Alinha itens ao centro verticalmente */
+    }
+
+    .sidebar .logo {
+        margin-bottom: 0; /* Remove margem inferior do logo */
+        text-align: left; /* Alinha o logo à esquerda na sidebar */
+    }
+
+    .sidebar .responsive-image {
+        width: 100px; /* Logo menor no mobile */
+    }
+
+    .sidebar nav {
+        flex-grow: 1; /* Permite que a navegação ocupe o espaço restante */
+        margin-left: 20px; /* Espaço entre logo e nav */
+    }
+
+    .sidebar nav ul {
+        display: flex;
+        flex-wrap: wrap; /* Permite que os itens quebrem linha */
+        justify-content: center; /* Centraliza os itens de menu */
+        gap: 10px; /* Espaçamento entre os itens */
+    }
+
+    .sidebar nav ul li {
+        margin-bottom: 0; /* Remove margem inferior */
+        padding: 8px 12px;
+        font-size: 0.9em; /* Fontes menores para o menu */
+    }
+
+    .sidebar .user-info {
+        margin-top: 0; /* Remove margem superior */
+        padding-top: 0;
+        border-top: none; /* Remove a linha divisória */
+        margin-left: 20px; /* Espaço entre nav e user-info */
+    }
+
+    .main-content {
+        padding: 20px;
+        align-items: flex-start; /* Volta a alinhar o conteúdo principal à esquerda para o mobile */
+    }
+
+    .empresa-titulo-container {
+        /* Alinha o nome da empresa à direita no mobile, mas dentro do fluxo normal */
+        align-self: flex-end; /* Overrides align-items: flex-start do main-content */
+        margin-bottom: 20px; /* Ajusta espaçamento */
+    }
+
+    .section-title {
+        font-size: 1.5em;
+        margin-bottom: 20px;
+    }
+
+    /* Tabela Responsiva - Adiciona rolagem horizontal */
+    .filas-section {
+        overflow-x: auto; /* Adiciona scroll horizontal se o conteúdo for muito largo */
+        -webkit-overflow-scrolling: touch; /* Melhora a rolagem em iOS */
+        align-self: stretch; /* Garante que a seção de filas ocupe a largura total */
+    }
+
+    .filas-table {
+        min-width: 600px; /* Define uma largura mínima para a tabela, forçando a rolagem */
+        width: auto; /* Permite que a tabela cresça além de 100% se min-width for maior */
+    }
+}
+
+/* Ajustes para telas de Celular pequenas - Até 480px */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 15px;
+    }
+
+    .empresa-titulo-container {
+        padding: 5px 10px;
+        font-size: 0.9em; /* Texto do badge ainda menor */
+    }
+    .empresa-nome {
+        font-size: 1em; /* Ajuste para o texto do nome da empresa */
+    }
+
+    .section-title {
+        font-size: 1.2em; /* Título da seção menor */
+        margin-bottom: 15px;
+        padding-left: 5px;
+    }
+
+    .filas-table th,
+    .filas-table td {
+        padding: 10px 10px; /* Padding das células da tabela ainda menor */
+        font-size: 0.8em; /* Fontes da tabela ainda menores */
+    }
+
+    .sidebar nav ul {
+        flex-direction: column; /* Itens do menu voltam a ser coluna */
+        align-items: center; /* Centraliza itens */
+        gap: 5px;
+    }
+    .sidebar nav ul li {
+        width: 100%; /* Itens do menu ocupam a largura total */
+        justify-content: center; /* Centraliza o texto e ícone */
+        text-align: center;
+        margin-bottom: 5px;
+    }
+
+    .sidebar .user-info {
+        flex-direction: column; /* Informações do usuário em coluna */
+        align-items: center; /* Centraliza */
+        margin-left: 0;
+        margin-top: 15px; /* Espaço do menu */
     }
 }
