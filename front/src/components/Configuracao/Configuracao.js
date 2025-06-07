@@ -1,43 +1,99 @@
-import React, { useState } from 'react';
-import './configuracao.css';
-import api from '../../services/api';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom'; // Importar useParams e useNavigate
+import './configuracao.css'; // Mantenha seu CSS existente
 
 const FormularioConfiguracaoFila = () => {
+    const { id } = useParams(); // Pega o ID da URL para modo de edição (ID_CONF_FILA)
+    const navigate = useNavigate(); // Para redirecionar após salvar/cancelar
+
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const idEmpresa = empresaSelecionada?.ID_EMPRESA || null;
 
     const [formData, setFormData] = useState({
         id_empresa: idEmpresa,
         nome_fila: '',
-        ini_vig: '', // Manter vazio para o input type="date"
-        fim_vig: '', // Manter vazio para o input type="date"
-        // Definir 'campos' como um array vazio para coletar os campos selecionados
-        // O back-end espera um array de objetos, ex: [{ "campo": "CPF", "tipo": "numero" }]
+        ini_vig: '',
+        fim_vig: '',
         campos: { cpf: true, rg: false, telefone: true, endereco: false, data_nascimento: false, email: false, qtde_pessoas: false },
         mensagem: '',
-        img_banner: { url: '' }, // Objeto para URL do banner
-        img_logo: { url: '' }, // Adicionado ao estado para controle no front-end, mas será removido no payload
+        img_banner: { url: '' },
+        img_logo: { url: '' }, // Mantido para controle no front, será removido no payload
         temp_tol: '',
         qtde_min: '',
         qtde_max: '',
-        per_sair: false, // Booleano
-        per_loc: false,  // Booleano
-        situacao: 1,     // Número (1 ou 0)
+        per_sair: false,
+        per_loc: false,
+        situacao: 1,
     });
 
+    const [loading, setLoading] = useState(true); // Novo estado para controlar o carregamento dos dados
     const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
     const [mensagemSucessoModal, setMensagemSucessoModal] = useState('');
     const [mostrarModalErro, setMostrarModalErro] = useState(false);
     const [mensagemErroModal, setMensagemErroModal] = useState('');
 
+    useEffect(() => {
+        const fetchConfiguracaoFila = async () => {
+            if (id) { // Se um ID for passado, estamos no modo de edição
+                try {
+                    const response = await fetch(`http://localhost:3001/api/configuracao-fila/${id}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+
+                    // Ajusta os dados recebidos do backend para o formato do seu formData
+                    const loadedData = {
+                        ...data,
+                        id_empresa: data.id_empresa || idEmpresa, // Usa o ID da empresa do banco ou do localStorage
+                        nome_fila: data.nome_fila || '',
+                        ini_vig: data.ini_vig || '', // Deve vir como 'YYYY-MM-DD' do backend
+                        fim_vig: data.fim_vig || '', // Deve vir como 'YYYY-MM-DD' do backend
+                        
+                        // Reconstroi o objeto `campos` do array `[{campo: "CPF", tipo: "numero"}, ...]`
+                        campos: {
+                            cpf: false, rg: false, telefone: false, endereco: false,
+                            data_nascimento: false, email: false, qtde_pessoas: false,
+                            // Sobrescreve com os que vieram do banco se existirem
+                            ...(data.campos && Array.isArray(data.campos) ? data.campos.reduce((acc, current) => {
+                                const key = current.campo.toLowerCase().replace(/\s/g, '_');
+                                acc[key] = true;
+                                return acc;
+                            }, {}) : {} )
+                        },
+                        img_banner: data.img_banner || { url: '' },
+                        img_logo: { url: '' }, // img_logo não é persistido, então inicializa vazio
+                        temp_tol: data.temp_tol === null ? '' : data.temp_tol, // Converte null para '' para input number
+                        qtde_min: data.qtde_min === null ? '' : data.qtde_min,
+                        qtde_max: data.qtde_max === null ? '' : data.qtde_max,
+                        per_sair: data.per_sair, // Já deve vir como boolean do backend
+                        per_loc: data.per_loc,   // Já deve vir como boolean do backend
+                        situacao: data.situacao,
+                    };
+                    setFormData(loadedData);
+                } catch (err) {
+                    console.error('Erro ao carregar configuração de fila para edição:', err);
+                    setMensagemErroModal('Erro ao carregar os dados da configuração de fila. Verifique a conexão ou se o ID é válido.');
+                    setMostrarModalErro(true);
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setLoading(false); // Não há ID, é um novo cadastro
+            }
+        };
+
+        fetchConfiguracaoFila();
+    }, [id, idEmpresa]); // Dependência do ID para recarregar se o ID na URL mudar, e idEmpresa
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-
         if (type === 'checkbox') {
             setFormData({ ...formData, [name]: checked });
-        } else if (["temp_tol", "qtde_min", "qtde_max"].includes(name)) { // Situacao já é Number, não precisa forçar de novo aqui.
+        } else if (["temp_tol", "qtde_min", "qtde_max"].includes(name)) {
+            // Garante que o valor é um número ou string vazia para null
             setFormData({ ...formData, [name]: value === '' ? '' : Number(value) });
-        } else if (name === 'situacao') { // Garante que situacao é um número
+        } else if (name === 'situacao') {
             setFormData({ ...formData, [name]: Number(value) });
         } else {
             setFormData({ ...formData, [name]: value });
@@ -62,10 +118,10 @@ const FormularioConfiguracaoFila = () => {
             reader.onloadend = () => {
                 setFormData(prevData => ({
                     ...prevData,
-                    [fieldName]: { url: reader.result, file: file } // Guarda a URL base64 e o File object
+                    [fieldName]: { url: reader.result, file: file }
                 }));
             };
-            reader.readAsDataURL(file); // Lê o arquivo como URL base64
+            reader.readAsDataURL(file);
         }
     };
 
@@ -80,24 +136,17 @@ const FormularioConfiguracaoFila = () => {
 
         const dataToSend = { ...formData };
 
-        // --- PREPARANDO OS DADOS PARA O BACK-END ---
-
-        // 1. Tratamento das datas para INT (YYYYMMDD)
-        // O input type="date" retorna "YYYY-MM-DD". O back-end espera YYYYMMDD (int).
+        // Tratamento das datas para INT (YYYYMMDD)
         dataToSend.ini_vig = dataToSend.ini_vig ? parseInt(dataToSend.ini_vig.replace(/-/g, ''), 10) : null;
         dataToSend.fim_vig = dataToSend.fim_vig ? parseInt(dataToSend.fim_vig.replace(/-/g, ''), 10) : null;
 
-        // 2. Tratamento dos campos selecionados para o formato que o back-end espera
-        // Seu back-end espera um array de objetos como: [{"campo":"Nome","tipo":"texto"}, {"campo":"CPF","tipo":"numero"}]
-        // E depois converte para JSON.stringified.
+        // Converte o objeto de campos para o array que o backend espera
         const camposArray = Object.entries(formData.campos)
-            .filter(([, ativo]) => ativo) // Filtra apenas os campos que estão 'true'
+            .filter(([, ativo]) => ativo)
             .map(([campoName]) => {
-                // Mapeia os nomes dos campos para algo mais legível e define um tipo padrão
-                let tipo = 'texto'; // Tipo padrão
-                let nomeCampo = campoName.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); // Capitaliza e remove underscores
-                
-                // Tipos específicos para CPF e outros, se necessário.
+                let tipo = 'texto';
+                let nomeCampo = campoName.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
                 if (campoName === 'cpf' || campoName === 'qtde_pessoas') {
                     tipo = 'numero';
                 } else if (campoName === 'data_nascimento') {
@@ -105,92 +154,91 @@ const FormularioConfiguracaoFila = () => {
                 } else if (campoName === 'email') {
                     tipo = 'email';
                 }
-                
                 return { campo: nomeCampo, tipo: tipo };
             });
-        
-        dataToSend.campos = camposArray; // Atribui o array de objetos 'campos'
+        dataToSend.campos = camposArray;
 
-        // 3. Tratamento de IMG_BANNER
-        // Seu back-end espera um JSON string da URL do banner, ex: '{"url":"data:image/png;base64,..."}'
-        // E o Postman usa { "url": "https://example.com/banner.png", "descricao": "..." }
-        // Se você está enviando base64, o backend espera o objeto { url: 'base64...' }
-        // Se a url for uma URL externa (vindo de um input text), use essa url.
-        // Se você quer que o backend salve a base64 string, o formato abaixo está correto.
+        // Trata img_banner
         if (dataToSend.img_banner && dataToSend.img_banner.url) {
-            // Se formData.img_banner.file existe, significa que veio de um upload.
-            // O backend espera um objeto {url: "base64"} ou {url: "http://..."}
-            // Não há 'descricao' no seu backend para IMG_BANNER, apenas 'url'.
             dataToSend.img_banner = { url: dataToSend.img_banner.url };
         } else {
-            dataToSend.img_banner = { url: '' }; // Envia objeto vazio se não houver banner
+            dataToSend.img_banner = { url: '' };
         }
 
-        // 4. Remover img_logo do payload, pois não existe na tabela ConfiguracaoFila
-        delete dataToSend.img_logo;
+        delete dataToSend.img_logo; // Remove img_logo antes de enviar, pois não vai para o banco
 
-        // 5. Tratamento de booleanos para 0 ou 1
-        // Seu back-end espera 0 ou 1 para per_sair e per_loc.
-        dataToSend.per_sair = dataToSend.per_sair ? 1 : 0;
-        dataToSend.per_loc = dataToSend.per_loc ? 1 : 0;
+        dataToSend.per_sair = dataToSend.per_sair ? 1 : 0; // Converte boolean para 0/1
+        dataToSend.per_loc = dataToSend.per_loc ? 1 : 0;     // Converte boolean para 0/1
 
-        // Converta strings vazias para null para campos numéricos opcionais
+        // Converte strings vazias para null para campos numéricos opcionais
         dataToSend.temp_tol = dataToSend.temp_tol === '' ? null : Number(dataToSend.temp_tol);
         dataToSend.qtde_min = dataToSend.qtde_min === '' ? null : Number(dataToSend.qtde_min);
         dataToSend.qtde_max = dataToSend.qtde_max === '' ? null : Number(dataToSend.qtde_max);
+        
+        dataToSend.situacao = Number(dataToSend.situacao); // Garante que situacao é número
 
-        // O 'situacao' já está como Number no handleChange, mas garante aqui
-        dataToSend.situacao = Number(dataToSend.situacao);
-
-
-        // LOG FINAL DOS DADOS ANTES DE ENVIAR (CRUCIAL PARA DEPURAR)
         console.log('Dados do formulário final (dataToSend) sendo enviados:', dataToSend);
 
         try {
-            // VERIFIQUE SE A URL DA API ESTÁ CORRETA!
-            // No seu back-end, a rota é `/api/configurar-fila`.
-            // No seu front-end, você está usando `http://localhost:3001/api/configuracao/configuracao-fila`.
-            // A rota correta é `http://localhost:3001/api/configurar-fila` (assumindo porta 3001).
-          const response = await api.post('/configuracao-fila', dataToSend);
+            const url = id
+                ? `http://localhost:3001/api/configuracao-fila/${id}` // URL para PUT (edição)
+                : 'http://localhost:3001/api/configuracao-fila'; // URL para POST (cadastro)
 
+            const method = id ? 'PUT' : 'POST'; // Método HTTP
 
-            // --- Tratamento de Erros Aprimorado ---
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataToSend)
+            });
+
             if (!response.ok) {
-                let errorMessage = 'Erro desconhecido ao cadastrar configuração.';
+                let errorMessage = 'Erro desconhecido ao salvar configuração.';
                 try {
                     const errorData = await response.json();
                     errorMessage = errorData.erro || errorData.mensagem || JSON.stringify(errorData);
                 } catch (parseError) {
                     errorMessage = `Erro ${response.status}: ${response.statusText || 'Resposta não JSON'}`;
                 }
-                setMensagemErroModal(`Falha ao cadastrar: ${errorMessage}`);
+                setMensagemErroModal(`Falha ao salvar: ${errorMessage}`);
                 setMostrarModalErro(true);
                 console.error('Erro na resposta da API:', response.status, response.statusText, errorMessage);
                 return;
             }
 
             const data = await response.json();
-
-            setMensagemSucessoModal('Configuração de fila cadastrada com sucesso! Token: ' + data.token_fila);
+            setMensagemSucessoModal(`Configuração de fila ${id ? 'atualizada' : 'cadastrada'} com sucesso!`);
+            if (!id && data.token_fila) { // Mostra o token apenas para novos cadastros
+                setMensagemSucessoModal(prev => prev + ` Token: ${data.token_fila}`);
+            }
             setMostrarModalSucesso(true);
 
-            // Limpa o formulário após o sucesso
-            setFormData({
-                id_empresa: idEmpresa,
-                nome_fila: '',
-                ini_vig: '',
-                fim_vig: '',
-                campos: { cpf: true, rg: false, telefone: true, endereco: false, data_nascimento: false, email: false, qtde_pessoas: false },
-                mensagem: '',
-                img_banner: { url: '' },
-                img_logo: { url: '' },
-                temp_tol: '',
-                qtde_min: '',
-                qtde_max: '',
-                per_sair: false,
-                per_loc: false,
-                situacao: 1,
-            });
+            // Redireciona após um pequeno delay para o usuário ver a mensagem
+            setTimeout(() => {
+                setMostrarModalSucesso(false);
+                navigate('/filas-cadastradas'); // Redireciona para a lista após o sucesso
+            }, 2000); 
+            
+            // Se for um novo cadastro, limpa o formulário
+            if (!id) {
+                setFormData({
+                    id_empresa: idEmpresa,
+                    nome_fila: '',
+                    ini_vig: '',
+                    fim_vig: '',
+                    campos: { cpf: true, rg: false, telefone: true, endereco: false, data_nascimento: false, email: false, qtde_pessoas: false },
+                    mensagem: '',
+                    img_banner: { url: '' },
+                    img_logo: { url: '' },
+                    temp_tol: '',
+                    qtde_min: '',
+                    qtde_max: '',
+                    per_sair: false,
+                    per_loc: false,
+                    situacao: 1,
+                });
+            }
+
         } catch (err) {
             console.error('Erro de rede ou na requisição:', err);
             setMensagemErroModal('Ocorreu um erro ao enviar os dados. Verifique sua conexão ou se o servidor está ativo.');
@@ -200,6 +248,7 @@ const FormularioConfiguracaoFila = () => {
 
     const fecharModalSucesso = () => {
         setMostrarModalSucesso(false);
+        navigate('/filas-cadastradas'); // Garante redirecionamento mesmo se o usuário fechar o modal
     };
 
     const fecharModalErro = () => {
@@ -217,12 +266,16 @@ const FormularioConfiguracaoFila = () => {
     };
     const uploadIconPath = '/imagens/upload-icon.png';
 
+    if (loading) {
+        return <p>Carregando formulário...</p>;
+    }
+
     return (
         <div className="configuracao-fila">
             <div className="header">
-                <button className="voltar-btn">← Voltar</button>
-                <h2>Configuração de fila</h2>
-                <p className="subtitle">Preencha os dados abaixo para configurar a sua fila de espera</p>
+                <button className="voltar-btn" onClick={() => navigate('/filas-cadastradas')}>← Voltar</button>
+                <h2>{id ? 'Editar Configuração de Fila' : 'Configuração de Fila'}</h2>
+                <p className="subtitle">Preencha os dados abaixo para {id ? 'editar a' : 'configurar a sua'} fila de espera</p>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -285,7 +338,7 @@ const FormularioConfiguracaoFila = () => {
 
                     <div className="input-field full-width">
                         <label>Nome da fila</label>
-                        <input type="text" name="nome_fila" value={formData.nome_fila} onChange={handleChange} placeholder="Nome da fila" />
+                        <input type="text" name="nome_fila" value={formData.nome_fila} onChange={handleChange} placeholder="Nome da fila" required />
                     </div>
 
                     <div className="group-inputs date-inputs">
@@ -373,7 +426,7 @@ const FormularioConfiguracaoFila = () => {
                 </div>
 
                 <div className="botoes">
-                    <button type="button" className="cancel-btn">Cancelar</button>
+                    <button type="button" className="cancel-btn" onClick={() => navigate('/filas-cadastradas')}>Cancelar</button>
                     <button type="submit" className="save-btn">Salvar</button>
                 </div>
             </form>

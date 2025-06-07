@@ -125,7 +125,7 @@ const GestaoFilaClientes = () => {
                             </Link>
                         </li>
                         <li>
-                            <Link to="/configuracao" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <Link to="/filas-cadastradas" style={{ textDecoration: 'none', color: 'inherit' }}>
                                 <FaCog /> Configuração de fila
                             </Link>
                         </li>

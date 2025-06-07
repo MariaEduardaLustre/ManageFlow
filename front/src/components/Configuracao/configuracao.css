@@ -34,6 +34,15 @@
     align-items: center;
     justify-content: center;
 }
+.voltar-btn:hover {
+  background-color: none;
+}
+.voltar-btn:focus,
+.voltar-btn:active {
+    outline: none;
+    box-shadow: none;
+}
+
 
 .header h2 {
     font-size: 24px;
