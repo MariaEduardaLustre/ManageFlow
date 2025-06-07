@@ -1,35 +1,36 @@
-// src/pages/GestaoFilaClientes/GestaoFilaClientes.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
-import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle } from 'react-icons/fa';
-import './GestaoFilaClientes.css'; // Importa o CSS para este componente
+import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaEdit, FaUndo } from 'react-icons/fa';
+import './GestaoFilaClientes.css';
 
 const GestaoFilaClientes = () => {
-    const { idEmpresa, dtMovto, idFila } = useParams(); // Captura os parâmetros da URL
+    const { idEmpresa, dtMovto, idFila } = useParams();
     const navigate = useNavigate();
     const [clientesFila, setClientesFila] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [editingClienteId, setEditingClienteId] = useState(null);
 
-    // Dados do usuário e empresa para o sidebar (reaproveitados de FilaLista)
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
-    const nomeUsuario = "Usuário"; // Substitua com o nome do usuário logado se tiver
-    const cargoUsuario = "Gerente de Projeto"; // Substitua com o cargo do usuário logado se tiver
+    const nomeUsuario = "Usuário";
+    const cargoUsuario = "Gerente de Projeto";
 
-    // Função para formatar a data (reaproveitada de FilaLista)
     const formatarData = (dataSQL) => {
         if (!dataSQL) return 'N/A';
+        const dataStr = String(dataSQL);
+        if (dataStr.length === 8) {
+            const ano = dataStr.substring(0, 4);
+            const mes = dataStr.substring(4, 6);
+            const dia = dataStr.substring(6, 8);
+            return `${dia}/${mes}/${ano}`;
+        }
         const date = new Date(dataSQL);
         if (isNaN(date.getTime())) {
-            const dataStr = String(dataSQL);
-            if (dataStr.length === 8) {
-                const ano = dataStr.substring(0, 4);
-                const mes = dataStr.substring(4, 6);
-                const dia = dataStr.substring(6, 8);
-                return `${dia}/${mes}/${ano}`;
-            }
             return dataSQL;
         }
         const dia = String(date.getDate()).padStart(2, '0');
@@ -49,13 +50,38 @@ const GestaoFilaClientes = () => {
         return `${horas}:${minutos}`;
     };
 
+    const formatarCpfCnpj = (valor) => {
+        if (!valor) return 'N/A';
+        const limpo = String(valor).replace(/\D/g, '');
+        if (limpo.length === 11) {
+            return limpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        } else if (limpo.length === 14) {
+            return limpo.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        }
+        return valor;
+    };
+
+    const formatarCelular = (ddd, numero) => {
+        if (!ddd || !numero) return 'N/A';
+        const dddLimpo = String(ddd).replace(/\D/g, '');
+        const numeroLimpo = String(numero).replace(/\D/g, '');
+        const numeroCompleto = dddLimpo + numeroLimpo;
+
+        if (numeroCompleto.length === 11) {
+            return `(${numeroCompleto.substring(0, 2)}) ${numeroCompleto.substring(2, 7)}-${numeroCompleto.substring(7, 11)}`;
+        } else if (numeroCompleto.length === 10) {
+            return `(${numeroCompleto.substring(0, 2)}) ${numeroCompleto.substring(2, 6)}-${numeroCompleto.substring(6, 10)}`;
+        }
+        return `(${dddLimpo}) ${numeroLimpo}`;
+    };
+
     const fetchClientesFila = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            // A rota de backend espera ID_EMPRESA, DT_MOVTO, ID_FILA
             const response = await api.get(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/clientes`);
             setClientesFila(response.data);
+            setEditingClienteId(null);
         } catch (err) {
             if (err.response && err.response.status === 404) {
                 console.log('Nenhum cliente encontrado para esta fila.');
@@ -71,37 +97,82 @@ const GestaoFilaClientes = () => {
 
     useEffect(() => {
         if (!idEmpresa || !dtMovto || !idFila) {
-            navigate('/filas'); // Redireciona se os parâmetros da fila não estiverem completos
+            navigate('/filas');
             return;
         }
         fetchClientesFila();
     }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFila]);
 
-    const handleConfirmarPresenca = async (cliente) => {
-        try {
-            await api.put(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`, { novaSituacao: 1 }); // 1 = Confirmado Presença
-            alert(`Presença de ${cliente.NOME} confirmada!`);
-            fetchClientesFila(); // Recarrega a lista para refletir a mudança
-        } catch (err) {
-            console.error('Erro ao confirmar presença:', err);
-            alert('Erro ao confirmar presença do cliente.');
+    const getSituacaoText = (situacao) => {
+        switch (situacao) {
+            case 1:
+                return 'Presença Confirmada';
+            case 2:
+                return 'Não Compareceu';
+            case 3:
+                return 'Chamado';
+            case 4:
+                return 'Atendido';
+            case 0:
+            default:
+                return 'Aguardando';
         }
     };
 
-    const handleNaoCompareceu = async (cliente) => {
+    const updateClienteSituacaoLocal = (clienteId, novaSituacao) => {
+        setClientesFila(prevClientes =>
+            prevClientes.map(cliente =>
+                cliente.ID_CLIENTE === clienteId ? { ...cliente, SITUACAO: novaSituacao } : cliente
+            )
+        );
+    };
+
+    const openModal = (message) => {
+        setModalMessage(message);
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setModalMessage('');
+    };
+
+    const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
+        const situacaoOriginal = cliente.SITUACAO;
+        
+        updateClienteSituacaoLocal(cliente.ID_CLIENTE, novaSituacao);
+        setEditingClienteId(null);
+
         try {
-            await api.put(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`, { novaSituacao: 2 }); // 2 = Não Compareceu
-            alert(`Cliente ${cliente.NOME} marcado como não compareceu.`);
-            fetchClientesFila(); // Recarrega a lista para refletir a mudança
+            await api.put(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`, { novaSituacao });
+            openModal(mensagemSucesso);
         } catch (err) {
-            console.error('Erro ao marcar não compareceu:', err);
-            alert('Erro ao marcar cliente como não compareceu.');
+            console.error('Erro ao atualizar situação:', err);
+            openModal(mensagemErro);
+            updateClienteSituacaoLocal(cliente.ID_CLIENTE, situacaoOriginal);
+        } finally {
+            // fetchClientesFila();
         }
+    };
+
+    const handleConfirmarPresenca = (cliente) => {
+        handleUpdateSituacao(cliente, 1, `Presença de ${cliente.NOME} confirmada!`, 'Erro ao confirmar presença do cliente. Revertendo situação.');
+    };
+
+    const handleNaoCompareceu = (cliente) => {
+        handleUpdateSituacao(cliente, 2, `Cliente ${cliente.NOME} marcado como não compareceu.`, 'Erro ao marcar cliente como não compareceu. Revertendo situação.');
+    };
+
+    const handleAlterarSituacao = (clienteId) => {
+        setEditingClienteId(clienteId);
+    };
+
+    const handleCancelarAlteracao = () => {
+        setEditingClienteId(null);
     };
 
     const handleEnviarNotificacao = (cliente) => {
-        // Implementação futura para enviar notificação
-        alert(`Funcionalidade de Notificação para ${cliente.NOME} em desenvolvimento!`);
+        openModal(`Funcionalidade de Notificação para ${cliente.NOME} em desenvolvimento!`);
     };
 
     const logout = () => {
@@ -125,13 +196,13 @@ const GestaoFilaClientes = () => {
                             </Link>
                         </li>
                         <li>
+                            {/* LINHA CORRIGIDA AQUI: REMOVIDO O ">" EXTRA */}
                             <Link to="/configuracao" style={{ textDecoration: 'none', color: 'inherit' }}>
                                 <FaCog /> Configuração de fila
                             </Link>
                         </li>
                         <li><FaTv /> Painel de TV</li>
                         <li className="active">
-                            {/* O link para /filas agora leva de volta para a lista de filas da empresa */}
                             <Link to="/filas" style={{ textDecoration: 'none', color: 'inherit' }}>
                                 <FaClipboardList /> Gestão da fila
                             </Link>
@@ -152,12 +223,12 @@ const GestaoFilaClientes = () => {
             </aside>
 
             <main className="main-content">
-                <h1 className="main-content-empresa-titulo">
-                    {nomeEmpresa || 'Empresa Carregando...'} - Gestão da Fila ({idFila} - {formatarData(dtMovto)})
-                </h1>
+                <div className="empresa-titulo-container">
+                    <span className="empresa-nome">{nomeEmpresa || 'Carregando...'}</span>
+                </div>
 
                 <section className="clientes-fila-section">
-                    <h2 className="section-title">Clientes na Fila</h2>
+                    <h2 className="section-title">Clientes</h2>
 
                     {loading && <p>Carregando clientes...</p>}
                     {error && <p className="error-message">{error}</p>}
@@ -170,52 +241,98 @@ const GestaoFilaClientes = () => {
                         <table className="clientes-fila-table">
                             <thead>
                                 <tr>
-                                    <th>Nome do Cliente</th>
-                                    <th>Entrada</th>
-                                    <th>Situação</th>
-                                    <th>Ações</th>
+                                    <th>NOME CLIENTE</th>
+                                    <th>CPF/CNPJ</th>
+                                    <th>DATA DE NASCIMENTO</th>
+                                    <th>CELULAR</th>
+                                    <th>ENTRADA</th>
+                                    <th>STATUS</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {clientesFila.map((cliente) => (
                                     <tr key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`}>
                                         <td>{cliente.NOME || 'N/A'}</td>
+                                        <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
+                                        <td>{formatarData(cliente.DT_NASC)}</td>
+                                        <td>{formatarCelular(cliente.DDDCEL, cliente.NR_CEL)}</td>
                                         <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
-                                        <td>
-                                            {cliente.SITUACAO === 0 && 'Aguardando'}
-                                            {cliente.SITUACAO === 1 && 'Confirmado'}
-                                            {cliente.SITUACAO === 2 && 'Não Compareceu'}
-                                        </td>
                                         <td className="acao-buttons">
-                                            {/* Botões de Ação */}
-                                            {cliente.SITUACAO !== 1 && cliente.SITUACAO !== 2 ? ( // Exibe botões se não foi confirmado nem não compareceu
-                                                <>
+                                            {/* Lógica para exibir os botões de ação ou a mensagem de status */}
+                                            {editingClienteId === cliente.ID_CLIENTE ? (
+                                                // MODO DE EDIÇÃO: Sempre exibe todos os botões de ação para alterar
+                                                <div className="icone-buttons-group">
                                                     <button
-                                                        className="btn-confirmar"
+                                                        className="btn-acao btn-confirmar"
                                                         onClick={() => handleConfirmarPresenca(cliente)}
                                                         title="Confirmar Presença"
                                                     >
-                                                        <FaCheckCircle /> Confirmar
+                                                        <FaCheckCircle />
                                                     </button>
                                                     <button
-                                                        className="btn-notificar"
+                                                        className="btn-acao btn-notificar"
                                                         onClick={() => handleEnviarNotificacao(cliente)}
                                                         title="Enviar Notificação"
                                                     >
-                                                        <FaPaperPlane /> Notificar
+                                                        <FaPaperPlane />
                                                     </button>
                                                     <button
-                                                        className="btn-nao-compareceu"
+                                                        className="btn-acao btn-nao-compareceu"
                                                         onClick={() => handleNaoCompareceu(cliente)}
                                                         title="Não Compareceu"
                                                     >
-                                                        <FaTimesCircle /> Não Compareceu
+                                                        <FaTimesCircle />
                                                     </button>
-                                                </>
+                                                    <button
+                                                        className="btn-acao btn-cancelar"
+                                                        onClick={handleCancelarAlteracao}
+                                                        title="Cancelar Alteração"
+                                                    >
+                                                        <FaUndo />
+                                                    </button>
+                                                </div>
                                             ) : (
-                                                <span className="acao-disabled-message">
-                                                    {cliente.SITUACAO === 1 ? 'Presença Confirmada' : 'Não Compareceu'}
-                                                </span>
+                                                // MODO DE VISUALIZAÇÃO:
+                                                <>
+                                                    {cliente.SITUACAO === 1 || cliente.SITUACAO === 2 ? (
+                                                        // Situações 1 (Presença Confirmada) ou 2 (Não Compareceu)
+                                                        <div className="icone-buttons-group status-display">
+                                                            <span className="acao-disabled-message">{getSituacaoText(cliente.SITUACAO)}</span>
+                                                            <button
+                                                                className="btn-acao btn-alterar"
+                                                                onClick={() => handleAlterarSituacao(cliente.ID_CLIENTE)}
+                                                                title="Alterar Situação"
+                                                            >
+                                                                <FaEdit />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        // Qualquer outra situação (0 - Aguardando, 3 - Chamado, 4 - Atendido, etc.)
+                                                        <div className="icone-buttons-group">
+                                                            <button
+                                                                className="btn-acao btn-confirmar"
+                                                                onClick={() => handleConfirmarPresenca(cliente)}
+                                                                title="Confirmar Presença"
+                                                            >
+                                                                <FaCheckCircle />
+                                                            </button>
+                                                            <button
+                                                                className="btn-acao btn-notificar"
+                                                                onClick={() => handleEnviarNotificacao(cliente)}
+                                                                title="Enviar Notificação"
+                                                            >
+                                                                <FaPaperPlane />
+                                                            </button>
+                                                            <button
+                                                                className="btn-acao btn-nao-compareceu"
+                                                                onClick={() => handleNaoCompareceu(cliente)}
+                                                                title="Não Compareceu"
+                                                            >
+                                                                <FaTimesCircle />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </td>
                                     </tr>
@@ -224,6 +341,19 @@ const GestaoFilaClientes = () => {
                         </table>
                     )}
                 </section>
+
+                {showModal && (
+                    <div className="modal-overlay" onClick={closeModal}>
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
+                            <div className="modal-body modal-body-simplified">
+                                <p>{modalMessage}</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="modal-ok-button" onClick={closeModal}>OK</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
