@@ -79,60 +79,6 @@
     background-color: #006bb3;
   }
   
-  /* Estilos para o modal de sucesso e erro (mantidos) */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  
-  .modal {
-    background-color: white;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
-    text-align: center;
-    max-width: 95%;
-    width: 400px;
-  }
-  
-  .modal p.mensagem-sucesso {
-    color: green;
-    font-size: 1.1rem;
-    margin-bottom: 15px;
-  }
-  
-  .modal p.mensagem-erro {
-    color: red;
-    font-size: 1.1rem;
-    margin-bottom: 15px;
-  }
-  
-  .btn-fechar-modal {
-    padding: 10px 15px;
-    background-color: #5cb85c;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    margin-top: 10px;
-  }
-  
-  .modal.erro .btn-fechar-modal {
-    background-color: #d9534f;
-  }
-  
-  .btn-fechar-modal:hover {
-    opacity: 0.9;
-  }
   
   @media (max-width: 768px) {
     .form-container-config {

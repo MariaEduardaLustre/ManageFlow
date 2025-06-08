@@ -264,11 +264,10 @@ router.get('/filas/:idEmpresa', async (req, res) => {
 
 
 // >>> INÍCIO DA NOVA ROTA PARA BUSCAR CLIENTES DE UMA FILA ESPECÍFICA <<<
+// Substitua a rota existente por esta versão no seu arquivo de rotas
+
 router.get('/fila/:idEmpresa/:dtMovto/:idFila/clientes', async (req, res) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
-
-
-
 
     try {
         const [clientes] = await db.query(`
@@ -292,26 +291,20 @@ router.get('/fila/:idEmpresa/:dtMovto/:idFila/clientes', async (req, res) => {
                 DT_APRE,
                 DT_SAIDA,
                 DV133_NR_USRDEL,
-                DV133_NR_LAT,
-                DV133_NR_LNG,
+                -- DV133_NR_LAT,      // << LINHA REMOVIDA
+                -- DV133_NR_LNG,      // << LINHA REMOVIDA
                 SITUACAO
             FROM
-                clientes_fila
+                clientesfila
             WHERE
                 ID_EMPRESA = ? AND DT_MOVTO = ? AND ID_FILA = ?
             ORDER BY
                 DT_ENTRA ASC
         `, [idEmpresa, dtMovto, idFila]);
 
-
-
-
         if (clientes.length === 0) {
             return res.status(404).json({ message: 'Nenhum cliente encontrado para esta fila.' });
         }
-
-
-
 
         res.json(clientes);
     } catch (err) {
@@ -364,7 +357,7 @@ router.put('/fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/atualizar-situa
 
     try {
         const [result] = await db.query(`
-            UPDATE clientes_fila
+            UPDATE clientesfila
             SET SITUACAO = ?, ${updateField}
             WHERE ID_EMPRESA = ? AND DT_MOVTO = ? AND ID_FILA = ? AND ID_CLIENTE = ?
         `, [novaSituacao, currentTimestamp, idEmpresa, dtMovto, idFila, idCliente]);
@@ -392,7 +385,73 @@ router.put('/fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/atualizar-situa
 // >>> FIM DA ROTA PARA ATUALIZAR STATUS DO CLIENTE NA FILA <<<
 
 
+router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, res) => {
+    const { idEmpresa, dtMovto, idFila } = req.params;
+    const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES } = req.body;
 
+    if (!NOME || !CPFCNPJ) {
+        return res.status(400).json({ error: 'Nome e CPF/CNPJ são obrigatórios.' });
+    }
+
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        // Passo 1: Encontrar ou criar o cliente na tabela principal 'Usuario' para ter um ID único.
+        let [clienteExistente] = await connection.query(
+            'SELECT ID FROM Usuario WHERE CPFCNPJ = ?',
+            [CPFCNPJ]
+        );
+
+        let idCliente;
+        if (clienteExistente.length > 0) {
+            idCliente = clienteExistente[0].ID;
+        } else {
+            const [novoClienteResult] = await connection.query(
+                `INSERT INTO Usuario (NOME, CPFCNPJ, DT_NASC, EMAIL, DDDCEL, NR_CEL, RG) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [NOME, CPFCNPJ, DT_NASC, EMAIL, DDDCEL, NR_CEL, RG]
+            );
+            idCliente = novoClienteResult.insertId;
+        }
+
+        // Passo 2: Verificar se este cliente já não está na fila específica.
+        const [jaNaFila] = await connection.query(
+            'SELECT 1 FROM clientesfila WHERE ID_EMPRESA = ? AND DT_MOVTO = ? AND ID_FILA = ? AND ID_CLIENTE = ?',
+            [idEmpresa, dtMovto, idFila, idCliente]
+        );
+
+        if (jaNaFila.length > 0) {
+            await connection.rollback();
+            return res.status(409).json({ error: 'Este cliente já se encontra na fila.' });
+        }
+
+        // Passo 3: Inserir o registro na tabela 'clientesfila' com a SITUACAO = 1.
+        await connection.query(
+            `INSERT INTO clientesfila (
+                ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, 
+                CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, 
+                DT_ENTRA, SITUACAO
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`, // << MUDANÇA 1: Adicionado SITUACAO
+            [
+                idEmpresa, dtMovto, idFila, idCliente,
+                CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES || 1, DDDCEL, NR_CEL,
+                1 // << MUDANÇA 2: Definido o valor 1 para a SITUACAO
+            ]
+        );
+
+        await connection.commit();
+        res.status(201).json({ message: 'Cliente adicionado à fila com sucesso!' });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Erro ao adicionar cliente na fila:', error);
+        res.status(500).json({ error: 'Erro interno ao adicionar cliente.' });
+    } finally {
+        connection.release();
+    }
+});
 
 module.exports = router;
 
