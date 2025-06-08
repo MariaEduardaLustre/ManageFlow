@@ -13,24 +13,20 @@ exports.loginUsuario = async (req, res) => {
   }
 
   try {
+    // A query de login já está correta, buscando por EMAIL.
     const [results] = await db.query('SELECT * FROM Usuario WHERE EMAIL = ?', [email]);
 
     if (results.length === 0) {
       console.log('[ERRO] Usuário não encontrado');
-      return res.status(401).send('Usuário não encontrado.');
+      return res.status(401).send('Usuário ou senha inválidos.'); // Mensagem mais segura
     }
 
     const usuario = results[0];
-
-    console.log('Senha digitada:', senha);
-    console.log('Hash no banco:', usuario.SENHA);
-
     const senhaValida = await bcrypt.compare(senha, usuario.SENHA);
-    console.log('Senha válida?', senhaValida);
 
     if (!senhaValida) {
       console.log('[ERRO] Senha incorreta');
-      return res.status(401).send('Senha incorreta.');
+      return res.status(401).send('Usuário ou senha inválidos.'); // Mensagem mais segura
     }
 
     const token = jwt.sign(
@@ -51,19 +47,24 @@ exports.loginUsuario = async (req, res) => {
   }
 };
 
+// =================================================================
+// FUNÇÃO DE CADASTRO TOTALMENTE ATUALIZADA
+// =================================================================
 exports.cadastrarUsuario = async (req, res) => {
-  const { nome, email, cpfCnpj, senha, numero, endereco, complemento } = req.body;
+  // 1. Capturar TODOS os campos que vêm do formulário
+  const { nome, email, cpfCnpj, senha, cep, endereco, numero, complemento, ddi, ddd, telefone } = req.body;
 
   console.log('[CADASTRO] Dados recebidos:', req.body);
 
-  if (!nome || !email || !cpfCnpj || !senha) {
+  // 2. Validação mais completa dos campos obrigatórios do formulário
+  if (!nome || !email || !cpfCnpj || !senha || !cep || !endereco || !numero || !ddi || !ddd || !telefone) {
     return res.status(400).send('Preencha todos os campos obrigatórios.');
   }
 
   try {
-    // Verifica se já existe usuário com esse e-mail ou CPF
+    // 3. Corrigir a query para buscar na coluna CPFCNPJ
     const [usuariosExistentes] = await db.query(
-      'SELECT * FROM Usuario WHERE EMAIL = ? OR CPF = ?',
+      'SELECT * FROM Usuario WHERE EMAIL = ? OR CPFCNPJ = ?',
       [email, cpfCnpj]
     );
 
@@ -72,25 +73,26 @@ exports.cadastrarUsuario = async (req, res) => {
       if (existente.EMAIL === email) {
         return res.status(409).send('E-mail já cadastrado.');
       }
-      if (existente.CPF === cpfCnpj) {
-        return res.status(409).send('CPF já cadastrado.');
+      // 4. Corrigir a verificação do campo CPFCNPJ
+      if (existente.CPFCNPJ === cpfCnpj) {
+        return res.status(409).send('CPF/CNPJ já cadastrado.');
       }
     }
 
-    // Criptografa a senha
     const senhaCriptografada = await bcrypt.hash(senha, 10);
 
-    // Insere o novo usuário
+    // 5. Query INSERT final e correta, com todas as colunas e valores
     await db.query(
-      `INSERT INTO Usuario (NOME, EMAIL, CPF, SENHA, ENDERECO, NUMERO, COMPLEMENTO)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [nome, email, cpfCnpj, senhaCriptografada, endereco, numero, complemento]
+      `INSERT INTO Usuario (NOME, EMAIL, CPFCNPJ, SENHA, CEP, ENDERECO, NUMERO, COMPLEMENTO, DDI, DDD, TELEFONE)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [nome, email, cpfCnpj, senhaCriptografada, cep, endereco, numero, complemento, ddi, ddd, telefone]
     );
 
     return res.status(201).send('Usuário cadastrado com sucesso!');
   } catch (error) {
     console.error('[ERRO] Erro ao cadastrar usuário:', error);
-    return res.status(500).send('Erro interno ao cadastrar usuário.');
+    // Envia uma mensagem de erro mais específica do banco, se disponível
+    return res.status(500).send(error.sqlMessage || 'Erro interno ao cadastrar usuário.');
   }
 };
 
@@ -113,7 +115,6 @@ exports.solicitarRedefinicaoSenha = async (req, res) => {
     }
 
     const usuario = results[0];
-
     const token = crypto.randomBytes(20).toString('hex');
     const expires = new Date(Date.now() + 3600000); // 1 hora a partir de agora
 
@@ -145,8 +146,7 @@ exports.solicitarRedefinicaoSenha = async (req, res) => {
     };
 
     console.log('📤 Enviando e-mail para:', usuario.EMAIL);
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ E-mail enviado:', info.messageId);
+    await transporter.sendMail(mailOptions);
 
     res.send('Um link para redefinição de senha foi enviado para o seu e-mail.');
   } catch (err) {
@@ -189,4 +189,3 @@ exports.redefinirSenha = async (req, res) => {
     res.status(500).send('Erro interno ao redefinir a senha.');
   }
 };
-

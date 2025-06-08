@@ -6,6 +6,8 @@ import { paisesComDdi } from '../../utils/paisesComDdi';
 import { FaUser, FaEnvelope, FaIdCard, FaLock, FaMapMarkerAlt, FaHome, FaBuilding, FaPhone, FaGlobe, FaMapPin } from 'react-icons/fa'; // Ícones gerais
 import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs'; 
 import { MdConfirmationNumber } from "react-icons/md"; 
+// --- IMPORTAÇÕES DO REACT BOOTSTRAP ---
+import { Modal, Button } from 'react-bootstrap';
 
 const Cadastro = () => {
   const [formData, setFormData] = useState({
@@ -204,6 +206,7 @@ const Cadastro = () => {
   const alternarMostrarConfirmarSenha = () => {
     setMostrarConfirmarSenha(!mostrarConfirmarSenha);
   };
+  
 
   return (
     <div className="cadastro-page-container">
@@ -306,7 +309,7 @@ const Cadastro = () => {
                   id="ddi">
                   <option value="">Selecione o país</option>
                   {paisesComDdi.map((pais) => (
-                    <option key={pais.ddi} value={pais.ddi}>
+                    <option key={`${pais.ddi}-${pais.nome}`} value={pais.ddi}>
                       {pais.nome} ({pais.ddi})
                     </option>
                   ))}
@@ -364,33 +367,47 @@ const Cadastro = () => {
         </div>
       </div>
 
-      {mostrarConfirmacao && (
-        <div className="modal-overlay">
-          <div className="modal confirmacao">
-            <p className="mensagem-confirmacao">Deseja confirmar o cadastro?</p>
-            <div className="botoes-confirmacao">
-              <button onClick={confirmarCadastro} className="btn-confirmar">Sim, Cadastrar</button>
-              <button onClick={cancelarCadastro} className="btn-cancelar">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {mostrarModalSucesso && mensagemSucessoModal && (
-        <div className="modal-overlay">
-          <div className="modal sucesso">
-            <p className="mensagem-sucesso">{mensagemSucessoModal}</p>
-            <button onClick={fecharModalSucesso} className="btn-fechar-modal">Fechar</button>
-          </div>
-        </div>
-      )}
-      {mostrarModalErro && mensagemErroModal && (
-        <div className="modal-overlay">
-          <div className="modal erro">
-            <p className="mensagem-erro">{mensagemErroModal}</p>
-            <button onClick={fecharModalErro} className="btn-fechar-modal">Fechar</button>
-          </div>
-        </div>
-      )}
+      {/* Modal de Confirmação */}
+      <Modal show={mostrarConfirmacao} onHide={cancelarCadastro} centered backdrop="static" keyboard={false}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Cadastro</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Deseja realmente confirmar o cadastro com os dados informados?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={cancelarCadastro}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={confirmarCadastro}>
+            Sim, Cadastrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de Sucesso */}
+      <Modal show={mostrarModalSucesso} onHide={fecharModalSucesso} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Sucesso!</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{mensagemSucessoModal}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="success" onClick={fecharModalSucesso}>
+            Fechar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de Erro */}
+      <Modal show={mostrarModalErro} onHide={fecharModalErro} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Ocorreu um Erro</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{mensagemErroModal}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="danger" onClick={fecharModalErro}>
+            Fechar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

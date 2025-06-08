@@ -129,6 +129,20 @@ router.get('/detalhes/:idEmpresa', async (req, res) => {
         res.status(500).json({ error: 'Erro interno ao buscar detalhes da empresa.' });
     }
 });
-// >>> FIM DA NOVA ROTA PARA DETALHES DA EMPRESA <<<
+
+// Buscar perfis de uma empresa específica
+router.get('/perfis/:idEmpresa', async (req, res) => {
+    const { idEmpresa } = req.params;
+    try {
+        const [perfis] = await db.query(
+            `SELECT ID_PERFIL, NOME_PERFIL, NIVEL FROM perfil WHERE ID_EMPRESA = ? ORDER BY NIVEL`,
+            [idEmpresa]
+        );
+        res.json(perfis);
+    } catch (err) {
+        console.error('Erro ao buscar perfis da empresa:', err);
+        res.status(500).json({ error: 'Erro interno ao buscar perfis.' });
+    }
+});
 
 module.exports = router;
