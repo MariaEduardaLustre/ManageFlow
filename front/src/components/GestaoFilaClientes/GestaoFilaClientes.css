@@ -1,0 +1,436 @@
+/* src/components/GestaoFilaClientes/GestaoFilaClientes.css */
+
+/* Estilos gerais do contêiner e sidebar */
+.home-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #ffffff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.sidebar .logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.sidebar .responsive-image {
+    width: 150px;
+    height: auto;
+}
+
+.sidebar nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar nav ul li {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #9197B3;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-size: 1.05em;
+}
+
+.sidebar nav ul li:hover {
+    background-color: #f0f4ff;
+    color: #1e73be;
+}
+
+.sidebar nav ul li.active {
+    background-color: #e2eafc;
+    font-weight: bold;
+    color: #1e73be;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.user-info img {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+}
+
+/* Estilos do conteúdo principal */
+.main-content {
+    flex-grow: 1;
+    padding: 30px;
+    background-color: #f4f7f6;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    position: relative;
+}
+
+/* ESTILOS DO CABEÇALHO DA EMPRESA (BADGE) */
+.empresa-titulo-container {
+    background-color: #3A5AFE;
+    border-radius: 8px;
+    padding: 8px 15px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    color: white;
+    width: fit-content;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    cursor: default;
+}
+
+.empresa-titulo-container:hover {
+    background-color: #2b45e0;
+    transform: none;
+}
+
+.empresa-nome {
+    font-size: 1.1em;
+    font-weight: bold;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Seção da Tabela de Clientes */
+.clientes-fila-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-top: 0;
+    width: 100%;
+    align-self: flex-start;
+}
+
+.clientes-fila-section .section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: left;
+}
+
+/* Estilos da Tabela de Clientes */
+.clientes-fila-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    table-layout: fixed; /* Isso faz com que as larguras das colunas sejam respeitadas */
+}
+
+.clientes-fila-table th, .clientes-fila-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+    /* Removido white-space, overflow, text-overflow para a coluna de ações para permitir flexbox */
+}
+
+.clientes-fila-table th {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+.clientes-fila-table th:first-child { border-top-left-radius: 8px; }
+.clientes-fila-table th:last-child { border-top-right-radius: 8px; }
+
+.clientes-fila-table tr:last-child td { border-bottom: none; }
+
+.clientes-fila-table tbody tr:hover { background-color: #f5f5f5; }
+
+/* Definindo larguras para as colunas */
+.clientes-fila-table th:nth-child(1),
+.clientes-fila-table td:nth-child(1) { width: 20%; } /* Nome do Cliente */
+
+.clientes-fila-table th:nth-child(2),
+.clientes-fila-table td:nth-child(2) { width: 15%; } /* CPF/CNPJ */
+
+.clientes-fila-table th:nth-child(3),
+.clientes-fila-table td:nth-child(3) { width: 15%; } /* Data de Nascimento */
+
+.clientes-fila-table th:nth-child(4),
+.clientes-fila-table td:nth-child(4) { width: 15%; } /* Celular */
+
+.clientes-fila-table th:nth-child(5),
+.clientes-fila-table td:nth-child(5) { width: 15%; } /* Entrada */
+
+.clientes-fila-table th:nth-child(6),
+.clientes-fila-table td:nth-child(6) { 
+    width: 20%; /* Aumenta a largura da coluna Ações / Situação */
+    min-width: 200px; /* Garante uma largura mínima para acomodar a mensagem e o botão */
+}
+
+/* Estilos dos Botões de Ação */
+.acao-buttons {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap; /* Impede que os itens quebrem linha, preferindo o overflow */
+    width: 100%; /* Ocupa toda a largura disponível da célula */
+}
+
+/* Estilos para o grupo de botões de ícone */
+.icone-buttons-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-wrap: nowrap; /* Importante para manter o botão "Editar" na mesma linha da mensagem */
+}
+
+/* Estilo para quando a mensagem de status e o botão de editar estão juntos */
+.icone-buttons-group.status-display {
+    gap: 10px; /* Mais espaço entre a mensagem e o botão de editar */
+    flex-wrap: nowrap; /* Reafirma que não deve quebrar linha */
+}
+
+
+.btn-acao {
+    padding: 8px;
+    border: none;
+    border-radius: 5px; /* Ajuste para bordas levemente arredondadas */
+    width: 38px;
+    height: 38px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-acao:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-acao:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.btn-acao:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    opacity: 0.7;
+}
+
+.btn-confirmar { background-color: #28a745; color: white; }
+.btn-confirmar:hover { background-color: #218838; }
+
+.btn-notificar { background-color: #007bff; color: white; }
+.btn-notificar:hover { background-color: #0056b3; }
+
+.btn-nao-compareceu { background-color: #dc3545; color: white; }
+.btn-nao-compareceu:hover { background-color: #c82333; }
+
+/* REINTRODUZIDO: Estilo para a mensagem de status (badge) */
+.acao-disabled-message {
+    color: #495057;
+    font-style: italic;
+    font-size: 0.9em;
+    padding: 8px 12px; /* Padding para o badge */
+    background-color: #e2e6ea; /* Cor de fundo para o badge */
+    border-radius: 5px; /* Bordas arredondadas como os botões */
+    display: inline-flex; /* Para que o padding e alinhamento funcionem */
+    align-items: center;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    white-space: nowrap; /* Garante que o texto não quebre linha */
+    /* text-overflow: ellipsis; */ /* Removido/Comentado para não cortar o texto */
+    /* overflow: hidden; */ /* Removido/Comentado para não cortar o texto */
+    flex-shrink: 0; /* Impede que a mensagem encolha */
+}
+
+.error-message {
+    color: #dc3545;
+    text-align: center;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+.btn-alterar {
+    background-color: #ffc107;
+    color: #343a40;
+}
+.btn-alterar:hover { background-color: #e0a800; }
+
+.btn-cancelar {
+    background-color: #6c757d;
+    color: white;
+}
+.btn-cancelar:hover { background-color: #5a6268; }
+
+/* ----------------------------------------------------------------------- */
+/* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
+/* ----------------------------------------------------------------------- */
+
+/* Ajustes para telas de Tablet (e desktops menores) - Até 1024px */
+@media (max-width: 1024px) {
+    .sidebar { width: 200px; padding: 15px; }
+    .sidebar .responsive-image { width: 120px; }
+    .sidebar nav ul li { font-size: 1em; margin-bottom: 15px; }
+    .main-content { padding: 20px; }
+    .empresa-titulo-container { padding: 7px 12px; margin-bottom: 20px; }
+    .empresa-nome { font-size: 1em; }
+    .section-title { font-size: 1.6em; margin-bottom: 20px; }
+    
+    .clientes-fila-table th, .clientes-fila-table td { padding: 10px 12px; font-size: 0.8em; }
+
+    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 20%; }
+    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 15%; }
+    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 15%; }
+    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 15%; }
+    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 15%; }
+    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
+        width: 20%; 
+        min-width: 180px; 
+    }
+
+    /* Botões de ação em telas menores */
+    .btn-acao {
+        width: 34px;
+        height: 34px;
+        font-size: 1em;
+    }
+    .icone-buttons-group { gap: 3px; }
+    .icone-buttons-group.status-display { gap: 8px; /* Menor espaço em telas menores */ }
+    .acao-disabled-message { font-size: 0.8em; padding: 6px 10px; }
+}
+
+/* Ajustes para telas de Tablet (retrato) e Celulares grandes - Até 768px */
+@media (max-width: 768px) {
+    .home-container { flex-direction: column; }
+    .sidebar {
+        width: 100%; height: auto; padding: 15px 20px; border-right: none;
+        border-bottom: 1px solid #e0e0e0; flex-direction: row; justify-content: space-between; align-items: center;
+    }
+    .sidebar .logo { margin-bottom: 0; text-align: left; }
+    .sidebar .responsive-image { width: 100px; }
+    .sidebar nav { flex-grow: 1; margin-left: 20px; }
+    .sidebar nav ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .sidebar nav ul li { margin-bottom: 0; padding: 8px 12px; font-size: 0.9em; }
+    .sidebar .user-info { margin-top: 0; padding-top: 0; border-top: none; margin-left: 20px; }
+    .main-content { padding: 20px; align-items: flex-start; }
+    .empresa-titulo-container { align-self: flex-end; margin-top: 0; margin-bottom: 20px; }
+    .section-title { font-size: 1.5em; margin-bottom: 20px; }
+
+    .clientes-fila-section {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        align-self: stretch;
+    }
+    .clientes-fila-table { min-width: 800px; width: auto; } /* Aumente o min-width da tabela */
+    
+    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 18%; }
+    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 14%; }
+    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 14%; }
+    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 14%; }
+    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 14%; }
+    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
+        width: 26%; 
+        min-width: 180px; 
+    }
+
+    /* Ajustes para os botões de ação em mobile */
+    .acao-buttons {
+        flex-direction: row; /* Permita que os itens quebrem linha */
+        justify-content: center; /* Centraliza os botões quando quebram */
+        flex-wrap: wrap; 
+    }
+
+    .icone-buttons-group {
+        flex-direction: row; 
+        gap: 5px;
+        flex-wrap: wrap; /* Permita que a mensagem e o botão quebrem linha */
+        justify-content: center; /* Centraliza */
+    }
+    .icone-buttons-group.status-display { 
+        gap: 5px; /* Menor espaço em mobile */ 
+        flex-wrap: wrap; /* Também permite quebra de linha aqui */
+        justify-content: center;
+    }
+
+    .btn-acao {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9em;
+    }
+    .acao-disabled-message { font-size: 0.75em; padding: 5px 8px; }
+}
+
+/* Ajustes para telas de Celular pequenas - Até 480px */
+@media (max-width: 480px) {
+    .main-content { padding: 15px; }
+    .empresa-titulo-container { padding: 5px 10px; }
+    .empresa-nome { font-size: 0.9em; }
+    .section-title { font-size: 1.2em; margin-bottom: 15px; padding-left: 5px; }
+    
+    .clientes-fila-table th, .clientes-fila-table td { padding: 10px 10px; font-size: 0.8em; }
+    .clientes-fila-table { min-width: 700px; width: auto; } /* Mantenha um min-width para a tabela */
+
+    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 18%; }
+    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 14%; }
+    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 14%; }
+    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 14%; }
+    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 14%; }
+    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
+        width: 26%; 
+        min-width: 160px; 
+    }
+
+    .sidebar nav ul { flex-direction: column; align-items: center; gap: 5px; }
+    .sidebar nav ul li { width: 100%; justify-content: center; text-align: center; margin-bottom: 5px; }
+    .sidebar .user-info { flex-direction: column; align-items: center; margin-left: 0; margin-top: 15px; }
+
+    .btn-acao {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85em;
+    }
+    .icone-buttons-group { 
+        gap: 3px; 
+        flex-direction: column; /* Empilha a mensagem e o botão editar */
+        align-items: center;
+    }
+    .icone-buttons-group.status-display { 
+        gap: 3px; 
+        flex-direction: column; 
+        align-items: center;
+    }
+    .acao-disabled-message { font-size: 0.7em; padding: 4px 6px; }
+}

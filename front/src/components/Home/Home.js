@@ -96,6 +96,33 @@ const Home = () => {
 
   return (
     <div className="home-container">
+      <aside className="sidebar">
+        <div className="logo"><img src="/imagens/logoManageflow.png" alt="Curva lateral" className="responsive-image" /></div>
+        <nav>
+          <ul>
+            
+            <li><FaTv />Dashboard</li>
+            <li>
+              <Link to="/configuracao" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <FaCog /> Configuração de fila
+              </Link>
+            </li>
+            <li><FaTv /> Painel de TV</li>
+            <li>
+              <Link to="/filas" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <FaCog /> Gestão da fila
+              </Link>
+            </li>
+            <li><FaChartBar /> Relatórios</li>
+            <li className="active"><FaUser /> Usuários</li>
+            <li onClick={logout} style={{ cursor: 'pointer', color: 'red', marginTop: '20px' }}><FaSignOutAlt /> Sair</li>
+          </ul>
+        </nav>
+        <div className="user-info">
+          <img src="https://i.pravatar.cc/40" alt="Evano" />
+          <div>Evano<br /><small>Project Manager</small></div>
+        </div>
+      </aside>
        <Menu />
 
 
