@@ -1,7 +1,5 @@
-
-import './Menu.css';
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   FaTachometerAlt,
   FaCogs,
@@ -11,31 +9,59 @@ import {
   FaUsers,
   FaSignOutAlt,
   FaAngleLeft,
-  FaAngleRight
+  FaAngleRight,
+  FaUserCircle
 } from 'react-icons/fa';
+import './Menu.css';
 
 const Sidebar = () => {
   const logo = '/imagens/logo.png';
-  const avatar = '/imagens/avatar.png';
+  const navigate = useNavigate();
+
   const [colapsado, setColapsado] = useState(false);
+  const [nomeUsuario, setNomeUsuario] = useState('');
+  const [cargoUsuario, setCargoUsuario] = useState('');
+  
+  // << NOVO STATE PARA O NÍVEL DE PERMISSÃO >>
+  const [nivelPermissao, setNivelPermissao] = useState(null);
+
+  useEffect(() => {
+    // Busca o nome do usuário salvo no login
+    const nomeSalvo = localStorage.getItem('nomeUsuario') || 'Usuário';
+    setNomeUsuario(nomeSalvo);
+
+    // Busca as informações da empresa selecionada
+    const empresaInfo = JSON.parse(localStorage.getItem('empresaSelecionada'));
+    const perfilSalvo = empresaInfo ? empresaInfo.NOME_PERFIL : 'Sem Perfil';
+    
+    // << BUSCA O NÍVEL DE PERMISSÃO JUNTO COM O CARGO >>
+    const nivelSalvo = empresaInfo ? empresaInfo.NIVEL : null;
+    
+    setCargoUsuario(perfilSalvo);
+    setNivelPermissao(nivelSalvo); // Armazena o nível no state
+
+    // Lógica para colapsar a sidebar em telas menores
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setColapsado(true);
+      } else {
+        setColapsado(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const logout = () => {
+    localStorage.clear(); // Limpa todo o localStorage para garantir uma saída completa
+    navigate('/');
+  };
 
   const toggleSidebar = () => {
     setColapsado(!colapsado);
   };
-  useEffect(() => {
-  const handleResize = () => {
-    if (window.innerWidth <= 768) {
-      setColapsado(true);
-    } else {
-      setColapsado(false);
-    }
-  };
-
-  handleResize(); // executa na primeira renderização
-
-  window.addEventListener('resize', handleResize);
-  return () => window.removeEventListener('resize', handleResize);
-}, []);
 
   return (
     <div className={`sidebar ${colapsado ? 'collapsed' : ''}`}>
@@ -49,6 +75,7 @@ const Sidebar = () => {
       </div>
 
       <nav className="sidebar-menu">
+        {/* Links do menu... */}
         <ul>
             <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                 <FaTachometerAlt />
@@ -58,11 +85,11 @@ const Sidebar = () => {
                 <FaCogs />
                 {!colapsado && <span>Configuração de fila</span>}
             </NavLink>
-            <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/painel-tv" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                 <FaTv />
                 {!colapsado && <span>Painel de TV</span>}
             </NavLink>
-            <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/filas" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                 <FaClipboardList />
                 {!colapsado && <span>Gestão da Fila</span>}
             </NavLink>
@@ -81,17 +108,21 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn">
+        <button onClick={logout} className="logout-btn">
           <FaSignOutAlt />
           {!colapsado && <span>Sair</span>}
         </button>
 
         {!colapsado && (
           <div className="user-info">
-            <img src={avatar} alt="Avatar" className="avatar" />
+            <FaUserCircle className="avatar-icon" />
             <div>
-              <div className="user-name">Evano</div>
-              <div className="user-role">Project Manager</div>
+              <div className="user-name">{nomeUsuario}</div>
+              {/* << EXIBIÇÃO DO NÍVEL DE PERMISSÃO >> */}
+              <div className="user-role">
+                {cargoUsuario}
+                {nivelPermissao}
+              </div>
             </div>
           </div>
         )}
