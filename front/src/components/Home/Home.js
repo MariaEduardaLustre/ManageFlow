@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaTrash, FaPlus } from 'react-icons/fa';
+import Menu from '../Menu/Menu';
+import {  FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaTrash, FaPlus } from 'react-icons/fa';
 import api from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import './Home.css';
-
-
+ 
 const Home = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [novoUsuario, setNovoUsuario] = useState('');
@@ -123,6 +123,7 @@ const Home = () => {
           <div>Evano<br /><small>Project Manager</small></div>
         </div>
       </aside>
+       <Menu />
 
 
       <main className="main-content">

@@ -1,218 +1,259 @@
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap');
+
+:root {
+  --cor-primaria: #3A5AFE;
+  --cor-texto-principal: #333A47;
+  --cor-texto-secundario: #717885;
+  --cor-borda-input: #E2E8F0;
+  --cor-fundo-input: #F7F8FC;
+  --cor-fundo-pagina: #FFFFFF;
+}
+
 body, html {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  height: 100%; /* Assegura que o container ocupe a altura total */
-}
-
-.cadastro-container {
-  display: flex;
-  background-color: #f9f9f9;
-}
-
-.image-container-cad {
-  flex: 0 0 32%; /* Faz a imagem ocupar 32% */
-  display: flex;
-}
-
-.responsive-image-cad {
-  width: 100%;
   height: 100%;
-  object-fit: cover;
+  font-family: 'Mulish', sans-serif;
+  background-color: var(--cor-fundo-pagina); 
 }
 
-.spacer {
-  margin-left: 20%; /* Espaço vazio para empurrar conteúdo adjacente */
-}
-
-.form-container {
-  flex: 0 0 40%; /* Faz o formulário ocupar 40% */
-  padding: 40px;
-  max-width: 800px; /* Definindo a largura máxima */
+.cadastro-page-container {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-
+  min-height: 100vh;
+  width: 100%;
 }
 
-.form-container h2 {
-  text-align: center;
-  font-size: 2rem;
-  color: #1e73be;
+.cadastro-image-panel {
+  flex: 0 0 40%; 
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.cadastro-form-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;    
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.form-content-area {
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-title {
+  text-align: left;
+  font-size: 2.1rem; 
+  color: var(--cor-primaria);
   margin-bottom: 30px;
+  font-weight: 800;
+}
+.password-group {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.wrapper-password {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wrapper-password input {
+  width: 100%;
+  padding-right: 45px;
+  padding-left: 40px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #717885;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--cor-texto-secundario);
+  font-size: 1.1rem;
+  z-index: 2;
+}
+
+.mensagem-alerta {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: red;
+}
+
+.cadastro-form-actual {
+  width: 100%; 
 }
 
 .form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 1rem;
-  margin-bottom: 8px;
+  position: relative;
+  margin-bottom: 18px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 25px;
+  padding: 13px 18px 13px 50px; 
+  border: 1px solid #E2E8F0;
+  border-radius: 30px !important;
+  background-color: #F7F8FC;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  color: #333A47;
+  padding-left: 40px !important;
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  color: #717885;
   font-size: 1rem;
-  margin-top: 5px;
-  outline: none;
+  pointer-events: none;
+  z-index: 2;
 }
 
-input:focus {
-  border-color: #4254cb;
-  box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
+.form-group.input-filled .input-icon {
+  opacity: 0;
 }
 
-.botao {
+.password-group input {
+  padding-right: 45px;
+}
+.password-toggle-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--cor-texto-secundario);
+  font-size: 1.1rem;
+  z-index: 2;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.btn-submit-cadastro {
   width: 100%;
-  padding: 12px;
-  font-size: 1.2rem;
-  background-color: #1e73be;
+  padding: 13px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background-color: var(--cor-primaria);
   color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: 30px;
   cursor: pointer;
-  margin-top: 20px;
+  margin-top: 25px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-button:hover {
-  background-color: #006bb3;
+.btn-submit-cadastro:hover {
+  background-color: #2a48d8;
+  box-shadow: 0 4px 12px rgba(58, 90, 254, 0.25);
 }
 
-p {
-  text-align: center;
-  margin-top: 20px;
+.login-link {
+  text-align: left;
+  margin-top: 25px;
+  font-size: 0.875rem;
+  color: var(--cor-texto-secundario);
 }
 
-a {
-  color: #1e73be;
+.login-link a {
+  color: var(--cor-primaria);
   text-decoration: none;
+  font-weight: 700;
 }
 
-a:hover {
+.login-link a:hover {
   text-decoration: underline;
 }
 
-/* Estilos para o modal (a janela em si) */
-.modal {
-background-color: white;
-padding: 25px; /* Aumentei um pouco o padding interno */
-border-radius: 8px; /* Arredondei um pouco mais as bordas */
-box-shadow: 0 0 12px rgba(0, 0, 0, 0.4); /* Aumentei um pouco a sombra */
-text-align: center;
-max-width: 95%; /* Permite ocupar um pouco mais em telas menores */
-width: 450px; /* Aumentei um pouco a largura desejada do modal */
+.form-ddi {
+  flex: 0 0 30% !important;
 }
 
-.modal p.mensagem-sucesso {
-color: black; /* Roxo escuro */
-font-size: 1.5rem; /* Aumentei um pouco o tamanho da fonte */
-margin-bottom: 20px; /* Aumentei um pouco a margem inferior */
+.form-ddi select{
+  padding-left: 30px !important;
 }
 
-/* Estilos para o botão de fechar */
-.btn-fechar-modal {
-padding: 12px 18px; /* Aumentei um pouco o padding do botão */
-background-color: #6a5acd; /* Roxo arroxeado */
-color: white;
-border: none;
-border-radius: 8px; /* Arredondei as bordas do botão também */
-cursor: pointer;
-font-size: 1.05rem; /* Aumentei um pouco a fonte do botão */
+.form-ddd {
+  flex: 0 0 20% !important;
 }
 
-.btn-fechar-modal:hover {
-background-color: #483d8b; /* Tom mais escuro no hover */
-}
-
-/* ... outros estilos ... */
-
-.modal.erro {
-background-color: #ffe0e0; /* Fundo levemente vermelho para indicar erro */
-border: 1px solid #ffaaaa;
-}
-
-.modal.erro p.mensagem-erro {
-color: #cc0000; /* Texto vermelho para a mensagem de erro */
-font-size: 1.1rem;
-margin-bottom: 20px;
-}
-
-/* ... outros estilos ... */
-
-.modal.confirmacao {
-background-color: white;
-padding: 25px;
-border-radius: 8px;
-box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
-text-align: center;
-max-width: 95%;
-width: 400px;
-}
-
-.modal.confirmacao p.mensagem-confirmacao {
-font-size: 1.1rem;
-margin-bottom: 20px;
-color: #333;
-}
-
-.botoes-confirmacao {
-display: flex;
-justify-content: center;
-gap: 15px;
-}
-
-.btn-confirmar,
-.btn-cancelar {
-padding: 10px 15px;
-border-radius: 5px;
-cursor: pointer;
-font-size: 1rem;
-}
-
-.btn-confirmar {
-background-color: #483d8b; /* Cor verde para confirmar */
-color: white;
-border: none;
-}
-
-.btn-confirmar:hover {
-background-color: #483d8b;
-}
-
-.btn-cancelar {
-background-color: #dc3545; /* Cor vermelha para cancelar */
-color: white;
-border: none;
-}
-
-.btn-cancelar:hover {
-background-color: #c82333;
-}
-
-
-
-.form-group label.senha-requisitos {
-display: block;
-font-size: 0.8rem;
-color: red;
-margin-top: 5px;
-}
-
-@media (max-width: 768px) {
-  .cadastro-container {
-    flex-direction: column; /* Para telas pequenas, coloca tudo em uma coluna */
+/* Responsividade */
+@media (max-width: 992px) {
+  .cadastro-image-panel {
+    display: none;
   }
-
-  .image-container {
-    height: 200px; /* Ajuste a altura para telas pequenas */
+  .cadastro-form-section {
+    padding: 30px 20px;
   }
+  .form-content-area {
+    max-width: 420px;
+  }
+}
 
-  .form-container {
+@media (max-width: 576px) {
+  .cadastro-form-section {
     padding: 20px;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+  .form-content-area {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  .form-title {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .form-row .form-group {
+    margin-bottom: 18px;
+  }
+  .login-link {
+    text-align: center;
+  }
+  .form-group input {
+    padding-left: 40px; 
+  }
+  .input-icon {
+    left: 12px;
+    font-size: 0.9rem;
+  }
+  .password-group input {
+    padding-right: 40px;
+  }
+  .password-toggle-icon {
+    right: 12px;
+    font-size: 1rem;
   }
 }

@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import './Cadastro.css';
 import api from '../../services/api';
-import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
+import { paisesComDdi } from '../../utils/paisesComDdi';
+// Importando ícones
+import { FaUser, FaEnvelope, FaIdCard, FaLock, FaMapMarkerAlt, FaHome, FaBuilding, FaPhone, FaGlobe, FaMapPin } from 'react-icons/fa'; // Ícones gerais
+import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs'; 
+import { MdConfirmationNumber } from "react-icons/md"; 
 
 const Cadastro = () => {
   const [formData, setFormData] = useState({
@@ -13,8 +17,14 @@ const Cadastro = () => {
     cep: '',
     endereco: '',
     numero: '',
-    complemento: ''
+    complemento: '',
+    ddi: '',
+    ddd: '',
+    telefone: ''
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');
   const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
@@ -25,9 +35,49 @@ const Cadastro = () => {
   const [cpfCnpjValido, setCpfCnpjValido] = useState(true);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
+  const [emailValido, setEmailValido] = useState(true);
+  const [nomeValido, setNomeValido] = useState(true);
+  const [camposNumericosValidos, setCamposNumericosValidos] = useState({
+    cpfCnpj: true,
+    cep: true,
+    numero: true,
+    ddd: true,
+    telefone: true
+  });
+
+  const validarEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const validarNome = (nome) => {
+    const apenasLetras = /^[A-Za-zÀ-ÿ\s]+$/.test(nome);
+    return apenasLetras && nome.trim().length >= 3;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'email') {
+      setEmailValido(validarEmail(value));
+    }
+
+    if (name === 'nome') {
+      const apenasLetras = value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
+      setFormData({
+        ...formData,
+        [name]: apenasLetras,
+      });
+      setNomeValido(validarNome(apenasLetras));
+      return;
+    }
+
+    if (['cpfCnpj', 'cep', 'numero', 'ddd', 'telefone'].includes(name)) {
+      const apenasNumeros = value.replace(/\D/g, '');
+      setFormData({
+        ...formData,
+        [name]: apenasNumeros,
+      });
+      return;
+    }
+
     setFormData({
       ...formData,
       [name]: value,
@@ -45,17 +95,12 @@ const Cadastro = () => {
     }
   };
 
+
+
   const limparCampos = () => {
     setFormData({
-      nome: '',
-      email: '',
-      cpfCnpj: '',
-      senha: '',
-      confirmarSenha: '',
-      cep: '',
-      endereco: '',
-      numero: '',
-      complemento: '',
+      nome: '', email: '', cpfCnpj: '', senha: '', confirmarSenha: '',
+      cep: '', endereco: '', numero: '', complemento: '',
     });
   };
 
@@ -89,7 +134,6 @@ const Cadastro = () => {
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
-
       if (!data.erro) {
         setFormData({ ...formData, endereco: data.logradouro || '' });
       } else {
@@ -107,35 +151,31 @@ const Cadastro = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    if (!formData.email || !formData.cpfCnpj || !formData.senha || !formData.confirmarSenha || !formData.cep || !formData.endereco || !formData.numero) {
+      setMensagemErroModal('Por favor, preencha todos os campos obrigatórios.');
+      setMostrarModalErro(true);
+      return;
+    }
     if (!validarSenhaSegura(formData.senha)) {
       setMensagemErroModal('A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.');
       setMostrarModalErro(true);
       return;
     }
-
     if (formData.senha !== formData.confirmarSenha) {
       setMensagemErroModal('As senhas não coincidem!');
       setMostrarModalErro(true);
       return;
     }
-
-    if (formData.cpfCnpj && !validarCPF(formData.cpfCnpj)) {
+    if (formData.cpfCnpj && !validarCPF(formData.cpfCnpj)) { 
       setMensagemErroModal('CPF inválido!');
       setMostrarModalErro(true);
       return;
     }
-
     setMostrarConfirmacao(true);
   };
 
   const confirmarCadastro = async () => {
     setMostrarConfirmacao(false);
-    setMostrarModalErro(false);
-    setMensagemErroModal('');
-    setMostrarModalSucesso(false);
-    setMensagemSucessoModal('');
-
     try {
       const response = await api.post('/usuarios', formData);
       setMensagemSucessoModal(response.data);
@@ -144,7 +184,7 @@ const Cadastro = () => {
     } catch (error) {
       console.error('Erro no cadastro:', error);
       if (error.response && error.response.data) {
-        setMensagemErroModal(error.response.data);
+        setMensagemErroModal(error.response.data.message || error.response.data);
       } else {
         setMensagemErroModal('Ocorreu um erro ao cadastrar o usuário.');
       }
@@ -152,17 +192,10 @@ const Cadastro = () => {
     }
   };
 
-  const cancelarCadastro = () => {
-    setMostrarConfirmacao(false);
-  };
+  const cancelarCadastro = () => setMostrarConfirmacao(false);
+  const fecharModalSucesso = () => setMostrarModalSucesso(false);
+  const fecharModalErro = () => setMostrarModalErro(false);
 
-  const fecharModalSucesso = () => {
-    setMostrarModalSucesso(false);
-  };
-
-  const fecharModalErro = () => {
-    setMostrarModalErro(false);
-  };
 
   const alternarMostrarSenha = () => {
     setMostrarSenha(!mostrarSenha);
@@ -173,133 +206,162 @@ const Cadastro = () => {
   };
 
   return (
-    <div className="cadastro-container">
-      <div className="image-container-cad">
-        <img src="/imagens/cadastro.png" alt="Curva lateral" className="responsive-image-cad" />
+    <div className="cadastro-page-container">
+      <div className="cadastro-image-panel">
+        <img src="/imagens/cadastro.png" alt="Decoração cadastro" className="responsive-image-cad"/>
       </div>
-      <div className="spacer"></div>
-      <div className="form-container">
-        <h2>Cadastro</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="nome">Nome Completo:</label>
-            <input type="text" name="nome" value={formData.nome} onChange={handleChange} required id="nome" />
-          </div>
-          <div className="form-group">
-            <label htmlFor="email">E-mail:</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} required id="email" />
-          </div>
-          <div className="form-group">
-            <label htmlFor="cpfCnpj">CPF/CNPJ:</label>
-            <input
-              type="text"
-              name="cpfCnpj"
-              value={formData.cpfCnpj}
-              onChange={handleChange}
-              required
-              id="cpfCnpj"
-              onBlur={(e) => {
-                if (e.target.value && !validarCPF(e.target.value)) {
-                  setMensagemErroModal('CPF ou CNPJ inválidos!');
-                  setMostrarModalErro(true);
-                }
-              }}
-            />
+      <div className="cadastro-form-section">
+        <div className="cadastro-form-wrapper">
+          <h2 className="form-title">Cadastre-se</h2>
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="form-group">
+              <div className="wrapper-password">
+                <FaUser className="input-icon" />
+                <input name="nome" placeholder="Nome Completo" value={formData.nome} onChange={handleChange} required id="nome" maxLength={100}/>
+              </div>
+              {!nomeValido && formData.nome.length > 0 && (
+                <p className="mensagem-alerta">Digite um nome válido com pelo menos 3 letras.</p>
+              )}
+
+
+            </div>
+            <div className="form-group">
+              <div className="wrapper-password">
+                <FaEnvelope className="input-icon" />
+                <input type="email" name="email" placeholder="E-mail" value={formData.email} onChange={handleChange} required id="email" maxLength={100} />
+              </div>
+              {!emailValido && formData.email.length > 0 && (
+                <p className="mensagem-alerta">Digite um e-mail válido.</p>
+              )}
+            </div>
+            <div className="form-group">
+              <div className="wrapper-password">
+                <FaIdCard className="input-icon" />
+                <input name="cpfCnpj" placeholder="CPF/CNPJ" maxLength={14} value={formData.cpfCnpj} onChange={handleChange} required id="cpfCnpj" onBlur={(e) => {
+                  if (e.target.value && !validarCPF(e.target.value)) {
+                    setMensagemErroModal('CPF ou CNPJ inválidos!');
+                    setMostrarModalErro(true);
+                  }
+                }}
+              />
+              </div>
+              
             {!cpfCnpjValido && formData.cpfCnpj.length > 0 && (
               <p className="mensagem-alerta">CPF ou CNPJ inválidos!</p>
-            )}
-          </div>
-          <div className="form-group senha-container">
-          <label htmlFor="senha">Senha:</label>
-          <input
-            type={mostrarSenha ? 'text' : 'password'}
-            name="senha"
-            value={formData.senha}
-            onChange={handleChange}
-            required
-            id="senha"
-          />
-          <button
-            type="button"
-            className="mostrar-senha-btn"
-            onClick={alternarMostrarSenha}
-            tabIndex={-1}
-          >
-            {mostrarSenha ? <AiFillEyeInvisible /> : <AiFillEye />}
-          </button>
-          {!senhaValida && formData.senha.length > 0 && (
-            <p className="mensagem-alerta">
-              A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caracter especial.
-            </p>
-          )}
+            )} 
+            </div>
+            <div className="form-group password-group">
+              <div className="wrapper-password">
+                <FaLock className="input-icon" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="senha"
+                  placeholder="Senha"
+                  maxLength={64}
+                  value={formData.senha}
+                  onChange={handleChange}
+                  required
+                  id="senha"
+                />
+                <span onClick={() => setShowPassword(!showPassword)} className="password-toggle-icon">
+                  {showPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
+                </span>
+              </div>
+              {!senhaValida && formData.senha.length > 0 && (
+                <p className="mensagem-alerta">
+                  A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caracter especial.
+                </p>
+              )}
+            </div>
+
+            <div className="form-group password-group">
+               <div className="wrapper-password">
+                  <FaLock className="input-icon" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmarSenha"
+                  placeholder="Confirme sua senha"
+                  maxLength={64}
+                  value={formData.confirmarSenha}
+                  onChange={handleChange}
+                  required id="confirmarSenha"/>
+                <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="password-toggle-icon">
+                  {showConfirmPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
+                </span>
+               </div>
+              
+              {!senhasCoincidem && formData.confirmarSenha.length > 0 && (
+                <p className="mensagem-alerta">As senhas não coincidem!</p>
+              )}
+            </div>
+
+            <div className="form-row">
+              <div className="form-group form-ddi">
+                <FaGlobe className="input-icon" />
+                <select
+                  name="ddi"
+                  value={formData.ddi}
+                  onChange={handleChange}
+                  required
+                  id="ddi">
+                  <option value="">Selecione o país</option>
+                  {paisesComDdi.map((pais) => (
+                    <option key={pais.ddi} value={pais.ddi}>
+                      {pais.nome} ({pais.ddi})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group form-ddd">
+                <FaMapPin className="input-icon" />
+                <input
+                  name="ddd"
+                  placeholder="DDD"
+                  maxLength={3}
+                  value={formData.ddd}
+                  onChange={handleChange}
+                  required
+                  id="ddd"/>
+              </div>
+              <div className="form-group form-telefone">
+                <FaPhone className="input-icon" />
+                <input
+                  name="telefone"
+                  placeholder="Telefone"
+                  maxLength={10}
+                  value={formData.telefone}
+                  onChange={handleChange}
+                  required
+                  id="telefone"/>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <FaMapMarkerAlt className="input-icon" />
+                <input name="cep" placeholder="CEP" maxLength={8} value={formData.cep} onChange={handleChange} onBlur={(e) => buscarEndereco(e.target.value)} required id="cep" />
+              </div>
+              <div className="form-group">
+                <MdConfirmationNumber className="input-icon" />
+                <input name="numero" placeholder="Número" maxLength={6} value={formData.numero} onChange={handleChange} required id="numero" />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <FaHome className="input-icon" />
+              <input name="endereco" placeholder="Endereço (Logradouro)" maxLength={80} value={formData.endereco} onChange={handleChange} required id="endereco" />
+            </div>
+
+            <div className="form-group">
+              <FaBuilding className="input-icon" />
+              <input name="complemento" maxLength={30} placeholder="Complemento (Opcional)" value={formData.complemento} onChange={handleChange} id="complemento" />
+            </div> 
+
+            <button className='btn-submit-cadastro' type="submit">Cadastrar</button>
+          </form>
+          <p className="login-link">
+            Já possui uma conta? <a href="/login">Faça o login</a>
+          </p>
         </div>
-
-        <div className="form-group senha-container">
-          <label htmlFor="confirmarSenha">Confirmar Senha:</label>
-          <input
-            type={mostrarConfirmarSenha ? 'text' : 'password'}
-            name="confirmarSenha"
-            value={formData.confirmarSenha}
-            onChange={handleChange}
-            required
-            id="confirmarSenha"
-          />
-          <button
-            type="button"
-            className="mostrar-senha-btn"
-            onClick={alternarMostrarConfirmarSenha}
-            tabIndex={-1}
-          >
-            {mostrarConfirmarSenha ? <AiFillEyeInvisible /> : <AiFillEye />}
-          </button>
-          {!senhasCoincidem && formData.confirmarSenha.length > 0 && (
-            <p className="mensagem-alerta">As senhas não coincidem!</p>
-          )}
-        </div>
-
-          <div className="form-group">
-            <label htmlFor="cep">CEP:</label>
-            <input
-              type="text"
-              name="cep"
-              value={formData.cep}
-              onChange={handleChange}
-              required
-              id="cep"
-              onBlur={(e) => buscarEndereco(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="endereco">Logradouro:</label>
-            <input
-              type="text"
-              name="endereco"
-              value={formData.endereco}
-              onChange={handleChange}
-              required
-              id="endereco"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="numero">Número:</label>
-            <input type="text" name="numero" value={formData.numero} onChange={handleChange} required id="numero" />
-          </div>
-          <div className="form-group">
-            <label htmlFor="complemento">Complemento:</label>
-            <input
-              type="text"
-              name="complemento"
-              value={formData.complemento}
-              onChange={handleChange}
-              id="complemento"
-            />
-          </div>
-
-          <button className="botao" type="submit">Cadastrar</button>
-        </form>
-        <p className="link-login">
-          Já possui uma conta? <a href="/login">Faça Login Aqui!</a>
-        </p>
       </div>
 
       {mostrarConfirmacao && (
@@ -313,7 +375,6 @@ const Cadastro = () => {
           </div>
         </div>
       )}
-
       {mostrarModalSucesso && mensagemSucessoModal && (
         <div className="modal-overlay">
           <div className="modal sucesso">
@@ -322,7 +383,6 @@ const Cadastro = () => {
           </div>
         </div>
       )}
-
       {mostrarModalErro && mensagemErroModal && (
         <div className="modal-overlay">
           <div className="modal erro">
