@@ -10,6 +10,12 @@ import Login from './components/Login/Login';
 import PrivateRoute from './components/PrivateRoute';
 import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
 import ConfiguracaoFila from './components/ConfiguracaoFila/ConfiguracaoFila';
+import Empresa from './components/Empresa/Empresa';
+import FilaLista from './components/ListarFilas/FilaLista';
+import GestaoFilaClientes from './components/GestaoFilaClientes/GestaoFilaClientes';
+import Dashboard from './components/Dashboard/Dashboard';
+import Relatorio from './components/Relatorio/Relatorio'
+
 function App() {
   return (
     <Router>
@@ -22,13 +28,18 @@ function App() {
          <Route path="/configuracaofila" element={<ConfiguracaoFila />} />
         <Route path="/escolher-empresa" element={<Empresa />} />
         <Route path="/configuracao" element={<FormularioConfiguracaoFila />} />
+        <Route path="/filas" element={<FilaLista />} />
+        <Route path="/gestao-fila/:idEmpresa/:dtMovto/:idFila" element={<GestaoFilaClientes />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/relatorio" element={<Relatorio />} />
+
 
         <Route
           path="/home"
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <Home />
-            </PrivateRoute>
+            // </PrivateRoute>
           }
         />
       </Routes>

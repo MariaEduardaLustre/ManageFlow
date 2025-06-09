@@ -1,183 +1,273 @@
-/* Estrutura geral */
+/* Estrutura geral da página Home */
 .home-container {
-  display: flex;
-  height: 100vh;
-  background-color: #f8f9fd;
-  font-family: 'Poppins', sans-serif;
+    display: flex;
+    height: 100vh;
+    background-color: #f8f9fd;
 }
 
-/* Sidebar */
-.sidebar {
-  width: 250px;
-  background-color: #ffffff;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-right: 1px solid #e0e0e0;
+/* --- HEADER DA PÁGINA HOME --- */
+.home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
 }
 
-
-.sidebar .logo {
-  font-weight: bold;
-  font-size: 1.5rem;
-  margin-bottom: 40px;
+.home-header-greeting {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #333;
 }
 
-.sidebar nav ul {
-  list-style: none;
-  padding: 0;
+.home-empresa-btn {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    background-color: #fff !important;
+    border: 1px solid #e0e0e0 !important;
+    padding: 10px 20px !important;
 }
 
-.sidebar nav ul li {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #9197B3;
-  cursor: pointer;
- 
+/* --- SEÇÃO DE CARDS --- */
+.home-cards-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
 }
 
-.sidebar nav ul li.active {
-  background-color: #f0f4ff;
-  padding: 10px;
-  border-radius: 8px;
-  font-weight: bold;
-  color: #1e73be;
+.home-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.home-card.action-card {
+    cursor: pointer;
 }
 
-.user-info img {
-  border-radius: 50%;
+.home-card.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Main Content */
-.main-content {
-  flex: 1;
-  padding: 30px;
-  overflow-y: auto;
+.home-card-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
 }
 
-header h1 {
-  font-size: 2rem;
-  margin-bottom: 20px;
+/* Cores específicas para cada card */
+.home-card-icon-wrapper.total-membros {
+    background-color: #e6f1ff;
+    color: #4a90e2;
 }
 
-.cards {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
+.home-card-icon-wrapper.adicionar-membro {
+    background-color: #e0f8e9;
+    color: #34a853;
 }
 
-.card {
-  flex: 1;
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.home-card-icon-wrapper.configurar-perfil {
+    background-color: #fcefe2;
+    color: #f5a623;
 }
 
-.usuarios-section {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+.home-card-info {
+    display: flex;
+    flex-direction: column;
 }
 
-.usuarios-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.home-card-title {
+    font-size: 1rem;
+    color: #888;
+    margin-bottom: 5px;
 }
 
-.usuarios-header input {
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  width: 200px;
+.home-card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
 }
 
-.usuarios-table {
-  width: 100%;
-  border-collapse: collapse;
+/* Título da seção de usuários */
+.home-section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
 }
 
-.usuarios-table th, .usuarios-table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
+/* Removendo o título principal antigo, já que temos o header */
+.main-content-empresa-titulo {
+    display: none;
 }
 
-.status-active {
-  background-color: #d1f7d6;
-  color: #2d8a34;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 0.85rem;
+/* --- Sidebar Específica da Home --- */
+.home-sidebar {
+    width: 250px;
+    background-color: #ffffff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid #e0e0e0;
 }
 
-.status-inactive {
-  background-color: #fddada;
-  color: #d0312d;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 0.85rem;
+.home-sidebar .home-logo {
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin-bottom: 40px;
 }
 
-/* Paginação */
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  gap: 5px;
+.home-sidebar .home-logo-img {
+    max-width: 80%; /* Ajuste para o tamanho do seu logo */
+    height: auto;
 }
 
-.pagination button {
-  background: #f0f4ff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
+.home-sidebar nav ul {
+    list-style: none;
+    padding: 0;
 }
 
-.pagination button.active {
-  background-color: #1e73be;
-  color: white;
-}
-.adicionar-usuario {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.adicionar-usuario input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+.home-sidebar nav ul li {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #9197B3;
+    cursor: pointer;
 }
 
-.adicionar-usuario button {
-  background-color: #1e73be;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.home-sidebar nav ul li.active {
+    background-color: #f0f4ff;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    color: #1e73be;
 }
 
-.responsive-image{
-  width: 10px;
+.home-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+
+.home-user-info img {
+    border-radius: 50%;
+}
+
+/* --- Conteúdo Principal Específico da Home --- */
+.home-main-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.home-main-content-empresa-titulo {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.home-main-content-empresa-titulo:hover {
+    color: #1e73be;
+}
+
+.home-usuarios-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Seção de Adicionar Usuário --- */
+.home-adicionar-usuario {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Melhora a responsividade */
+}
+
+.home-adicionar-usuario input,
+.home-adicionar-usuario select {
+    flex: 1;
+    min-width: 200px; /* Largura mínima para os inputs */
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.home-adicionar-usuario button {
+    background-color: #1e73be;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s ease;
+}
+
+.home-adicionar-usuario button:hover {
+    background-color: #165a94;
+}
+
+/* --- Tabela de Usuários --- */
+.home-usuarios-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.home-usuarios-table th,
+.home-usuarios-table td {
+    padding: 15px 12px; /* Aumenta o padding para melhor leitura */
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.home-usuarios-table th {
+    color: #9197B3;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.home-permissao-select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #f8f9fd;
+}
+
+.home-btn-remover {
+    background-color: transparent;
+    color: #dc3545;
+    border: none;
+    font-size: 1.2rem; /* Aumenta o ícone */
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+.home-btn-remover:hover {
+    color: #a71d2a;
+}
+

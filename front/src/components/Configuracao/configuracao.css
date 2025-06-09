@@ -468,6 +468,19 @@ input:checked + .slider:before {
 
     .subtitle, .toggle-text span, .upload-area span, .campo-box span {
         font-size: 13px;
+    margin-top: 15px;
+  }
+  
+  .botao:hover {
+    background-color: #006bb3;
+  }
+  
+  
+  @media (max-width: 768px) {
+    .form-container-config {
+      width: 95%;
+      margin: 20px auto;
+      padding: 20px;
     }
 
     .input-field label, .section-card .section-title {
