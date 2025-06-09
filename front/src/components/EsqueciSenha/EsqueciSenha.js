@@ -15,7 +15,7 @@ const EsqueciSenha = () => {
     setMostrarModal(false); // Esconde o modal em caso de novas tentativas
 
     try {
-      const response = await api.post('/usuarios/esqueci-senha', { email });
+      const response = await api.post('/esqueci-senha', { email });
       setMensagem(response.data);
       setMostrarModal(true); // Mostra o modal após o sucesso
     } catch (error) {

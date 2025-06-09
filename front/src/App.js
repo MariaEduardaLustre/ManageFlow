@@ -19,8 +19,10 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
-        <Route path="/configuracao" element={<FormularioConfiguracaoFila />} />
          <Route path="/configuracaofila" element={<ConfiguracaoFila />} />
+        <Route path="/escolher-empresa" element={<Empresa />} />
+        <Route path="/configuracao" element={<FormularioConfiguracaoFila />} />
+
         <Route
           path="/home"
           element={
