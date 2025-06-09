@@ -475,7 +475,7 @@ input:checked + .slider:before {
     background-color: #006bb3;
   }
   
-  
+}
   @media (max-width: 768px) {
     .form-container-config {
       width: 95%;

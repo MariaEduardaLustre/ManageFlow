@@ -2,16 +2,17 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 
-// --- IMPORTS COMPLETOS (UNINDO AS DUAS VERSÕES) ---
+// --- IMPORTS COMPLETOS ---
 import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaEdit, FaUndo, FaPlus } from 'react-icons/fa';
 import { Modal, Button, Form } from 'react-bootstrap';
 import Menu from '../Menu/Menu'; 
 import './GestaoFilaClientes.css';
+
 const GestaoFilaClientes = () => {
     const { idEmpresa, dtMovto, idFila } = useParams();
     const navigate = useNavigate();
 
-    // --- STATES COMPLETOS (UNINDO AS DUAS VERSÕES) ---
+    // --- STATES COMPLETOS ---
     const [clientesFila, setClientesFila] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -28,15 +29,14 @@ const GestaoFilaClientes = () => {
 
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
-    // Lógica original de usuário e cargo
     const nomeUsuario = localStorage.getItem('nomeUsuario') || "Usuário";
     const cargoUsuario = "Gerente"; // Exemplo, ajuste conforme necessário
 
-    // --- FUNÇÕES DE FORMATAÇÃO (LÓGICA ORIGINAL) ---
+    // --- FUNÇÕES DE FORMATAÇÃO ---
     const formatarData = (dataSQL) => {
         if (!dataSQL) return 'N/A';
         const date = new Date(dataSQL);
-        if (isNaN(date.getTime())) return dataSQL.toString().substring(0, 10); // Fallback para strings
+        if (isNaN(date.getTime())) return dataSQL.toString().substring(0, 10);
         const options = { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' };
         return new Intl.DateTimeFormat('pt-BR', options).format(date);
     };
@@ -62,7 +62,7 @@ const GestaoFilaClientes = () => {
         return `(${String(ddd).replace(/\D/g, '')}) ${String(numero).replace(/\D/g, '')}`;
     };
 
-    // --- LÓGICA DE BUSCA E NAVEGAÇÃO (ORIGINAL) ---
+    // --- LÓGICA DE BUSCA E NAVEGAÇÃO ---
     const fetchClientesFila = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -88,7 +88,7 @@ const GestaoFilaClientes = () => {
         fetchClientesFila();
     }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFila]);
 
-    // --- FUNÇÕES DE LÓGICA PARA STATUS E AÇÕES (ORIGINAIS, ADAPTADAS PARA MODAIS) ---
+    // --- FUNÇÕES DE LÓGICA PARA STATUS E AÇÕES ---
     const getSituacaoText = (situacao) => {
         switch (situacao) {
             case 1: return 'Confirmado';
@@ -106,7 +106,7 @@ const GestaoFilaClientes = () => {
     };
 
     const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
-        const situacaoOriginal = cliente.SITUACAO;
+        const situacaoOriginal = cliente.SITUACAO; 
         setClientesFila(prev => prev.map(c => c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c));
         setEditingClienteId(null);
         try {
@@ -130,7 +130,7 @@ const GestaoFilaClientes = () => {
         navigate('/');
     };
 
-    // --- LÓGICA PARA ADICIONAR CLIENTE (NOVA, ADAPTADA PARA MODAIS) ---
+    // --- LÓGICA PARA ADICIONAR CLIENTE ---
     const handleCloseAddModal = () => setShowAddModal(false);
     const handleShowAddModal = () => {
         setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
@@ -151,9 +151,13 @@ const GestaoFilaClientes = () => {
         }
     };
 
+    // --- NOVA FUNÇÃO: NAVEGAR PARA O PAINEL DE EXIBIÇÃO ---
+    const handleVerPainel = () => {
+        navigate(`/painel-fila/${idEmpresa}/${dtMovto}/${idFila}`);
+    };
+
     return (
         <div className="home-container">
-            
             <Menu />
             <main className="main-content">
                 <div className="empresa-titulo-container">
@@ -163,7 +167,11 @@ const GestaoFilaClientes = () => {
                 <section className="clientes-fila-section">
                     <div className="section-header">
                         <h2 className="section-title">Clientes na Fila</h2>
-                        <Button variant="primary" onClick={handleShowAddModal}><FaPlus /> Adicionar Cliente</Button>
+                        {/* --- Adicionando o botão "Ver Painel" aqui --- */}
+                        <div className="header-buttons"> {/* Novo div para agrupar botões */}
+                            <Button variant="primary" onClick={handleShowAddModal} className="me-2"><FaPlus /> Adicionar Cliente</Button>
+                            <Button variant="info" onClick={handleVerPainel}><FaTv /> Ver Painel</Button> {/* Novo botão */}
+                        </div>
                     </div>
 
                     {loading && <p>Carregando clientes...</p>}

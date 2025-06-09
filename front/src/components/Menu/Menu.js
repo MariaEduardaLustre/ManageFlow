@@ -85,10 +85,10 @@ const Sidebar = () => {
                 <FaCogs />
                 {!colapsado && <span>Configuração de fila</span>}
             </NavLink>
-            <NavLink to="/painel-tv" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            {/*<NavLink to="/painel-fila/:idEmpresa/:dtMovto/:idFila" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                 <FaTv />
                 {!colapsado && <span>Painel de TV</span>}
-            </NavLink>
+            </NavLink>*/}
             <NavLink to="/filas" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                 <FaClipboardList />
                 {!colapsado && <span>Gestão da Fila</span>}
