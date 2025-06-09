@@ -14,6 +14,8 @@ import FilaLista from './components/ListarFilas/FilaLista';
 import GestaoFilaClientes from './components/GestaoFilaClientes/GestaoFilaClientes';
 // Novo componente para a tela de listagem de filas configuradas
 import FilasCadastradas from './components/FilasCadastradas/FilasCadastradas'; // Crie este arquivo
+import Dashboard from './components/Dashboard/Dashboard';
+import Relatorio from './components/Relatorio/Relatorio'
 
 
 function App() {
@@ -36,13 +38,16 @@ function App() {
 
         <Route path="/filas" element={<FilaLista />} />
         <Route path="/gestao-fila/:idEmpresa/:dtMovto/:idFila" element={<GestaoFilaClientes />} />
-       
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/relatorio" element={<Relatorio />} />
+
+
         <Route
           path="/home"
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <Home />
-            </PrivateRoute>
+            // </PrivateRoute>
           }
         />
       </Routes>

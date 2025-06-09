@@ -35,7 +35,7 @@ const Empresa = ({ idUsuario }) => {
 
   const escolherEmpresa = (empresa) => {
     localStorage.setItem('empresaSelecionada', JSON.stringify(empresa));
-    navigate('/dashboard');
+    navigate('/home');
   };
 
   const criarEmpresa = async () => {

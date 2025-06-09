@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt } from 'react-icons/fa';
 import './FilaLista.css';
+import Menu from '../Menu/Menu';
 
 const FilaLista = () => {
     const [filas, setFilas] = useState([]);
@@ -114,42 +115,7 @@ const FilaLista = () => {
 
     return (
         <div className="home-container">
-            <aside className="sidebar">
-                <div className="logo">
-                    <img src="/imagens/logoManageflow.png" alt="Manageflow Logo" className="responsive-image" />
-                </div>
-                <nav>
-                    <ul>
-                        <li>
-                            <Link to="/home" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                <FaTv /> Dashboard
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/filas-cadastradas" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                <FaCog /> Configuração de fila
-                            </Link>
-                        </li>
-                        <li><FaTv /> Painel de TV</li>
-                        <li className="active">
-                            <Link to="/filas" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                <FaClipboardList /> Gestão da fila
-                            </Link>
-                        </li>
-                        <li><FaChartBar /> Relatórios</li>
-                        <li>
-                            <Link to="/home" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                <FaUser /> Usuários
-                            </Link>
-                        </li>
-                        <li onClick={logout} style={{ cursor: 'pointer', color: 'red', marginTop: '20px' }}><FaSignOutAlt /> Sair</li>
-                    </ul>
-                </nav>
-                <div className="user-info">
-                    <img src="https://i.pravatar.cc/40" alt={nomeUsuario} />
-                    <div>{nomeUsuario}<br /><small>{cargoUsuario}</small></div>
-                </div>
-            </aside>
+            <Menu />
 
             <main className="main-content">
                 {/* ALTERAÇÃO AQUI: Remover o span da label "Empresa" */}

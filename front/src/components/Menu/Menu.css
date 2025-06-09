@@ -1,0 +1,164 @@
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background-color: #fff;
+  border-right: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 20px;
+}
+.sidebar.sidebar.collapsed {
+  padding: 0 !important;
+  align-items: center;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 30px;
+  justify-content: space-between;
+}
+
+.sidebar-footer{
+    margin-top: auto;
+}
+
+.sidebar-logo img {
+  width: 120px;
+  height: auto;
+  max-height: 40px;
+  object-fit: contain;
+}
+
+.sidebar.collapsed .sidebar-logo img {
+  width: 30px;
+}
+
+.toggle-btn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #a0a4b8;
+}
+
+.sidebar-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar nav ul li {
+    margin-bottom: 0;
+}
+.sidebar-menu li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #a0a4b8;
+  font-size: 0.95rem;
+  padding: 12px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-menu a.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #a0a4b8;
+  font-size: 0.95rem;
+  padding: 12px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-menu a.sidebar-link:hover {
+  background-color: #f2f4ff;
+}
+
+.sidebar-menu a.sidebar-link.active {
+  background-color: #e9efff;
+  color: #3A5AFE;
+  font-weight: bold;
+}
+
+
+.sidebar-menu li:hover {
+  background-color: #f2f4ff;
+}
+
+.sidebar-menu li.active {
+  background-color: #e9efff;
+  color: #3A5AFE;
+  font-weight: bold;
+}
+
+.sidebar.collapsed .sidebar-menu .sidebar-link span {
+  display: none;
+}
+
+.sidebar-footer {
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: red;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.user-role {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    z-index: 1000;
+    height: 100vh;
+    left: 0;
+    top: 0;
+  }
+
+  .home-content, .main-content {
+    margin-left: 70px; /* ou 240px se expandido */
+    transition: margin 0.3s ease;
+  }
+}
+
