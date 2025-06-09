@@ -9,12 +9,12 @@ import LandingPage from './components/Landing/Landing';
 import Login from './components/Login/Login';
 import PrivateRoute from './components/PrivateRoute';
 import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
-import ConfiguracaoFila from './components/ConfiguracaoFila/ConfiguracaoFila';
 import Empresa from './components/Empresa/Empresa';
 import FilaLista from './components/ListarFilas/FilaLista';
 import GestaoFilaClientes from './components/GestaoFilaClientes/GestaoFilaClientes';
 import Dashboard from './components/Dashboard/Dashboard';
 import Relatorio from './components/Relatorio/Relatorio'
+
 
 function App() {
   return (
@@ -25,7 +25,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
-         <Route path="/configuracaofila" element={<ConfiguracaoFila />} />
         <Route path="/escolher-empresa" element={<Empresa />} />
         <Route path="/configuracao" element={<FormularioConfiguracaoFila />} />
         <Route path="/filas" element={<FilaLista />} />
