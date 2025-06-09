@@ -2,8 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const usuarioRoutes = require('./routes/usuarioRoutes');
+const configuracaoRoutes = require('./routes/configuracaoRoutes'); // ConfiguracaFila adicionada
 const empresaRoutes = require('./routes/empresaRoutes');
-const configuracaoRoutes = require('./routes/configuracaoRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+app.use('/api/usuarios', usuarioRoutes);
+app.use('/api', configuracaoRoutes); // adiciona a nova rota de configuração de fila
 app.use('/api', usuarioRoutes);
 app.use('/api/empresas', empresaRoutes);
 app.use('/api/configuracao', configuracaoRoutes);
