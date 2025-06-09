@@ -127,10 +127,16 @@
     align-self: flex-start;
 }
 
+.clientes-fila-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* <-- Esta linha foi adicionada/ajustada */
+}
+
 .clientes-fila-section .section-title {
     font-size: 1.5rem;
     font-weight: bold;
-    margin-bottom: 20px;
     color: #333;
     text-align: left;
 }
@@ -142,7 +148,7 @@
     border-spacing: 0;
     overflow: hidden;
     border-radius: 8px;
-    table-layout: fixed; /* Isso faz com que as larguras das colunas sejam respeitadas */
+    table-layout: fixed;
 }
 
 .clientes-fila-table th, .clientes-fila-table td {
@@ -150,7 +156,6 @@
     text-align: left;
     border-bottom: 1px solid #eee;
     vertical-align: middle;
-    /* Removido white-space, overflow, text-overflow para a coluna de ações para permitir flexbox */
 }
 
 .clientes-fila-table th {
@@ -197,8 +202,8 @@
     justify-content: flex-start;
     align-items: center;
     gap: 5px;
-    flex-wrap: nowrap; /* Impede que os itens quebrem linha, preferindo o overflow */
-    width: 100%; /* Ocupa toda a largura disponível da célula */
+    flex-wrap: nowrap;
+    width: 100%;
 }
 
 /* Estilos para o grupo de botões de ícone */
@@ -206,20 +211,19 @@
     display: flex;
     gap: 5px;
     align-items: center;
-    flex-wrap: nowrap; /* Importante para manter o botão "Editar" na mesma linha da mensagem */
+    flex-wrap: nowrap;
 }
 
 /* Estilo para quando a mensagem de status e o botão de editar estão juntos */
 .icone-buttons-group.status-display {
-    gap: 10px; /* Mais espaço entre a mensagem e o botão de editar */
-    flex-wrap: nowrap; /* Reafirma que não deve quebrar linha */
+    gap: 10px;
+    flex-wrap: nowrap;
 }
-
 
 .btn-acao {
     padding: 8px;
     border: none;
-    border-radius: 5px; /* Ajuste para bordas levemente arredondadas */
+    border-radius: 5px;
     width: 38px;
     height: 38px;
     display: flex;
@@ -264,16 +268,14 @@
     color: #495057;
     font-style: italic;
     font-size: 0.9em;
-    padding: 8px 12px; /* Padding para o badge */
-    background-color: #e2e6ea; /* Cor de fundo para o badge */
-    border-radius: 5px; /* Bordas arredondadas como os botões */
-    display: inline-flex; /* Para que o padding e alinhamento funcionem */
+    padding: 8px 12px;
+    background-color: #e2e6ea;
+    border-radius: 5px;
+    display: inline-flex;
     align-items: center;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-    white-space: nowrap; /* Garante que o texto não quebre linha */
-    /* text-overflow: ellipsis; */ /* Removido/Comentado para não cortar o texto */
-    /* overflow: hidden; */ /* Removido/Comentado para não cortar o texto */
-    flex-shrink: 0; /* Impede que a mensagem encolha */
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .error-message {
@@ -328,7 +330,7 @@
         font-size: 1em;
     }
     .icone-buttons-group { gap: 3px; }
-    .icone-buttons-group.status-display { gap: 8px; /* Menor espaço em telas menores */ }
+    .icone-buttons-group.status-display { gap: 8px; }
     .acao-disabled-message { font-size: 0.8em; padding: 6px 10px; }
 }
 
@@ -354,7 +356,7 @@
         -webkit-overflow-scrolling: touch;
         align-self: stretch;
     }
-    .clientes-fila-table { min-width: 800px; width: auto; } /* Aumente o min-width da tabela */
+    .clientes-fila-table { min-width: 800px; width: auto; }
     
     .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 18%; }
     .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 14%; }
@@ -368,20 +370,20 @@
 
     /* Ajustes para os botões de ação em mobile */
     .acao-buttons {
-        flex-direction: row; /* Permita que os itens quebrem linha */
-        justify-content: center; /* Centraliza os botões quando quebram */
+        flex-direction: row;
+        justify-content: center;
         flex-wrap: wrap; 
     }
 
     .icone-buttons-group {
         flex-direction: row; 
         gap: 5px;
-        flex-wrap: wrap; /* Permita que a mensagem e o botão quebrem linha */
-        justify-content: center; /* Centraliza */
+        flex-wrap: wrap;
+        justify-content: center;
     }
     .icone-buttons-group.status-display { 
-        gap: 5px; /* Menor espaço em mobile */ 
-        flex-wrap: wrap; /* Também permite quebra de linha aqui */
+        gap: 5px; 
+        flex-wrap: wrap;
         justify-content: center;
     }
 
@@ -401,7 +403,7 @@
     .section-title { font-size: 1.2em; margin-bottom: 15px; padding-left: 5px; }
     
     .clientes-fila-table th, .clientes-fila-table td { padding: 10px 10px; font-size: 0.8em; }
-    .clientes-fila-table { min-width: 700px; width: auto; } /* Mantenha um min-width para a tabela */
+    .clientes-fila-table { min-width: 700px; width: auto; }
 
     .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 18%; }
     .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 14%; }
@@ -424,7 +426,7 @@
     }
     .icone-buttons-group { 
         gap: 3px; 
-        flex-direction: column; /* Empilha a mensagem e o botão editar */
+        flex-direction: column;
         align-items: center;
     }
     .icone-buttons-group.status-display { 

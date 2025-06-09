@@ -398,25 +398,28 @@ router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, r
     try {
         await connection.beginTransaction();
 
-        // Passo 1: Encontrar ou criar o cliente na tabela principal 'Usuario' para ter um ID único.
-        let [clienteExistente] = await connection.query(
-            'SELECT ID FROM Usuario WHERE CPFCNPJ = ?',
+        // Passo 1: Procurar se o CPFCNPJ já existe em algum registro da tabela clientesfila.
+        const [clienteExistente] = await connection.query(
+            'SELECT ID_CLIENTE FROM clientesfila WHERE CPFCNPJ = ? ORDER BY DT_ENTRA DESC LIMIT 1',
             [CPFCNPJ]
         );
 
         let idCliente;
+
         if (clienteExistente.length > 0) {
-            idCliente = clienteExistente[0].ID;
+            // Se já existe, reutiliza o mesmo ID_CLIENTE.
+            idCliente = clienteExistente[0].ID_CLIENTE;
         } else {
-            const [novoClienteResult] = await connection.query(
-                `INSERT INTO Usuario (NOME, CPFCNPJ, DT_NASC, EMAIL, DDDCEL, NR_CEL, RG) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [NOME, CPFCNPJ, DT_NASC, EMAIL, DDDCEL, NR_CEL, RG]
+            // Se não existe, precisamos criar um novo ID.
+            // Para isso, pegamos o maior ID existente e somamos 1.
+            const [[maxIdResult]] = await connection.query(
+                'SELECT MAX(ID_CLIENTE) as maxId FROM clientesfila'
             );
-            idCliente = novoClienteResult.insertId;
+            // Se a tabela estiver vazia, maxIdResult.maxId será null, então começamos com 1.
+            idCliente = (maxIdResult.maxId || 0) + 1;
         }
 
-        // Passo 2: Verificar se este cliente já não está na fila específica.
+        // Passo 2: Verificar se este cliente (com o ID encontrado ou criado) já está na fila específica.
         const [jaNaFila] = await connection.query(
             'SELECT 1 FROM clientesfila WHERE ID_EMPRESA = ? AND DT_MOVTO = ? AND ID_FILA = ? AND ID_CLIENTE = ?',
             [idEmpresa, dtMovto, idFila, idCliente]
@@ -427,17 +430,16 @@ router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, r
             return res.status(409).json({ error: 'Este cliente já se encontra na fila.' });
         }
 
-        // Passo 3: Inserir o registro na tabela 'clientesfila' com a SITUACAO = 1.
+        // Passo 3: Inserir o novo registro na tabela 'clientesfila'.
         await connection.query(
             `INSERT INTO clientesfila (
                 ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, 
                 CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, 
                 DT_ENTRA, SITUACAO
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`, // << MUDANÇA 1: Adicionado SITUACAO
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`,
             [
                 idEmpresa, dtMovto, idFila, idCliente,
-                CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES || 1, DDDCEL, NR_CEL,
-                1 // << MUDANÇA 2: Definido o valor 1 para a SITUACAO
+                CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES || 0, DDDCEL, NR_CEL
             ]
         );
 
