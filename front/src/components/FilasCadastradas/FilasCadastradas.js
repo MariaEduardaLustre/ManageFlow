@@ -70,7 +70,7 @@ const FilasCadastradas = () => {
                 body: JSON.stringify({ block: !currentBlockStatus })
             });
             if (!response.ok) {
-                 const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
+                const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
                 throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || JSON.stringify(errorData)}`);
             }
             fetchFilas(idEmpresaLogada); // <--- Recarrega as filas com o ID da empresa após a mudança
@@ -88,7 +88,7 @@ const FilasCadastradas = () => {
                 body: JSON.stringify({ situacao: !currentStatus })
             });
             if (!response.ok) {
-                 const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
+                const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
                 throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || JSON.stringify(errorData)}`);
             }
             fetchFilas(idEmpresaLogada); // <--- Recarrega as filas com o ID da empresa após a mudança
@@ -122,7 +122,7 @@ const FilasCadastradas = () => {
                         </li>
                         <li><FaTv /> Painel de TV</li>
                         <li>
-                            <Link to="/gestao-fila/1/2025-01-01/1">
+                            <Link to="/filas">
                                 <FaCog /> Gestão da fila
                             </Link>
                         </li>
@@ -140,101 +140,104 @@ const FilasCadastradas = () => {
             </aside>
 
             <main className="main-content">
-                <div className="cards-section">
-                    <div className="card total-filas">
-                        <FaUsers className="card-icon" />
-                        <div className="card-text">
-                            <p>Total de filas</p>
-                            <h3>{filas.length}</h3>
+                {/* O conteúdo dentro de main-content será centralizado pelo CSS */}
+                <div className="content-wrapper"> {/* Novo wrapper para centralizar */}
+                    <div className="cards-section">
+                        <div className="card total-filas">
+                            <FaUsers className="card-icon" />
+                            <div className="card-text">
+                                <p>Total de filas</p>
+                                <h3>{filas.length}</h3>
+                            </div>
+                        </div>
+                        <div className="card add-fila" onClick={() => navigate('/configuracao')}>
+                            <FaPlus className="card-icon" />
+                            <div className="card-text">
+                                <p>Adicionar fila</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="card add-fila" onClick={() => navigate('/configuracao')}>
-                        <FaPlus className="card-icon" />
-                        <div className="card-text">
-                            <p>Adicionar fila</p>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="page-content">
-                    <h2>Configurações de fila</h2>
+                    <div className="page-content">
+                        <h2>Configurações de fila</h2>
 
-                    <div className="search-sort-section">
-                        <div className="search-bar">
-                            <FaSearch />
-                            <input type="text" placeholder="Search" />
+                        <div className="search-sort-section">
+                            <div className="search-bar">
+                                <FaSearch />
+                                <input type="text" placeholder="Search" />
+                            </div>
+                            <div className="sort-by">
+                                Short by: <select><option>Newest</option></select>
+                            </div>
                         </div>
-                        <div className="sort-by">
-                            Short by: <select><option>Newest</option></select>
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nome da fila</th>
-                                <th>ID fila</th>
-                                <th>Data movimentação</th>
-                                <th>Nº pessoas fila</th>
-                                <th>Bloqueio</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{textAlign: 'center'}}>Carregando configurações de fila...</td></tr>
-                            ) : error ? (
-                                <tr><td colSpan="6" style={{textAlign: 'center', color: 'red'}}>{error}</td></tr>
-                            ) : filas.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center' }}>Nenhuma fila configurada encontrada.</td></tr>
-                            ) : (
-                                filas.map((fila) => (
-                                    <tr key={fila.ID_FILA}>
-                                        <td
-                                            onClick={() => handleEditFila(fila.ID_CONF_FILA)}
-                                            style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline' }}
-                                        >
-                                            {fila.NOME_FILA}
-                                        </td>
-                                        <td>{fila.ID_FILA}</td>
-                                        <td>{fila.DT_MOVTO}</td>
-                                        <td>{fila.QTDE_PESSOAS_FILA || 0}</td>
-                                        <td>
-                                            <label className="switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={fila.BLOCK}
-                                                    onChange={() => handleToggleBlock(fila.ID_FILA, fila.BLOCK)}
-                                                />
-                                                <span className="slider round"></span>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <button
-                                                className={`status-button ${fila.SITUACAO ? 'active' : 'inactive'}`}
-                                                onClick={() => handleToggleStatus(fila.ID_FILA, fila.SITUACAO)}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome da fila</th>
+                                    <th>ID fila</th>
+                                    <th>Data movimentação</th>
+                                    <th>Nº pessoas fila</th>
+                                    <th>Bloqueio</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr><td colSpan="6" style={{textAlign: 'center'}}>Carregando configurações de fila...</td></tr>
+                                ) : error ? (
+                                    <tr><td colSpan="6" style={{textAlign: 'center', color: 'red'}}>{error}</td></tr>
+                                ) : filas.length === 0 ? (
+                                    <tr><td colSpan="6" style={{ textAlign: 'center' }}>Nenhuma fila configurada encontrada.</td></tr>
+                                ) : (
+                                    filas.map((fila) => (
+                                        <tr key={fila.ID_FILA}>
+                                            <td
+                                                onClick={() => handleEditFila(fila.ID_CONF_FILA)}
+                                                style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline' }}
                                             >
-                                                {fila.SITUACAO ? 'Active' : 'Inactive'}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                    <div className="pagination">
-                        <span>Showing data 1 to {filas.length} of {filas.length} entries</span>
-                        <div>
-                            <button>&lt;</button>
-                            <button className="active">1</button>
-                            <button>2</button>
-                            <button>3</button>
-                            <button>4</button>
-                            <button>...</button>
-                            <button>40</button>
-                            <button>&gt;</button>
+                                                {fila.NOME_FILA}
+                                            </td>
+                                            <td>{fila.ID_FILA}</td>
+                                            <td>{fila.DT_MOVTO}</td>
+                                            <td>{fila.QTDE_PESSOAS_FILA || 0}</td>
+                                            <td>
+                                                <label className="switch">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={fila.BLOCK}
+                                                        onChange={() => handleToggleBlock(fila.ID_FILA, fila.BLOCK)}
+                                                    />
+                                                    <span className="slider round"></span>
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className={`status-button ${fila.SITUACAO ? 'active' : 'inactive'}`}
+                                                    onClick={() => handleToggleStatus(fila.ID_FILA, fila.SITUACAO)}
+                                                >
+                                                    {fila.SITUACAO ? 'Active' : 'Inactive'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                        <div className="pagination">
+                            <span>Showing data 1 to {filas.length} of {filas.length} entries</span>
+                            <div>
+                                <button>&lt;</button>
+                                <button className="active">1</button>
+                                <button>2</button>
+                                <button>3</button>
+                                <button>4</button>
+                                <button>...</button>
+                                <button>40</button>
+                                <button>&gt;</button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </div> {/* Fim do content-wrapper */}
             </main>
         </div>
     );

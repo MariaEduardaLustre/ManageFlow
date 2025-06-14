@@ -169,6 +169,7 @@ const Home = () => {
                                 <tr>
                                     <th>Nome</th>
                                     <th>Email</th>
+                                    {/* LINHA REMOVIDA: <th>Nome do Pet</th> */} {/* Antiga coluna aqui */}
                                     <th>Permissão</th>
                                     {nivel === 1 && <th>Ações</th>}
                                 </tr>
@@ -178,6 +179,7 @@ const Home = () => {
                                     <tr key={user.ID}>
                                         <td data-label="Nome">{user.NOME}</td>
                                         <td data-label="Email">{user.EMAIL}</td>
+                                        {/* LINHA REMOVIDA: <td data-label="Nome do Pet">{user.NOMEPET || '-'}</td> */} {/* Antigo dado do pet aqui */}
                                         <td data-label="Permissão">
                                             {nivel === 1 ? (
                                                 <select value={user.ID_PERFIL} onChange={(e) => handleMudarPermissao(user.ID, e.target.value)} className="home-permissao-select">

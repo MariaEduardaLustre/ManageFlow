@@ -4,8 +4,8 @@ import api from '../../services/api';
 import { paisesComDdi } from '../../utils/paisesComDdi';
 // Importando ícones
 import { FaUser, FaEnvelope, FaIdCard, FaLock, FaMapMarkerAlt, FaHome, FaBuilding, FaPhone, FaGlobe, FaMapPin } from 'react-icons/fa'; // Ícones gerais
-import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs'; 
-import { MdConfirmationNumber } from "react-icons/md"; 
+import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs';
+import { MdConfirmationNumber } from "react-icons/md";
 // --- IMPORTAÇÕES DO REACT BOOTSTRAP ---
 import { Modal, Button } from 'react-bootstrap';
 
@@ -22,7 +22,8 @@ const Cadastro = () => {
     complemento: '',
     ddi: '',
     ddd: '',
-    telefone: ''
+    telefone: '',
+    // REMOVIDO: nomePet: ''
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +72,16 @@ const Cadastro = () => {
       return;
     }
 
+    // REMOVIDO: Adicionado tratamento para o nome do pet para permitir letras e espaços
+    // if (name === 'nomePet') {
+    //   const apenasLetrasEspacos = value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
+    //   setFormData({
+    //     ...formData,
+    //     [name]: apenasLetrasEspacos,
+    //   });
+    //   return;
+    // }
+
     if (['cpfCnpj', 'cep', 'numero', 'ddd', 'telefone'].includes(name)) {
       const apenasNumeros = value.replace(/\D/g, '');
       setFormData({
@@ -97,12 +108,13 @@ const Cadastro = () => {
     }
   };
 
-
-
   const limparCampos = () => {
     setFormData({
       nome: '', email: '', cpfCnpj: '', senha: '', confirmarSenha: '',
       cep: '', endereco: '', numero: '', complemento: '',
+      ddi: '', ddd: '', telefone: '',
+      // REMOVIDO: limpando nome do pet
+      // nomePet: ''
     });
   };
 
@@ -168,7 +180,7 @@ const Cadastro = () => {
       setMostrarModalErro(true);
       return;
     }
-    if (formData.cpfCnpj && !validarCPF(formData.cpfCnpj)) { 
+    if (formData.cpfCnpj && !validarCPF(formData.cpfCnpj)) {
       setMensagemErroModal('CPF inválido!');
       setMostrarModalErro(true);
       return;
@@ -179,6 +191,7 @@ const Cadastro = () => {
   const confirmarCadastro = async () => {
     setMostrarConfirmacao(false);
     try {
+      // Importante: O objeto `formData` será enviado sem o campo `nomePet`
       const response = await api.post('/usuarios', formData);
       setMensagemSucessoModal(response.data);
       setMostrarModalSucesso(true);
@@ -198,15 +211,13 @@ const Cadastro = () => {
   const fecharModalSucesso = () => setMostrarModalSucesso(false);
   const fecharModalErro = () => setMostrarModalErro(false);
 
-
   const alternarMostrarSenha = () => {
-    setMostrarSenha(!mostrarSenha);
+    setShowPassword(!showPassword); // Corrigido para setShowPassword
   };
 
   const alternarMostrarConfirmarSenha = () => {
-    setMostrarConfirmarSenha(!mostrarConfirmarSenha);
+    setShowConfirmPassword(!showConfirmPassword); // Corrigido para setShowConfirmPassword
   };
-  
 
   return (
     <div className="cadastro-page-container">
@@ -225,9 +236,25 @@ const Cadastro = () => {
               {!nomeValido && formData.nome.length > 0 && (
                 <p className="mensagem-alerta">Digite um nome válido com pelo menos 3 letras.</p>
               )}
-
-
             </div>
+
+            {/* REMOVIDO: Bloco do campo Nome do Pet */}
+            {/*
+            <div className="form-group">
+              <div className="wrapper-password">
+                  <FaUser className="input-icon" />
+                  <input
+                      name="nomePet"
+                      placeholder="Nome do Pet (Opcional)"
+                      value={formData.nomePet}
+                      onChange={handleChange}
+                      id="nomePet"
+                      maxLength={50}
+                  />
+              </div>
+            </div>
+            */}
+
             <div className="form-group">
               <div className="wrapper-password">
                 <FaEnvelope className="input-icon" />
@@ -248,10 +275,10 @@ const Cadastro = () => {
                 }}
               />
               </div>
-              
+
             {!cpfCnpjValido && formData.cpfCnpj.length > 0 && (
               <p className="mensagem-alerta">CPF ou CNPJ inválidos!</p>
-            )} 
+            )}
             </div>
             <div className="form-group password-group">
               <div className="wrapper-password">
@@ -278,7 +305,7 @@ const Cadastro = () => {
             </div>
 
             <div className="form-group password-group">
-               <div className="wrapper-password">
+                <div className="wrapper-password">
                   <FaLock className="input-icon" />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
@@ -291,8 +318,8 @@ const Cadastro = () => {
                 <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="password-toggle-icon">
                   {showConfirmPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
                 </span>
-               </div>
-              
+                </div>
+
               {!senhasCoincidem && formData.confirmarSenha.length > 0 && (
                 <p className="mensagem-alerta">As senhas não coincidem!</p>
               )}
@@ -357,7 +384,7 @@ const Cadastro = () => {
             <div className="form-group">
               <FaBuilding className="input-icon" />
               <input name="complemento" maxLength={30} placeholder="Complemento (Opcional)" value={formData.complemento} onChange={handleChange} id="complemento" />
-            </div> 
+            </div>
 
             <button className='btn-submit-cadastro' type="submit">Cadastrar</button>
           </form>

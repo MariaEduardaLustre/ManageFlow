@@ -2,16 +2,17 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 
-// --- IMPORTS COMPLETOS (UNINDO AS DUAS VERSÕES) ---
+// --- IMPORTS COMPLETOS ---
 import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaEdit, FaUndo, FaPlus } from 'react-icons/fa';
 import { Modal, Button, Form } from 'react-bootstrap';
 import Menu from '../Menu/Menu'; 
 import './GestaoFilaClientes.css';
+
 const GestaoFilaClientes = () => {
     const { idEmpresa, dtMovto, idFila } = useParams();
     const navigate = useNavigate();
 
-    // --- STATES COMPLETOS (UNINDO AS DUAS VERSÕES) ---
+    // --- STATES COMPLETOS ---
     const [clientesFila, setClientesFila] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -28,15 +29,14 @@ const GestaoFilaClientes = () => {
 
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
-    // Lógica original de usuário e cargo
     const nomeUsuario = localStorage.getItem('nomeUsuario') || "Usuário";
     const cargoUsuario = "Gerente"; // Exemplo, ajuste conforme necessário
 
-    // --- FUNÇÕES DE FORMATAÇÃO (LÓGICA ORIGINAL) ---
+    // --- FUNÇÕES DE FORMATAÇÃO ---
     const formatarData = (dataSQL) => {
         if (!dataSQL) return 'N/A';
         const date = new Date(dataSQL);
-        if (isNaN(date.getTime())) return dataSQL.toString().substring(0, 10); // Fallback para strings
+        if (isNaN(date.getTime())) return dataSQL.toString().substring(0, 10);
         const options = { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' };
         return new Intl.DateTimeFormat('pt-BR', options).format(date);
     };
@@ -62,14 +62,14 @@ const GestaoFilaClientes = () => {
         return `(${String(ddd).replace(/\D/g, '')}) ${String(numero).replace(/\D/g, '')}`;
     };
 
-    // --- LÓGICA DE BUSCA E NAVEGAÇÃO (ORIGINAL) ---
+    // --- LÓGICA DE BUSCA E NAVEGAÇÃO ---
     const fetchClientesFila = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const response = await api.get(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/clientes`);
             setClientesFila(response.data);
-            setEditingClienteId(null);
+            setEditingClienteId(null); // Garante que nenhum cliente está em modo de edição ao carregar a lista
         } catch (err) {
             setClientesFila([]);
             if (err.response?.status !== 404) {
@@ -88,14 +88,14 @@ const GestaoFilaClientes = () => {
         fetchClientesFila();
     }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFila]);
 
-    // --- FUNÇÕES DE LÓGICA PARA STATUS E AÇÕES (ORIGINAIS, ADAPTADAS PARA MODAIS) ---
+    // --- FUNÇÕES DE LÓGICA PARA STATUS E AÇÕES ---
     const getSituacaoText = (situacao) => {
         switch (situacao) {
             case 1: return 'Confirmado';
             case 2: return 'Não Compareceu';
             case 3: return 'Chamado';
             case 4: return 'Atendido';
-            default: return 'Aguardando';
+            default: return 'Aguardando'; // Situação 0 ou qualquer outra
         }
     };
 
@@ -106,16 +106,36 @@ const GestaoFilaClientes = () => {
     };
 
     const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
-        const situacaoOriginal = cliente.SITUACAO;
-        setClientesFila(prev => prev.map(c => c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c));
-        setEditingClienteId(null);
+        const situacaoOriginal = cliente.SITUACAO; 
+        
+        // --- LOG PARA DEPURACAO NO FRONTEND ---
+        console.log(`Tentando atualizar cliente ID: ${cliente.ID_CLIENTE} para situação: ${novaSituacao}`);
+        console.log(`URL da API: /empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`);
+        console.log(`Payload enviado: { novaSituacao: ${novaSituacao} }`);
+        // --- FIM LOG PARA DEPURACAO ---
+
+        // Atualiza o estado local imediatamente para uma resposta mais rápida
+        setClientesFila(prev => prev.map(c => 
+            c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c
+        ));
+        
+        // Sai do modo de edição após a tentativa de atualização
+        setEditingClienteId(null); 
+
         try {
             await api.put(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`, { novaSituacao });
             openFeedbackModal(mensagemSucesso, 'success');
+            // Após a atualização bem-sucedida, você pode querer recarregar os dados do servidor
+            // para ter certeza que tudo está sincronizado, ou confiar no estado local.
+            // Para garantir a persistência após refresh, o backend precisa estar certo.
+            // fetchClientesFila(); // Descomente se preferir recarregar do servidor após sucesso
         } catch (err) {
             console.error('Erro ao atualizar situação:', err);
             openFeedbackModal(mensagemErro, 'danger');
-            setClientesFila(prev => prev.map(c => c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: situacaoOriginal } : c));
+            // Reverte o estado local em caso de erro na API
+            setClientesFila(prev => prev.map(c => 
+                c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: situacaoOriginal } : c
+            ));
         }
     };
 
@@ -130,7 +150,7 @@ const GestaoFilaClientes = () => {
         navigate('/');
     };
 
-    // --- LÓGICA PARA ADICIONAR CLIENTE (NOVA, ADAPTADA PARA MODAIS) ---
+    // --- LÓGICA PARA ADICIONAR CLIENTE ---
     const handleCloseAddModal = () => setShowAddModal(false);
     const handleShowAddModal = () => {
         setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
@@ -144,16 +164,20 @@ const GestaoFilaClientes = () => {
             await api.post(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/adicionar-cliente`, novoCliente);
             handleCloseAddModal();
             openFeedbackModal('Cliente adicionado com sucesso!', 'success');
-            fetchClientesFila();
+            fetchClientesFila(); // Recarrega a lista de clientes para incluir o novo
         } catch (err) {
             const msg = err.response?.data?.error || 'Erro ao adicionar cliente.';
             openFeedbackModal(msg, 'danger');
         }
     };
 
+    // --- NOVA FUNÇÃO: NAVEGAR PARA O PAINEL DE EXIBIÇÃO ---
+    const handleVerPainel = () => {
+        navigate(`/painel-fila/${idEmpresa}/${dtMovto}/${idFila}`);
+    };
+
     return (
         <div className="home-container">
-            
             <Menu />
             <main className="main-content">
                 <div className="empresa-titulo-container">
@@ -163,7 +187,10 @@ const GestaoFilaClientes = () => {
                 <section className="clientes-fila-section">
                     <div className="section-header">
                         <h2 className="section-title">Clientes na Fila</h2>
-                        <Button variant="primary" onClick={handleShowAddModal}><FaPlus /> Adicionar Cliente</Button>
+                        <div className="header-buttons"> {/* Novo div para agrupar botões */}
+                            <Button variant="primary" onClick={handleShowAddModal} className="me-2"><FaPlus /> Adicionar Cliente</Button>
+                            <Button variant="info" onClick={handleVerPainel}><FaTv /> Ver Painel</Button> {/* Novo botão */}
+                        </div>
                     </div>
 
                     {loading && <p>Carregando clientes...</p>}
@@ -190,8 +217,8 @@ const GestaoFilaClientes = () => {
                                             <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
                                             <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
                                             <td className="acao-buttons">
-                                                {/* --- LÓGICA DE BOTÕES (ORIGINAL RESTAURADA) --- */}
                                                 {editingClienteId === cliente.ID_CLIENTE ? (
+                                                    // Modo de Edição: Mostra os botões de ação + Cancelar
                                                     <div className="icone-buttons-group">
                                                         <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
                                                         <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
@@ -199,6 +226,9 @@ const GestaoFilaClientes = () => {
                                                         <button className="btn-acao btn-cancelar" onClick={handleCancelarAlteracao} title="Cancelar Alteração"><FaUndo /></button>
                                                     </div>
                                                 ) : (
+                                                    // Modo de Exibição Padrão:
+                                                    // Se o status for 1 (Confirmado) ou 2 (Não Compareceu), mostra a mensagem e o botão Alterar
+                                                    // Caso contrário (status 0, 3, 4, etc.), mostra os botões de ação originais
                                                     <>
                                                         {cliente.SITUACAO === 1 || cliente.SITUACAO === 2 ? (
                                                             <div className="icone-buttons-group status-display">

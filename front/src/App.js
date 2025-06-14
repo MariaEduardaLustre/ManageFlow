@@ -16,6 +16,7 @@ import GestaoFilaClientes from './components/GestaoFilaClientes/GestaoFilaClient
 import FilasCadastradas from './components/FilasCadastradas/FilasCadastradas'; // Crie este arquivo
 import Dashboard from './components/Dashboard/Dashboard';
 import Relatorio from './components/Relatorio/Relatorio'
+import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao';
 
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
         <Route path="/gestao-fila/:idEmpresa/:dtMovto/:idFila" element={<GestaoFilaClientes />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/relatorio" element={<Relatorio />} />
+        <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
 
 
         <Route
