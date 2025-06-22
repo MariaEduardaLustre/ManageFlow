@@ -5,7 +5,7 @@ import api from '../../services/api';
 // --- IMPORTS COMPLETOS ---
 import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaEdit, FaUndo, FaPlus } from 'react-icons/fa';
 import { Modal, Button, Form } from 'react-bootstrap';
-import Menu from '../Menu/Menu'; 
+import Menu from '../Menu/Menu';
 import './GestaoFilaClientes.css';
 
 const GestaoFilaClientes = () => {
@@ -59,7 +59,15 @@ const GestaoFilaClientes = () => {
 
     const formatarCelular = (ddd, numero) => {
         if (!ddd || !numero) return 'N/A';
-        return `(${String(ddd).replace(/\D/g, '')}) ${String(numero).replace(/\D/g, '')}`;
+        const dddLimpo = String(ddd).replace(/\D/g, '');
+        const numeroLimpo = String(numero).replace(/\D/g, '');
+
+        if (numeroLimpo.length === 8) { // Celular antigo ou fixo
+            return `(${dddLimpo}) ${numeroLimpo.replace(/(\d{4})(\d{4})/, '$1-$2')}`;
+        } else if (numeroLimpo.length === 9) { // Celular novo (com 9º dígito)
+            return `(${dddLimpo}) ${numeroLimpo.replace(/(\d{5})(\d{4})/, '$1-$2')}`;
+        }
+        return `(${dddLimpo}) ${numeroLimpo}`; // Caso padrão se não corresponder
     };
 
     // --- LÓGICA DE BUSCA E NAVEGAÇÃO ---
@@ -74,6 +82,8 @@ const GestaoFilaClientes = () => {
             setClientesFila([]);
             if (err.response?.status !== 404) {
                 setError('Não foi possível carregar os clientes da fila.');
+            } else {
+                setError('Nenhum cliente encontrado para esta fila.'); // Mensagem mais específica para 404
             }
         } finally {
             setLoading(false);
@@ -90,12 +100,25 @@ const GestaoFilaClientes = () => {
 
     // --- FUNÇÕES DE LÓGICA PARA STATUS E AÇÕES ---
     const getSituacaoText = (situacao) => {
-        switch (situacao) {
-            case 1: return 'Confirmado';
+        switch (Number(situacao)) { // Garante que a situação é um número
+            case 0: return 'Aguardando';
+            case 1: return 'Presença Confirmada';
             case 2: return 'Não Compareceu';
             case 3: return 'Chamado';
             case 4: return 'Atendido';
-            default: return 'Aguardando'; // Situação 0 ou qualquer outra
+            default: return 'Desconhecido';
+        }
+    };
+
+    // Retorna a classe CSS para o badge da situação
+    const getSituacaoClass = (situacao) => {
+        switch (Number(situacao)) {
+            case 0: return 'aguardando';
+            case 1: return 'presenca-confirmada';
+            case 2: return 'nao-compareceu';
+            case 3: return 'chamado';
+            case 4: return 'atendido';
+            default: return 'desconhecido';
         }
     };
 
@@ -106,8 +129,8 @@ const GestaoFilaClientes = () => {
     };
 
     const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
-        const situacaoOriginal = cliente.SITUACAO; 
-        
+        const situacaoOriginal = cliente.SITUACAO;
+
         // --- LOG PARA DEPURACAO NO FRONTEND ---
         console.log(`Tentando atualizar cliente ID: ${cliente.ID_CLIENTE} para situação: ${novaSituacao}`);
         console.log(`URL da API: /empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`);
@@ -115,25 +138,24 @@ const GestaoFilaClientes = () => {
         // --- FIM LOG PARA DEPURACAO ---
 
         // Atualiza o estado local imediatamente para uma resposta mais rápida
-        setClientesFila(prev => prev.map(c => 
+        setClientesFila(prev => prev.map(c =>
             c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c
         ));
-        
+
         // Sai do modo de edição após a tentativa de atualização
-        setEditingClienteId(null); 
+        setEditingClienteId(null);
 
         try {
             await api.put(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`, { novaSituacao });
             openFeedbackModal(mensagemSucesso, 'success');
             // Após a atualização bem-sucedida, você pode querer recarregar os dados do servidor
             // para ter certeza que tudo está sincronizado, ou confiar no estado local.
-            // Para garantir a persistência após refresh, o backend precisa estar certo.
             // fetchClientesFila(); // Descomente se preferir recarregar do servidor após sucesso
         } catch (err) {
             console.error('Erro ao atualizar situação:', err);
             openFeedbackModal(mensagemErro, 'danger');
             // Reverte o estado local em caso de erro na API
-            setClientesFila(prev => prev.map(c => 
+            setClientesFila(prev => prev.map(c =>
                 c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: situacaoOriginal } : c
             ));
         }
@@ -144,7 +166,7 @@ const GestaoFilaClientes = () => {
     const handleAlterarSituacao = (clienteId) => setEditingClienteId(clienteId);
     const handleCancelarAlteracao = () => setEditingClienteId(null);
     const handleEnviarNotificacao = (cliente) => openFeedbackModal(`Funcionalidade de Notificação para ${cliente.NOME} em desenvolvimento!`);
-    
+
     const logout = () => {
         localStorage.clear();
         navigate('/');
@@ -157,7 +179,7 @@ const GestaoFilaClientes = () => {
         setShowAddModal(true);
     };
     const handleNovoClienteChange = (e) => setNovoCliente(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    
+
     const handleAdicionarCliente = async (e) => {
         e.preventDefault();
         try {
@@ -187,9 +209,9 @@ const GestaoFilaClientes = () => {
                 <section className="clientes-fila-section">
                     <div className="section-header">
                         <h2 className="section-title">Clientes na Fila</h2>
-                        <div className="header-buttons"> {/* Novo div para agrupar botões */}
+                        <div className="header-buttons">
                             <Button variant="primary" onClick={handleShowAddModal} className="me-2"><FaPlus /> Adicionar Cliente</Button>
-                            <Button variant="info" onClick={handleVerPainel}><FaTv /> Ver Painel</Button> {/* Novo botão */}
+                            <Button variant="info" onClick={handleVerPainel}><FaTv /> Ver Painel</Button>
                         </div>
                     </div>
 
@@ -207,43 +229,46 @@ const GestaoFilaClientes = () => {
                                         <th>NOME CLIENTE</th>
                                         <th>CPF/CNPJ</th>
                                         <th>ENTRADA</th>
-                                        <th>STATUS</th>
+                                        <th>STATUS E AÇÕES</th> {/* NOVA COLUNA UNIFICADA */}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {clientesFila.map((cliente) => (
-                                        <tr key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`}>
+                                        <tr key={String(cliente.ID_EMPRESA) + '-' + String(cliente.DT_MOVTO) + '-' + String(cliente.ID_FILA) + '-' + String(cliente.ID_CLIENTE)} className="linha-cliente"> {/* ADICIONADA CLASSE LINHA-CLIENTE */}
                                             <td>{cliente.NOME || 'N/A'}</td>
                                             <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
                                             <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
-                                            <td className="acao-buttons">
-                                                {editingClienteId === cliente.ID_CLIENTE ? (
-                                                    // Modo de Edição: Mostra os botões de ação + Cancelar
-                                                    <div className="icone-buttons-group">
-                                                        <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
-                                                        <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
-                                                        <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
-                                                        <button className="btn-acao btn-cancelar" onClick={handleCancelarAlteracao} title="Cancelar Alteração"><FaUndo /></button>
-                                                    </div>
-                                                ) : (
-                                                    // Modo de Exibição Padrão:
-                                                    // Se o status for 1 (Confirmado) ou 2 (Não Compareceu), mostra a mensagem e o botão Alterar
-                                                    // Caso contrário (status 0, 3, 4, etc.), mostra os botões de ação originais
-                                                    <>
-                                                        {cliente.SITUACAO === 1 || cliente.SITUACAO === 2 ? (
-                                                            <div className="icone-buttons-group status-display">
-                                                                <span className="acao-disabled-message">{getSituacaoText(cliente.SITUACAO)}</span>
+                                            <td className="coluna-status-acoes"> {/* NOVA CÉLULA UNIFICADA */}
+                                                <span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>
+                                                    {getSituacaoText(cliente.SITUACAO)}
+                                                </span>
+                                                <div className="botoes-acoes-contexto"> {/* CONTÊINER PARA OS BOTÕES */}
+                                                    {editingClienteId === cliente.ID_CLIENTE ? (
+                                                        // Modo de Edição: Mostra todos os botões de ação + Cancelar
+                                                        <>
+                                                            <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
+                                                            <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
+                                                            <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
+                                                            <button className="btn-acao btn-cancelar" onClick={handleCancelarAlteracao} title="Cancelar Alteração"><FaUndo /></button>
+                                                        </>
+                                                    ) : (
+                                                        // Modo de Exibição Padrão:
+                                                        // Se a situação for 1 (Presença Confirmada) ou 2 (Não Compareceu), mostra apenas o botão Editar
+                                                        <>
+                                                            {Number(cliente.SITUACAO) === 1 || Number(cliente.SITUACAO) === 2 || Number(cliente.SITUACAO) === 4 ? (
+                                                                // Incluído SITUACAO 4 (Atendido) para mostrar o Editar também
                                                                 <button className="btn-acao btn-alterar" onClick={() => handleAlterarSituacao(cliente.ID_CLIENTE)} title="Alterar Situação"><FaEdit /></button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="icone-buttons-group">
-                                                                <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
-                                                                <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
-                                                                <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                )}
+                                                            ) : (
+                                                                // Se a situação for 0 (Aguardando) ou 3 (Chamado), mostra os botões de ação normais
+                                                                <>
+                                                                    <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
+                                                                    <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
+                                                                    <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
+                                                                </>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -273,7 +298,7 @@ const GestaoFilaClientes = () => {
                     </Modal.Footer>
                 </Form>
             </Modal>
-            
+
             {/* Modal genérico para feedback de sucesso ou erro */}
             <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)} centered>
                 <Modal.Header closeButton>

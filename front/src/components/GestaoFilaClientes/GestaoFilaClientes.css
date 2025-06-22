@@ -131,7 +131,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px; /* <-- Esta linha foi adicionada/ajustada */
+    margin-bottom: 20px;
 }
 
 .clientes-fila-section .section-title {
@@ -144,17 +144,15 @@
 /* Estilos da Tabela de Clientes */
 .clientes-fila-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
     overflow: hidden;
     border-radius: 8px;
-    table-layout: fixed;
+    table-layout: fixed; /* Garante que as larguras de coluna sejam respeitadas */
 }
 
-.clientes-fila-table th, .clientes-fila-table td {
+.clientes-fila-table th,
+.clientes-fila-table td {
     padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
     vertical-align: middle;
 }
 
@@ -165,61 +163,79 @@
     text-transform: uppercase;
     font-size: 0.9em;
     letter-spacing: 0.5px;
+    border-bottom: 1px solid #dee2e6;
+    text-align: center; /* Centraliza TODOS os nomes das colunas (TH) */
 }
-
-.clientes-fila-table th:first-child { border-top-left-radius: 8px; }
-.clientes-fila-table th:last-child { border-top-right-radius: 8px; }
-
-.clientes-fila-table tr:last-child td { border-bottom: none; }
 
 .clientes-fila-table tbody tr:hover { background-color: #f5f5f5; }
 
-/* Definindo larguras para as colunas */
+.clientes-fila-table tbody tr {
+    border-bottom: 1px solid #eee;
+}
+
+.clientes-fila-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+/* Adicionado: Altura mínima para as linhas da tabela para melhor alinhamento */
+.clientes-fila-table tr {
+    height: 60px; /* Define uma altura fixa para as linhas, ajuste conforme a necessidade visual */
+}
+
+/* Definindo larguras e alinhamentos para as colunas - AJUSTADO PARA 4 COLUNAS */
 .clientes-fila-table th:nth-child(1),
-.clientes-fila-table td:nth-child(1) { width: 20%; } /* Nome do Cliente */
+.clientes-fila-table td:nth-child(1) { width: 25%; text-align: left; } /* NOME CLIENTE */
 
 .clientes-fila-table th:nth-child(2),
-.clientes-fila-table td:nth-child(2) { width: 15%; } /* CPF/CNPJ */
+.clientes-fila-table td:nth-child(2) { width: 20%; text-align: left; } /* CPF/CNPJ */
 
 .clientes-fila-table th:nth-child(3),
-.clientes-fila-table td:nth-child(3) { width: 15%; } /* Data de Nascimento */
+.clientes-fila-table td:nth-child(3) {
+    width: 20%;
+    text-align: center; /* Centraliza o conteúdo de ENTRADA */
+} /* ENTRADA */
 
 .clientes-fila-table th:nth-child(4),
-.clientes-fila-table td:nth-child(4) { width: 15%; } /* Celular */
+.clientes-fila-table td:nth-child(4) {
+    width: 35%; /* STATUS E AÇÕES: Mais espaço para o badge e botões */
+    min-width: 250px; /* Garante que a coluna não fique muito pequena */
+    /* Remove text-align aqui, pois o Flexbox fará o alinhamento interno */
+}
 
-.clientes-fila-table th:nth-child(5),
-.clientes-fila-table td:nth-child(5) { width: 15%; } /* Entrada */
 
-.clientes-fila-table th:nth-child(6),
-.clientes-fila-table td:nth-child(6) { 
-    width: 20%; /* Aumenta a largura da coluna Ações / Situação */
-    min-width: 200px; /* Garante uma largura mínima para acomodar a mensagem e o botão */
+/* --- NOVOS ESTILOS PARA A COLUNA UNIFICADA DE STATUS E AÇÕES --- */
+.coluna-status-acoes {
+    display: flex; /* Habilita Flexbox */
+    align-items: center; /* Alinha verticalmente os itens (tag e botões) ao centro */
+    justify-content: space-between; /* Espaça a tag e o grupo de botões, jogando um para cada lado */
+    gap: 10px; /* Adiciona um pequeno espaço entre a tag e os botões quando visíveis */
+    padding-right: 15px; /* Adiciona um padding à direita para não colar na borda da célula */
+    height: 100%; /* Ocupa a altura total da TD */
+}
+
+/* Estilo para o contêiner dos botões de ação */
+.botoes-acoes-contexto {
+    display: flex; /* Habilita Flexbox para os botões dentro dele */
+    gap: 8px; /* Espaçamento entre os botões individuais */
+    opacity: 0; /* Torna os botões invisíveis por padrão */
+    pointer-events: none; /* Desabilita interações (cliques) quando invisível */
+    transition: opacity 0.2s ease-in-out; /* Adiciona uma transição suave */
+    flex-shrink: 0; /* Impede que os botões encolham */
+}
+
+/* Efeito de HOVER: Quando o mouse passar sobre a LINHA inteira (tr), os botões no .botoes-acoes-contexto ficam visíveis */
+.linha-cliente:hover .botoes-acoes-contexto {
+    opacity: 1; /* Torna os botões visíveis */
+    pointer-events: auto; /* Reabilita as interações */
+}
+
+/* Opcional: Garante que a tag de situação não encolha quando os botões aparecerem */
+.coluna-status-acoes .situacao-badge { /* Use .situacao-badge para especificidade */
+    flex-shrink: 0; /* Impede que a tag diminua para dar espaço aos botões */
+    /* Removido margin-right: auto; pois justify-content: space-between; já faz esse trabalho */
 }
 
 /* Estilos dos Botões de Ação */
-.acao-buttons {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 5px;
-    flex-wrap: nowrap;
-    width: 100%;
-}
-
-/* Estilos para o grupo de botões de ícone */
-.icone-buttons-group {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    flex-wrap: nowrap;
-}
-
-/* Estilo para quando a mensagem de status e o botão de editar estão juntos */
-.icone-buttons-group.status-display {
-    gap: 10px;
-    flex-wrap: nowrap;
-}
-
 .btn-acao {
     padding: 8px;
     border: none;
@@ -263,7 +279,6 @@
 .btn-nao-compareceu { background-color: #dc3545; color: white; }
 .btn-nao-compareceu:hover { background-color: #c82333; }
 
-/* REINTRODUZIDO: Estilo para a mensagem de status (badge) */
 .acao-disabled-message {
     color: #495057;
     font-style: italic;
@@ -297,6 +312,46 @@
 }
 .btn-cancelar:hover { background-color: #5a6268; }
 
+/* ESTILOS PARA OS BADGES DE SITUAÇÃO (CORES MAIS FORTES) */
+.situacao-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border-radius: 20px; /* Bordas arredondadas para parecer um "badge" */
+    font-weight: bold;
+    font-size: 0.85em;
+    color: white; /* Texto branco para todas as cores fortes */
+    white-space: nowrap; /* Garante que o texto não quebre linha */
+    min-width: 100px; /* Largura mínima para os badges, ajuste se necessário */
+    text-align: center;
+}
+
+.situacao-badge.aguardando {
+    background-color: #6c757d; /* Cinza para "Aguardando" */
+}
+
+.situacao-badge.presenca-confirmada {
+    background-color: #28a745; /* Verde para sucesso */
+}
+
+.situacao-badge.nao-compareceu {
+    background-color: #dc3545; /* Vermelho para alerta/problema */
+}
+
+.situacao-badge.chamado {
+    background-color: #6f42c1; /* Roxo para em andamento */
+}
+
+.situacao-badge.atendido {
+    background-color: #007bff; /* Azul para finalizado */
+}
+
+.situacao-badge.desconhecido {
+    background-color: #6c757d; /* Cinza para status desconhecido */
+}
+
+
 /* ----------------------------------------------------------------------- */
 /* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
 /* ----------------------------------------------------------------------- */
@@ -310,17 +365,16 @@
     .empresa-titulo-container { padding: 7px 12px; margin-bottom: 20px; }
     .empresa-nome { font-size: 1em; }
     .section-title { font-size: 1.6em; margin-bottom: 20px; }
-    
+
     .clientes-fila-table th, .clientes-fila-table td { padding: 10px 12px; font-size: 0.8em; }
 
-    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 20%; }
-    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 15%; }
-    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 15%; }
-    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 15%; }
-    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 15%; }
-    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
-        width: 20%; 
-        min-width: 180px; 
+    /* Ajuste as larguras das colunas para 4 colunas */
+    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 25%; text-align: left; }
+    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 20%; text-align: left; }
+    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 20%; text-align: center; }
+    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) {
+        width: 35%;
+        min-width: 220px; /* Ajuste o min-width para telas menores se necessário */
     }
 
     /* Botões de ação em telas menores */
@@ -329,9 +383,7 @@
         height: 34px;
         font-size: 1em;
     }
-    .icone-buttons-group { gap: 3px; }
-    .icone-buttons-group.status-display { gap: 8px; }
-    .acao-disabled-message { font-size: 0.8em; padding: 6px 10px; }
+    .botoes-acoes-contexto { gap: 5px; } /* Ajuste o gap aqui */
 }
 
 /* Ajustes para telas de Tablet (retrato) e Celulares grandes - Até 768px */
@@ -352,47 +404,41 @@
     .section-title { font-size: 1.5em; margin-bottom: 20px; }
 
     .clientes-fila-section {
-        overflow-x: auto;
+        overflow-x: auto; /* Adiciona scroll horizontal se a tabela for muito larga */
         -webkit-overflow-scrolling: touch;
         align-self: stretch;
     }
-    .clientes-fila-table { min-width: 800px; width: auto; }
-    
-    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 18%; }
-    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 14%; }
-    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 14%; }
-    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 14%; }
-    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 14%; }
-    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
-        width: 26%; 
-        min-width: 180px; 
+    .clientes-fila-table { min-width: 750px; width: auto; } /* Min-width para evitar que as colunas fiquem muito apertadas */
+
+    /* Ajuste as larguras das colunas para 4 colunas em mobile */
+    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 22%; text-align: left; }
+    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 18%; text-align: left; }
+    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 18%; text-align: center; }
+    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) {
+        width: 42%; /* Mais espaço para a coluna unificada */
+        min-width: 250px; /* Garante espaço para o conteúdo */
     }
 
     /* Ajustes para os botões de ação em mobile */
-    .acao-buttons {
+    .botoes-acoes-contexto {
         flex-direction: row;
-        justify-content: center;
-        flex-wrap: wrap; 
-    }
-
-    .icone-buttons-group {
-        flex-direction: row; 
+        justify-content: flex-end; /* Alinha os botões à direita dentro do seu contêiner */
+        flex-wrap: wrap; /* Permite quebrar linha se não houver espaço */
         gap: 5px;
-        flex-wrap: wrap;
-        justify-content: center;
     }
-    .icone-buttons-group.status-display { 
-        gap: 5px; 
+    /* Mantenha o flex-wrap no .coluna-status-acoes se quiser que tag e botões quebrem linha */
+    .coluna-status-acoes {
         flex-wrap: wrap;
-        justify-content: center;
+        justify-content: center; /* Centraliza a tag e os botões se eles quebrarem linha */
+        align-items: center;
     }
 
     .btn-acao {
         width: 32px;
         height: 32px;
-        font-size: 0.9em;
+        font-size: 1em;
     }
-    .acao-disabled-message { font-size: 0.75em; padding: 5px 8px; }
+    .acao-disabled-message { font-size: 0.8em; padding: 6px 10px; }
 }
 
 /* Ajustes para telas de Celular pequenas - Até 480px */
@@ -401,38 +447,24 @@
     .empresa-titulo-container { padding: 5px 10px; }
     .empresa-nome { font-size: 0.9em; }
     .section-title { font-size: 1.2em; margin-bottom: 15px; padding-left: 5px; }
-    
-    .clientes-fila-table th, .clientes-fila-table td { padding: 10px 10px; font-size: 0.8em; }
-    .clientes-fila-table { min-width: 700px; width: auto; }
 
-    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 18%; }
-    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 14%; }
-    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 14%; }
-    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 14%; }
-    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 14%; }
-    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
-        width: 26%; 
-        min-width: 160px; 
-    }
+    .clientes-fila-table th, .clientes-fila-table td { padding: 8px 8px; font-size: 0.75em; }
+    .clientes-fila-table { min-width: 600px; width: auto; } /* Diminui o min-width para telas muito pequenas */
 
-    .sidebar nav ul { flex-direction: column; align-items: center; gap: 5px; }
-    .sidebar nav ul li { width: 100%; justify-content: center; text-align: center; margin-bottom: 5px; }
-    .sidebar .user-info { flex-direction: column; align-items: center; margin-left: 0; margin-top: 15px; }
+    /* Ajuste as larguras das colunas para 4 colunas em mobile pequeno */
+    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 20%; }
+    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 16%; }
+    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 16%; }
+    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 48%; min-width: 200px; }
 
     .btn-acao {
         width: 30px;
         height: 30px;
-        font-size: 0.85em;
+        font-size: 0.9em;
     }
-    .icone-buttons-group { 
-        gap: 3px; 
-        flex-direction: column;
-        align-items: center;
+    .situacao-badge {
+        font-size: 0.8em;
+        padding: 4px 8px;
+        min-width: 80px;
     }
-    .icone-buttons-group.status-display { 
-        gap: 3px; 
-        flex-direction: column; 
-        align-items: center;
-    }
-    .acao-disabled-message { font-size: 0.7em; padding: 4px 6px; }
 }
