@@ -14,6 +14,7 @@
     --border-radius-large: 12px;
     --border-radius-medium: 8px;
     --border-radius-small: 5px;
+    --gray-color: #6c757d; /* Nova variável para a cor cinza */
 }
 
 body {
@@ -53,8 +54,8 @@ body {
 }
 
 .painel-header h1 {
-    font-size: 2.8rem; 
-    font-weight: 700; 
+    font-size: 2.0rem; 
+    font-weight: 600; 
     color: var(--primary-color); 
     margin: 0; /* Remove margem para centralização flexível */
     letter-spacing: -0.5px;
@@ -113,7 +114,7 @@ body {
 }
 
 .coluna-clientes h2 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-color);
     border-bottom: 2px solid var(--border-color); 
@@ -123,8 +124,8 @@ body {
 }
 
 .coluna-clientes.na-fila h2 {
-    color: var(--primary-color); 
-    border-color: var(--primary-color);
+    color: var(--gray-color); /* Usando a nova variável para o título "Aguardando" */
+    border-color: var(--gray-color); /* Usando a nova variável para a borda do título "Aguardando" */
 }
 
 .coluna-clientes.confirmados h2 {
@@ -156,7 +157,7 @@ body {
 }
 
 .cartao-cliente.aguardando {
-    border-left-color: var(--primary-color); 
+    border-left-color: var(--gray-color); /* Usando a nova variável para a borda do cartão "Aguardando" */
 }
 
 .cartao-cliente.confirmado {
@@ -164,7 +165,7 @@ body {
 }
 
 .cliente-nome {
-    font-size: 1.3rem; 
+    font-size: 1.0rem; 
     font-weight: 600;
     color: var(--text-color);
     margin-bottom: 5px;

@@ -128,7 +128,7 @@ const PainelFilaExibicao = () => {
 
             <div className="painel-colunas">
                 <div className="coluna-clientes na-fila">
-                    <h2>Na Fila</h2> 
+                    <h2>Aguardando</h2> 
                     {clientesAguardando.length === 0 && !loading && !error && (
                         <p className="no-clients">Nenhum cliente aguardando no momento.</p>
                     )}
