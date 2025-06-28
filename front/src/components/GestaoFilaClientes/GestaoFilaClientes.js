@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 
 // --- IMPORTS COMPLETOS ---
-import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaEdit, FaUndo, FaPlus } from 'react-icons/fa';
+import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaPlus } from 'react-icons/fa';
 import { Modal, Button, Form } from 'react-bootstrap';
 import Menu from '../Menu/Menu';
 import './GestaoFilaClientes.css';
@@ -16,7 +16,6 @@ const GestaoFilaClientes = () => {
     const [clientesFila, setClientesFila] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [editingClienteId, setEditingClienteId] = useState(null);
 
     // States para o modal de adicionar cliente
     const [showAddModal, setShowAddModal] = useState(false);
@@ -77,7 +76,6 @@ const GestaoFilaClientes = () => {
         try {
             const response = await api.get(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/clientes`);
             setClientesFila(response.data);
-            setEditingClienteId(null); // Garante que nenhum cliente está em modo de edição ao carregar a lista
         } catch (err) {
             setClientesFila([]);
             if (err.response?.status !== 404) {
@@ -142,29 +140,21 @@ const GestaoFilaClientes = () => {
             c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c
         ));
 
-        // Sai do modo de edição após a tentativa de atualização
-        setEditingClienteId(null);
-
         try {
             await api.put(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`, { novaSituacao });
             openFeedbackModal(mensagemSucesso, 'success');
-            // Após a atualização bem-sucedida, você pode querer recarregar os dados do servidor
-            // para ter certeza que tudo está sincronizado, ou confiar no estado local.
-            // fetchClientesFila(); // Descomente se preferir recarregar do servidor após sucesso
         } catch (err) {
             console.error('Erro ao atualizar situação:', err);
             openFeedbackModal(mensagemErro, 'danger');
             // Reverte o estado local em caso de erro na API
             setClientesFila(prev => prev.map(c =>
-                c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: situacaoOriginal } : c
+                c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUacao: situacaoOriginal } : c
             ));
         }
     };
 
     const handleConfirmarPresenca = (cliente) => handleUpdateSituacao(cliente, 1, `Presença de ${cliente.NOME} confirmada!`, 'Erro ao confirmar presença.');
     const handleNaoCompareceu = (cliente) => handleUpdateSituacao(cliente, 2, `${cliente.NOME} marcado como não compareceu.`, 'Erro ao marcar ausência.');
-    const handleAlterarSituacao = (clienteId) => setEditingClienteId(clienteId);
-    const handleCancelarAlteracao = () => setEditingClienteId(null);
     const handleEnviarNotificacao = (cliente) => openFeedbackModal(`Funcionalidade de Notificação para ${cliente.NOME} em desenvolvimento!`);
 
     const logout = () => {
@@ -234,40 +224,30 @@ const GestaoFilaClientes = () => {
                                 </thead>
                                 <tbody>
                                     {clientesFila.map((cliente) => (
-                                        <tr key={String(cliente.ID_EMPRESA) + '-' + String(cliente.DT_MOVTO) + '-' + String(cliente.ID_FILA) + '-' + String(cliente.ID_CLIENTE)} className="linha-cliente"> {/* ADICIONADA CLASSE LINHA-CLIENTE */}
+                                        <tr key={String(cliente.ID_EMPRESA) + '-' + String(cliente.DT_MOVTO) + '-' + String(cliente.ID_FILA) + '-' + String(cliente.ID_CLIENTE)} className="linha-cliente">
                                             <td>{cliente.NOME || 'N/A'}</td>
                                             <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
                                             <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
-                                            <td className="coluna-status-acoes"> {/* NOVA CÉLULA UNIFICADA */}
-                                                <span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>
-                                                    {getSituacaoText(cliente.SITUACAO)}
-                                                </span>
-                                                <div className="botoes-acoes-contexto"> {/* CONTÊINER PARA OS BOTÕES */}
-                                                    {editingClienteId === cliente.ID_CLIENTE ? (
-                                                        // Modo de Edição: Mostra todos os botões de ação + Cancelar
-                                                        <>
-                                                            <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
-                                                            <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
-                                                            <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
-                                                            <button className="btn-acao btn-cancelar" onClick={handleCancelarAlteracao} title="Cancelar Alteração"><FaUndo /></button>
-                                                        </>
-                                                    ) : (
-                                                        // Modo de Exibição Padrão:
-                                                        // Se a situação for 1 (Presença Confirmada) ou 2 (Não Compareceu), mostra apenas o botão Editar
-                                                        <>
-                                                            {Number(cliente.SITUACAO) === 1 || Number(cliente.SITUACAO) === 2 || Number(cliente.SITUACAO) === 4 ? (
-                                                                // Incluído SITUACAO 4 (Atendido) para mostrar o Editar também
-                                                                <button className="btn-acao btn-alterar" onClick={() => handleAlterarSituacao(cliente.ID_CLIENTE)} title="Alterar Situação"><FaEdit /></button>
-                                                            ) : (
-                                                                // Se a situação for 0 (Aguardando) ou 3 (Chamado), mostra os botões de ação normais
-                                                                <>
-                                                                    <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
-                                                                    <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
-                                                                    <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
-                                                                </>
-                                                            )}
-                                                        </>
-                                                    )}
+                                            <td className="coluna-status-acoes">
+                                                {/* NOVO: Conteúdo unificado para status e ações */}
+                                                <div className="conteudo-status-acoes">
+                                                    {/* Wrapper para a badge de situação */}
+                                                    <div className="situacao-wrapper">
+                                                        <span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>
+                                                            {getSituacaoText(cliente.SITUACAO)}
+                                                        </span>
+                                                    </div>
+                                                    {/* Contêiner dos botões */}
+                                                    <div className="botoes-acoes-contexto">
+                                                        {/* BOTÃO DE ENVIAR NOTIFICAÇÕES (AGORA PRIMEIRO) */}
+                                                        <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
+                                                        
+                                                        {/* BOTÃO DE CONFIRMAR PRESENÇA (SEGUNDO) */}
+                                                        <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
+                                                        
+                                                        {/* BOTÃO DE NÃO COMPARECEU (TERCEIRO) */}
+                                                        <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>

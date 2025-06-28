@@ -179,7 +179,7 @@
 
 /* Adicionado: Altura mínima para as linhas da tabela para melhor alinhamento */
 .clientes-fila-table tr {
-    height: 60px; /* Define uma altura fixa para as linhas, ajuste conforme a necessidade visual */
+    height: 55px; /* Ajustado para acomodar badge e botões lado a lado */
 }
 
 /* Definindo larguras e alinhamentos para as colunas - AJUSTADO PARA 4 COLUNAS */
@@ -197,42 +197,41 @@
 
 .clientes-fila-table th:nth-child(4),
 .clientes-fila-table td:nth-child(4) {
-    width: 35%; /* STATUS E AÇÕES: Mais espaço para o badge e botões */
+    width: 35%; /* STATUS E AÇÕES: Mais espaço */
     min-width: 250px; /* Garante que a coluna não fique muito pequena */
-    /* Remove text-align aqui, pois o Flexbox fará o alinhamento interno */
+    /* text-align: center; // Removido para evitar conflitos com flexbox */
 }
 
 
-/* --- NOVOS ESTILOS PARA A COLUNA UNIFICADA DE STATUS E AÇÕES --- */
-.coluna-status-acoes {
-    display: flex; /* Habilita Flexbox */
-    align-items: center; /* Alinha verticalmente os itens (tag e botões) ao centro */
-    justify-content: space-between; /* Espaça a tag e o grupo de botões, jogando um para cada lado */
-    gap: 10px; /* Adiciona um pequeno espaço entre a tag e os botões quando visíveis */
-    padding-right: 15px; /* Adiciona um padding à direita para não colar na borda da célula */
-    height: 100%; /* Ocupa a altura total da TD */
+/* --- ESTILOS PARA A COLUNA UNIFICADA DE STATUS E AÇÕES --- */
+.conteudo-status-acoes {
+    display: flex; /* Faz com que badge e botões fiquem lado a lado */
+    align-items: center; /* Alinha verticalmente os itens (badge e botões) */
+    gap: 15px; /* Espaçamento fixo entre a badge e os botões */
+    padding-left: 40px; /* NOVO: Adiciona um recuo de 10px à esquerda */
 }
+
+
+
+
+/* Wrapper para a badge de situação */
+.situacao-wrapper {
+    flex-shrink: 0; /* Impede que o wrapper do badge encolha */
+    display: flex;
+    justify-content: center; /* Mantém o texto do badge centralizado dentro dele */
+    align-items: center;
+    min-width: 160px; /* Mantido para garantir o espaço mínimo para o texto mais longo */
+}
+
 
 /* Estilo para o contêiner dos botões de ação */
 .botoes-acoes-contexto {
     display: flex; /* Habilita Flexbox para os botões dentro dele */
     gap: 8px; /* Espaçamento entre os botões individuais */
-    opacity: 0; /* Torna os botões invisíveis por padrão */
-    pointer-events: none; /* Desabilita interações (cliques) quando invisível */
-    transition: opacity 0.2s ease-in-out; /* Adiciona uma transição suave */
+    opacity: 1; /* Torna os botões VISÍVEIS por padrão */
+    pointer-events: auto; /* Habilita interações (cliques) */
+    transition: none; /* Remove a transição de opacidade */
     flex-shrink: 0; /* Impede que os botões encolham */
-}
-
-/* Efeito de HOVER: Quando o mouse passar sobre a LINHA inteira (tr), os botões no .botoes-acoes-contexto ficam visíveis */
-.linha-cliente:hover .botoes-acoes-contexto {
-    opacity: 1; /* Torna os botões visíveis */
-    pointer-events: auto; /* Reabilita as interações */
-}
-
-/* Opcional: Garante que a tag de situação não encolha quando os botões aparecerem */
-.coluna-status-acoes .situacao-badge { /* Use .situacao-badge para especificidade */
-    flex-shrink: 0; /* Impede que a tag diminua para dar espaço aos botões */
-    /* Removido margin-right: auto; pois justify-content: space-between; já faz esse trabalho */
 }
 
 /* Estilos dos Botões de Ação */
@@ -293,38 +292,19 @@
     flex-shrink: 0;
 }
 
-.error-message {
-    color: #dc3545;
-    text-align: center;
-    margin-top: 20px;
-    font-weight: bold;
-}
-
-.btn-alterar {
-    background-color: #ffc107;
-    color: #343a40;
-}
-.btn-alterar:hover { background-color: #e0a800; }
-
-.btn-cancelar {
-    background-color: #6c757d;
-    color: white;
-}
-.btn-cancelar:hover { background-color: #5a6268; }
-
 /* ESTILOS PARA OS BADGES DE SITUAÇÃO (CORES MAIS FORTES) */
 .situacao-badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center; /* Centraliza o texto dentro do badge */
     padding: 5px 10px;
     border-radius: 20px; /* Bordas arredondadas para parecer um "badge" */
     font-weight: bold;
     font-size: 0.85em;
     color: white; /* Texto branco para todas as cores fortes */
     white-space: nowrap; /* Garante que o texto não quebre linha */
-    min-width: 100px; /* Largura mínima para os badges, ajuste se necessário */
-    text-align: center;
+    text-align: center; /* Garante que o texto fique centralizado dentro do badge */
+    width: 160px; /* NOVO: Define uma largura fixa para o fundo colorido do badge */
 }
 
 .situacao-badge.aguardando {
@@ -422,14 +402,14 @@
     /* Ajustes para os botões de ação em mobile */
     .botoes-acoes-contexto {
         flex-direction: row;
-        justify-content: flex-end; /* Alinha os botões à direita dentro do seu contêiner */
+        justify-content: center; /* Centraliza os botões */
         flex-wrap: wrap; /* Permite quebrar linha se não houver espaço */
         gap: 5px;
     }
-    /* Mantenha o flex-wrap no .coluna-status-acoes se quiser que tag e botões quebrem linha */
     .coluna-status-acoes {
-        flex-wrap: wrap;
-        justify-content: center; /* Centraliza a tag e os botões se eles quebrarem linha */
+        /* Ajustar se o conteudo-status-acoes precisar de mais espaço */
+        flex-wrap: nowrap; /* Não quebrar linha dentro da TD se a TD tiver width suficiente */
+        justify-content: center;
         align-items: center;
     }
 
@@ -449,22 +429,4 @@
     .section-title { font-size: 1.2em; margin-bottom: 15px; padding-left: 5px; }
 
     .clientes-fila-table th, .clientes-fila-table td { padding: 8px 8px; font-size: 0.75em; }
-    .clientes-fila-table { min-width: 600px; width: auto; } /* Diminui o min-width para telas muito pequenas */
-
-    /* Ajuste as larguras das colunas para 4 colunas em mobile pequeno */
-    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 20%; }
-    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 16%; }
-    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 16%; }
-    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 48%; min-width: 200px; }
-
-    .btn-acao {
-        width: 30px;
-        height: 30px;
-        font-size: 0.9em;
-    }
-    .situacao-badge {
-        font-size: 0.8em;
-        padding: 4px 8px;
-        min-width: 80px;
-    }
 }
