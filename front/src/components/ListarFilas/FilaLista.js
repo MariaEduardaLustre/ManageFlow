@@ -124,7 +124,7 @@ const FilaLista = () => {
             <main className="main-content">
                 <div className="empresa-titulo-container" onClick={exibirDetalhesEmpresa} style={{ cursor: 'pointer' }}>
                     <span className="empresa-nome">
-                        {loadingEmpresa ? 'Carregando detalhes...' : `Empresa: ${nomeEmpresa || 'Carregando...'}`}
+                        {loadingEmpresa ? 'Carregando detalhes...' : `${nomeEmpresa || 'Carregando...'}`}
                     </span>
                 </div>
 

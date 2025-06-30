@@ -443,11 +443,11 @@
     }
 
     .empresa-titulo-container {
-        /* Garante que continue à direita em telas menores */
-        align-self: flex-end; /* Para este item, alinhar à direita dentro do seu flex container */
-        margin-left: auto; /* Essencial para empurrar para a direita */
-        margin-right: 0;
-        margin-bottom: 20px;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        background-color: #fff !important;
+        border: 1px solid #e0e0e0 !important;
+        padding: 10px 20px !important;
     }
 
     .section-title {
