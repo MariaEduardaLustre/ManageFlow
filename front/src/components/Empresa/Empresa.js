@@ -24,21 +24,56 @@ const Empresa = ({ idUsuario }) => {
   const [submitting, setSubmitting] = useState(false);
   const [busca, setBusca] = useState("");
   const [ordenacao, setOrdenacao] = useState("nomeAsc");
-  const logo = "/imagens/logo.png";
+
+  // use um nome diferente para o caminho do logo para não conflitar com o campo "logo" do form
+  const logoSrc = "/imagens/logo.png";
 
   const navigate = useNavigate();
 
+  // Resolva o id do usuário: prop > localStorage
+  const userId = useMemo(() => {
+    const fromProp = Number(idUsuario);
+    if (fromProp) return fromProp;
+    const fromStorage = Number(localStorage.getItem("idUsuario"));
+    return Number.isFinite(fromStorage) ? fromStorage : null;
+  }, [idUsuario]);
+
+  // Hidratamos com cache (se existir) e também buscamos do backend
   useEffect(() => {
     let ativo = true;
-    async function fetchEmpresas() {
-      setLoading(true);
-      setErro("");
+
+    // 1) hidrata com cache para render rápido
+    const cache = sessionStorage.getItem("empresasDoUsuario");
+    if (cache) {
       try {
-        const resp = await api.get(
-          `/empresas/empresas-do-usuario/${idUsuario}`
-        );
+        const parsed = JSON.parse(cache);
+        if (Array.isArray(parsed)) {
+          setEmpresas(parsed);
+          setLoading(false); // já mostra algo enquanto atualiza em background
+        }
+      } catch {}
+    }
+
+    // 2) se não tiver userId, volta pro login
+    if (!userId) {
+      setLoading(false);
+      navigate("/login");
+      return;
+    }
+
+    // 3) busca oficial
+    async function fetchEmpresas() {
+      // se já carregou do cache, não precisa mostrar loading forte
+      if (!cache) setLoading(true);
+      setErro("");
+
+      try {
+        const resp = await api.get(`/empresas/empresas-do-usuario/${userId}`);
         if (!ativo) return;
-        setEmpresas(Array.isArray(resp.data) ? resp.data : []);
+        const list = Array.isArray(resp.data) ? resp.data : [];
+        setEmpresas(list);
+        // atualiza cache
+        sessionStorage.setItem("empresasDoUsuario", JSON.stringify(list));
       } catch (error) {
         console.error("Erro ao buscar empresas", error);
         if (!ativo) return;
@@ -47,11 +82,12 @@ const Empresa = ({ idUsuario }) => {
         if (ativo) setLoading(false);
       }
     }
+
     fetchEmpresas();
     return () => {
       ativo = false;
     };
-  }, [idUsuario]);
+  }, [userId, navigate]);
 
   const escolherEmpresa = (empresa) => {
     localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
@@ -77,11 +113,9 @@ const Empresa = ({ idUsuario }) => {
     if (!podeSalvar) return;
     setSubmitting(true);
     try {
-      const { nome, cnpj, email, ddi, ddd, telefone, endereco, numero, logo } =
-        novaEmpresa;
+      const { nome, cnpj, email, ddi, ddd, telefone, endereco, numero, logo } = novaEmpresa;
 
-      const idUsuarioStorage =
-        Number(localStorage.getItem("idUsuario")) || idUsuario;
+      const idUsuarioStorage = userId;
 
       const response = await api.post("/empresas/criar-empresa", {
         nomeEmpresa: nome,
@@ -128,17 +162,13 @@ const Empresa = ({ idUsuario }) => {
 
     if (termo) {
       base = empresas.filter((emp) =>
-        `${emp.NOME_EMPRESA ?? ""} ${emp.NOME_PERFIL ?? ""}`
-          .toLowerCase()
-          .includes(termo)
+        `${emp.NOME_EMPRESA ?? ""} ${emp.NOME_PERFIL ?? ""}`.toLowerCase().includes(termo)
       );
     }
 
     const ordenadores = {
-      nomeAsc: (a, b) =>
-        (a.NOME_EMPRESA ?? "").localeCompare(b.NOME_EMPRESA ?? ""),
-      nomeDesc: (a, b) =>
-        (b.NOME_EMPRESA ?? "").localeCompare(a.NOME_EMPRESA ?? ""),
+      nomeAsc: (a, b) => (a.NOME_EMPRESA ?? "").localeCompare(b.NOME_EMPRESA ?? ""),
+      nomeDesc: (a, b) => (b.NOME_EMPRESA ?? "").localeCompare(a.NOME_EMPRESA ?? ""),
       nivelAsc: (a, b) => (a.NIVEL ?? 0) - (b.NIVEL ?? 0),
       nivelDesc: (a, b) => (b.NIVEL ?? 0) - (a.NIVEL ?? 0),
     };
@@ -153,9 +183,7 @@ const Empresa = ({ idUsuario }) => {
           src={logoUrl}
           alt={nome}
           className="empresa-card__logo"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
       );
     }
@@ -165,11 +193,7 @@ const Empresa = ({ idUsuario }) => {
       .slice(0, 2)
       .join("")
       .toUpperCase();
-    return (
-      <div className="empresa-card__avatar" aria-hidden>
-        {iniciais}
-      </div>
-    );
+    return <div className="empresa-card__avatar" aria-hidden>{iniciais}</div>;
   };
 
   return (
@@ -178,12 +202,12 @@ const Empresa = ({ idUsuario }) => {
       <nav className="navbar navbar-expand-lg navbar-light bg-white fixed-top flow-header shadow-sm">
         <div className="container">
           <a className="navbar-brand" href="#home">
-            <img src={logo} alt="Manage Flow Logo" className="flow-logo" />
+            <img src={logoSrc} alt="Manage Flow Logo" className="flow-logo" />
           </a>
         </div>
       </nav>
 
-      {/* TÍTULO + FILTROS (fora do header/nav) */}
+      {/* TÍTULO + FILTROS */}
       <section className="empresa__heading">
         <h1 className="empresa__title">Selecione sua empresa</h1>
         <p className="empresa__subtitle">
@@ -224,11 +248,7 @@ const Empresa = ({ idUsuario }) => {
       </section>
 
       {/* Estado de erro */}
-      {erro && (
-        <div className="alert alert-error" role="alert">
-          {erro}
-        </div>
-      )}
+      {erro && <div className="alert alert-error" role="alert">{erro}</div>}
 
       {/* Lista / Loading / Vazio */}
       {loading ? (
@@ -239,9 +259,7 @@ const Empresa = ({ idUsuario }) => {
         </div>
       ) : listaFiltrada.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state__icon" aria-hidden>
-            🏷️
-          </div>
+          <div className="empty-state__icon" aria-hidden>🏷️</div>
           <h3>Nenhuma empresa encontrada</h3>
           <p>Você pode ajustar a busca ou criar uma nova empresa.</p>
         </div>
@@ -260,8 +278,7 @@ const Empresa = ({ idUsuario }) => {
               <div className="empresa-card__body">
                 <h3 className="empresa-card__title">{empresa.NOME_EMPRESA}</h3>
                 <p className="empresa-card__meta">
-                  {empresa.NOME_PERFIL ?? "Perfil"} • Nível{" "}
-                  {empresa.NIVEL ?? "—"}
+                  {empresa.NOME_PERFIL ?? "Perfil"} • Nível {empresa.NIVEL ?? "—"}
                 </p>
               </div>
               <div className="empresa-card__footer">
@@ -295,13 +312,9 @@ const Empresa = ({ idUsuario }) => {
                   type="text"
                   placeholder="Ex.: Tech LTDA"
                   value={novaEmpresa.nome}
-                  onChange={(e) =>
-                    setNovaEmpresa({ ...novaEmpresa, nome: e.target.value })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, nome: e.target.value })}
                 />
-                {errosForm.nome && (
-                  <span className="field-error">{errosForm.nome}</span>
-                )}
+                {errosForm.nome && <span className="field-error">{errosForm.nome}</span>}
               </div>
 
               <div className="form-field">
@@ -313,15 +326,11 @@ const Empresa = ({ idUsuario }) => {
                   maxLength={18}
                   value={novaEmpresa.cnpj}
                   onChange={(e) => {
-                    const onlyDigits = e.target.value
-                      .replace(/\D/g, "")
-                      .slice(0, 14);
+                    const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 14);
                     setNovaEmpresa({ ...novaEmpresa, cnpj: onlyDigits });
                   }}
                 />
-                {errosForm.cnpj && (
-                  <span className="field-error">{errosForm.cnpj}</span>
-                )}
+                {errosForm.cnpj && <span className="field-error">{errosForm.cnpj}</span>}
               </div>
 
               <div className="form-field">
@@ -330,13 +339,9 @@ const Empresa = ({ idUsuario }) => {
                   type="email"
                   placeholder="contato@empresa.com"
                   value={novaEmpresa.email}
-                  onChange={(e) =>
-                    setNovaEmpresa({ ...novaEmpresa, email: e.target.value })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, email: e.target.value })}
                 />
-                {errosForm.email && (
-                  <span className="field-error">{errosForm.email}</span>
-                )}
+                {errosForm.email && <span className="field-error">{errosForm.email}</span>}
               </div>
 
               <div className="form-field">
@@ -347,10 +352,7 @@ const Empresa = ({ idUsuario }) => {
                   placeholder="55"
                   value={novaEmpresa.ddi}
                   onChange={(e) =>
-                    setNovaEmpresa({
-                      ...novaEmpresa,
-                      ddi: e.target.value.replace(/\D/g, "").slice(0, 3),
-                    })
+                    setNovaEmpresa({ ...novaEmpresa, ddi: e.target.value.replace(/\D/g, "").slice(0, 3) })
                   }
                 />
               </div>
@@ -363,10 +365,7 @@ const Empresa = ({ idUsuario }) => {
                   placeholder="11"
                   value={novaEmpresa.ddd}
                   onChange={(e) =>
-                    setNovaEmpresa({
-                      ...novaEmpresa,
-                      ddd: e.target.value.replace(/\D/g, "").slice(0, 3),
-                    })
+                    setNovaEmpresa({ ...novaEmpresa, ddd: e.target.value.replace(/\D/g, "").slice(0, 3) })
                   }
                 />
               </div>
@@ -379,10 +378,7 @@ const Empresa = ({ idUsuario }) => {
                   placeholder="999999999"
                   value={novaEmpresa.telefone}
                   onChange={(e) =>
-                    setNovaEmpresa({
-                      ...novaEmpresa,
-                      telefone: e.target.value.replace(/\D/g, "").slice(0, 11),
-                    })
+                    setNovaEmpresa({ ...novaEmpresa, telefone: e.target.value.replace(/\D/g, "").slice(0, 11) })
                   }
                 />
               </div>
@@ -393,9 +389,7 @@ const Empresa = ({ idUsuario }) => {
                   type="text"
                   placeholder="Rua, bairro, cidade"
                   value={novaEmpresa.endereco}
-                  onChange={(e) =>
-                    setNovaEmpresa({ ...novaEmpresa, endereco: e.target.value })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, endereco: e.target.value })}
                 />
               </div>
 
@@ -407,10 +401,7 @@ const Empresa = ({ idUsuario }) => {
                   placeholder="123"
                   value={novaEmpresa.numero}
                   onChange={(e) =>
-                    setNovaEmpresa({
-                      ...novaEmpresa,
-                      numero: e.target.value.replace(/\D/g, "").slice(0, 6),
-                    })
+                    setNovaEmpresa({ ...novaEmpresa, numero: e.target.value.replace(/\D/g, "").slice(0, 6) })
                   }
                 />
               </div>
@@ -421,9 +412,7 @@ const Empresa = ({ idUsuario }) => {
                   type="url"
                   placeholder="https://.../logo.png"
                   value={novaEmpresa.logo}
-                  onChange={(e) =>
-                    setNovaEmpresa({ ...novaEmpresa, logo: e.target.value })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, logo: e.target.value })}
                 />
               </div>
             </div>
