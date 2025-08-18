@@ -1,120 +1,229 @@
-.empresa-container {
-    max-width: 800px;
-    margin: 40px auto;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
-    font-family: 'Segoe UI', sans-serif;
-  }
-  
-  .empresa-container h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
-  }
-  
-  .empresa-lista {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-  }
-  
-  .empresa-item {
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    padding: 16px;
-    width: 220px;
-    text-align: center;
-    background-color: #f9f9f9;
-  }
-  
-  .empresa-item strong {
-    display: block;
-    font-size: 1.1rem;
-    margin-bottom: 8px;
-  }
-  
-  .empresa-item p {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 12px;
-  }
-  
-  .empresa-item button {
-    background-color: #1e73be;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
-  }
-  
-  .empresa-item button:hover {
-    background-color: #155b9b;
-  }
-  
-  .nova-empresa {
-    margin-top: 30px;
-    text-align: center;
-  }
-  
-  .nova-empresa button {
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  .nova-empresa button:hover {
-    background-color: #3d8e41;
-  }
-  
-  .formulario-criacao {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  
-  .formulario-criacao input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 0.95rem;
-  }
-  
-  .formulario-criacao button {
-    background-color: #1e73be;
-    color: white;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  .formulario-criacao button:hover {
-    background-color: #155b9b;
-  }
-  
-  @media (max-width: 600px) {
-    .empresa-lista {
-      flex-direction: column;
-      align-items: center;
-    }
-  
-    .empresa-item {
-      width: 100%;
-    }
-  }
-  
+/* Tipografia oficial */
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;600;700;800&display=swap');
+
+:root{
+  /* Paleta da Brand Guideline */
+  --royal: #3A5AFE;     /* Primária 1 */
+  --sereno: #637BFE;    /* Primária 2 */
+  --ardosia: #2F4C67;   /* Texto/acentos frios */
+  --menta: #16C098;     /* Sucesso */
+  --ouro:  #FFD200;     /* Destaques/aviso */
+  --terra: #DF3821;     /* Erro/alerta */
+  --platina: #EDEDED;   /* Background claro */
+
+  /* Derivadas / neutras */
+  --bg: #F6F7F9;        /* base de tela */
+  --panel: #FFFFFF;     /* cartões e painéis */
+  --text: #1E293B;      /* texto principal */
+  --muted: #667085;     /* texto secundário */
+  --border: #E5E7EB;    /* bordas leves */
+  --ring: rgba(99, 123, 254, .35); /* focus com SERENO */
+
+  /* Sombras e raios */
+  --shadow: 0 10px 24px rgba(41, 53, 86, .08);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --flow-nav-h: 72px;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  /* margin-top: 100px;  <-- REMOVER */
+  padding-top: var(--flow-nav-h); /* compensa a fixed-top */
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Mulish", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* garante que a navbar respeite a mesma altura declarada */
+.flow-header { 
+  min-height: var(--flow-nav-h);
+  z-index: 1050;
+}
+
+.mf-link {
+  color: var(--ardosia);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background .15s ease, color .15s ease;
+}
+.mf-link:hover { background: rgba(99,123,254,.08); color: var(--royal); }
+
+/* ===== CONTAINER ===== */
+.empresa { max-width: 1120px; margin: 48px auto 72px; padding: 0 20px;  }
+
+/* ===== HEADING (fora do header/nav) ===== */
+.empresa__heading { margin-top: 36px; margin-bottom: 18px; }
+.empresa__title { font-size: 28px; font-weight: 800; margin: 0 0 6px; color: var(--royal); }
+.empresa__subtitle { margin: 0 0 10px; color: var(--muted); }
+
+/* Ações (busca / sort / CTA) */
+.empresa__actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-start; }
+
+.input-search input, .select {
+  background: var(--panel); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; min-width: 260px; outline: none;
+  transition: box-shadow .2s, border-color .2s, transform .06s;
+  box-shadow: var(--shadow);
+}
+.input-search input:focus, .select:focus { box-shadow: 0 0 0 4px var(--ring), var(--shadow); border-color: var(--sereno); }
+
+/* Botões */
+.btn {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: transform .06s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+.btn:hover { background: #fafafa; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--royal), var(--sereno));
+  color: #fff;
+  border-color: transparent;
+}
+.btn-primary:hover { filter: brightness(0.98); }
+.btn-primary:focus { box-shadow: 0 0 0 4px var(--ring), var(--shadow); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--royal);
+  border-color: rgba(58,90,254,.25);
+}
+.btn-ghost:hover { background: rgba(58,90,254,.06); }
+
+/* Alertas */
+.alert {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: #FFF2EF;
+  color: var(--terra);
+  margin: 14px 0;
+  box-shadow: var(--shadow);
+}
+.alert-error { background: #FFF2EF; }
+
+/* Grid de cartões */
+.empresa-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1200px) { .empresa-grid { grid-template-columns: repeat(8, 1fr);} }
+@media (max-width: 820px)  { .empresa-grid { grid-template-columns: repeat(6, 1fr);} }
+@media (max-width: 640px)  { .empresa-grid { grid-template-columns: repeat(4, 1fr);} }
+@media (max-width: 460px)  { .empresa-grid { grid-template-columns: repeat(2, 1fr);} }
+
+/* Card de empresa */
+.empresa-card {
+  grid-column: span 4;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+  outline: none;
+  box-shadow: var(--shadow);
+}
+.empresa-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(58,90,254,.35);
+  box-shadow: 0 14px 28px rgba(41,53,86,.12);
+}
+.empresa-card:focus { box-shadow: 0 0 0 4px var(--ring), var(--shadow); border-color: var(--sereno); }
+
+.empresa-card--skeleton {
+  grid-column: span 4;
+  height: 84px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, #f2f4f8, #e9ecf3, #f2f4f8);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+@keyframes shimmer { 0%{background-position:0% 0} 100%{background-position:200% 0} }
+
+.empresa-card__logo, .empresa-card__avatar{
+  width: 56px; height: 56px; border-radius: 12px; object-fit: cover;
+  background: #F1F4FA; display: grid; place-items: center; font-weight: 800;
+  border: 1px solid var(--border);
+  color: var(--sereno);
+}
+.empresa-card__body { min-width: 0; }
+.empresa-card__title { margin: 0 0 4px; font-size: 16px; line-height: 1.25; font-weight: 700; color: #0F172A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.empresa-card__meta { margin: 0; color: var(--muted); font-size: 13px; }
+.empresa-card__footer { display: flex; gap: 8px; }
+
+/* Estado vazio */
+.empty-state {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  text-align: center;
+  color: var(--muted);
+  box-shadow: var(--shadow);
+}
+.empty-state__icon { font-size: 28px; margin-bottom: 8px; }
+
+/* Drawer do formulário */
+.drawer { position: sticky; bottom: 0; left: 0; right: 0; margin-top: 18px; }
+.drawer__content {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 16px 40px rgba(41,53,86,.14);
+  animation: slideUp .18s ease-out;
+}
+@keyframes slideUp {
+  from { transform: translateY(8px); opacity: .6; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.drawer__header h2 { margin: 0 0 10px; color: var(--ardosia); font-weight: 800; }
+.drawer__footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+
+/* Formulário */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+}
+.form-field { grid-column: span 6; display: grid; gap: 6px; }
+.form-field--col2 { grid-column: span 12; }
+.form-field label { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+.form-field input {
+  background: #FFFFFF; color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; outline: none;
+  transition: box-shadow .2s, border-color .2s, background .15s;
+  box-shadow: var(--shadow);
+}
+.form-field input::placeholder { color: #98A2B3; }
+.form-field input:focus { box-shadow: 0 0 0 4px var(--ring), var(--shadow); border-color: var(--sereno); background: #fff; }
+
+.field-error {
+  color: var(--terra); font-size: 12px; font-weight: 600;
+}
+
+/* Estados utilitários (opcional) */
+.badge-success { background: rgba(22,192,152,.12); color: var(--menta); border: 1px solid rgba(22,192,152,.35); }
+.badge-warning { background: rgba(255,210,0,.12); color: #8A6D00; border: 1px solid rgba(255,210,0,.45); }
