@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 
-// --- IMPORTS COMPLETOS ---
 import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaPlus } from 'react-icons/fa';
 import { Modal, Button, Form } from 'react-bootstrap';
 import Menu from '../Menu/Menu';
@@ -12,26 +11,22 @@ const GestaoFilaClientes = () => {
     const { idEmpresa, dtMovto, idFila } = useParams();
     const navigate = useNavigate();
 
-    // --- STATES COMPLETOS ---
     const [clientesFila, setClientesFila] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // States para o modal de adicionar cliente
     const [showAddModal, setShowAddModal] = useState(false);
     const [novoCliente, setNovoCliente] = useState({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
 
-    // States para modais genéricos de feedback
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState('');
-    const [feedbackVariant, setFeedbackVariant] = useState('info'); // 'success', 'danger', 'info'
+    const [feedbackVariant, setFeedbackVariant] = useState('info');
 
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
     const nomeUsuario = localStorage.getItem('nomeUsuario') || "Usuário";
-    const cargoUsuario = "Gerente"; // Exemplo, ajuste conforme necessário
+    const cargoUsuario = "Gerente";
 
-    // --- FUNÇÕES DE FORMATAÇÃO ---
     const formatarData = (dataSQL) => {
         if (!dataSQL) return 'N/A';
         const date = new Date(dataSQL);
@@ -61,16 +56,16 @@ const GestaoFilaClientes = () => {
         const dddLimpo = String(ddd).replace(/\D/g, '');
         const numeroLimpo = String(numero).replace(/\D/g, '');
 
-        if (numeroLimpo.length === 8) { // Celular antigo ou fixo
+        if (numeroLimpo.length === 8) {
             return `(${dddLimpo}) ${numeroLimpo.replace(/(\d{4})(\d{4})/, '$1-$2')}`;
-        } else if (numeroLimpo.length === 9) { // Celular novo (com 9º dígito)
+        } else if (numeroLimpo.length === 9) {
             return `(${dddLimpo}) ${numeroLimpo.replace(/(\d{5})(\d{4})/, '$1-$2')}`;
         }
-        return `(${dddLimpo}) ${numeroLimpo}`; // Caso padrão se não corresponder
+        return `(${dddLimpo}) ${numeroLimpo}`;
     };
 
-    // --- LÓGICA DE BUSCA E NAVEGAÇÃO ---
-    const fetchClientesFila = useCallback(async () => {
+    // Função para buscar a lista completa de clientes (inicial)
+    const fetchClientesFilaCompleta = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -81,10 +76,32 @@ const GestaoFilaClientes = () => {
             if (err.response?.status !== 404) {
                 setError('Não foi possível carregar os clientes da fila.');
             } else {
-                setError('Nenhum cliente encontrado para esta fila.'); // Mensagem mais específica para 404
+                setError('Nenhum cliente encontrado para esta fila.');
             }
         } finally {
             setLoading(false);
+        }
+    }, [idEmpresa, dtMovto, idFila]);
+
+    // NOVA FUNÇÃO: Atualiza apenas os clientes que mudaram de status
+    const atualizarClientesParcialmente = useCallback(async () => {
+        try {
+            const response = await api.get(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/clientes-nao-compareceu`);
+            const clientesAtualizados = response.data;
+            
+            if (clientesAtualizados.length > 0) {
+                setClientesFila(prevClientes => {
+                    const updatedIds = new Set(clientesAtualizados.map(c => c.ID_CLIENTE));
+                    return prevClientes.map(cliente => {
+                        if (updatedIds.has(cliente.ID_CLIENTE) && cliente.SITUACAO !== 2) {
+                            return { ...cliente, SITUACAO: 2 };
+                        }
+                        return cliente;
+                    });
+                });
+            }
+        } catch (err) {
+            console.error('Erro na atualização parcial dos clientes:', err);
         }
     }, [idEmpresa, dtMovto, idFila]);
 
@@ -93,12 +110,22 @@ const GestaoFilaClientes = () => {
             navigate('/filas');
             return;
         }
-        fetchClientesFila();
-    }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFila]);
 
-    // --- FUNÇÕES DE LÓGICA PARA STATUS E AÇÕES ---
+        // 1. A primeira vez que a página carrega, busca a lista completa
+        fetchClientesFilaCompleta();
+
+        // 2. Começa o polling para atualizações parciais
+        const intervalId = setInterval(() => {
+            atualizarClientesParcialmente();
+        }, 60000); // 60000 ms = 1 minuto
+
+        // 3. Limpa o intervalo quando o componente é desmontado
+        return () => clearInterval(intervalId);
+
+    }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFilaCompleta, atualizarClientesParcialmente]);
+
     const getSituacaoText = (situacao) => {
-        switch (Number(situacao)) { // Garante que a situação é um número
+        switch (Number(situacao)) {
             case 0: return 'Aguardando';
             case 1: return 'Presença Confirmada';
             case 2: return 'Não Compareceu';
@@ -108,7 +135,6 @@ const GestaoFilaClientes = () => {
         }
     };
 
-    // Retorna a classe CSS para o badge da situação
     const getSituacaoClass = (situacao) => {
         switch (Number(situacao)) {
             case 0: return 'aguardando';
@@ -129,13 +155,6 @@ const GestaoFilaClientes = () => {
     const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
         const situacaoOriginal = cliente.SITUACAO;
 
-        // --- LOG PARA DEPURACAO NO FRONTEND ---
-        console.log(`Tentando atualizar cliente ID: ${cliente.ID_CLIENTE} para situação: ${novaSituacao}`);
-        console.log(`URL da API: /empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`);
-        console.log(`Payload enviado: { novaSituacao: ${novaSituacao} }`);
-        // --- FIM LOG PARA DEPURACAO ---
-
-        // Atualiza o estado local imediatamente para uma resposta mais rápida
         setClientesFila(prev => prev.map(c =>
             c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c
         ));
@@ -146,7 +165,6 @@ const GestaoFilaClientes = () => {
         } catch (err) {
             console.error('Erro ao atualizar situação:', err);
             openFeedbackModal(mensagemErro, 'danger');
-            // Reverte o estado local em caso de erro na API
             setClientesFila(prev => prev.map(c =>
                 c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUacao: situacaoOriginal } : c
             ));
@@ -155,14 +173,29 @@ const GestaoFilaClientes = () => {
 
     const handleConfirmarPresenca = (cliente) => handleUpdateSituacao(cliente, 1, `Presença de ${cliente.NOME} confirmada!`, 'Erro ao confirmar presença.');
     const handleNaoCompareceu = (cliente) => handleUpdateSituacao(cliente, 2, `${cliente.NOME} marcado como não compareceu.`, 'Erro ao marcar ausência.');
-    const handleEnviarNotificacao = (cliente) => openFeedbackModal(`Funcionalidade de Notificação para ${cliente.NOME} em desenvolvimento!`);
+    
+    const handleEnviarNotificacao = async (cliente) => {
+        const url = `/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/enviar-notificacao`;
+        try {
+            const response = await api.post(url, {});
+
+            setClientesFila(prev => prev.map(c =>
+                c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: 3 } : c
+            ));
+
+            openFeedbackModal(response.data.message, 'success');
+        } catch (err) {
+            console.error('Erro ao enviar notificação:', err);
+            const errorMessage = err.response?.data?.error || 'Erro ao agendar o timeout. Tente novamente.';
+            openFeedbackModal(errorMessage, 'danger');
+        }
+    };
 
     const logout = () => {
         localStorage.clear();
         navigate('/');
     };
 
-    // --- LÓGICA PARA ADICIONAR CLIENTE ---
     const handleCloseAddModal = () => setShowAddModal(false);
     const handleShowAddModal = () => {
         setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
@@ -176,14 +209,13 @@ const GestaoFilaClientes = () => {
             await api.post(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/adicionar-cliente`, novoCliente);
             handleCloseAddModal();
             openFeedbackModal('Cliente adicionado com sucesso!', 'success');
-            fetchClientesFila(); // Recarrega a lista de clientes para incluir o novo
+            fetchClientesFilaCompleta();
         } catch (err) {
             const msg = err.response?.data?.error || 'Erro ao adicionar cliente.';
             openFeedbackModal(msg, 'danger');
         }
     };
 
-    // --- NOVA FUNÇÃO: NAVEGAR PARA O PAINEL DE EXIBIÇÃO ---
     const handleVerPainel = () => {
         navigate(`/painel-fila/${idEmpresa}/${dtMovto}/${idFila}`);
     };
@@ -219,7 +251,7 @@ const GestaoFilaClientes = () => {
                                         <th>NOME CLIENTE</th>
                                         <th>CPF/CNPJ</th>
                                         <th>ENTRADA</th>
-                                        <th>STATUS E AÇÕES</th> {/* NOVA COLUNA UNIFICADA */}
+                                        <th>STATUS E AÇÕES</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -229,23 +261,17 @@ const GestaoFilaClientes = () => {
                                             <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
                                             <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
                                             <td className="coluna-status-acoes">
-                                                {/* NOVO: Conteúdo unificado para status e ações */}
                                                 <div className="conteudo-status-acoes">
-                                                    {/* Wrapper para a badge de situação */}
                                                     <div className="situacao-wrapper">
                                                         <span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>
                                                             {getSituacaoText(cliente.SITUACAO)}
                                                         </span>
                                                     </div>
-                                                    {/* Contêiner dos botões */}
                                                     <div className="botoes-acoes-contexto">
-                                                        {/* BOTÃO DE ENVIAR NOTIFICAÇÕES (AGORA PRIMEIRO) */}
                                                         <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
                                                         
-                                                        {/* BOTÃO DE CONFIRMAR PRESENÇA (SEGUNDO) */}
                                                         <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
                                                         
-                                                        {/* BOTÃO DE NÃO COMPARECEU (TERCEIRO) */}
                                                         <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
                                                     </div>
                                                 </div>
@@ -259,7 +285,6 @@ const GestaoFilaClientes = () => {
                 </section>
             </main>
 
-            {/* --- MODAIS --- */}
             <Modal show={showAddModal} onHide={handleCloseAddModal} centered>
                 <Modal.Header closeButton><Modal.Title>Adicionar Novo Cliente</Modal.Title></Modal.Header>
                 <Form onSubmit={handleAdicionarCliente}>
@@ -279,7 +304,6 @@ const GestaoFilaClientes = () => {
                 </Form>
             </Modal>
 
-            {/* Modal genérico para feedback de sucesso ou erro */}
             <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{feedbackVariant === 'success' ? 'Sucesso!' : 'Aviso'}</Modal.Title>
