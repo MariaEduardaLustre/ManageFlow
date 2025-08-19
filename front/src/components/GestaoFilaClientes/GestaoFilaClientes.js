@@ -1,6 +1,8 @@
+// Arquivo: GestaoFilaClientes.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
+import { io } from "socket.io-client"; // Importe o cliente do Socket.IO
 
 import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaPlus } from 'react-icons/fa';
 import { Modal, Button, Form } from 'react-bootstrap';
@@ -14,10 +16,8 @@ const GestaoFilaClientes = () => {
     const [clientesFila, setClientesFila] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
     const [showAddModal, setShowAddModal] = useState(false);
     const [novoCliente, setNovoCliente] = useState({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
-
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState('');
     const [feedbackVariant, setFeedbackVariant] = useState('info');
@@ -64,7 +64,6 @@ const GestaoFilaClientes = () => {
         return `(${dddLimpo}) ${numeroLimpo}`;
     };
 
-    // Função para buscar a lista completa de clientes (inicial)
     const fetchClientesFilaCompleta = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -83,46 +82,41 @@ const GestaoFilaClientes = () => {
         }
     }, [idEmpresa, dtMovto, idFila]);
 
-    // NOVA FUNÇÃO: Atualiza apenas os clientes que mudaram de status
-    const atualizarClientesParcialmente = useCallback(async () => {
-        try {
-            const response = await api.get(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/clientes-nao-compareceu`);
-            const clientesAtualizados = response.data;
-            
-            if (clientesAtualizados.length > 0) {
-                setClientesFila(prevClientes => {
-                    const updatedIds = new Set(clientesAtualizados.map(c => c.ID_CLIENTE));
-                    return prevClientes.map(cliente => {
-                        if (updatedIds.has(cliente.ID_CLIENTE) && cliente.SITUACAO !== 2) {
-                            return { ...cliente, SITUACAO: 2 };
-                        }
-                        return cliente;
-                    });
-                });
-            }
-        } catch (err) {
-            console.error('Erro na atualização parcial dos clientes:', err);
-        }
-    }, [idEmpresa, dtMovto, idFila]);
-
     useEffect(() => {
         if (!idEmpresa || !dtMovto || !idFila) {
             navigate('/filas');
             return;
         }
 
-        // 1. A primeira vez que a página carrega, busca a lista completa
+        // 1. Conecta ao servidor WebSocket
+        const socket = io("http://localhost:3001"); // Conecte ao seu servidor Node.js
+        console.log("Conectado ao servidor WebSocket.");
+
+        // 2. Escuta o evento 'cliente_atualizado'
+        socket.on('cliente_atualizado', (data) => {
+            console.log("Recebida notificação de cliente atualizado:", data);
+            
+            // Atualiza o estado local apenas para o cliente que mudou
+            setClientesFila(prevClientes => {
+                return prevClientes.map(cliente => {
+                    if (cliente.ID_CLIENTE === data.idCliente) {
+                        return { ...cliente, SITUACAO: data.novaSituacao };
+                    }
+                    return cliente;
+                });
+            });
+        });
+
+        // 3. Busca a lista completa na primeira carga
         fetchClientesFilaCompleta();
 
-        // 2. Começa o polling para atualizações parciais
-        const intervalId = setInterval(() => {
-            atualizarClientesParcialmente();
-        }, 60000); // 60000 ms = 1 minuto
+        // 4. Limpa a conexão e a busca quando o componente é desmontado
+        return () => {
+            socket.disconnect();
+            console.log("Desconectado do servidor WebSocket.");
+        };
 
-        // 3. Limpa o intervalo quando o componente é desmontado
-        return () => clearInterval(intervalId);
-
-    }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFilaCompleta, atualizarClientesParcialmente]);
+    }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFilaCompleta]);
 
     const getSituacaoText = (situacao) => {
         switch (Number(situacao)) {
@@ -224,9 +218,7 @@ const GestaoFilaClientes = () => {
         <div className="home-container">
             <Menu />
             <main className="main-content">
-                <div className="empresa-titulo-container">
-                    <span className="empresa-nome">{nomeEmpresa || 'Carregando...'}</span>
-                </div>
+                
 
                 <section className="clientes-fila-section">
                     <div className="section-header">
