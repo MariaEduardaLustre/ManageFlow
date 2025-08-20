@@ -320,7 +320,7 @@
 }
 
 .situacao-badge.chamado {
-    background-color: #6f42c1; /* Roxo para em andamento */
+    background-color: #007bff; /* Roxo para em andamento */
 }
 
 .situacao-badge.atendido {

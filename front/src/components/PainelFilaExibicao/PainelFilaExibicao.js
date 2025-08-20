@@ -1,18 +1,20 @@
-// src/components/PainelFilaExibicao/PainelFilaExibicao.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { io } from "socket.io-client";
+import { BiFullscreen, BiExitFullscreen } from 'react-icons/bi';
 
-import './PainelFilaExibicao.css'; 
+import './PainelFilaExibicao.css';
 
 const PainelFilaExibicao = () => {
     const { idEmpresa, dtMovto, idFila } = useParams();
     const navigate = useNavigate();
 
     const [clientesAguardando, setClientesAguardando] = useState([]);
-    const [clientesConfirmados, setClientesConfirmados] = useState([]);
+    const [clientesChamados, setClientesChamados] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
@@ -46,41 +48,19 @@ const PainelFilaExibicao = () => {
         setLoading(true);
         setError(null);
         try {
-            console.log("-----------------------------------------");
-            console.log(`DEBUG: Iniciando fetch para Empresa: ${idEmpresa}, Data: ${dtMovto}, Fila: ${idFila}`);
             const url = `/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/clientes`;
-            console.log(`DEBUG: URL da requisição API: ${url}`);
-
             const response = await api.get(url);
             const allClients = response.data;
 
-            console.log("DEBUG: Resposta da API recebida (dados brutos):");
-            console.log(allClients); 
-            console.log(`DEBUG: Total de clientes recebidos: ${allClients.length}`);
-
-            const aguardando = allClients.filter(cliente => {
-                const situacaoNumerica = Number(cliente.SITUACAO); 
-                console.log(`DEBUG: Cliente ID: ${cliente.ID_CLIENTE}, Nome: ${cliente.NOME}, SITUACAO ORIGINAL: ${cliente.SITUACAO}, SITUACAO NUMÉRICA: ${situacaoNumerica}`);
-                return situacaoNumerica === 0;
-            });
-            const confirmados = allClients.filter(cliente => {
-                const situacaoNumerica = Number(cliente.SITUACAO); 
-                return situacaoNumerica === 1;
-            });
+            const aguardando = allClients.filter(cliente => Number(cliente.SITUACAO) === 0);
+            const chamados = allClients.filter(cliente => Number(cliente.SITUACAO) === 3);
 
             setClientesAguardando(aguardando);
-            setClientesConfirmados(confirmados);
-
-            console.log(`DEBUG: Clientes Aguardando (filtrados): ${aguardando.length}`);
-            console.log(aguardando); 
-            console.log(`DEBUG: Clientes Confirmados (filtrados): ${confirmados.length}`);
-            console.log(confirmados); 
-            console.log("-----------------------------------------");
+            setClientesChamados(chamados);
 
         } catch (err) {
             setClientesAguardando([]);
-            setClientesConfirmados([]);
-            console.error("DEBUG: Erro ao carregar clientes da fila:", err.response?.data || err.message || err);
+            setClientesChamados([]);
             if (err.response?.status !== 404) {
                 setError('Não foi possível carregar os clientes da fila.');
             } else {
@@ -93,33 +73,67 @@ const PainelFilaExibicao = () => {
 
     useEffect(() => {
         if (!idEmpresa || !dtMovto || !idFila) {
-            console.warn("DEBUG: Parâmetros de URL faltando, redirecionando para /filas.");
-            navigate('/filas'); 
+            navigate('/filas');
             return;
         }
 
+        const socket = io("http://localhost:3001");
+        console.log("Painel conectado ao servidor WebSocket.");
+
+        socket.on('cliente_atualizado', (data) => {
+            console.log("Notificação recebida via WebSocket:", data);
+            fetchClientesFila();
+        });
+
         fetchClientesFila();
 
-        const intervalId = setInterval(fetchClientesFila, 5000); 
+        return () => {
+            socket.disconnect();
+            console.log("Painel desconectado do servidor WebSocket.");
+        };
 
-        return () => clearInterval(intervalId);
     }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFila]);
 
-    // Função para voltar para a tela anterior
     const handleGoBack = () => {
-        navigate(-1); // Volta para a página anterior no histórico
+        navigate(-1);
     };
+
+    const handleFullscreenToggle = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Erro ao tentar ativar tela cheia: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        };
+    }, []);
 
     return (
         <div className="painel-exibicao-container">
             <header className="painel-header">
-                {/* Contêiner para alinhar o botão e o título */}
                 <div className="painel-header-content">
-                    {/* Botão de Voltar */}
-                    <button className="btn-voltar" onClick={handleGoBack}>
-                        &larr; Voltar
-                    </button>
+                    {/* O botão "Voltar" só é exibido se não estiver em tela cheia */}
+                    {!isFullscreen && (
+                        <button className="btn-voltar" onClick={handleGoBack}>
+                            &larr; Voltar
+                        </button>
+                    )}
                     <h1>Painel da Fila</h1>
+                    <button className="btn-fullscreen" onClick={handleFullscreenToggle} title="Alternar Tela Cheia">
+                        {isFullscreen ? <BiExitFullscreen /> : <BiFullscreen />}
+                    </button>
                 </div>
             </header>
 
@@ -127,8 +141,9 @@ const PainelFilaExibicao = () => {
             {error && <div className="error-message-panel">{error}</div>}
 
             <div className="painel-colunas">
+                {/* COLUNA: AGUARDANDO */}
                 <div className="coluna-clientes na-fila">
-                    <h2>Aguardando</h2> 
+                    <h2>Aguardando</h2>
                     {clientesAguardando.length === 0 && !loading && !error && (
                         <p className="no-clients">Nenhum cliente aguardando no momento.</p>
                     )}
@@ -136,23 +151,22 @@ const PainelFilaExibicao = () => {
                         {clientesAguardando.map(cliente => (
                             <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente aguardando">
                                 <span className="cliente-nome">{cliente.NOME || 'Cliente Desconhecido'}</span>
-                                <span className="cliente-hora">{formatarHora(cliente.DT_ENTRA)}</span>
-                                <span className="cliente-espera">Tempo de Espera: {calcularTempoEspera(cliente.DT_ENTRA)}</span>
+                                <span className="cliente-hora">Tempo de Espera: {calcularTempoEspera(cliente.DT_ENTRA)}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="coluna-clientes confirmados">
-                    <h2>Confirmados</h2> 
-                    {clientesConfirmados.length === 0 && !loading && !error && (
-                        <p className="no-clients">Nenhum cliente confirmado ainda.</p>
+                {/* COLUNA: CHAMADOS */}
+                <div className="coluna-clientes chamados">
+                    <h2>Chamados</h2>
+                    {clientesChamados.length === 0 && !loading && !error && (
+                        <p className="no-clients">Nenhum cliente chamado ainda.</p>
                     )}
                     <div className="lista-clientes">
-                        {clientesConfirmados.map(cliente => (
-                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente confirmado">
+                        {clientesChamados.map(cliente => (
+                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente chamado">
                                 <span className="cliente-nome">{cliente.NOME || 'Cliente Desconhecido'}</span>
-                                <span className="cliente-hora">{formatarHora(cliente.DT_APRE)}</span> 
                             </div>
                         ))}
                     </div>
