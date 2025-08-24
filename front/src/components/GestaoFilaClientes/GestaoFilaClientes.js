@@ -1,8 +1,7 @@
-// Arquivo: GestaoFilaClientes.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
-import { io } from "socket.io-client"; // Importe o cliente do Socket.IO
+import { io } from "socket.io-client";
 
 import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt, FaCheckCircle, FaPaperPlane, FaTimesCircle, FaPlus } from 'react-icons/fa';
 import { Modal, Button, Form } from 'react-bootstrap';
@@ -21,6 +20,8 @@ const GestaoFilaClientes = () => {
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState('');
     const [feedbackVariant, setFeedbackVariant] = useState('info');
+
+    const [abaAtiva, setAbaAtiva] = useState('aguardando');
 
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
@@ -88,29 +89,27 @@ const GestaoFilaClientes = () => {
             return;
         }
 
-        // 1. Conecta ao servidor WebSocket
-        const socket = io("http://localhost:3001"); // Conecte ao seu servidor Node.js
+        const socket = io("http://localhost:3001");
         console.log("Conectado ao servidor WebSocket.");
 
-        // 2. Escuta o evento 'cliente_atualizado'
         socket.on('cliente_atualizado', (data) => {
             console.log("Recebida notificação de cliente atualizado:", data);
             
-            // Atualiza o estado local apenas para o cliente que mudou
             setClientesFila(prevClientes => {
-                return prevClientes.map(cliente => {
-                    if (cliente.ID_CLIENTE === data.idCliente) {
-                        return { ...cliente, SITUACAO: data.novaSituacao };
-                    }
-                    return cliente;
-                });
+                const clienteExistente = prevClientes.find(c => c.ID_CLIENTE === data.idCliente);
+                if (clienteExistente) {
+                    return prevClientes.map(cliente =>
+                        cliente.ID_CLIENTE === data.idCliente ? { ...cliente, SITUACAO: data.novaSituacao } : cliente
+                    );
+                } else {
+                    fetchClientesFilaCompleta();
+                    return prevClientes;
+                }
             });
         });
 
-        // 3. Busca a lista completa na primeira carga
         fetchClientesFilaCompleta();
 
-        // 4. Limpa a conexão e a busca quando o componente é desmontado
         return () => {
             socket.disconnect();
             console.log("Desconectado do servidor WebSocket.");
@@ -185,18 +184,6 @@ const GestaoFilaClientes = () => {
         }
     };
 
-    const logout = () => {
-        localStorage.clear();
-        navigate('/');
-    };
-
-    const handleCloseAddModal = () => setShowAddModal(false);
-    const handleShowAddModal = () => {
-        setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
-        setShowAddModal(true);
-    };
-    const handleNovoClienteChange = (e) => setNovoCliente(prev => ({ ...prev, [e.target.name]: e.target.value }));
-
     const handleAdicionarCliente = async (e) => {
         e.preventDefault();
         try {
@@ -210,16 +197,36 @@ const GestaoFilaClientes = () => {
         }
     };
 
+    const handleCloseAddModal = () => setShowAddModal(false);
+    const handleShowAddModal = () => {
+        setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
+        setShowAddModal(true);
+    };
+    const handleNovoClienteChange = (e) => setNovoCliente(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
     const handleVerPainel = () => {
         navigate(`/painel-fila/${idEmpresa}/${dtMovto}/${idFila}`);
     };
+
+    const filtrarClientes = () => {
+        switch (abaAtiva) {
+            case 'aguardando':
+                return clientesFila.filter(cliente => Number(cliente.SITUACAO) === 0 || Number(cliente.SITUACAO) === 3);
+            case 'confirmados':
+                return clientesFila.filter(cliente => Number(cliente.SITUACAO) === 1 || Number(cliente.SITUACAO) === 4);
+            case 'nao-compareceu':
+                return clientesFila.filter(cliente => Number(cliente.SITUACAO) === 2);
+            default:
+                return [];
+        }
+    };
+
+    const clientesFiltrados = filtrarClientes();
 
     return (
         <div className="home-container">
             <Menu />
             <main className="main-content">
-                
-
                 <section className="clientes-fila-section">
                     <div className="section-header">
                         <h2 className="section-title">Clientes na Fila</h2>
@@ -228,14 +235,37 @@ const GestaoFilaClientes = () => {
                             <Button variant="info" onClick={handleVerPainel}><FaTv /> Ver Painel</Button>
                         </div>
                     </div>
+                    
+                    <div className="tabs-container">
+                        <div className="tabs-list">
+                            <button
+                                className={`tab-button ${abaAtiva === 'aguardando' ? 'active' : ''}`}
+                                onClick={() => setAbaAtiva('aguardando')}
+                            >
+                                Aguardando & Chamados
+                            </button>
+                            <button
+                                className={`tab-button ${abaAtiva === 'confirmados' ? 'active' : ''}`}
+                                onClick={() => setAbaAtiva('confirmados')}
+                            >
+                                Confirmados
+                            </button>
+                            <button
+                                className={`tab-button ${abaAtiva === 'nao-compareceu' ? 'active' : ''}`}
+                                onClick={() => setAbaAtiva('nao-compareceu')}
+                            >
+                                Não Compareceu
+                            </button>
+                        </div>
+                    </div>
 
                     {loading && <p>Carregando clientes...</p>}
                     {error && <p className="error-message">{error}</p>}
-                    {!loading && clientesFila.length === 0 && !error && (
+                    {!loading && clientesFiltrados.length === 0 && !error && (
                         <p>Nenhum cliente na fila. Clique em "Adicionar Cliente" para começar.</p>
                     )}
 
-                    {!loading && clientesFila.length > 0 && (
+                    {!loading && clientesFiltrados.length > 0 && (
                         <div className="table-responsive">
                             <table className="clientes-fila-table">
                                 <thead>
@@ -247,7 +277,7 @@ const GestaoFilaClientes = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {clientesFila.map((cliente) => (
+                                    {clientesFiltrados.map((cliente) => (
                                         <tr key={String(cliente.ID_EMPRESA) + '-' + String(cliente.DT_MOVTO) + '-' + String(cliente.ID_FILA) + '-' + String(cliente.ID_CLIENTE)} className="linha-cliente">
                                             <td>{cliente.NOME || 'N/A'}</td>
                                             <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
@@ -260,10 +290,9 @@ const GestaoFilaClientes = () => {
                                                         </span>
                                                     </div>
                                                     <div className="botoes-acoes-contexto">
+                                                        {/* AQUI ESTÁ A MUDANÇA: TODOS OS BOTÕES SÃO EXIBIDOS SEMPRE */}
                                                         <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
-                                                        
                                                         <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
-                                                        
                                                         <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
                                                     </div>
                                                 </div>
