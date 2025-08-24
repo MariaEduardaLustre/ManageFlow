@@ -430,3 +430,40 @@
 
     .clientes-fila-table th, .clientes-fila-table td { padding: 8px 8px; font-size: 0.75em; }
 }
+
+/* --- ESTILOS PARA AS ABAS --- */
+.tabs-container {
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tabs-list {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.tab-button {
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab-button:hover {
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+.tab-button.active {
+    color: #1e73be;
+    font-weight: bold;
+    border-bottom: 3px solid #1e73be;
+    background-color: #fff;
+}
