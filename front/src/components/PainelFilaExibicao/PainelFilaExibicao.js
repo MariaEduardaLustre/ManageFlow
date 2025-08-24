@@ -16,6 +16,14 @@ const PainelFilaExibicao = () => {
     const [error, setError] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
+    const mensagens = [
+        "Bem-vindo(a) ao nosso painel de atendimento!",
+        "Fique atento(a) ao seu nome e número de guichê.",
+        "Seu tempo de espera pode variar.",
+        "Agradecemos a sua paciência!",
+        "Não se esqueça de verificar nossas promoções no balcão de atendimento."
+    ];
+    
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
 
@@ -27,23 +35,6 @@ const PainelFilaExibicao = () => {
         return new Intl.DateTimeFormat('pt-BR', options).format(date);
     };
 
-    const calcularTempoEspera = (dtEntra) => {
-        if (!dtEntra) return 'Calculando...';
-        const entrada = new Date(dtEntra);
-        const agora = new Date();
-        const diffMs = agora - entrada;
-
-        const diffMinutes = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMinutes / 60);
-        const remainingMinutes = diffMinutes % 60;
-
-        if (diffHours > 0) {
-            return `${diffHours}h ${remainingMinutes}m`;
-        } else {
-            return `${diffMinutes}m`;
-        }
-    };
-
     const fetchClientesFila = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -53,8 +44,12 @@ const PainelFilaExibicao = () => {
             const allClients = response.data;
 
             const aguardando = allClients.filter(cliente => Number(cliente.SITUACAO) === 0);
-            const chamados = allClients.filter(cliente => Number(cliente.SITUACAO) === 3);
-
+            
+            const chamados = allClients
+                .filter(cliente => Number(cliente.SITUACAO) === 3)
+                .sort((a, b) => new Date(b.DT_ENTRA) - new Date(a.DT_ENTRA))
+                .slice(0, 5);
+            
             setClientesAguardando(aguardando);
             setClientesChamados(chamados);
 
@@ -69,7 +64,7 @@ const PainelFilaExibicao = () => {
         } finally {
             setLoading(false);
         }
-    }, [idEmpresa, dtMovto, idFila]);
+    }, [idEmpresa, dtMovto, idFila, navigate]);
 
     useEffect(() => {
         if (!idEmpresa || !dtMovto || !idFila) {
@@ -111,6 +106,14 @@ const PainelFilaExibicao = () => {
     useEffect(() => {
         const handleFullscreenChange = () => {
             setIsFullscreen(!!document.fullscreenElement);
+            const mainContainer = document.querySelector('.painel-exibicao-container');
+            if (mainContainer) {
+                if (document.fullscreenElement) {
+                    mainContainer.classList.add('fullscreen-ativo');
+                } else {
+                    mainContainer.classList.remove('fullscreen-ativo');
+                }
+            }
         };
         
         document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -120,11 +123,11 @@ const PainelFilaExibicao = () => {
         };
     }, []);
 
+
     return (
         <div className="painel-exibicao-container">
             <header className="painel-header">
                 <div className="painel-header-content">
-                    {/* O botão "Voltar" só é exibido se não estiver em tela cheia */}
                     {!isFullscreen && (
                         <button className="btn-voltar" onClick={handleGoBack}>
                             &larr; Voltar
@@ -141,7 +144,6 @@ const PainelFilaExibicao = () => {
             {error && <div className="error-message-panel">{error}</div>}
 
             <div className="painel-colunas">
-                {/* COLUNA: AGUARDANDO */}
                 <div className="coluna-clientes na-fila">
                     <h2>Aguardando</h2>
                     {clientesAguardando.length === 0 && !loading && !error && (
@@ -151,13 +153,10 @@ const PainelFilaExibicao = () => {
                         {clientesAguardando.map(cliente => (
                             <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente aguardando">
                                 <span className="cliente-nome">{cliente.NOME || 'Cliente Desconhecido'}</span>
-                                <span className="cliente-hora">Tempo de Espera: {calcularTempoEspera(cliente.DT_ENTRA)}</span>
                             </div>
                         ))}
                     </div>
                 </div>
-
-                {/* COLUNA: CHAMADOS */}
                 <div className="coluna-clientes chamados">
                     <h2>Chamados</h2>
                     {clientesChamados.length === 0 && !loading && !error && (
@@ -172,8 +171,22 @@ const PainelFilaExibicao = () => {
                     </div>
                 </div>
             </div>
+            {/* Banner de Mensagens Rotativas */}
+            <div className="mensagens-rotativas-container">
+                <div className="mensagem-texto">
+                    {/* Renderiza as mensagens uma vez */}
+                    {mensagens.map((msg, index) => (
+                        <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
+                    ))}
+                    {/* E renderiza as mensagens uma segunda vez */}
+                    {mensagens.map((msg, index) => (
+                        <span key={`segundo-${index}`} className="mensagem-item">{msg}</span>
+                    ))}
+                </div>
+            </div>
         </div>
     );
 };
 
 export default PainelFilaExibicao;
+
