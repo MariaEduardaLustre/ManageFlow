@@ -16,7 +16,18 @@ const GestaoFilaClientes = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [novoCliente, setNovoCliente] = useState({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
+    
+    // RENOMEADO: Agora usa 'MEIO_NOTIFICACAO'
+    const [novoCliente, setNovoCliente] = useState({ 
+        NOME: '', 
+        CPFCNPJ: '', 
+        DT_NASC: '', 
+        DDDCEL: '', 
+        NR_CEL: '',
+        MEIO_NOTIFICACAO: 'whatsapp',
+        EMAIL: ''
+    });
+    
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState('');
     const [feedbackVariant, setFeedbackVariant] = useState('info');
@@ -187,6 +198,7 @@ const GestaoFilaClientes = () => {
     const handleAdicionarCliente = async (e) => {
         e.preventDefault();
         try {
+            // Nenhum ajuste necessário aqui, pois a função já envia o estado `novoCliente` completo.
             await api.post(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/adicionar-cliente`, novoCliente);
             handleCloseAddModal();
             openFeedbackModal('Cliente adicionado com sucesso!', 'success');
@@ -198,10 +210,21 @@ const GestaoFilaClientes = () => {
     };
 
     const handleCloseAddModal = () => setShowAddModal(false);
+    
+    // RENOMEADO: Agora usa 'MEIO_NOTIFICACAO' no estado inicial
     const handleShowAddModal = () => {
-        setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
+        setNovoCliente({ 
+            NOME: '', 
+            CPFCNPJ: '', 
+            DT_NASC: '', 
+            DDDCEL: '', 
+            NR_CEL: '',
+            MEIO_NOTIFICACAO: 'whatsapp',
+            EMAIL: ''
+        });
         setShowAddModal(true);
     };
+    
     const handleNovoClienteChange = (e) => setNovoCliente(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
     const handleVerPainel = () => {
@@ -290,7 +313,6 @@ const GestaoFilaClientes = () => {
                                                         </span>
                                                     </div>
                                                     <div className="botoes-acoes-contexto">
-                                                        {/* AQUI ESTÁ A MUDANÇA: TODOS OS BOTÕES SÃO EXIBIDOS SEMPRE */}
                                                         <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
                                                         <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
                                                         <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
@@ -310,9 +332,40 @@ const GestaoFilaClientes = () => {
                 <Modal.Header closeButton><Modal.Title>Adicionar Novo Cliente</Modal.Title></Modal.Header>
                 <Form onSubmit={handleAdicionarCliente}>
                     <Modal.Body>
+                        {/* CAMPOS EXISTENTES */}
                         <Form.Group className="mb-3"><Form.Label>Nome Completo*</Form.Label><Form.Control type="text" name="NOME" value={novoCliente.NOME} onChange={handleNovoClienteChange} required /></Form.Group>
                         <Form.Group className="mb-3"><Form.Label>CPF/CNPJ*</Form.Label><Form.Control type="text" name="CPFCNPJ" value={novoCliente.CPFCNPJ} onChange={handleNovoClienteChange} required /></Form.Group>
                         <Form.Group className="mb-3"><Form.Label>Data de Nascimento</Form.Label><Form.Control type="date" name="DT_NASC" value={novoCliente.DT_NASC} onChange={handleNovoClienteChange} /></Form.Group>
+                        
+                        {/* NOVO CAMPO: SELEÇÃO DA FORMA DE NOTIFICAÇÃO */}
+                        <Form.Group className="mb-3">
+                            <Form.Label>Forma de Notificação</Form.Label>
+                            <Form.Select 
+                                name="MEIO_NOTIFICACAO" 
+                                value={novoCliente.MEIO_NOTIFICACAO} 
+                                onChange={handleNovoClienteChange} 
+                                required
+                            >
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="sms">SMS</option>
+                                <option value="email">E-mail</option>
+                            </Form.Select>
+                        </Form.Group>
+                        
+                        {/* NOVO CAMPO CONDICIONAL: E-MAIL */}
+                        {novoCliente.MEIO_NOTIFICACAO === 'email' && (
+                            <Form.Group className="mb-3">
+                                <Form.Label>E-mail</Form.Label>
+                                <Form.Control 
+                                    type="email" 
+                                    name="EMAIL" 
+                                    value={novoCliente.EMAIL} 
+                                    onChange={handleNovoClienteChange} 
+                                    required={novoCliente.MEIO_NOTIFICACAO === 'email'}
+                                />
+                            </Form.Group>
+                        )}
+                        
                         <div className="d-flex gap-3">
                             <Form.Group><Form.Label>DDD</Form.Label><Form.Control type="text" name="DDDCEL" value={novoCliente.DDDCEL} onChange={handleNovoClienteChange} /></Form.Group>
                             <Form.Group className="flex-grow-1"><Form.Label>Celular</Form.Label><Form.Control type="text" name="NR_CEL" value={novoCliente.NR_CEL} onChange={handleNovoClienteChange} /></Form.Group>

@@ -161,7 +161,7 @@ module.exports = (io) => {
             const [clientes] = await db.query(`
                 SELECT
                     ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, CPFCNPJ, RG, NOME, DT_NASC, EMAIL,
-                    NR_QTDPES, DDDCEL, NR_CEL, CAMPOS, DT_ENTRA, DT_CHAMA, DT_LIMAPRE, DT_APRE, DT_SAIDA, SITUACAO
+                    NR_QTDPES, DDDCEL, NR_CEL, MEIO_NOTIFICACAO, CAMPOS, DT_ENTRA, DT_CHAMA, DT_LIMAPRE, DT_APRE, DT_SAIDA, SITUACAO
                 FROM clientesfila
                 WHERE ID_EMPRESA = ? AND DATE(DT_MOVTO) = ? AND ID_FILA = ?
                 ORDER BY DT_ENTRA ASC
@@ -200,7 +200,7 @@ module.exports = (io) => {
     router.put('/fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/atualizar-situacao', async (req, res) => {
         const { idEmpresa, dtMovto, idFila, idCliente } = req.params;
         const { novaSituacao } = req.body;
-        const dtMovtoFormatted = dtMovto.split('T')[0]; 
+        const dtMovtoFormatted = dtMovto.split('T')[0];
 
         console.log('--- REQUISIÇÃO PUT ATUALIZAR SITUAÇÃO ---');
         console.log(`Parâmetros da URL: idEmpresa=${idEmpresa}, dtMovto=${dtMovto}(raw), idFila=${idFila}, idCliente=${idCliente}`);
@@ -296,7 +296,7 @@ module.exports = (io) => {
             io.emit('cliente_atualizado', { 
                 idEmpresa: idEmpresa,
                 idFila: idFila,
-                idCliente: idCliente,  
+                idCliente: idCliente,
                 novaSituacao: 3
             });
 
@@ -311,10 +311,16 @@ module.exports = (io) => {
     // Rota para adicionar cliente na fila
     router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, res) => {
         const { idEmpresa, dtMovto, idFila } = req.params;
-        const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES } = req.body;
+        // ATUALIZADO: Incluindo MEIO_NOTIFICACAO e EMAIL na desestruturação
+        const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES, MEIO_NOTIFICACAO } = req.body;
 
         if (!NOME || !CPFCNPJ) {
             return res.status(400).json({ error: 'Nome e CPF/CNPJ são obrigatórios.' });
+        }
+        
+        // NOVO: Validação para e-mail se MEIO_NOTIFICACAO for 'email'
+        if (MEIO_NOTIFICACAO === 'email' && !EMAIL) {
+            return res.status(400).json({ error: 'O campo E-mail é obrigatório para esta forma de notificação.' });
         }
 
         const connection = await db.getConnection();
@@ -348,15 +354,17 @@ module.exports = (io) => {
                 return res.status(409).json({ error: 'Este cliente já se encontra na fila.' });
             }
 
+            // ATUALIZADO: Incluindo EMAIL e MEIO_NOTIFICACAO no comando INSERT
             await connection.query(
                 `INSERT INTO clientesfila (
                     ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, 
                     CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, 
-                    DT_ENTRA, SITUACAO
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`,
+                    DT_ENTRA, SITUACAO, MEIO_NOTIFICACAO
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, ?)`,
                 [
                     idEmpresa, dtMovto, idFila, idCliente,
-                    CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES || 0, DDDCEL, NR_CEL
+                    CPFCNPJ, RG, NOME, DT_NASC, EMAIL || null, NR_QTDPES || 0, DDDCEL, NR_CEL,
+                    MEIO_NOTIFICACAO
                 ]
             );
 
