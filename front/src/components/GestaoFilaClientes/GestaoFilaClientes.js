@@ -262,7 +262,7 @@ const GestaoFilaClientes = () => {
                     {loading && <p>Carregando clientes...</p>}
                     {error && <p className="error-message">{error}</p>}
                     {!loading && clientesFiltrados.length === 0 && !error && (
-                        <p>Nenhum cliente na fila. Clique em "Adicionar Cliente" para começar.</p>
+                        <p>Nenhum cliente na fila.</p>
                     )}
 
                     {!loading && clientesFiltrados.length > 0 && (
