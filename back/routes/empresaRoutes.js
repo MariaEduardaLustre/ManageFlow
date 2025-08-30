@@ -384,4 +384,3 @@ module.exports = (io) => {
     // Retorne o roteador configurado
     return router;
 };
-

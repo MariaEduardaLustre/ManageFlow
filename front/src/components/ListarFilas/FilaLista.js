@@ -122,11 +122,11 @@ const FilaLista = () => {
             <Menu />
 
             <main className="main-content">
-                <div className="empresa-titulo-container" onClick={exibirDetalhesEmpresa} style={{ cursor: 'pointer' }}>
+               {/*  <div className="empresa-titulo-container" onClick={exibirDetalhesEmpresa} style={{ cursor: 'pointer' }}>
                     <span className="empresa-nome">
                         {loadingEmpresa ? 'Carregando detalhes...' : `${nomeEmpresa || 'Carregando...'}`}
                     </span>
-                </div>
+                </div>*/}
 
                 <section className="filas-section">
                     <h2 className="section-title">Filas</h2>
