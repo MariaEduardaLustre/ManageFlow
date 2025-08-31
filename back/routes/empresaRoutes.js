@@ -2,8 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/connection');
+// NOVO: Importando o serviço de notificação
+const { sendNotification, scheduleTimeoutForAbsence } = require('../services/notificationService');
 
-// AQUI ESTÁ A MUDANÇA: Exporte uma função que recebe 'io'
 module.exports = (io) => {
 
     // Rota para criar empresa
@@ -283,6 +284,22 @@ module.exports = (io) => {
         const { idEmpresa, dtMovto, idFila, idCliente } = req.params;
 
         try {
+            // Busque as informações do cliente, incluindo o MEIO_NOTIFICACAO
+            const [clientes] = await db.query(
+                'SELECT NOME, DDDCEL, NR_CEL, EMAIL, MEIO_NOTIFICACAO FROM clientesfila WHERE ID_EMPRESA = ? AND DT_MOVTO = ? AND ID_FILA = ? AND ID_CLIENTE = ?',
+                [idEmpresa, dtMovto, idFila, idCliente]
+            );
+            
+            if (clientes.length === 0) {
+                return res.status(404).json({ error: 'Cliente não encontrado.' });
+            }
+            
+            const cliente = clientes[0];
+
+            // Chame a função do serviço de notificação para enviar a mensagem
+            await sendNotification(cliente);
+            
+            // Atualize a situação do cliente e o carimbo de data/hora
             const [result] = await db.query(
                 'UPDATE clientesfila SET DT_NOTIFICACAO = NOW(), SITUACAO = 3 WHERE ID_EMPRESA = ? AND ID_FILA = ? AND ID_CLIENTE = ? AND DATE(DT_MOVTO) = ?',
                 [idEmpresa, idFila, idCliente, dtMovto.split('T')[0]]
@@ -291,6 +308,10 @@ module.exports = (io) => {
             if (result.affectedRows === 0) {
                 return res.status(404).json({ error: 'Cliente não encontrado para o agendamento.' });
             }
+
+            // Agende o timeout
+            const timeout = 15 * 60 * 1000;
+            scheduleTimeoutForAbsence(idEmpresa, dtMovto, idFila, idCliente, timeout, io);
 
             // Emita a notificação via WebSocket
             io.emit('cliente_atualizado', { 
@@ -311,14 +332,12 @@ module.exports = (io) => {
     // Rota para adicionar cliente na fila
     router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, res) => {
         const { idEmpresa, dtMovto, idFila } = req.params;
-        // ATUALIZADO: Incluindo MEIO_NOTIFICACAO e EMAIL na desestruturação
         const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES, MEIO_NOTIFICACAO } = req.body;
 
         if (!NOME || !CPFCNPJ) {
             return res.status(400).json({ error: 'Nome e CPF/CNPJ são obrigatórios.' });
         }
         
-        // NOVO: Validação para e-mail se MEIO_NOTIFICACAO for 'email'
         if (MEIO_NOTIFICACAO === 'email' && !EMAIL) {
             return res.status(400).json({ error: 'O campo E-mail é obrigatório para esta forma de notificação.' });
         }
@@ -354,7 +373,6 @@ module.exports = (io) => {
                 return res.status(409).json({ error: 'Este cliente já se encontra na fila.' });
             }
 
-            // ATUALIZADO: Incluindo EMAIL e MEIO_NOTIFICACAO no comando INSERT
             await connection.query(
                 `INSERT INTO clientesfila (
                     ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, 
@@ -370,7 +388,6 @@ module.exports = (io) => {
 
             await connection.commit();
             
-            // Emita a notificação via WebSocket
             io.emit('cliente_atualizado', {
                 idEmpresa: idEmpresa,
                 idFila: idFila,
@@ -389,6 +406,5 @@ module.exports = (io) => {
         }
     });
     
-    // Retorne o roteador configurado
     return router;
 };
