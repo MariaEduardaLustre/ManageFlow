@@ -1,0 +1,51 @@
+{
+  "cadastro": {
+    "titulo": "Sign Up",
+    "placeholder": {
+      "nome": "Full Name",
+      "email": "E-mail",
+      "cpfCnpj": "SSN/EIN",
+      "senha": "Password",
+      "confirmarSenha": "Confirm your password",
+      "ddd": "Area Code",
+      "telefone": "Phone",
+      "cep": "Zip Code",
+      "numero": "Number",
+      "endereco": "Address",
+      "complemento": "Complement (Optional)"
+    },
+    "botoes": {
+      "cadastrar": "Register"
+    },
+    "links": {
+      "login": "Already have an account?",
+      "loginLink": "Login here"
+    },
+    "mensagens": {
+      "alerta": {
+        "nomeInvalido": "Please enter a valid name with at least 3 letters.",
+        "emailInvalido": "Please enter a valid e-mail.",
+        "cpfCnpjInvalido": "Invalid SSN or EIN!",
+        "senhaInvalida": "The password must contain at least 8 characters, one uppercase letter, and one special character.",
+        "senhasNaoCoincidem": "Passwords do not match!",
+        "camposObrigatorios": "Please fill out all required fields.",
+        "erroCep": "Zip code not found.",
+        "erroGeralCep": "Error fetching zip code.",
+        "erroGenerico": "An error occurred while registering the user."
+      },
+      "modal": {
+        "confirmacaoTitulo": "Confirm Registration",
+        "confirmacaoBody": "Do you really want to confirm the registration with the information provided?",
+        "confirmacaoBotaoCancelar": "Cancel",
+        "confirmacaoBotaoSim": "Yes, Register",
+        "sucessoTitulo": "Success!",
+        "sucessoBotaoFechar": "Close",
+        "erroTitulo": "An Error Occurred",
+        "erroBotaoFechar": "Close"
+      }
+    },
+    "selects": {
+      "pais": "Select a country"
+    }
+  }
+}

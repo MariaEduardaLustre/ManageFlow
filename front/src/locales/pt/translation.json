@@ -1,0 +1,51 @@
+{
+  "cadastro": {
+    "titulo": "Cadastre-se",
+    "placeholder": {
+      "nome": "Nome Completo",
+      "email": "E-mail",
+      "cpfCnpj": "CPF/CNPJ",
+      "senha": "Senha",
+      "confirmarSenha": "Confirme sua senha",
+      "ddd": "DDD",
+      "telefone": "Telefone",
+      "cep": "CEP",
+      "numero": "Número",
+      "endereco": "Endereço (Logradouro)",
+      "complemento": "Complemento (Opcional)"
+    },
+    "botoes": {
+      "cadastrar": "Cadastrar"
+    },
+    "links": {
+    "login": "Já possui uma conta?",
+    "loginLink": "Faça o login"
+    },
+    "mensagens": {
+      "alerta": {
+        "nomeInvalido": "Digite um nome válido com pelo menos 3 letras.",
+        "emailInvalido": "Digite um e-mail válido.",
+        "cpfCnpjInvalido": "CPF ou CNPJ inválidos!",
+        "senhaInvalida": "A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caracter especial.",
+        "senhasNaoCoincidem": "As senhas não coincidem!",
+        "camposObrigatorios": "Por favor, preencha todos os campos obrigatórios.",
+        "erroCep": "CEP não encontrado.",
+        "erroGeralCep": "Erro ao buscar CEP.",
+        "erroGenerico": "Ocorreu um erro ao cadastrar o usuário."
+      },
+      "modal": {
+        "confirmacaoTitulo": "Confirmar Cadastro",
+        "confirmacaoBody": "Deseja realmente confirmar o cadastro com os dados informados?",
+        "confirmacaoBotaoCancelar": "Cancelar",
+        "confirmacaoBotaoSim": "Sim, Cadastrar",
+        "sucessoTitulo": "Sucesso!",
+        "sucessoBotaoFechar": "Fechar",
+        "erroTitulo": "Ocorreu um Erro",
+        "erroBotaoFechar": "Fechar"
+      }
+    },
+    "selects": {
+      "pais": "Selecione o país"
+    }
+  }
+}
