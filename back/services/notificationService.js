@@ -21,7 +21,7 @@ const sendEmailNotification = async (cliente) => {
         to: cliente.EMAIL,
         subject: 'Sua vez está chegando!',
         html: `
-            <p>Olá, ${cliente.NOME}!</p>
+            <p>Olá, ${cliente.NOME || 'Cliente'}!</p>
             <p>Seu atendimento está prestes a ser iniciado. Por favor, dirija-se à área de espera para a sua chamada.</p>
             <p>Agradecemos a sua paciência!</p>
         `,
@@ -42,6 +42,8 @@ const sendEmailNotification = async (cliente) => {
  * @param {object} cliente - Objeto com os dados do cliente (NOME, DDDCEL, NR_CEL, etc.).
  */
 const sendWhatsappNotification = async (cliente) => {
+    console.log('Dados do cliente para o WhatsApp:', cliente);
+
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
     const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
 
@@ -52,7 +54,7 @@ const sendWhatsappNotification = async (cliente) => {
 
     const payload = {
         messaging_product: 'whatsapp',
-        to: `+55${cliente.DDDCEL}${cliente.NR_CEL}`, // Linha corrigida para incluir +55
+        to: `+55${cliente.DDDCEL}${cliente.NR_CEL}`,
         type: 'template',
         template: {
             name: 'aviso_chamada',
@@ -65,7 +67,7 @@ const sendWhatsappNotification = async (cliente) => {
                     parameters: [
                         {
                             type: 'text',
-                            text: cliente.NOME,
+                            text: String(cliente.NOME || 'Cliente'),
                         },
                     ],
                 },
@@ -105,12 +107,10 @@ const sendSmsNotification = async (cliente) => {
     }
 
     const client = twilio(accountSid, authToken);
-
-    // Constrói o número completo no formato internacional: +DDI(DDD)(NÚMERO)
-    // Usamos o DDI do cliente, se existir. Caso contrário, usamos +55.
+    
     const numeroCompleto = `+${cliente.DDI || '55'}${cliente.DDDCEL}${cliente.NR_CEL}`;
 
-    const mensagem = `Ola, ${cliente.NOME}! Sua vez esta chegando. Por favor, dirija-se a area de espera.`;
+    const mensagem = `Ola, ${cliente.NOME || 'Cliente'}! Sua vez esta chegando. Por favor, dirija-se a area de espera.`;
 
     try {
         await client.messages.create({
@@ -129,7 +129,7 @@ const sendSmsNotification = async (cliente) => {
  * Função principal para enviar notificação com base no meio escolhido.
  * @param {object} cliente - Objeto com os dados do cliente.
  */
-exports.sendNotification = async (cliente) => {
+const sendNotification = async (cliente) => {
     switch (cliente.MEIO_NOTIFICACAO) {
         case 'whatsapp':
             if (!cliente.DDDCEL || !cliente.NR_CEL) {
@@ -157,6 +157,11 @@ exports.sendNotification = async (cliente) => {
     }
 };
 
-exports.scheduleTimeoutForAbsence = (idEmpresa, dtMovto, idFila, idCliente, timeout, io) => {
+const scheduleTimeoutForAbsence = (idEmpresa, dtMovto, idFila, idCliente, timeout, io) => {
     // Sua lógica de agendamento aqui
+};
+
+module.exports = {
+  sendNotification,
+  scheduleTimeoutForAbsence,
 };

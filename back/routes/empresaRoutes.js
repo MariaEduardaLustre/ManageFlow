@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/connection');
-// NOVO: Importando o serviço de notificação
+// CORREÇÃO AQUI: Importando o serviço de notificação corretamente
 const { sendNotification, scheduleTimeoutForAbsence } = require('../services/notificationService');
 
 module.exports = (io) => {
@@ -296,7 +296,7 @@ module.exports = (io) => {
             
             const cliente = clientes[0];
 
-            // Chame a função do serviço de notificação para enviar a mensagem
+            // A chamada para a função sendNotification estava aqui
             await sendNotification(cliente);
             
             // Atualize a situação do cliente e o carimbo de data/hora
