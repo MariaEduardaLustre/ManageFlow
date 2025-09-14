@@ -20,20 +20,28 @@ const PainelFilaExibicao = () => {
     const [weatherError, setWeatherError] = useState(null);
     const [showWeather, setShowWeather] = useState(true);
 
-    // --- Novos estados para Notícias ---
     const [newsData, setNewsData] = useState([]);
     const [newsError, setNewsError] = useState(null);
     const [showNews, setShowNews] = useState(true);
-    // -----------------------------------
 
-    const mensagens = [
+    const [customTitle, setCustomTitle] = useState('');
+    const [backgroundColor, setBackgroundColor] = useState('#f4f7f6');
+    const [logoBase64, setLogoBase64] = useState('');
+    const defaultMessages = [
         "Bem-vindo(a) ao nosso painel de atendimento!",
         "Fique atento(a) ao seu nome e número de guichê.",
         "Seu tempo de espera pode variar.",
         "Agradecemos a sua paciência!",
         "Não se esqueça de verificar nossas promoções no balcão de atendimento."
     ];
+    const [customMessages, setCustomMessages] = useState([]);
+    const [messagesInput, setMessagesInput] = useState(defaultMessages.join('\n'));
     
+    // --- NOVO: Estado para a notificação customizada ---
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationMessage, setNotificationMessage] = useState('');
+    // ----------------------------------------------------
+
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
 
@@ -76,9 +84,8 @@ const PainelFilaExibicao = () => {
         }
     }, [idEmpresa, dtMovto, idFila, navigate]);
 
-    // --- Função para buscar os dados do clima ---
     const fetchWeather = async () => {
-        const apiKey = 'f8aaf7be83364aba956f8ded73591533'; // Substitua pela sua chave real
+        const apiKey = 'SUA_CHAVE_DO_CLIMA_AQUI'; 
         const city = 'Curitiba';
         const countryCode = 'BR';
         try {
@@ -94,32 +101,84 @@ const PainelFilaExibicao = () => {
             setWeatherData(null);
         }
     };
-    // ---------------------------------------------
     
-    // --- NOVA Função para buscar as notícias ---
     const fetchNews = async () => {
-        // Importante: Substitua 'SUA_CHAVE_DE_NOTICIAS_AQUI' pela sua chave de API real da News API
         const apiKey = 'SUA_CHAVE_DE_NOTICIAS_AQUI'; 
-        const query = 'noticias do brasil'; // Você pode mudar o tema das notícias
+        const query = 'noticias do brasil'; 
         try {
             const response = await fetch(`https://newsapi.org/v2/everything?q=${query}&language=pt&apiKey=${apiKey}`);
             if (!response.ok) {
                 throw new Error('Não foi possível obter os dados das notícias.');
             }
             const data = await response.json();
-            setNewsData(data.articles.slice(0, 5)); // Pega os 5 primeiros artigos
+            setNewsData(data.articles.slice(0, 5));
         } catch (err) {
             console.error('Erro ao buscar as notícias:', err);
             setNewsError('Falha ao carregar as notícias.');
             setNewsData([]);
         }
     };
-    // ------------------------------------------
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoBase64(reader.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setLogoBase64('');
+        }
+    };
+    
+    // --- FUNÇÃO CORRIGIDA para salvar as configurações com notificação customizada ---
+    const handleSaveSettings = () => {
+        const settings = {
+            customTitle,
+            backgroundColor,
+            logoBase64,
+            messages: messagesInput.split('\n').map(msg => msg.trim()).filter(msg => msg !== '')
+        };
+        localStorage.setItem('painelSettings', JSON.stringify(settings));
+        setCustomMessages(settings.messages);
+        
+        // CORRIGIDO: Exibe a notificação customizada e a esconde após 3 segundos
+        setNotificationMessage('Configurações salvas com sucesso!');
+        setShowNotification(true);
+        setTimeout(() => {
+            setShowNotification(false);
+        }, 3000); 
+    };
+    // -----------------------------------------------------
+
+    const handleRemoveLogo = () => {
+        setLogoBase64('');
+        const fileInput = document.getElementById('logo-upload');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    };
 
     useEffect(() => {
         if (!idEmpresa || !dtMovto || !idFila) {
             navigate('/filas');
             return;
+        }
+
+        const savedSettings = localStorage.getItem('painelSettings');
+        if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            setCustomTitle(settings.customTitle || '');
+            setBackgroundColor(settings.backgroundColor || '#f4f7f6');
+            setLogoBase64(settings.logoBase64 || '');
+            if (settings.messages && settings.messages.length > 0) {
+                setCustomMessages(settings.messages);
+                setMessagesInput(settings.messages.join('\n'));
+            } else {
+                setCustomMessages([]);
+                setMessagesInput(defaultMessages.join('\n'));
+            }
         }
 
         const socket = io("http://localhost:3001");
@@ -137,21 +196,18 @@ const PainelFilaExibicao = () => {
             console.log("Painel desconectado do servidor WebSocket.");
         };
 
-    }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFila]);
+    }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFila, isFullscreen]);
 
-    // --- useEffect para buscar o clima e as notícias periodicamente ---
     useEffect(() => {
         fetchWeather();
         fetchNews();
-        const weatherIntervalId = setInterval(fetchWeather, 600000); // 10 minutos
-        const newsIntervalId = setInterval(fetchNews, 1800000); // 30 minutos
-
+        const weatherIntervalId = setInterval(fetchWeather, 600000);
+        const newsIntervalId = setInterval(fetchNews, 1800000);
         return () => {
             clearInterval(weatherIntervalId);
             clearInterval(newsIntervalId);
         };
     }, []);
-    // -----------------------------------------------------------------
 
     const handleGoBack = () => {
         navigate(-1);
@@ -171,64 +227,157 @@ const PainelFilaExibicao = () => {
         setShowWeather(prevShowWeather => !prevShowWeather);
     };
 
-    // --- Nova função para alternar a exibição das notícias ---
     const handleToggleNews = () => {
         setShowNews(prevShowNews => !prevShowNews);
     };
-    // --------------------------------------------------------
 
     useEffect(() => {
         const handleFullscreenChange = () => {
             setIsFullscreen(!!document.fullscreenElement);
-            const mainContainer = document.querySelector('.painel-exibicao-container');
-            if (mainContainer) {
-                if (document.fullscreenElement) {
-                    mainContainer.classList.add('fullscreen-ativo');
-                } else {
-                    mainContainer.classList.remove('fullscreen-ativo');
-                }
-            }
         };
         
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-
         return () => {
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
         };
     }, []);
-
-    return (
-        <div className={`painel-exibicao-container ${isFullscreen ? 'fullscreen-ativo' : ''}`}>
-            <header className="painel-header">
-                <div className="painel-header-content">
-                    {!isFullscreen && (
+    
+    const messagesToDisplay = customMessages.length > 0 ? customMessages : defaultMessages;
+    
+    if (!isFullscreen) {
+        return (
+            <div className="painel-exibicao-container">
+                <header className="painel-header">
+                    <div className="painel-header-content">
                         <button className="btn-voltar" onClick={handleGoBack}>
                             &larr; Voltar
                         </button>
-                    )}
-                    <h1>Painel da Fila</h1>
-                    
-                    {/* Botão para alternar o clima */}
-                    {!isFullscreen && (
-                        <button className="btn-toggle-weather" onClick={handleToggleWeather} title="Exibir/Ocultar Clima">
-                            {showWeather ? 'Ocultar Clima' : 'Exibir Clima'}
+                        <h1>Configuração do Painel</h1>
+                        <button className="btn-fullscreen" onClick={handleFullscreenToggle} title="Ativar Tela Cheia">
+                            <BiFullscreen />
                         </button>
-                    )}
-                    
-                    {/* NOVO: Botão para alternar as notícias */}
-                    {!isFullscreen && (
-                        <button className="btn-toggle-news" onClick={handleToggleNews} title="Exibir/Ocultar Notícias">
-                            {showNews ? 'Ocultar Notícias' : 'Exibir Notícias'}
-                        </button>
-                    )}
+                    </div>
+                </header>
 
-                    <button className="btn-fullscreen" onClick={handleFullscreenToggle} title="Alternar Tela Cheia">
-                        {isFullscreen ? <BiExitFullscreen /> : <BiFullscreen />}
+                <div className="painel-configuracao-wrapper">
+                    <div className="painel-configuracao">
+                        <div className="config-group">
+                            <label>Título do Painel:</label>
+                            <input
+                                type="text"
+                                value={customTitle}
+                                onChange={(e) => setCustomTitle(e.target.value)}
+                                placeholder="Ex: Painel da Fila da Loja X"
+                            />
+                        </div>
+                        <div className="config-group color-group">
+                            <label htmlFor="backgroundColor">Cor de Fundo:</label>
+                            <input
+                                type="color"
+                                id="backgroundColor"
+                                value={backgroundColor}
+                                onChange={(e) => setBackgroundColor(e.target.value)}
+                            />
+                        </div>
+                        
+                        <div className="config-group">
+                            <label>Logo da Empresa:</label>
+                            <div className="file-input-wrapper">
+                                <input
+                                    type="file"
+                                    id="logo-upload"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                />
+                                {logoBase64 && (
+                                    <button className="btn-remover-logo" onClick={handleRemoveLogo}>
+                                        Remover
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="config-group">
+                            <label>Mensagens do Banner (uma por linha):</label>
+                            <textarea
+                                value={messagesInput}
+                                onChange={(e) => setMessagesInput(e.target.value)}
+                                rows="5"
+                                placeholder="Digite cada mensagem em uma linha separada."
+                            />
+                        </div>
+                        <button className="btn-save-settings" onClick={handleSaveSettings}>
+                            Salvar Configurações
+                        </button>
+                    </div>
+
+                    {/* Painel de Prévia */}
+                    <div className="painel-preview" style={{ backgroundColor: backgroundColor }}>
+                        <div className="painel-preview-content">
+                            <header className="painel-header" style={{ backgroundColor: 'var(--card-background)' }}>
+                                <div className="painel-header-content">
+                                    {logoBase64 && <img src={logoBase64} alt="Logo da Empresa" className="painel-logo" />}
+                                    <h1>{customTitle || 'Painel da Fila'}</h1>
+                                </div>
+                            </header>
+                            
+                            <div className="painel-colunas">
+                                <div className="coluna-clientes na-fila">
+                                    <h2>Aguardando</h2>
+                                    <div className="lista-clientes">
+                                        {clientesAguardando.slice(0, 3).map(cliente => (
+                                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente aguardando">
+                                                <span className="cliente-nome">{cliente.NOME || 'Cliente'}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="coluna-clientes chamados">
+                                    <h2>Chamados</h2>
+                                    <div className="lista-clientes">
+                                        {clientesChamados.slice(0, 2).map(cliente => (
+                                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente chamado">
+                                                <span className="cliente-nome">{cliente.NOME || 'Cliente'}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mensagens-rotativas-container">
+                                <div className="mensagem-texto">
+                                    {messagesInput.split('\n').filter(m => m.trim() !== '').map((msg, index) => (
+                                        <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
+                                    ))}
+                                    {messagesInput.split('\n').filter(m => m.trim() !== '').map((msg, index) => (
+                                        <span key={`segundo-${index}`} className="mensagem-item">{msg}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {showNotification && (
+                    <div className="custom-notification">
+                        <p>{notificationMessage}</p>
+                    </div>
+                )}
+            </div>
+        );
+    }
+    
+    return (
+        <div className="painel-exibicao-container fullscreen-ativo" style={{ backgroundColor: backgroundColor }}>
+            <header className="painel-header">
+                <div className="painel-header-content">
+                    {logoBase64 && <img src={logoBase64} alt="Logo da Empresa" className="painel-logo" />}
+                    <h1>{customTitle || 'Painel da Fila'}</h1>
+                    <button className="btn-fullscreen" onClick={handleFullscreenToggle} title="Sair da Tela Cheia">
+                        <BiExitFullscreen />
                     </button>
                 </div>
             </header>
 
-            {/* Widget do clima */}
             {showWeather && weatherData && (
                 <div className="weather-widget">
                     <div className="weather-icon">
@@ -273,7 +422,6 @@ const PainelFilaExibicao = () => {
                 </div>
             </div>
 
-            {/* NOVO: Widget de notícias */}
             {showNews && newsData.length > 0 && (
                 <div className="news-widget">
                     <h2>Últimas Notícias</h2>
@@ -287,13 +435,12 @@ const PainelFilaExibicao = () => {
                 </div>
             )}
             
-            {/* Banner de Mensagens Rotativas */}
             <div className="mensagens-rotativas-container">
                 <div className="mensagem-texto">
-                    {mensagens.map((msg, index) => (
+                    {messagesToDisplay.map((msg, index) => (
                         <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
                     ))}
-                    {mensagens.map((msg, index) => (
+                    {messagesToDisplay.map((msg, index) => (
                         <span key={`segundo-${index}`} className="mensagem-item">{msg}</span>
                     ))}
                 </div>

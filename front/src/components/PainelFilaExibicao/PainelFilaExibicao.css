@@ -1,6 +1,5 @@
 /* src/components/PainelFilaExibicao/PainelFilaExibicao.css */
 
-
 /* --- Variáveis CSS (Opcional, mas útil para consistência) --- */
 :root {
     --primary-color: #3A5AFE; /* Azul principal */
@@ -63,6 +62,15 @@ body {
     text-align: center;
 }
 
+/* --- Estilo para o Logo no Painel de Exibição --- */
+.painel-logo {
+    position: absolute;
+    left: 30px;
+    height: 60px; /* Ajuste o tamanho do logo conforme a necessidade */
+    object-fit: contain;
+}
+
+/* --- Estilo para o botão de Voltar --- */
 .btn-voltar {
     background-color: var(--secondary-color);
     color: white;
@@ -109,7 +117,54 @@ body {
     color: var(--primary-color); /* Muda a cor para o azul principal no hover */
 }
 
-/* Estilos para o painel no modo normal (quando não está em tela cheia) */
+/* --- Estilo para o botão de alternância do Clima --- */
+.btn-toggle-weather {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 15px;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 5rem; /* Posição à esquerda do botão de tela cheia */
+}
+
+.btn-toggle-weather:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* --- Estilo para o botão de alternância de Notícias --- */
+.btn-toggle-news {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 15px;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 12.5rem; /* Posição à esquerda do botão de clima */
+}
+
+.btn-toggle-news:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Ocultar botões de navegação no painel de exibição em tela cheia */
+.painel-exibicao-container.fullscreen-ativo .btn-toggle-weather,
+.painel-exibicao-container.fullscreen-ativo .btn-toggle-news,
+.painel-exibicao-container.fullscreen-ativo .btn-voltar {
+    display: none;
+}
+
+/* --- Estilos para o painel no modo normal (quando não está em tela cheia) --- */
 .coluna-clientes h2 {
     font-size: 1.5rem;
     font-weight: 600;
@@ -241,6 +296,7 @@ body {
     border-radius: var(--border-radius-large);
     box-shadow: 0 2px 10px var(--shadow-light);
     margin-top: auto;
+    margin-top: 20px; /* NOVO: Adiciona um espaço no topo do banner */
     overflow: hidden; /* Garante que o texto que está fora da tela fique invisível */
     position: relative;
 }
@@ -277,69 +333,17 @@ body {
     }
 }
 
-@media (max-width: 1200px) {
-    .painel-header h1 { font-size: 2.5rem; }
-    .btn-voltar { padding: 8px 15px; font-size: 0.9rem; }
-    .coluna-clientes h2 { font-size: 1.6rem; }
-    .cliente-nome { font-size: 1.2rem; }
-}
-
-@media (max-width: 768px) {
-    .painel-exibicao-container { padding: 15px; gap: 15px; }
-    .painel-header { padding: 20px 25px; }
-    .painel-header-content { flex-direction: column; gap: 10px; align-items: center; }
-    .btn-voltar { position: static; margin-bottom: 10px; padding: 10px 18px; font-size: 1rem; }
-    .painel-colunas { flex-direction: column; align-items: center; gap: 15px; }
-    .coluna-clientes { max-width: 95%; min-width: unset; width: 100%; padding: 20px; }
-    .coluna-clientes h2 { font-size: 1.5rem; }
-    .cliente-nome { font-size: 1.1rem; }
-}
-
-@media (max-width: 480px) {
-    .painel-exibicao-container { padding: 10px; }
-    .painel-header { padding: 15px 20px; }
-    .painel-header h1 { font-size: 1.8rem; }
-    .coluna-clientes { padding: 15px; }
-    .coluna-clientes h2 { font-size: 1.3rem; }
-    .cartao-cliente { padding: 12px 15px; }
-    .cliente-nome { font-size: 1rem; }
-    .loading-message, .error-message-panel, .no-clients { font-size: 1rem; padding: 15px; }
-}
-
-/* Seu CSS existente ... */
-
-/* --- Novo Estilo para o Botão de Alternância do Clima --- */
-.btn-toggle-weather {
-    background-color: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    padding: 8px 15px;
-    border-radius: var(--border-radius-medium);
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    position: absolute;
-    right: 5rem; /* Ajuste para não colidir com o botão de tela cheia */
-}
-
-.btn-toggle-weather:hover {
-    background-color: var(--primary-color);
-    color: white;
-}
-
 /* --- Widget de Clima --- */
 .weather-widget {
-    background-color: var(--card-background); /* Usa a cor de fundo dos cartões */
-    border-radius: var(--border-radius-large); /* Usa o mesmo raio de borda do cabeçalho */
-    box-shadow: 0 4px 15px var(--shadow-light); /* Sombra consistente */
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
     padding: 15px 20px;
     display: flex;
     align-items: center;
     gap: 15px;
     font-size: 1.2rem;
     color: var(--text-color);
-    
     position: absolute;
     top: 20px;
     right: 20px;
@@ -347,7 +351,7 @@ body {
 }
 
 .weather-icon {
-    width: 60px; /* Tamanho do ícone para ser bem visível */
+    width: 60px;
     height: 60px;
     flex-shrink: 0;
 }
@@ -373,83 +377,7 @@ body {
     color: var(--light-text-color);
 }
 
-/* Ajustes para o modo de tela cheia */
-.painel-exibicao-container.fullscreen-ativo .weather-widget {
-    top: 30px;
-    right: 30px;
-    transform: scale(1.1); /* Aumenta um pouco em tela cheia */
-    transition: transform 0.3s ease;
-}
-
-/* Ajustes para telas menores (media queries) */
-@media (max-width: 768px) {
-    .btn-toggle-weather {
-        position: static;
-        right: auto;
-        margin-bottom: 10px;
-    }
-
-    .weather-widget {
-        position: static; /* Remove o posicionamento absoluto */
-        padding: 10px 15px;
-        gap: 10px;
-    }
-    
-    .weather-icon {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .weather-temp {
-        font-size: 1.4rem;
-    }
-    
-    .weather-description {
-        font-size: 0.9rem;
-    }
-}
-
-/* ... Seu CSS existente ... */
-
-/* --- Novo Estilo para o Botão de Alternância das Notícias --- */
-.btn-toggle-news {
-    background-color: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    padding: 8px 15px;
-    border-radius: var(--border-radius-medium);
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    position: absolute;
-    right: 12.5rem; /* Posição à esquerda do botão de clima */
-}
-
-.btn-toggle-news:hover {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-/* --- Widget de Clima --- */
-.weather-widget {
-    background-color: var(--card-background);
-    border-radius: var(--border-radius-large);
-    box-shadow: 0 4px 15px var(--shadow-light);
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-size: 1.2rem;
-    color: var(--text-color);
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 10;
-}
-/* ... restante do CSS do clima ... */
-
-/* --- NOVO: Widget de Notícias --- */
+/* --- Widget de Notícias --- */
 .news-widget {
     background-color: var(--card-background);
     border-radius: var(--border-radius-large);
@@ -477,7 +405,7 @@ body {
     list-style: none;
     padding: 0;
     margin: 0;
-    overflow-y: auto; /* Adiciona scroll se a lista for grande */
+    overflow-y: auto;
     color: var(--text-color);
 }
 
@@ -498,16 +426,227 @@ body {
     font-weight: 500;
 }
 
-/* Ajustes de responsividade para o novo botão e widget */
+/* --- Estilos para o Painel de Configuração --- */
+.painel-configuracao-wrapper {
+    display: flex;
+    gap: 20px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.painel-configuracao {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    width: 450px;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.config-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Estilo específico para o grupo do campo de cor */
+.config-group.color-group {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.config-group label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.painel-configuracao input[type="text"],
+.painel-configuracao textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: 1rem;
+    resize: vertical;
+}
+
+/* Estilo para o campo de cor */
+.painel-configuracao input[type="color"] {
+    width: 35px;
+    height: 35px;
+    padding: 0;
+    border: none;
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+}
+
+.btn-save-settings {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    align-self: flex-end;
+}
+
+.btn-save-settings:hover {
+    background-color: #0047b3;
+    transform: translateY(-2px);
+}
+
+/* --- Estilos para a Prévia do Painel --- */
+.painel-preview {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    flex-grow: 1;
+    max-width: none;
+    height: 700px;
+    overflow-y: auto;
+    position: relative;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.painel-preview-content {
+    transform: scale(0.95);
+    transform-origin: top left;
+    width: 100%;
+    height: 100%;
+}
+
+.painel-preview .painel-logo {
+    left: 10px;
+}
+
+.painel-preview .btn-toggle-weather,
+.painel-preview .btn-toggle-news,
+.painel-preview .btn-fullscreen,
+.painel-preview .btn-voltar {
+    display: none;
+}
+
+.painel-preview .weather-widget,
+.painel-preview .news-widget {
+    display: none;
+}
+
+/* --- Media Queries (Responsividade) --- */
+@media (max-width: 1200px) {
+    .painel-header h1 { font-size: 2.5rem; }
+    .btn-voltar { padding: 8px 15px; font-size: 0.9rem; }
+    .coluna-clientes h2 { font-size: 1.6rem; }
+    .cliente-nome { font-size: 1.2rem; }
+}
+
 @media (max-width: 768px) {
-    .btn-toggle-news {
+    .painel-exibicao-container { padding: 15px; gap: 15px; }
+    .painel-header { padding: 20px 25px; }
+    .painel-header-content { flex-direction: column; gap: 10px; align-items: center; }
+    .btn-voltar { position: static; margin-bottom: 10px; padding: 10px 18px; font-size: 1rem; }
+    .btn-toggle-weather, .btn-toggle-news {
         position: static;
+        right: auto;
         margin-bottom: 10px;
     }
+    .painel-colunas { flex-direction: column; align-items: center; gap: 15px; }
+    .coluna-clientes { max-width: 95%; min-width: unset; width: 100%; padding: 20px; }
+    .coluna-clientes h2 { font-size: 1.5rem; }
+    .cliente-nome { font-size: 1.1rem; }
+    .loading-message, .error-message-panel, .no-clients { font-size: 1.1rem; padding: 15px; }
+    .weather-widget {
+        position: static;
+        padding: 10px 15px;
+        gap: 10px;
+    }
+    .weather-icon {
+        width: 40px;
+        height: 40px;
+    }
+    .weather-temp { font-size: 1.4rem; }
+    .weather-description { font-size: 0.9rem; }
     .news-widget {
         position: static;
         width: 100%;
         max-width: none;
         margin-top: 15px;
     }
+    .painel-configuracao-wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+    .painel-configuracao {
+        padding: 20px;
+    }
+    .painel-preview {
+        width: 100%;
+        height: 500px;
+    }
+}
+
+@media (max-width: 480px) {
+    .painel-exibicao-container { padding: 10px; }
+    .painel-header { padding: 15px 20px; }
+    .painel-header h1 { font-size: 1.8rem; }
+    .coluna-clientes { padding: 15px; }
+    .coluna-clientes h2 { font-size: 1.3rem; }
+    .cartao-cliente { padding: 12px 15px; }
+    .cliente-nome { font-size: 1rem; }
+    .loading-message, .error-message-panel, .no-clients { font-size: 1rem; padding: 15px; }
+    .painel-logo {
+        height: 50px;
+        left: 20px;
+    }
+    .painel-header-content h1 {
+        font-size: 1.5rem;
+    }
+}
+
+/* --- Novo Estilo para a Notificação Customizada --- */
+
+.custom-notification.fade-out {
+    opacity: 0;
+}
+
+/* --- Novo Estilo para a Notificação Customizada --- */
+/* --- Novo Estilo para a Notificação Customizada --- */
+.custom-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    padding: 15px 25px;
+    border-radius: var(--border-radius-medium);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 1;
+    max-width: 400px; /* NOVO: Limita a largura máxima */
+    width: fit-content; /* NOVO: Ajusta a largura ao conteúdo */
+}
+
+.custom-notification p {
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Opcional: ajustar a notificação para tela cheia */
+.fullscreen-notification {
+    top: 40px; /* Alterado de 'bottom' para 'top' */
+    right: 40px;
+    font-size: 1.2rem;
 }
