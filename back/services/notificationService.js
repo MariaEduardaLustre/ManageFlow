@@ -1,3 +1,4 @@
+// Arquivo: services/notificationService.js
 const twilio = require('twilio');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
@@ -13,35 +14,34 @@ const transporter = nodemailer.createTransport({
 
 /**
  * Envia uma notificação por e-mail para o cliente.
- * @param {object} cliente - Objeto com os dados do cliente (NOME, EMAIL, etc.).
+ * @param {string} email - Endereço de e-mail do cliente.
+ * @param {string} subject - Assunto do e-mail.
+ * @param {string} bodyHtml - Corpo do e-mail em HTML.
  */
-const sendEmailNotification = async (cliente) => {
+const sendEmailNotification = async (email, subject, bodyHtml) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: cliente.EMAIL,
-        subject: 'Sua vez está chegando!',
-        html: `
-            <p>Olá, ${cliente.NOME || 'Cliente'}!</p>
-            <p>Seu atendimento está prestes a ser iniciado. Por favor, dirija-se à área de espera para a sua chamada.</p>
-            <p>Agradecemos a sua paciência!</p>
-        `,
+        to: email,
+        subject: subject,
+        html: bodyHtml,
     };
-
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`E-mail de notificação enviado para ${cliente.EMAIL}.`);
-        return { success: true, message: 'E-mail enviado com sucesso.' };
+        console.log(`E-mail de notificação enviado para ${email}.`);
     } catch (error) {
-        console.error(`Erro ao enviar e-mail para ${cliente.EMAIL}:`, error);
+        console.error(`Erro ao enviar e-mail para ${email}:`, error);
         throw new Error('Falha no envio do e-mail.');
     }
 };
 
 /**
  * Envia uma notificação por WhatsApp usando a Cloud API.
- * @param {object} cliente - Objeto com os dados do cliente (NOME, DDDCEL, NR_CEL, etc.).
+ * Nota: É necessário ter um template aprovado para mensagens proativas.
+ * @param {object} cliente - Objeto com os dados do cliente.
+ * @param {string} templateName - Nome do template do WhatsApp.
+ * @param {array} parameters - Array de parâmetros para o template.
  */
-const sendWhatsappNotification = async (cliente) => {
+const sendWhatsappNotification = async (cliente, templateName, parameters) => {
     console.log('Dados do cliente para o WhatsApp:', cliente);
 
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -57,21 +57,14 @@ const sendWhatsappNotification = async (cliente) => {
         to: `+55${cliente.DDDCEL}${cliente.NR_CEL}`,
         type: 'template',
         template: {
-            name: 'aviso_chamada',
+            name: templateName,
             language: {
                 code: 'pt_BR',
             },
-            components: [
-                {
-                    type: 'body',
-                    parameters: [
-                        {
-                            type: 'text',
-                            text: String(cliente.NOME || 'Cliente'),
-                        },
-                    ],
-                },
-            ],
+            components: [{
+                type: 'body',
+                parameters: parameters,
+            }],
         },
     };
 
@@ -95,8 +88,9 @@ const sendWhatsappNotification = async (cliente) => {
 /**
  * Envia uma notificação por SMS usando a API da Twilio.
  * @param {object} cliente - Objeto com os dados do cliente (DDDCEL, NR_CEL, etc.).
+ * @param {string} mensagem - A mensagem de texto a ser enviada.
  */
-const sendSmsNotification = async (cliente) => {
+const sendSmsNotification = async (cliente, mensagem) => {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
@@ -109,8 +103,6 @@ const sendSmsNotification = async (cliente) => {
     const client = twilio(accountSid, authToken);
     
     const numeroCompleto = `+${cliente.DDI || '55'}${cliente.DDDCEL}${cliente.NR_CEL}`;
-
-    const mensagem = `Ola, ${cliente.NOME || 'Cliente'}! Sua vez esta chegando. Por favor, dirija-se a area de espera.`;
 
     try {
         await client.messages.create({
@@ -126,34 +118,57 @@ const sendSmsNotification = async (cliente) => {
 };
 
 /**
- * Função principal para enviar notificação com base no meio escolhido.
+ * Função principal para enviar notificação de 'vez chegando' com base no meio escolhido.
  * @param {object} cliente - Objeto com os dados do cliente.
  */
 const sendNotification = async (cliente) => {
+    const mensagem = `Ola, ${cliente.NOME || 'Cliente'}! Sua vez esta chegando. Por favor, dirija-se a area de espera.`;
+    const subject = 'Sua vez está chegando!';
+    const html = `
+        <p>Olá, ${cliente.NOME || 'Cliente'}!</p>
+        <p>Seu atendimento está prestes a ser iniciado. Por favor, dirija-se à área de espera para a sua chamada.</p>
+        <p>Agradecemos a sua paciência!</p>`;
+
     switch (cliente.MEIO_NOTIFICACAO) {
         case 'whatsapp':
-            if (!cliente.DDDCEL || !cliente.NR_CEL) {
-                console.error(`Cliente ${cliente.NOME} escolheu WhatsApp, mas o número de telefone está ausente.`);
-                throw new Error('Número de telefone do cliente ausente.');
-            }
-            await sendWhatsappNotification(cliente);
+            await sendWhatsappNotification(cliente, 'aviso_chamada', [{ type: 'text', text: String(cliente.NOME || 'Cliente') }]);
             break;
         case 'sms':
-            if (!cliente.DDDCEL || !cliente.NR_CEL) {
-                console.error(`Cliente ${cliente.NOME} escolheu SMS, mas o número de telefone está ausente.`);
-                throw new Error('Número de telefone do cliente ausente.');
-            }
-            await sendSmsNotification(cliente);
+            await sendSmsNotification(cliente, mensagem);
             break;
         case 'email':
-            if (!cliente.EMAIL) {
-                console.error(`Cliente ${cliente.NOME} escolheu e-mail, mas o endereço está ausente.`);
-                throw new Error('Endereço de e-mail ausente.');
-            }
-            await sendEmailNotification(cliente);
+            await sendEmailNotification(cliente.EMAIL, subject, html);
             break;
         default:
             console.warn(`Meio de notificação desconhecido: ${cliente.MEIO_NOTIFICACAO}`);
+    }
+};
+
+/**
+ * NOVA FUNÇÃO: Envia a notificação inicial de confirmação de entrada na fila.
+ * @param {object} cliente - Objeto com os dados do cliente.
+ * @param {number} posicaoNaFila - Posição do cliente na fila.
+ */
+const sendInitialNotification = async (cliente, posicaoNaFila) => {
+    const mensagem = `Olá ${cliente.NOME || 'Cliente'}! Você acabou de entrar na fila. O seu lugar é o ${posicaoNaFila}. Iremos notificá-lo quando a sua vez estiver a aproximar-se.`;
+    const subject = 'Confirmação de Entrada na Fila';
+    const html = `
+        <p>Olá, ${cliente.NOME || 'Cliente'}!</p>
+        <p>Você acaba de entrar na fila. Seu lugar é o **${posicaoNaFila}**. Iremos notificá-lo quando a sua vez estiver a aproximar-se.</p>
+        <p>Agradecemos a sua paciência!</p>`;
+
+    switch (cliente.MEIO_NOTIFICACAO) {
+        case 'whatsapp':
+            await sendWhatsappNotification(cliente, 'aviso_entrada_fila', [{ type: 'text', text: String(cliente.NOME || 'Cliente') }, { type: 'text', text: String(posicaoNaFila) }]);
+            break;
+        case 'sms':
+            await sendSmsNotification(cliente, mensagem);
+            break;
+        case 'email':
+            await sendEmailNotification(cliente.EMAIL, subject, html);
+            break;
+        default:
+            console.warn(`Meio de notificação desconhecido para notificação inicial: ${cliente.MEIO_NOTIFICACAO}`);
     }
 };
 
@@ -162,6 +177,7 @@ const scheduleTimeoutForAbsence = (idEmpresa, dtMovto, idFila, idCliente, timeou
 };
 
 module.exports = {
-  sendNotification,
-  scheduleTimeoutForAbsence,
+    sendNotification,
+    scheduleTimeoutForAbsence,
+    sendInitialNotification,
 };

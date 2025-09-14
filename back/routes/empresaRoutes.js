@@ -1,9 +1,7 @@
-// Arquivo: routes/empresaRoutes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/connection');
-// CORREÇÃO AQUI: Importando o serviço de notificação corretamente
-const { sendNotification, scheduleTimeoutForAbsence } = require('../services/notificationService');
+const { sendNotification, scheduleTimeoutForAbsence, sendInitialNotification } = require('../services/notificationService');
 
 module.exports = (io) => {
 
@@ -386,8 +384,26 @@ module.exports = (io) => {
                 ]
             );
 
+            const [[{ posicaoAtual }]] = await connection.query(
+                `SELECT COUNT(*) AS posicaoAtual 
+                 FROM clientesfila 
+                 WHERE ID_EMPRESA = ? 
+                   AND DATE(DT_MOVTO) = ? 
+                   AND ID_FILA = ? 
+                   AND (SITUACAO = 0 OR SITUACAO = 3)`,
+                [idEmpresa, dtMovto.split('T')[0], idFila]
+            );
+
+            const posicaoNaFila = posicaoAtual;
+            
             await connection.commit();
             
+            const clienteCompleto = { ...req.body, ID_CLIENTE: idCliente };
+            
+            if (clienteCompleto.MEIO_NOTIFICACAO) {
+                await sendInitialNotification(clienteCompleto, posicaoNaFila);
+            }
+
             io.emit('cliente_atualizado', {
                 idEmpresa: idEmpresa,
                 idFila: idFila,
@@ -395,7 +411,9 @@ module.exports = (io) => {
                 novaSituacao: 0
             });
             
-            res.status(201).json({ message: 'Cliente adicionado à fila com sucesso!' });
+            res.status(201).json({ 
+                message: 'Cliente adicionado à fila com sucesso! Notificação inicial enviada.' 
+            });
 
         } catch (error) {
             await connection.rollback();
