@@ -26,6 +26,11 @@ const FormularioConfiguracaoFila = () => {
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');
 
+  // novos estados para link/QR/token
+  const [linkConvite, setLinkConvite] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [tokenFila, setTokenFila] = useState('');
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -40,13 +45,13 @@ const FormularioConfiguracaoFila = () => {
 
   const handleCamposChange = (e) => {
     const { name, checked } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       campos: {
-        ...formData.campos,
+        ...prev.campos,
         [name]: checked
       }
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -68,8 +73,18 @@ const FormularioConfiguracaoFila = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setMensagemSucessoModal('Configuração de fila cadastrada com sucesso! Token: ' + data.token_fila);
+        // guarda os retornos do backend
+        setTokenFila(data.token_fila || '');
+        setLinkConvite(data.join_url || '');
+        setQrDataUrl(data.qr_data_url || '');
+
+        setMensagemSucessoModal(
+          'Configuração de fila cadastrada com sucesso!' +
+          (data.token_fila ? ` Token: ${data.token_fila}` : '')
+        );
         setMostrarModalSucesso(true);
+
+        // limpa o form (mantendo o id_empresa)
         setFormData({
           id_empresa: idEmpresa,
           nome_fila: '',
@@ -105,74 +120,158 @@ const FormularioConfiguracaoFila = () => {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="nome_fila">Nome da Fila:</label>
-          <input type="text" name="nome_fila" value={formData.nome_fila} onChange={handleChange} required id="nome_fila" />
+          <input
+            type="text"
+            name="nome_fila"
+            id="nome_fila"
+            value={formData.nome_fila}
+            onChange={handleChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label htmlFor="ini_vig">Início Vigência (ex: 20250101):</label>
-          <input type="number" name="ini_vig" value={formData.ini_vig} onChange={handleChange} id="ini_vig" />
+          <input
+            type="number"
+            name="ini_vig"
+            id="ini_vig"
+            value={formData.ini_vig}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="form-group">
           <label htmlFor="fim_vig">Fim Vigência (ex: 20251231):</label>
-          <input type="number" name="fim_vig" value={formData.fim_vig} onChange={handleChange} id="fim_vig" />
+          <input
+            type="number"
+            name="fim_vig"
+            id="fim_vig"
+            value={formData.fim_vig}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="form-group">
           <label htmlFor="mensagem">Mensagem:</label>
-          <input type="text" name="mensagem" value={formData.mensagem} onChange={handleChange} id="mensagem" />
+          <input
+            type="text"
+            name="mensagem"
+            id="mensagem"
+            value={formData.mensagem}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="form-group">
           <label htmlFor="img_banner_url">URL do Banner:</label>
-          <input type="text" name="img_banner_url" value={formData.img_banner.url} onChange={(e) => setFormData({ ...formData, img_banner: { url: e.target.value } })} id="img_banner_url" />
+          <input
+            type="text"
+            name="img_banner_url"
+            id="img_banner_url"
+            value={formData.img_banner.url}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, img_banner: { url: e.target.value } }))
+            }
+          />
         </div>
 
         <fieldset className="form-group">
           <legend>Campos do Formulário:</legend>
           <label>
-            <input type="checkbox" name="cpf" checked={formData.campos.cpf} onChange={handleCamposChange} /> CPF
+            <input
+              type="checkbox"
+              name="cpf"
+              checked={formData.campos.cpf}
+              onChange={handleCamposChange}
+            />{' '}
+            CPF
           </label>
           <label>
-            <input type="checkbox" name="nome" checked={formData.campos.nome} onChange={handleCamposChange} /> Nome
+            <input
+              type="checkbox"
+              name="nome"
+              checked={formData.campos.nome}
+              onChange={handleCamposChange}
+            />{' '}
+            Nome
           </label>
           <label>
-            <input type="checkbox" name="telefone" checked={formData.campos.telefone} onChange={handleCamposChange} /> Telefone
+            <input
+              type="checkbox"
+              name="telefone"
+              checked={formData.campos.telefone}
+              onChange={handleCamposChange}
+            />{' '}
+            Telefone
           </label>
         </fieldset>
 
         <div className="form-group">
           <label htmlFor="temp_tol">Tempo de Tolerância (min):</label>
-          <input type="number" name="temp_tol" value={formData.temp_tol} onChange={handleChange} id="temp_tol" />
+          <input
+            type="number"
+            name="temp_tol"
+            id="temp_tol"
+            value={formData.temp_tol}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="form-group">
           <label htmlFor="qtde_min">Quantidade Mínima:</label>
-          <input type="number" name="qtde_min" value={formData.qtde_min} onChange={handleChange} id="qtde_min" />
+          <input
+            type="number"
+            name="qtde_min"
+            id="qtde_min"
+            value={formData.qtde_min}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="form-group">
           <label htmlFor="qtde_max">Quantidade Máxima:</label>
-          <input type="number" name="qtde_max" value={formData.qtde_max} onChange={handleChange} id="qtde_max" />
+          <input
+            type="number"
+            name="qtde_max"
+            id="qtde_max"
+            value={formData.qtde_max}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="form-group">
           <label>
             Permite Sair da Fila:
-            <input type="checkbox" name="per_sair" checked={formData.per_sair} onChange={handleChange} />
+            <input
+              type="checkbox"
+              name="per_sair"
+              checked={formData.per_sair}
+              onChange={handleChange}
+            />
           </label>
         </div>
 
         <div className="form-group">
           <label>
             Permite Localização:
-            <input type="checkbox" name="per_loc" checked={formData.per_loc} onChange={handleChange} />
+            <input
+              type="checkbox"
+              name="per_loc"
+              checked={formData.per_loc}
+              onChange={handleChange}
+            />
           </label>
         </div>
 
         <div className="form-group">
           <label htmlFor="situacao">Situação:</label>
-          <select name="situacao" value={formData.situacao} onChange={handleChange} id="situacao">
+          <select
+            name="situacao"
+            id="situacao"
+            value={formData.situacao}
+            onChange={handleChange}
+          >
             <option value={1}>Ativa</option>
             <option value={0}>Inativa</option>
           </select>
@@ -186,7 +285,70 @@ const FormularioConfiguracaoFila = () => {
         <div className="modal-overlay">
           <div className="modal sucesso">
             <p className="mensagem-sucesso">{mensagemSucessoModal}</p>
-            <button onClick={fecharModalSucesso} className="btn-fechar-modal">Fechar</button>
+
+            {/* Bloco com link e QR code se o backend retornou */}
+            {(linkConvite || qrDataUrl) && (
+              <div className="convite-bloco" style={{ marginTop: 12 }}>
+                {linkConvite && (
+                  <>
+                    <p><strong>Link para o cliente entrar na fila:</strong></p>
+                    <a href={linkConvite} target="_blank" rel="noopener noreferrer">
+                      {linkConvite}
+                    </a>
+
+                    <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                      <input
+                        type="text"
+                        readOnly
+                        value={linkConvite}
+                        style={{ flex: 1 }}
+                        onFocus={(e) => e.target.select()}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(linkConvite)}
+                      >
+                        Copiar link
+                      </button>
+                      <a
+                        href={linkConvite}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-abrir-link"
+                      >
+                        Abrir
+                      </a>
+                    </div>
+                  </>
+                )}
+
+                {qrDataUrl && (
+                  <>
+                    <p style={{ marginTop: 12 }}><strong>QR Code:</strong></p>
+                    <img
+                      src={qrDataUrl}
+                      alt="QR Code da fila"
+                      style={{ width: 200, height: 200 }}
+                    />
+                    {/* Se você criou o endpoint de download do QR, pode exibir um link: */}
+                    {/* {tokenFila && (
+                      <div style={{ marginTop: 8 }}>
+                        <a
+                          href={`http://localhost:3001/api/configuracao/qr/${tokenFila}`}
+                          download={`qr-fila-${tokenFila}.png`}
+                        >
+                          Baixar QR em PNG
+                        </a>
+                      </div>
+                    )} */}
+                  </>
+                )}
+              </div>
+            )}
+
+            <button onClick={fecharModalSucesso} className="btn-fechar-modal">
+              Fechar
+            </button>
           </div>
         </div>
       )}

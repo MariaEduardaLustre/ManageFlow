@@ -10,11 +10,23 @@ const authMiddleware = require('./auth/jwt');               // <<< NOVO
 const meRoutes = require('./routes/me');                    // <<< NOVO
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+
+
 app.use(express.json());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://192.168.1.32:3000',             // <-- seu IP do front
+    process.env.PUBLIC_FRONT_BASE_URL       // <-- se usar a env
+  ].filter(Boolean),
+  credentials: true
+}));
 
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`API ouvindo em http://0.0.0.0:${PORT}`);
+});
 // públicas
 app.use('/api', usuarioRoutes);
 

@@ -15,7 +15,7 @@ import GestaoFilaClientes from './components/GestaoFilaClientes/GestaoFilaClient
 import Dashboard from './components/Dashboard/Dashboard';
 import Relatorio from './components/Relatorio/Relatorio';
 import Forbidden from './pages/Forbidden';
-
+import EntrarFilaPage from './pages/EntrarFilaPage';
 function App() {
   return (
     <Router>
@@ -26,7 +26,7 @@ function App() {
         <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
-
+        <Route path="/entrar-fila/:token" element={<EntrarFilaPage />} />
         {/* Seleção de empresa (apenas exige login) */}
         <Route
           path="/escolher-empresa"
