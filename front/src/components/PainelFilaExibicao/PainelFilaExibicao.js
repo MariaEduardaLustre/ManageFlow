@@ -16,6 +16,16 @@ const PainelFilaExibicao = () => {
     const [error, setError] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
+    const [weatherData, setWeatherData] = useState(null);
+    const [weatherError, setWeatherError] = useState(null);
+    const [showWeather, setShowWeather] = useState(true);
+
+    // --- Novos estados para Notícias ---
+    const [newsData, setNewsData] = useState([]);
+    const [newsError, setNewsError] = useState(null);
+    const [showNews, setShowNews] = useState(true);
+    // -----------------------------------
+
     const mensagens = [
         "Bem-vindo(a) ao nosso painel de atendimento!",
         "Fique atento(a) ao seu nome e número de guichê.",
@@ -66,6 +76,46 @@ const PainelFilaExibicao = () => {
         }
     }, [idEmpresa, dtMovto, idFila, navigate]);
 
+    // --- Função para buscar os dados do clima ---
+    const fetchWeather = async () => {
+        const apiKey = 'f8aaf7be83364aba956f8ded73591533'; // Substitua pela sua chave real
+        const city = 'Curitiba';
+        const countryCode = 'BR';
+        try {
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city},${countryCode}&appid=${apiKey}&units=metric&lang=pt_br`);
+            if (!response.ok) {
+                throw new Error('Não foi possível obter os dados do clima.');
+            }
+            const data = await response.json();
+            setWeatherData(data);
+        } catch (err) {
+            console.error('Erro ao buscar o clima:', err);
+            setWeatherError('Falha ao carregar o clima.');
+            setWeatherData(null);
+        }
+    };
+    // ---------------------------------------------
+    
+    // --- NOVA Função para buscar as notícias ---
+    const fetchNews = async () => {
+        // Importante: Substitua 'SUA_CHAVE_DE_NOTICIAS_AQUI' pela sua chave de API real da News API
+        const apiKey = 'SUA_CHAVE_DE_NOTICIAS_AQUI'; 
+        const query = 'noticias do brasil'; // Você pode mudar o tema das notícias
+        try {
+            const response = await fetch(`https://newsapi.org/v2/everything?q=${query}&language=pt&apiKey=${apiKey}`);
+            if (!response.ok) {
+                throw new Error('Não foi possível obter os dados das notícias.');
+            }
+            const data = await response.json();
+            setNewsData(data.articles.slice(0, 5)); // Pega os 5 primeiros artigos
+        } catch (err) {
+            console.error('Erro ao buscar as notícias:', err);
+            setNewsError('Falha ao carregar as notícias.');
+            setNewsData([]);
+        }
+    };
+    // ------------------------------------------
+
     useEffect(() => {
         if (!idEmpresa || !dtMovto || !idFila) {
             navigate('/filas');
@@ -89,6 +139,20 @@ const PainelFilaExibicao = () => {
 
     }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFila]);
 
+    // --- useEffect para buscar o clima e as notícias periodicamente ---
+    useEffect(() => {
+        fetchWeather();
+        fetchNews();
+        const weatherIntervalId = setInterval(fetchWeather, 600000); // 10 minutos
+        const newsIntervalId = setInterval(fetchNews, 1800000); // 30 minutos
+
+        return () => {
+            clearInterval(weatherIntervalId);
+            clearInterval(newsIntervalId);
+        };
+    }, []);
+    // -----------------------------------------------------------------
+
     const handleGoBack = () => {
         navigate(-1);
     };
@@ -102,6 +166,16 @@ const PainelFilaExibicao = () => {
             document.exitFullscreen();
         }
     };
+
+    const handleToggleWeather = () => {
+        setShowWeather(prevShowWeather => !prevShowWeather);
+    };
+
+    // --- Nova função para alternar a exibição das notícias ---
+    const handleToggleNews = () => {
+        setShowNews(prevShowNews => !prevShowNews);
+    };
+    // --------------------------------------------------------
 
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -123,9 +197,8 @@ const PainelFilaExibicao = () => {
         };
     }, []);
 
-
     return (
-        <div className="painel-exibicao-container">
+        <div className={`painel-exibicao-container ${isFullscreen ? 'fullscreen-ativo' : ''}`}>
             <header className="painel-header">
                 <div className="painel-header-content">
                     {!isFullscreen && (
@@ -134,12 +207,40 @@ const PainelFilaExibicao = () => {
                         </button>
                     )}
                     <h1>Painel da Fila</h1>
+                    
+                    {/* Botão para alternar o clima */}
+                    {!isFullscreen && (
+                        <button className="btn-toggle-weather" onClick={handleToggleWeather} title="Exibir/Ocultar Clima">
+                            {showWeather ? 'Ocultar Clima' : 'Exibir Clima'}
+                        </button>
+                    )}
+                    
+                    {/* NOVO: Botão para alternar as notícias */}
+                    {!isFullscreen && (
+                        <button className="btn-toggle-news" onClick={handleToggleNews} title="Exibir/Ocultar Notícias">
+                            {showNews ? 'Ocultar Notícias' : 'Exibir Notícias'}
+                        </button>
+                    )}
+
                     <button className="btn-fullscreen" onClick={handleFullscreenToggle} title="Alternar Tela Cheia">
                         {isFullscreen ? <BiExitFullscreen /> : <BiFullscreen />}
                     </button>
                 </div>
             </header>
 
+            {/* Widget do clima */}
+            {showWeather && weatherData && (
+                <div className="weather-widget">
+                    <div className="weather-icon">
+                        <img src={`http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`} alt="Ícone do Clima" />
+                    </div>
+                    <div className="weather-info-text">
+                        <span className="weather-temp">{Math.round(weatherData.main.temp)}°C</span>
+                        <span className="weather-description">{weatherData.weather[0].description}</span>
+                    </div>
+                </div>
+            )}
+            
             {loading && <div className="loading-message">Carregando painel da fila...</div>}
             {error && <div className="error-message-panel">{error}</div>}
 
@@ -171,14 +272,27 @@ const PainelFilaExibicao = () => {
                     </div>
                 </div>
             </div>
+
+            {/* NOVO: Widget de notícias */}
+            {showNews && newsData.length > 0 && (
+                <div className="news-widget">
+                    <h2>Últimas Notícias</h2>
+                    <ul className="news-list">
+                        {newsData.map((article, index) => (
+                            <li key={index} className="news-item">
+                                <span className="news-title">{article.title}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            
             {/* Banner de Mensagens Rotativas */}
             <div className="mensagens-rotativas-container">
                 <div className="mensagem-texto">
-                    {/* Renderiza as mensagens uma vez */}
                     {mensagens.map((msg, index) => (
                         <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
                     ))}
-                    {/* E renderiza as mensagens uma segunda vez */}
                     {mensagens.map((msg, index) => (
                         <span key={`segundo-${index}`} className="mensagem-item">{msg}</span>
                     ))}
@@ -189,4 +303,3 @@ const PainelFilaExibicao = () => {
 };
 
 export default PainelFilaExibicao;
-

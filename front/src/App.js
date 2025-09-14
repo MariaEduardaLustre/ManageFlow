@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-// Importe o componente que criamos
-import LanguageSelector from './components/LanguageSelector/LanguageSelector';
+// Corrigido: Importa o componente do caminho correto.
+import LanguageSelectorConditional from './components/LanguageSelectorConditional/LanguageSelectorConditional';
 
 import Cadastro from './components/Cadastro/Cadastro';
 import ConfiguracaoFila from './components/ConfiguracaoFila/ConfiguracaoFila';
@@ -19,12 +19,11 @@ import Dashboard from './components/Dashboard/Dashboard';
 import Relatorio from './components/Relatorio/Relatorio';
 import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao';
 
-
 function App() {
   return (
     <Router>
-      {/* Adicione o seletor de idioma aqui, fora de <Routes> */}
-      <LanguageSelector />
+      {/* Agora, o componente condicional decide se o seletor será exibido. */}
+      <LanguageSelectorConditional />
       
       <Routes>
         <Route path="/cadastro" element={<Cadastro />} />

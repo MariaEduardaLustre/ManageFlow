@@ -306,3 +306,208 @@ body {
     .loading-message, .error-message-panel, .no-clients { font-size: 1rem; padding: 15px; }
 }
 
+/* Seu CSS existente ... */
+
+/* --- Novo Estilo para o Botão de Alternância do Clima --- */
+.btn-toggle-weather {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 15px;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 5rem; /* Ajuste para não colidir com o botão de tela cheia */
+}
+
+.btn-toggle-weather:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* --- Widget de Clima --- */
+.weather-widget {
+    background-color: var(--card-background); /* Usa a cor de fundo dos cartões */
+    border-radius: var(--border-radius-large); /* Usa o mesmo raio de borda do cabeçalho */
+    box-shadow: 0 4px 15px var(--shadow-light); /* Sombra consistente */
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.weather-icon {
+    width: 60px; /* Tamanho do ícone para ser bem visível */
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.weather-icon img {
+    width: 100%;
+    height: 100%;
+}
+
+.weather-info-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.weather-temp {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.weather-description {
+    font-size: 1rem;
+    text-transform: capitalize;
+    color: var(--light-text-color);
+}
+
+/* Ajustes para o modo de tela cheia */
+.painel-exibicao-container.fullscreen-ativo .weather-widget {
+    top: 30px;
+    right: 30px;
+    transform: scale(1.1); /* Aumenta um pouco em tela cheia */
+    transition: transform 0.3s ease;
+}
+
+/* Ajustes para telas menores (media queries) */
+@media (max-width: 768px) {
+    .btn-toggle-weather {
+        position: static;
+        right: auto;
+        margin-bottom: 10px;
+    }
+
+    .weather-widget {
+        position: static; /* Remove o posicionamento absoluto */
+        padding: 10px 15px;
+        gap: 10px;
+    }
+    
+    .weather-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .weather-temp {
+        font-size: 1.4rem;
+    }
+    
+    .weather-description {
+        font-size: 0.9rem;
+    }
+}
+
+/* ... Seu CSS existente ... */
+
+/* --- Novo Estilo para o Botão de Alternância das Notícias --- */
+.btn-toggle-news {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 15px;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 12.5rem; /* Posição à esquerda do botão de clima */
+}
+
+.btn-toggle-news:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* --- Widget de Clima --- */
+.weather-widget {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+/* ... restante do CSS do clima ... */
+
+/* --- NOVO: Widget de Notícias --- */
+.news-widget {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    padding: 15px 20px;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: 250px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-widget h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.news-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto; /* Adiciona scroll se a lista for grande */
+    color: var(--text-color);
+}
+
+.news-list::-webkit-scrollbar {
+    width: 6px;
+}
+.news-list::-webkit-scrollbar-thumb {
+    background-color: var(--gray-color);
+    border-radius: 3px;
+}
+
+.news-item {
+    margin-bottom: 10px;
+}
+
+.news-title {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Ajustes de responsividade para o novo botão e widget */
+@media (max-width: 768px) {
+    .btn-toggle-news {
+        position: static;
+        margin-bottom: 10px;
+    }
+    .news-widget {
+        position: static;
+        width: 100%;
+        max-width: none;
+        margin-top: 15px;
+    }
+}
