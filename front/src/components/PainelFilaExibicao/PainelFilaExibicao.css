@@ -319,9 +319,8 @@ body {
 .mensagem-item {
     font-size: 1.1rem;
     font-weight: 500;
-    color: var(--text-color);
     white-space: nowrap;
-    margin-right: 150px; /* Espaço entre cada mensagem */
+    margin-right: 250px; /* Aumenta o espaço entre as mensagens */
 }
 
 
@@ -511,8 +510,9 @@ body {
 
 .file-input-wrapper {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column; /* ALTERADO: Alinha os itens em coluna */
+    align-items: flex-start; /* Alinha os itens ao início da coluna */
+    gap: 10px; /* Adiciona um espaço entre o input e o botão */
 }
 
 /* NOVO: Estilo para a prévia do logo */

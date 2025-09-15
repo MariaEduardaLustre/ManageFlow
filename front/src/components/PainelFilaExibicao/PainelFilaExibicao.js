@@ -304,7 +304,6 @@ const PainelFilaExibicao = () => {
                             />
                         </div>
 
-                        {/* NOVO: Container para os seletores de cor */}
                         <div className="color-options-container">
                             <div className="color-option">
                                 <label>Cor de Fundo do Painel:</label>
