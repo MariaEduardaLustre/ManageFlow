@@ -22,6 +22,7 @@ router.post('/usuarios', usuarioController.cadastrarUsuario);
 // Login
 router.post('/login', usuarioController.loginUsuario);
 
+
 /* ========= HELPERS ========= */
 
 async function isLastAdmin(idEmpresa, idUsuarioParaAlterarOpcional = null) {

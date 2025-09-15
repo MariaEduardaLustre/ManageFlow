@@ -4,7 +4,6 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
-
 const authMiddleware = require('./auth/jwt');     // mantém seu fluxo
 const meRoutes = require('./routes/me');
 
@@ -14,7 +13,7 @@ const server = http.createServer(app);
 // ---- CORS compartilhado (API e Socket.IO) ----
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.1.32:3000',           // seu IP de front local (ajuste se mudar)
+  'http://192.168.0.52:3000',           // seu IP de front local (ajuste se mudar)
   process.env.PUBLIC_FRONT_BASE_URL,     // ex.: http://192.168.0.10:3000
   process.env.FRONT_ORIGIN               // opcional
 ].filter(Boolean);
@@ -47,6 +46,9 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
+
+const configuracaoPublic = require('./routes/configuracaoPublicRoutes');
+app.use('/api/configuracao', configuracaoPublic);
 
 // Rotas públicas (login/cadastro)
 const usuarioRoutes = require('./routes/usuarioRoutes');

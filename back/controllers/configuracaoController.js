@@ -345,3 +345,279 @@ exports.listarConfiguracoesDaEmpresa = async (req, res) => {
     return res.status(500).json({ erro: 'Erro ao listar configurações.' });
   }
 };
+
+// ======================
+// INFO PÚBLICA POR TOKEN
+// GET /api/configuracao/public/info/:token
+// ======================
+exports.getPublicInfoByToken = async (req, res) => {
+  const { token } = req.params;
+  console.log('[getPublicInfoByToken] INICIO | token =', token);
+
+  const sql = `
+    SELECT
+      cf.ID_CONF_FILA, cf.ID_EMPRESA, cf.NOME_FILA, cf.TOKEN_FILA,
+      cf.INI_VIG, cf.FIM_VIG, cf.CAMPOS, cf.MENSAGEM, cf.IMG_BANNER,
+      cf.TEMP_TOL, cf.QDTE_MIN, cf.QTDE_MAX, cf.PER_SAIR, cf.PER_LOC, cf.SITUACAO,
+      e.NOME_EMPRESA, e.LOGO
+    FROM ConfiguracaoFila cf
+    JOIN empresa e ON e.ID_EMPRESA = cf.ID_EMPRESA
+    WHERE cf.TOKEN_FILA = ?
+    LIMIT 1
+  `;
+
+  try {
+    const [rows] = await db.execute(sql, [token]);
+    console.log('[getPublicInfoByToken] rows.length =', rows.length);
+
+    if (!rows.length) {
+      console.log('[getPublicInfoByToken] NENHUMA configuração encontrada para token:', token);
+      return res.status(404).json({ erro: 'config_not_found' });
+    }
+
+    const r = rows[0];
+    console.log('[getPublicInfoByToken] SITUACAO =', r.SITUACAO, 'INI_VIG =', r.INI_VIG, 'FIM_VIG =', r.FIM_VIG);
+
+    // parse JSON
+    let campos;
+    try { campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : []; } catch { campos = []; }
+    let img_banner;
+    try { img_banner = r.IMG_BANNER ? JSON.parse(r.IMG_BANNER) : null; } catch { img_banner = null; }
+
+    // helper: compara vigência
+    const toInt = (v) => (v == null ? null : parseInt(String(v), 10));
+    const todayInt = parseInt(
+      new Date().toISOString().slice(0,10).replace(/-/g,''), 10
+    );
+    const ini = toInt(r.INI_VIG);
+    const fim = toInt(r.FIM_VIG);
+    const withinRange =
+      (ini == null || todayInt >= ini) && (fim == null || todayInt <= fim);
+
+    const baseUrl = getPublicFrontBaseUrl(req);
+    const join_url = `${baseUrl}/entrar-fila/${r.TOKEN_FILA}`;
+
+    const payload = {
+      id_conf_fila: r.ID_CONF_FILA,
+      id_empresa: r.ID_EMPRESA,
+      nome_fila: r.NOME_FILA,
+      token_fila: r.TOKEN_FILA,
+      situacao: r.SITUACAO,       // 1 = ativa
+      ini_vig: r.INI_VIG || null,
+      fim_vig: r.FIM_VIG || null,
+      campos,                      // geralmente array [{campo, tipo}]
+      mensagem: r.MENSAGEM || '',
+      img_banner,                  // {url} ou null
+      temp_tol: r.TEMP_TOL,
+      qtde_min: r.QDTE_MIN,
+      qtde_max: r.QTDE_MAX,
+      per_sair: !!r.PER_SAIR,
+      per_loc: !!r.PER_LOC,
+      join_url,
+      empresa: {
+        id: r.ID_EMPRESA,
+        nome: r.NOME_EMPRESA,
+        logo_url: r.LOGO || ''
+      },
+      is_active: r.SITUACAO === 1,
+      within_range: withinRange
+    };
+
+    console.log('[getPublicInfoByToken] is_active=', payload.is_active, 'within_range=', payload.within_range);
+    return res.json(payload);
+
+  } catch (e) {
+    console.error('[getPublicInfoByToken] ERRO:', e);
+    return res.status(500).json({ erro: 'internal_error' });
+  }
+};
+
+
+// ======================
+// ENTRAR NA FILA (PÚBLICO) POR TOKEN
+// POST /api/configuracao/public/join/:token
+// body: { nome, cpf, rg?, dddcel?, nr_cel?, email?, dt_nasc?, nr_qtdpes? }
+// ======================
+exports.publicJoinByToken = async (req, res) => {
+  const { token } = req.params;
+  const {
+    nome,
+    cpf,
+    rg = null,
+    dddcel = null,
+    nr_cel = null,
+    email = null,
+    dt_nasc = null,
+    nr_qtdpes = 1
+  } = req.body;
+
+  console.log('[publicJoinByToken] INICIO | token =', token, 'body =', req.body);
+
+  if (!nome || !cpf) {
+    console.log('[publicJoinByToken] FALTANDO nome ou cpf');
+    return res.status(400).json({ erro: 'Nome e CPF são obrigatórios.' });
+  }
+
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // 1) Configuração
+    const [cfgRows] = await conn.execute(
+      `SELECT ID_CONF_FILA, ID_EMPRESA, NOME_FILA, SITUACAO, INI_VIG, FIM_VIG
+         FROM ConfiguracaoFila
+        WHERE TOKEN_FILA = ?
+        LIMIT 1`,
+      [token]
+    );
+    console.log('[publicJoinByToken] cfgRows.length =', cfgRows.length);
+
+    if (!cfgRows.length) {
+      await conn.rollback();
+      console.log('[publicJoinByToken] Configuração não encontrada para token:', token);
+      return res.status(404).json({ erro: 'config_not_found' });
+    }
+    const cfg = cfgRows[0];
+    console.log('[publicJoinByToken] cfg.SITUACAO =', cfg.SITUACAO, 'INI_VIG =', cfg.INI_VIG, 'FIM_VIG =', cfg.FIM_VIG);
+
+    if (cfg.SITUACAO !== 1) {
+      await conn.rollback();
+      console.log('[publicJoinByToken] Configuração INATIVA');
+      return res.status(409).json({ erro: 'config_inactive' });
+    }
+
+    // 1.1) Checa vigência (se desejar bloquear fora do período)
+    const toInt = (v) => (v == null ? null : parseInt(String(v), 10));
+    const todayInt = parseInt(new Date().toISOString().slice(0,10).replace(/-/g,''), 10);
+    const ini = toInt(cfg.INI_VIG);
+    const fim = toInt(cfg.FIM_VIG);
+    const withinRange =
+      (ini == null || todayInt >= ini) && (fim == null || todayInt <= fim);
+
+    if (!withinRange) {
+      await conn.rollback();
+      console.log('[publicJoinByToken] FORA DE VIGÊNCIA | today=', todayInt, 'ini=', ini, 'fim=', fim);
+      return res.status(409).json({ erro: 'config_out_of_range' });
+    }
+
+    const idEmpresa = cfg.ID_EMPRESA;
+    const idConfFila = cfg.ID_CONF_FILA;
+
+    // 2) Fila do dia (usa funções SQL para datas)
+    const [filaRows] = await conn.execute(
+      `SELECT ID_FILA, DT_MOVTO, BLOCK, SITUACAO
+         FROM fila
+        WHERE ID_EMPRESA = ? AND ID_CONF_FILA = ? AND DATE(DT_MOVTO) = CURDATE()
+        ORDER BY ID_FILA DESC
+        LIMIT 1`,
+      [idEmpresa, idConfFila]
+    );
+    console.log('[publicJoinByToken] filaRows.length =', filaRows.length);
+
+    let idFila;
+    if (filaRows.length) {
+      const f = filaRows[0];
+      if (f.BLOCK) {
+        await conn.rollback();
+        console.log('[publicJoinByToken] FILA BLOQUEADA');
+        return res.status(409).json({ erro: 'fila_blocked' });
+      }
+      if (f.SITUACAO !== 1) {
+        await conn.rollback();
+        console.log('[publicJoinByToken] FILA INATIVA');
+        return res.status(409).json({ erro: 'fila_inactive' });
+      }
+      idFila = f.ID_FILA;
+    } else {
+      const [insFila] = await conn.execute(
+        `INSERT INTO fila (ID_EMPRESA, ID_CONF_FILA, DT_MOVTO, DT_INI, BLOCK, SITUACAO)
+         VALUES (?, ?, CURDATE(), NOW(), 0, 1)`,
+        [idEmpresa, idConfFila]
+      );
+      idFila = insFila.insertId;
+      console.log('[publicJoinByToken] Fila criada | ID_FILA =', idFila);
+    }
+
+    // 3) Evita duplicidade por CPF na MESMA fila no DIA
+    const [dup] = await conn.execute(
+      `SELECT 1
+         FROM clientesfila
+        WHERE ID_EMPRESA = ? AND ID_FILA = ?
+          AND DATE(DT_MOVTO) = CURDATE()
+          AND CPFCNPJ = ?
+        LIMIT 1`,
+      [idEmpresa, idFila, cpf]
+    );
+    console.log('[publicJoinByToken] já na fila hoje? len =', dup.length);
+    if (dup.length) {
+      await conn.rollback();
+      console.log('[publicJoinByToken] DUPLICIDADE CPF na mesma fila hoje');
+      return res.status(409).json({ erro: 'duplicate_today' });
+    }
+
+    // 4) ID_CLIENTE (reaproveita último ou gera próximo)
+    const [clienteExist] = await conn.execute(
+      `SELECT ID_CLIENTE
+         FROM clientesfila
+        WHERE CPFCNPJ = ?
+        ORDER BY DT_ENTRA DESC
+        LIMIT 1`,
+      [cpf]
+    );
+
+    let idCliente;
+    if (clienteExist.length) {
+      idCliente = clienteExist[0].ID_CLIENTE;
+      console.log('[publicJoinByToken] Reutilizando ID_CLIENTE =', idCliente);
+    } else {
+      const [[mx]] = await conn.query(`SELECT COALESCE(MAX(ID_CLIENTE),0)+1 AS nextId FROM clientesfila`);
+      idCliente = mx.nextId;
+      console.log('[publicJoinByToken] Gerando novo ID_CLIENTE =', idCliente);
+    }
+
+    // 5) Inserir cliente
+    const qtd = Number.isFinite(Number(nr_qtdpes)) ? Number(nr_qtdpes) : 1;
+    await conn.execute(
+      `INSERT INTO clientesfila
+        (ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE,
+         CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL,
+         DT_ENTRA, SITUACAO)
+       VALUES
+        (?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`,
+      [idEmpresa, idFila, idCliente, cpf, rg, nome, dt_nasc || null, email, qtd, dddcel, nr_cel]
+    );
+    console.log('[publicJoinByToken] Cliente inserido com sucesso');
+
+    // 6) Posição (quantos aguardando antes de mim)
+    const [[posRow]] = await conn.query(
+      `SELECT COUNT(*) AS ahead
+         FROM clientesfila
+        WHERE ID_EMPRESA = ? AND ID_FILA = ?
+          AND DATE(DT_MOVTO) = CURDATE()
+          AND SITUACAO IN (0,3)
+          AND DT_ENTRA <
+              (SELECT DT_ENTRA FROM clientesfila
+                WHERE ID_EMPRESA=? AND ID_FILA=? AND ID_CLIENTE=? AND DATE(DT_MOVTO)=CURDATE()
+                LIMIT 1)`,
+      [idEmpresa, idFila, idEmpresa, idFila, idCliente]
+    );
+    const posicao = (posRow?.ahead ?? 0) + 1;
+    console.log('[publicJoinByToken] posicao =', posicao);
+
+    await conn.commit();
+    return res.status(201).json({
+      mensagem: 'Cliente inserido na fila com sucesso.',
+      id_empresa: idEmpresa,
+      id_fila: idFila,
+      id_cliente: idCliente,
+      dt_movto: new Date().toISOString().slice(0,10),
+      posicao
+    });
+  } catch (e) {
+    await conn.rollback();
+    console.error('[publicJoinByToken] ERRO:', e);
+    return res.status(500).json({ erro: 'internal_error' });
+  } finally {
+    conn.release();
+  }
+};
