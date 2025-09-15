@@ -81,7 +81,7 @@ const Sidebar = () => {
                 <FaTachometerAlt />
                 {!colapsado && <span>Dashboard</span>}
             </NavLink>
-            <NavLink to="/configuracao" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/filas-cadastradas" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                 <FaCogs />
                 {!colapsado && <span>Configuração de fila</span>}
             </NavLink>

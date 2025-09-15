@@ -142,7 +142,7 @@ const FormularioConfiguracaoFila = () => {
 
     // imagens
     dataToSend.img_banner = dataToSend.img_banner?.url ? { url: dataToSend.img_banner.url } : { url: '' };
-    delete dataToSend.img_logo;
+    dataToSend.img_logo = dataToSend.img_logo?.url ? { url: dataToSend.img_logo.url } : { url: '' };
 
     // booleanos -> tinyint
     dataToSend.per_sair = dataToSend.per_sair ? 1 : 0;
