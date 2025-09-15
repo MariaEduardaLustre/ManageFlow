@@ -222,6 +222,7 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     align-items: flex-start;
+    margin-bottom: 20px;
 }
 
 .coluna-clientes {
@@ -322,6 +323,7 @@ body {
     white-space: nowrap;
     margin-right: 150px; /* Espaço entre cada mensagem */
 }
+
 
 /* Define a animação de rolagem para um loop contínuo */
 @keyframes scroll-text {
@@ -456,17 +458,18 @@ body {
 }
 
 /* Estilo específico para o grupo do campo de cor */
-.config-group.color-group {
-    flex-direction: row;
+.config-cor {
+    display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
+    justify-content: space-between;
+    padding: 8px 0;
 }
 
-.config-group label {
+.config-cor label {
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--text-color);
+    margin: 0;
 }
 
 .painel-configuracao input[type="text"],
@@ -484,9 +487,39 @@ body {
     width: 35px;
     height: 35px;
     padding: 0;
-    border: none;
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-small);
     cursor: pointer;
+}
+
+/* NOVO: Estilo para o botão de remover logo */
+.btn-remover-logo {
+    background-color: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    padding: 5px 10px;
+    border-radius: var(--border-radius-small);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-remover-logo:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.file-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* NOVO: Estilo para a prévia do logo */
+.painel-configuracao .logo-preview {
+    max-width: 100px;
+    max-height: 100px;
+    margin-top: 10px;
 }
 
 .btn-save-settings {
@@ -542,6 +575,35 @@ body {
 .painel-preview .weather-widget,
 .painel-preview .news-widget {
     display: none;
+}
+
+/* --- Novo Estilo para a Notificação Customizada --- */
+.custom-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    padding: 15px 25px;
+    border-radius: var(--border-radius-medium);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 1;
+    max-width: 400px;
+    width: fit-content;
+}
+
+.custom-notification p {
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Opcional: ajustar a notificação para tela cheia */
+.fullscreen-notification {
+    bottom: 40px;
+    right: 40px;
+    font-size: 1.2rem;
 }
 
 /* --- Media Queries (Responsividade) --- */
@@ -613,40 +675,4 @@ body {
     .painel-header-content h1 {
         font-size: 1.5rem;
     }
-}
-
-/* --- Novo Estilo para a Notificação Customizada --- */
-
-.custom-notification.fade-out {
-    opacity: 0;
-}
-
-/* --- Novo Estilo para a Notificação Customizada --- */
-/* --- Novo Estilo para a Notificação Customizada --- */
-.custom-notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: #28a745;
-    color: white;
-    padding: 15px 25px;
-    border-radius: var(--border-radius-medium);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    transition: opacity 0.5s ease-in-out;
-    opacity: 1;
-    max-width: 400px; /* NOVO: Limita a largura máxima */
-    width: fit-content; /* NOVO: Ajusta a largura ao conteúdo */
-}
-
-.custom-notification p {
-    margin: 0;
-    font-weight: 500;
-}
-
-/* Opcional: ajustar a notificação para tela cheia */
-.fullscreen-notification {
-    top: 40px; /* Alterado de 'bottom' para 'top' */
-    right: 40px;
-    font-size: 1.2rem;
 }

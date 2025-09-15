@@ -27,6 +27,12 @@ const PainelFilaExibicao = () => {
     const [customTitle, setCustomTitle] = useState('');
     const [backgroundColor, setBackgroundColor] = useState('#f4f7f6');
     const [logoBase64, setLogoBase64] = useState('');
+    const [titleColor, setTitleColor] = useState('#3A5AFE'); 
+    const [columnTitleColor, setColumnTitleColor] = useState('#3A5AFE'); 
+    const [columnBgColor, setColumnBgColor] = useState('#ffffff'); 
+    const [clientNameColor, setClientNameColor] = useState('#333'); 
+    const [bannerTextColor, setBannerTextColor] = useState('#333');
+    const [bannerBgColor, setBannerBgColor] = useState('#e9ecef');
     const defaultMessages = [
         "Bem-vindo(a) ao nosso painel de atendimento!",
         "Fique atento(a) ao seu nome e número de guichê.",
@@ -37,10 +43,8 @@ const PainelFilaExibicao = () => {
     const [customMessages, setCustomMessages] = useState([]);
     const [messagesInput, setMessagesInput] = useState(defaultMessages.join('\n'));
     
-    // --- NOVO: Estado para a notificação customizada ---
     const [showNotification, setShowNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
-    // ----------------------------------------------------
 
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
@@ -132,25 +136,28 @@ const PainelFilaExibicao = () => {
         }
     };
     
-    // --- FUNÇÃO CORRIGIDA para salvar as configurações com notificação customizada ---
     const handleSaveSettings = () => {
         const settings = {
             customTitle,
             backgroundColor,
             logoBase64,
+            titleColor,
+            columnTitleColor,
+            columnBgColor,
+            clientNameColor,
+            bannerTextColor,
+            bannerBgColor,
             messages: messagesInput.split('\n').map(msg => msg.trim()).filter(msg => msg !== '')
         };
         localStorage.setItem('painelSettings', JSON.stringify(settings));
         setCustomMessages(settings.messages);
         
-        // CORRIGIDO: Exibe a notificação customizada e a esconde após 3 segundos
         setNotificationMessage('Configurações salvas com sucesso!');
         setShowNotification(true);
         setTimeout(() => {
             setShowNotification(false);
         }, 3000); 
     };
-    // -----------------------------------------------------
 
     const handleRemoveLogo = () => {
         setLogoBase64('');
@@ -172,6 +179,12 @@ const PainelFilaExibicao = () => {
             setCustomTitle(settings.customTitle || '');
             setBackgroundColor(settings.backgroundColor || '#f4f7f6');
             setLogoBase64(settings.logoBase64 || '');
+            setTitleColor(settings.titleColor || '#3A5AFE');
+            setColumnTitleColor(settings.columnTitleColor || '#3A5AFE');
+            setColumnBgColor(settings.columnBgColor || '#ffffff');
+            setClientNameColor(settings.clientNameColor || '#333');
+            setBannerTextColor(settings.bannerTextColor || '#333');
+            setBannerBgColor(settings.bannerBgColor || '#e9ecef');
             if (settings.messages && settings.messages.length > 0) {
                 setCustomMessages(settings.messages);
                 setMessagesInput(settings.messages.join('\n'));
@@ -263,23 +276,8 @@ const PainelFilaExibicao = () => {
                     <div className="painel-configuracao">
                         <div className="config-group">
                             <label>Título do Painel:</label>
-                            <input
-                                type="text"
-                                value={customTitle}
-                                onChange={(e) => setCustomTitle(e.target.value)}
-                                placeholder="Ex: Painel da Fila da Loja X"
-                            />
+                            <input type="text" value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} placeholder="Ex: Painel da Fila da Loja X"/>
                         </div>
-                        <div className="config-group color-group">
-                            <label htmlFor="backgroundColor">Cor de Fundo:</label>
-                            <input
-                                type="color"
-                                id="backgroundColor"
-                                value={backgroundColor}
-                                onChange={(e) => setBackgroundColor(e.target.value)}
-                            />
-                        </div>
-                        
                         <div className="config-group">
                             <label>Logo da Empresa:</label>
                             <div className="file-input-wrapper">
@@ -296,7 +294,6 @@ const PainelFilaExibicao = () => {
                                 )}
                             </div>
                         </div>
-
                         <div className="config-group">
                             <label>Mensagens do Banner (uma por linha):</label>
                             <textarea
@@ -306,46 +303,78 @@ const PainelFilaExibicao = () => {
                                 placeholder="Digite cada mensagem em uma linha separada."
                             />
                         </div>
+
+                        {/* NOVO: Container para os seletores de cor */}
+                        <div className="color-options-container">
+                            <div className="color-option">
+                                <label>Cor de Fundo do Painel:</label>
+                                <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)}/>
+                            </div>
+                            <div className="color-option">
+                                <label>Cor da Letra do Título:</label>
+                                <input type="color" value={titleColor} onChange={(e) => setTitleColor(e.target.value)}/>
+                            </div>
+                            <div className="color-option">
+                                <label>Cor de Fundo das Colunas:</label>
+                                <input type="color" value={columnBgColor} onChange={(e) => setColumnBgColor(e.target.value)}/>
+                            </div>
+                            <div className="color-option">
+                                <label>Cor da Letra dos Títulos das Colunas:</label>
+                                <input type="color" value={columnTitleColor} onChange={(e) => setColumnTitleColor(e.target.value)}/>
+                            </div>
+                            <div className="color-option">
+                                <label>Cor da Letra dos Clientes:</label>
+                                <input type="color" value={clientNameColor} onChange={(e) => setClientNameColor(e.target.value)}/>
+                            </div>
+                            <div className="color-option">
+                                <label>Cor de Fundo do Banner:</label>
+                                <input type="color" value={bannerBgColor} onChange={(e) => setBannerBgColor(e.target.value)}/>
+                            </div>
+                            <div className="color-option">
+                                <label>Cor da Letra do Banner:</label>
+                                <input type="color" value={bannerTextColor} onChange={(e) => setBannerTextColor(e.target.value)}/>
+                            </div>
+                        </div>
+
                         <button className="btn-save-settings" onClick={handleSaveSettings}>
                             Salvar Configurações
                         </button>
                     </div>
 
-                    {/* Painel de Prévia */}
                     <div className="painel-preview" style={{ backgroundColor: backgroundColor }}>
                         <div className="painel-preview-content">
                             <header className="painel-header" style={{ backgroundColor: 'var(--card-background)' }}>
                                 <div className="painel-header-content">
                                     {logoBase64 && <img src={logoBase64} alt="Logo da Empresa" className="painel-logo" />}
-                                    <h1>{customTitle || 'Painel da Fila'}</h1>
+                                    <h1 style={{ color: titleColor }}>{customTitle || 'Painel da Fila'}</h1>
                                 </div>
                             </header>
                             
                             <div className="painel-colunas">
-                                <div className="coluna-clientes na-fila">
-                                    <h2>Aguardando</h2>
+                                <div className="coluna-clientes na-fila" style={{ backgroundColor: columnBgColor }}>
+                                    <h2 style={{ color: columnTitleColor }}>Aguardando</h2>
                                     <div className="lista-clientes">
                                         {clientesAguardando.slice(0, 3).map(cliente => (
-                                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente aguardando">
-                                                <span className="cliente-nome">{cliente.NOME || 'Cliente'}</span>
+                                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente aguardando" style={{ backgroundColor: 'var(--background-light)' }}>
+                                                <span className="cliente-nome" style={{ color: clientNameColor }}>{cliente.NOME || 'Cliente'}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                                <div className="coluna-clientes chamados">
-                                    <h2>Chamados</h2>
+                                <div className="coluna-clientes chamados" style={{ backgroundColor: columnBgColor }}>
+                                    <h2 style={{ color: columnTitleColor }}>Chamados</h2>
                                     <div className="lista-clientes">
                                         {clientesChamados.slice(0, 2).map(cliente => (
-                                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente chamado">
-                                                <span className="cliente-nome">{cliente.NOME || 'Cliente'}</span>
+                                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente chamado" style={{ backgroundColor: 'var(--background-light)' }}>
+                                                <span className="cliente-nome" style={{ color: clientNameColor }}>{cliente.NOME || 'Cliente'}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mensagens-rotativas-container">
-                                <div className="mensagem-texto">
+                            <div className="mensagens-rotativas-container" style={{ backgroundColor: bannerBgColor }}>
+                                <div className="mensagem-texto" style={{ color: bannerTextColor }}>
                                     {messagesInput.split('\n').filter(m => m.trim() !== '').map((msg, index) => (
                                         <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
                                     ))}
@@ -368,10 +397,10 @@ const PainelFilaExibicao = () => {
     
     return (
         <div className="painel-exibicao-container fullscreen-ativo" style={{ backgroundColor: backgroundColor }}>
-            <header className="painel-header">
+            <header className="painel-header" style={{ backgroundColor: 'var(--card-background)' }}>
                 <div className="painel-header-content">
                     {logoBase64 && <img src={logoBase64} alt="Logo da Empresa" className="painel-logo" />}
-                    <h1>{customTitle || 'Painel da Fila'}</h1>
+                    <h1 style={{ color: titleColor }}>{customTitle || 'Painel da Fila'}</h1>
                     <button className="btn-fullscreen" onClick={handleFullscreenToggle} title="Sair da Tela Cheia">
                         <BiExitFullscreen />
                     </button>
@@ -394,28 +423,28 @@ const PainelFilaExibicao = () => {
             {error && <div className="error-message-panel">{error}</div>}
 
             <div className="painel-colunas">
-                <div className="coluna-clientes na-fila">
-                    <h2>Aguardando</h2>
+                <div className="coluna-clientes na-fila" style={{ backgroundColor: columnBgColor }}>
+                    <h2 style={{ color: columnTitleColor }}>Aguardando</h2>
                     {clientesAguardando.length === 0 && !loading && !error && (
                         <p className="no-clients">Nenhum cliente aguardando no momento.</p>
                     )}
                     <div className="lista-clientes">
                         {clientesAguardando.map(cliente => (
-                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente aguardando">
-                                <span className="cliente-nome">{cliente.NOME || 'Cliente Desconhecido'}</span>
+                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente aguardando" style={{ backgroundColor: 'var(--background-light)' }}>
+                                <span className="cliente-nome" style={{ color: clientNameColor }}>{cliente.NOME || 'Cliente Desconhecido'}</span>
                             </div>
                         ))}
                     </div>
                 </div>
-                <div className="coluna-clientes chamados">
-                    <h2>Chamados</h2>
+                <div className="coluna-clientes chamados" style={{ backgroundColor: columnBgColor }}>
+                    <h2 style={{ color: columnTitleColor }}>Chamados</h2>
                     {clientesChamados.length === 0 && !loading && !error && (
                         <p className="no-clients">Nenhum cliente chamado ainda.</p>
                     )}
                     <div className="lista-clientes">
                         {clientesChamados.map(cliente => (
-                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente chamado">
-                                <span className="cliente-nome">{cliente.NOME || 'Cliente Desconhecido'}</span>
+                            <div key={`${cliente.ID_EMPRESA}-${cliente.DT_MOVTO}-${cliente.ID_FILA}-${cliente.ID_CLIENTE}`} className="cartao-cliente chamado" style={{ backgroundColor: 'var(--background-light)' }}>
+                                <span className="cliente-nome" style={{ color: clientNameColor }}>{cliente.NOME || 'Cliente Desconhecido'}</span>
                             </div>
                         ))}
                     </div>
@@ -435,8 +464,8 @@ const PainelFilaExibicao = () => {
                 </div>
             )}
             
-            <div className="mensagens-rotativas-container">
-                <div className="mensagem-texto">
+            <div className="mensagens-rotativas-container" style={{ backgroundColor: bannerBgColor }}>
+                <div className="mensagem-texto" style={{ color: bannerTextColor }}>
                     {messagesToDisplay.map((msg, index) => (
                         <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
                     ))}
@@ -445,6 +474,11 @@ const PainelFilaExibicao = () => {
                     ))}
                 </div>
             </div>
+            {showNotification && (
+                <div className="custom-notification fullscreen-notification">
+                    <p>{notificationMessage}</p>
+                </div>
+            )}
         </div>
     );
 };
