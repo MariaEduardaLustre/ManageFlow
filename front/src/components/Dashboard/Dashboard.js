@@ -1,124 +1,159 @@
-import React, { useState, useEffect } from 'react';
-import Chart from 'react-apexcharts';
-import axios from 'axios';
-import ClienteStatus from './ClienteStatus';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
+import Menu from '../Menu/Menu';
+import GraficosFila from './GraficosFila';
+import './Dashboard.css';
 
-function Dashboard() {
-  const [empresaId, setEmpresaId] = useState(1); // ajuste conforme sua lógica
-  const [filaSelecionada, setFilaSelecionada] = useState(null);
-  const [dataSelecionada, setDataSelecionada] = useState('');
-  const [dashboardData, setDashboardData] = useState({
-    filas: [],
-    clientes: [],
-    espera: []
-  });
+const Dashboard = () => {
+    const navigate = useNavigate();
 
-  // Função para buscar todos os dados do dashboard
-  const fetchDashboard = () => {
-    let url = `http://localhost:3001/api/dashboardRoutes/${empresaId}`;
-    if (filaSelecionada) url += `/${filaSelecionada}`;
-    if (dataSelecionada) url += `/${dataSelecionada}`;
+    const [filas, setFilas] = useState([]);
+    const [loadingFilas, setLoadingFilas] = useState(true);
+    const [filaSelecionada, setFilaSelecionada] = useState(null);
+    const [dadosFila, setDadosFila] = useState(null);
+    const [loadingDadosFila, setLoadingDadosFila] = useState(false);
 
-    axios.get(url)
-      .then(res => setDashboardData(res.data))
-      .catch(err => console.error('Erro ao buscar dashboard:', err));
-  };
+    const [mostrarModalEmpresa, setMostrarModalEmpresa] = useState(false);
+    const [detalhesEmpresa, setDetalhesEmpresa] = useState(null);
+    const [loadingEmpresa, setLoadingEmpresa] = useState(false);
 
-  // Atualiza filas e tempo de espera ao montar o componente
-  useEffect(() => {
-    fetchDashboard();
-  }, [empresaId]);
+    const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
+    const idEmpresa = empresaSelecionada?.ID_EMPRESA;
+    const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
 
-  // Atualiza clientes quando fila ou data mudar
-  useEffect(() => {
-    if (filaSelecionada && dataSelecionada) {
-      fetchDashboard();
-    }
-  }, [filaSelecionada, dataSelecionada]);
+    // --- Buscar filas da empresa ---
+    useEffect(() => {
+        if (!idEmpresa) {
+            navigate('/escolher-empresa');
+            return;
+        }
 
-  const { filas, clientes, espera } = dashboardData;
+        const fetchFilas = async () => {
+            setLoadingFilas(true);
+            try {
+                const response = await api.get('/filas', { params: { idEmpresa } });
+                setFilas(response.data);
+            } catch (err) {
+                console.error('Erro ao buscar filas:', err);
+            } finally {
+                setLoadingFilas(false);
+            }
+        };
 
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Dashboard ManageFlow</h1>
+        fetchFilas();
+    }, [idEmpresa, navigate]);
 
-      {/* Dashboard 1: Filas */}
-      <section style={{ marginBottom: '40px' }}>
-        <h2>Filas da Empresa</h2>
-        {filas.length > 0 ? (
-          <Chart
-            options={{ chart: { id: 'filas' }, xaxis: { categories: filas.map(f => f.NOME_FILA) } }}
-            series={[{ name: 'Clientes', data: filas.map(f => f.total_clientes) }]}
-            type="bar"
-            height={350}
-          />
-        ) : (
-          <p>Nenhuma fila encontrada.</p>
-        )}
-      </section>
+    // --- Buscar dados da fila selecionada ---
+    useEffect(() => {
+        if (!filaSelecionada) {
+            setDadosFila(null);
+            return;
+        }
 
-      {/* Filtros para clientes */}
-      <section style={{ marginBottom: '20px' }}>
-        <h2>Clientes por Fila e Data</h2>
-        <label>
-          Fila: 
-          <select
-            value={filaSelecionada || ''}
-            onChange={e => setFilaSelecionada(Number(e.target.value))}
-          >
-            <option value="">Selecione</option>
-            {filas.map(f => <option key={f.ID_FILA} value={f.ID_FILA}>{f.NOME_FILA}</option>)}
-          </select>
-        </label>
-        <label style={{ marginLeft: '20px' }}>
-          Data: 
-          <input type="date" value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)} />
-        </label>
-      </section>
+        const fetchDadosFila = async () => {
+            setLoadingDadosFila(true);
+            try {
+                const response = await api.get(`/dashboard/dados-graficos/${filaSelecionada.ID_FILA}`);
+                setDadosFila(response.data);
+            } catch (err) {
+                console.error('Erro ao buscar dados da fila:', err);
+                setDadosFila(null);
+            } finally {
+                setLoadingDadosFila(false);
+            }
+        };
 
-      {/* Dashboard 2 & 3: Clientes e status */}
-      {clientes.length > 0 ? (
-        <section style={{ marginBottom: '40px' }}>
-          <h2>Lista de Clientes</h2>
-          <table border="1" cellPadding="8" style={{ borderCollapse: 'collapse', width: '100%' }}>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map(c => (
-                <tr key={c.ID_CLIENTE}>
-                  <td>{c.NOME_CLIENTE}</td>
-                  <td>
-                    <ClienteStatus cliente={c} fetchDashboard={fetchDashboard} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      ) : (
-        filaSelecionada && dataSelecionada && <p>Nenhum cliente encontrado para essa fila e data.</p>
-      )}
+        fetchDadosFila();
+    }, [filaSelecionada]);
 
-      {/* Dashboard 4: Tempo médio de espera */}
-      <section>
-        <h2>Tempo Médio de Espera por Fila</h2>
-        {espera.length > 0 ? (
-          <Chart
-            options={{ chart: { id: 'espera' }, xaxis: { categories: espera.map(e => e.NOME_FILA) } }}
-            series={[{ name: 'Tempo médio (min)', data: espera.map(e => e.tempo_medio) }]}
-            type="line"
-            height={350}
-          />
-        ) : (
-          <p>Não há dados de tempo de espera.</p>
-        )}
-      </section>
-    </div>
-  );
-}
+    // --- Modal de detalhes da empresa ---
+    const exibirDetalhesEmpresa = async () => {
+        if (!idEmpresa) return;
+        setLoadingEmpresa(true);
+        try {
+            const response = await api.get(`/empresas/detalhes/${idEmpresa}`);
+            setDetalhesEmpresa(response.data);
+            setMostrarModalEmpresa(true);
+        } catch (err) {
+            console.error('Erro ao buscar detalhes da empresa:', err);
+            alert('Erro ao carregar detalhes da empresa.');
+        } finally {
+            setLoadingEmpresa(false);
+        }
+    };
+
+    const fecharModalEmpresa = () => {
+        setMostrarModalEmpresa(false);
+        setDetalhesEmpresa(null);
+    };
+
+    return (
+        <div className="home-container">
+            <Menu />
+
+            <main className="main-content">
+                <div
+                    className="empresa-titulo-container"
+                    onClick={exibirDetalhesEmpresa}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <span className="empresa-nome">
+                        {loadingEmpresa ? 'Carregando...' : nomeEmpresa || 'Empresa não selecionada'}
+                    </span>
+                </div>
+
+                <div className="empresa-dropdown-container">
+                    <label>Fila: </label>
+                    {loadingFilas ? (
+                        <span>Carregando filas...</span>
+                    ) : (
+                        <select
+                            value={filaSelecionada?.ID_FILA || ''}
+                            onChange={(e) => {
+                                const fila = filas.find(f => f.ID_FILA === parseInt(e.target.value));
+                                setFilaSelecionada(fila || null);
+                            }}
+                        >
+                            <option value="">Selecione uma fila</option>
+                            {filas.map(f => (
+                                <option key={f.ID_FILA} value={f.ID_FILA}>
+                                    {f.NOME_FILA}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                </div>
+
+                <section className="filas-section">
+                    {loadingDadosFila && <p>Carregando dados...</p>}
+                    {!loadingDadosFila && dadosFila && filaSelecionada && (
+                        <GraficosFila dados={dadosFila} nomeFila={filaSelecionada.NOME_FILA} />
+                    )}
+                </section>
+            </main>
+
+            {/* Modal Empresa */}
+            {mostrarModalEmpresa && detalhesEmpresa && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2>Detalhes da Empresa</h2>
+                            <button onClick={fecharModalEmpresa}>&times;</button>
+                        </div>
+                        <div className="modal-body">
+                            <p><strong>Nome:</strong> {detalhesEmpresa.NOME_EMPRESA}</p>
+                            <p><strong>CNPJ:</strong> {detalhesEmpresa.CNPJ}</p>
+                            <p><strong>Email:</strong> {detalhesEmpresa.EMAIL}</p>
+                        </div>
+                        <div className="modal-footer">
+                            <button onClick={fecharModalEmpresa}>Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default Dashboard;
