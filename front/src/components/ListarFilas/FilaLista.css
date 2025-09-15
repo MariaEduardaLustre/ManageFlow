@@ -1,5 +1,3 @@
-/* src/pages/FilaLista/FilaLista.css */
-
 /* Estilos gerais do contêiner e sidebar */
 .home-container {
     display: flex;
@@ -81,12 +79,13 @@
     background-color: #f4f7f6;
     display: flex;
     flex-direction: column;
-    align-items: flex-end; /* Alinha o nome da empresa à direita */
+    /* Alterado para flex-start para que outros elementos como o título "Filas" se alinhem à esquerda */
+    align-items: flex-start;
 }
 
 /* ESTILOS DO CABEÇALHO DA EMPRESA (BADGE) */
 .empresa-titulo-container {
-    background-color: #3A5AFE;
+    background-color: #3A5AFE; /* Cor azul vibrante da imagem */
     border-radius: 8px;
     padding: 8px 15px;
     display: flex;
@@ -98,6 +97,9 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: background-color 0.2s ease, transform 0.2s ease;
     cursor: pointer;
+    /* AJUSTE CHAVE: Empurra o elemento para a direita dentro do seu flex container */
+    margin-left: auto;
+    margin-right: 0;
 }
 
 .empresa-titulo-container:hover {
@@ -142,7 +144,6 @@
     background-color: #ffffff;
     border-radius: 12px;
     overflow: hidden;
-    /* Adicionado para responsividade da tabela */
     table-layout: fixed; /* Ajuda a controlar a largura das colunas */
 }
 
@@ -192,109 +193,261 @@
 }
 
 /* ----------------------------------------------------------------------- */
+/* --- ESTILOS DO MODAL --- */
+/* ----------------------------------------------------------------------- */
+
+/* Overlay do Modal: Cobre toda a tela com um fundo semi-transparente */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Conteúdo do Modal: Onde os detalhes da empresa são exibidos */
+.modal-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Cabeçalho do Modal */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.8em;
+    color: #333;
+}
+
+/* Botão de Fechar no cabeçalho */
+.modal-close-button {
+    background: none;
+    border: none;
+    font-size: 2em;
+    color: #888;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.modal-close-button:hover {
+    color: #555;
+    background-color: #f0f0f0;
+}
+
+/* Corpo do Modal */
+.modal-body {
+    flex-grow: 1;
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #555;
+}
+
+.modal-body p {
+    margin-bottom: 10px;
+}
+
+.modal-body strong {
+    color: #333;
+}
+
+/* Estilo da logo da empresa dentro do modal (manter caso decida adicionar novamente) */
+.modal-empresa-logo {
+    max-width: 150px;
+    height: auto;
+    margin-top: 10px;
+    border: 1px solid #eee;
+    padding: 5px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+/* Rodapé do Modal */
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-top: 20px;
+    text-align: right;
+}
+
+/* Botão de Fechar no rodapé */
+.modal-close-button-footer {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.modal-close-button-footer:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+
+/* ----------------------------------------------------------------------- */
 /* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
 /* ----------------------------------------------------------------------- */
 
 /* Ajustes para telas de Tablet (e desktops menores) - Até 1024px */
 @media (max-width: 1024px) {
     .sidebar {
-        width: 200px; /* Reduz a largura da sidebar */
+        width: 200px;
         padding: 15px;
     }
 
     .sidebar .responsive-image {
-        width: 120px; /* Reduz o logo */
+        width: 120px;
     }
 
     .sidebar nav ul li {
-        font-size: 1em; /* Reduz ligeiramente o tamanho da fonte do menu */
+        font-size: 1em;
         margin-bottom: 15px;
     }
 
     .main-content {
-        padding: 20px; /* Reduz o padding do conteúdo principal */
+        padding: 20px;
+        align-items: flex-start; /* Manter para alinhamento geral */
     }
 
     .empresa-titulo-container {
-        padding: 7px 12px; /* Ajusta o padding do badge */
+        margin-left: auto; /* Garante que continue à direita */
+        margin-right: 0;
+        margin-bottom: 20px;
+        padding: 7px 12px;
     }
 
     .empresa-nome {
-        font-size: 1em; /* Ajusta a fonte do nome da empresa */
+        font-size: 1em;
     }
 
     .section-title {
-        font-size: 1.6em; /* Reduz o título da seção */
+        font-size: 1.6em;
         margin-bottom: 20px;
     }
 
     .filas-table th,
     .filas-table td {
-        padding: 12px 15px; /* Reduz o padding das células da tabela */
-        font-size: 0.85em; /* Reduz o tamanho da fonte da tabela */
+        padding: 12px 15px;
+        font-size: 0.85em;
+    }
+
+    /* Modal responsividade */
+    .modal-content {
+        max-width: 400px;
+        padding: 25px;
+    }
+    .modal-header h2 {
+        font-size: 1.6em;
+    }
+    .modal-close-button {
+        font-size: 1.8em;
+    }
+    .modal-body {
+        font-size: 1em;
     }
 }
 
 /* Ajustes para telas de Tablet (retrato) e Celulares grandes - Até 768px */
 @media (max-width: 768px) {
     .home-container {
-        flex-direction: column; /* Coloca sidebar no topo e conteúdo abaixo */
+        flex-direction: column;
     }
 
     .sidebar {
-        width: 100%; /* Sidebar ocupa toda a largura */
-        height: auto; /* Altura automática */
-        padding: 15px 20px; /* Padding ajustado */
+        width: 100%;
+        height: auto;
+        padding: 15px 20px;
         border-right: none;
-        border-bottom: 1px solid #e0e0e0; /* Adiciona borda inferior */
-        flex-direction: row; /* Itens da sidebar em linha */
-        justify-content: space-between; /* Espaço entre logo/menu e user-info */
-        align-items: center; /* Alinha itens ao centro verticalmente */
+        border-bottom: 1px solid #e0e0e0;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .sidebar .logo {
-        margin-bottom: 0; /* Remove margem inferior do logo */
-        text-align: left; /* Alinha o logo à esquerda na sidebar */
+        margin-bottom: 0;
+        text-align: left;
     }
 
     .sidebar .responsive-image {
-        width: 100px; /* Logo menor no mobile */
+        width: 100px;
     }
 
     .sidebar nav {
-        flex-grow: 1; /* Permite que a navegação ocupe o espaço restante */
-        margin-left: 20px; /* Espaço entre logo e nav */
+        flex-grow: 1;
+        margin-left: 20px;
     }
 
     .sidebar nav ul {
         display: flex;
-        flex-wrap: wrap; /* Permite que os itens quebrem linha */
-        justify-content: center; /* Centraliza os itens de menu */
-        gap: 10px; /* Espaçamento entre os itens */
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
     }
 
     .sidebar nav ul li {
-        margin-bottom: 0; /* Remove margem inferior */
+        margin-bottom: 0;
         padding: 8px 12px;
-        font-size: 0.9em; /* Fontes menores para o menu */
+        font-size: 0.9em;
     }
 
     .sidebar .user-info {
-        margin-top: 0; /* Remove margem superior */
+        margin-top: 0;
         padding-top: 0;
-        border-top: none; /* Remove a linha divisória */
-        margin-left: 20px; /* Espaço entre nav e user-info */
+        border-top: none;
+        margin-left: 20px;
     }
 
     .main-content {
         padding: 20px;
-        align-items: flex-start; /* Volta a alinhar o conteúdo principal à esquerda para o mobile */
+        align-items: flex-start; /* Manter aqui também para o layout padrão */
     }
 
     .empresa-titulo-container {
-        /* Alinha o nome da empresa à direita no mobile, mas dentro do fluxo normal */
-        align-self: flex-end; /* Overrides align-items: flex-start do main-content */
-        margin-bottom: 20px; /* Ajusta espaçamento */
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        background-color: #fff !important;
+        border: 1px solid #e0e0e0 !important;
+        padding: 10px 20px !important;
     }
 
     .section-title {
@@ -304,14 +457,32 @@
 
     /* Tabela Responsiva - Adiciona rolagem horizontal */
     .filas-section {
-        overflow-x: auto; /* Adiciona scroll horizontal se o conteúdo for muito largo */
-        -webkit-overflow-scrolling: touch; /* Melhora a rolagem em iOS */
-        align-self: stretch; /* Garante que a seção de filas ocupe a largura total */
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        align-self: stretch; /* Garante que ocupe a largura total para rolagem */
     }
 
     .filas-table {
-        min-width: 600px; /* Define uma largura mínima para a tabela, forçando a rolagem */
-        width: auto; /* Permite que a tabela cresça além de 100% se min-width for maior */
+        min-width: 600px; /* Garante largura mínima para rolagem */
+        width: auto;
+    }
+
+    /* Modal responsividade */
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+    .modal-header h2 {
+        font-size: 1.5em;
+    }
+    .modal-close-button {
+        font-size: 1.8em;
+    }
+    .modal-body {
+        font-size: 1em;
+    }
+    .modal-empresa-logo {
+        max-width: 100px;
     }
 }
 
@@ -323,40 +494,57 @@
 
     .empresa-titulo-container {
         padding: 5px 10px;
-        font-size: 0.9em; /* Texto do badge ainda menor */
+        font-size: 0.9em;
+        margin-left: auto; /* Manter para alinhamento à direita */
+        margin-right: 0;
     }
     .empresa-nome {
-        font-size: 1em; /* Ajuste para o texto do nome da empresa */
+        font-size: 1em;
     }
 
     .section-title {
-        font-size: 1.2em; /* Título da seção menor */
+        font-size: 1.2em;
         margin-bottom: 15px;
         padding-left: 5px;
     }
 
     .filas-table th,
     .filas-table td {
-        padding: 10px 10px; /* Padding das células da tabela ainda menor */
-        font-size: 0.8em; /* Fontes da tabela ainda menores */
+        padding: 10px 10px;
+        font-size: 0.8em;
     }
 
     .sidebar nav ul {
-        flex-direction: column; /* Itens do menu voltam a ser coluna */
-        align-items: center; /* Centraliza itens */
+        flex-direction: column;
+        align-items: center;
         gap: 5px;
     }
     .sidebar nav ul li {
-        width: 100%; /* Itens do menu ocupam a largura total */
-        justify-content: center; /* Centraliza o texto e ícone */
+        width: 100%;
+        justify-content: center;
         text-align: center;
         margin-bottom: 5px;
     }
 
     .sidebar .user-info {
-        flex-direction: column; /* Informações do usuário em coluna */
-        align-items: center; /* Centraliza */
+        flex-direction: column;
+        align-items: center;
         margin-left: 0;
-        margin-top: 15px; /* Espaço do menu */
+        margin-top: 15px;
+    }
+
+    /* Modal responsividade */
+    .modal-content {
+        padding: 15px;
+    }
+    .modal-header h2 {
+        font-size: 1.3em;
+    }
+    .modal-close-button {
+        font-size: 1.5em;
+        padding: 2px 5px;
+    }
+    .modal-body {
+        font-size: 0.9em;
     }
 }

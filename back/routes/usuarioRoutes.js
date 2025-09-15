@@ -26,7 +26,6 @@ router.post('/login', usuarioController.loginUsuario);
 
 async function isLastAdmin(idEmpresa, idUsuarioParaAlterarOpcional = null) {
   // Conta quantos usuários com NIVEL=1 (ADM) existem na empresa
-  // Se idUsuarioParaAlterarOpcional for passado, podemos checar se ele é ADM
   const [rows] = await db.query(
     `
     SELECT pm.ID_USUARIO, p.NIVEL
@@ -39,6 +38,7 @@ async function isLastAdmin(idEmpresa, idUsuarioParaAlterarOpcional = null) {
     `,
     [idEmpresa]
   );
+
   const totalAdmins = rows.length;
   if (idUsuarioParaAlterarOpcional == null) {
     return totalAdmins <= 1; // true se só existe 1 ADM
@@ -49,7 +49,12 @@ async function isLastAdmin(idEmpresa, idUsuarioParaAlterarOpcional = null) {
 
 /* ========= ROTAS PROTEGIDAS (JWT + opcional RBAC) ========= */
 
-// Listar usuários de uma empresa
+/**
+ * GET /empresa/:idEmpresa
+ * Listar usuários de uma empresa.
+ * Mantém JWT + RBAC (se disponível).
+ * (Do outro branch: retirada de campos obsoletos como NOMEPET já está refletida aqui)
+ */
 router.get(
   '/empresa/:idEmpresa',
   authMiddleware,
@@ -74,6 +79,19 @@ router.get(
         [idEmpresa]
       );
       res.json(usuarios);
+
+      // --- Versão do outro branch (sem auth e sem NIVEL) — preservada aqui como referência:
+      // const [usuarios] = await db.query(`
+      //   SELECT
+      //     u.ID, u.NOME, u.EMAIL, u.CPFCNPJ, u.CEP, u.DDI, u.DDD, u.TELEFONE,
+      //     perf.ID_PERFIL, perf.NOME_PERFIL
+      //   FROM usuario u
+      //   INNER JOIN permissoes p ON p.ID_USUARIO = u.ID
+      //   INNER JOIN perfil perf ON perf.ID_PERFIL = p.ID_PERFIL
+      //   WHERE p.ID_EMPRESA = ?
+      // `, [idEmpresa]);
+      // res.json(usuarios);
+
     } catch (error) {
       console.error('Erro ao buscar usuários da empresa:', error);
       res.status(500).json({ error: 'Erro ao buscar usuários da empresa' });
@@ -81,7 +99,10 @@ router.get(
   }
 );
 
-// Adicionar um usuário existente a uma empresa (recebe idPerfil no body)
+/**
+ * POST /empresa/:idEmpresa/adicionar-usuario
+ * Adicionar um usuário existente a uma empresa (mantém JWT + RBAC).
+ */
 router.post(
   '/empresa/:idEmpresa/adicionar-usuario',
   authMiddleware,
@@ -137,7 +158,10 @@ router.post(
   }
 );
 
-// Editar a permissão (trocar perfil) de um usuário na empresa
+/**
+ * PUT /permissoes/:idEmpresa/:idUsuario
+ * Editar a permissão (trocar perfil) de um usuário na empresa (mantém JWT + RBAC).
+ */
 router.put(
   '/permissoes/:idEmpresa/:idUsuario',
   authMiddleware,
@@ -145,8 +169,6 @@ router.put(
   async (req, res) => {
     const { idEmpresa, idUsuario } = req.params;
     const { idPerfil } = req.body;
-
-    console.log('[PUT /permissoes] params=', { idEmpresa, idUsuario }, 'body=', { idPerfil });
 
     if (!idPerfil) {
       return res.status(400).json({ error: 'Informe o novo idPerfil.' });
@@ -161,14 +183,16 @@ router.put(
         return res.status(400).json({ error: 'Perfil não pertence a esta empresa.' });
       }
 
-      // opcional: proteção do último ADM (já te mandei antes)
-      // ...
+      // opcional: proteção do último ADM (use isLastAdmin se desejar)
+      // const { totalAdmins, isTargetAdmin } = await isLastAdmin(idEmpresa, idUsuario);
+      // if (isTargetAdmin && totalAdmins <= 1 && perfilRows[0].NIVEL !== 1) {
+      //   return res.status(409).json({ error: 'Não é possível remover o último Administrador da empresa.' });
+      // }
 
       const [result] = await db.query(
         'UPDATE permissoes SET ID_PERFIL = ? WHERE ID_EMPRESA = ? AND ID_USUARIO = ?',
         [idPerfil, idEmpresa, idUsuario]
       );
-      console.log('[PUT /permissoes] mysql result=', result); // affectedRows, changedRows, info, etc.
 
       if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'Permissão não encontrada para este usuário e empresa.' });
@@ -197,7 +221,10 @@ router.put(
   }
 );
 
-// Remover usuário da empresa
+/**
+ * DELETE /empresa/:idEmpresa/remover-usuario/:idUsuario
+ * Remover usuário da empresa (mantém JWT + RBAC e proteção do último ADM).
+ */
 router.delete(
   '/empresa/:idEmpresa/remover-usuario/:idUsuario',
   authMiddleware,

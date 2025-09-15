@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 import Cadastro from './components/Cadastro/Cadastro';
-import FormularioConfiguracaoFila from './components/Configuracao/Configuracao';
+import ConfiguracaoFila from './components/ConfiguracaoFila/ConfiguracaoFila';
 import EsqueciSenha from './components/EsqueciSenha/EsqueciSenha';
 import Home from './components/Home/Home';
 import LandingPage from './components/Landing/Landing';
@@ -12,10 +12,14 @@ import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
 import Empresa from './components/Empresa/Empresa';
 import FilaLista from './components/ListarFilas/FilaLista';
 import GestaoFilaClientes from './components/GestaoFilaClientes/GestaoFilaClientes';
+// Novo componente para a tela de listagem de filas configuradas
+import FilasCadastradas from './components/FilasCadastradas/FilasCadastradas';
 import Dashboard from './components/Dashboard/Dashboard';
 import Relatorio from './components/Relatorio/Relatorio';
 import Forbidden from './pages/Forbidden';
 import EntrarFilaPage from './pages/EntrarFilaPage';
+import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao';
+
 function App() {
   return (
     <Router>
@@ -27,13 +31,10 @@ function App() {
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
         <Route path="/entrar-fila/:token" element={<EntrarFilaPage />} />
-        {/* Seleção de empresa (apenas exige login) */}
-        <Route
-          path="/escolher-empresa"
-          element={
-              <Empresa />
-          }
-        />
+        {/* Seleção de empresa (apenas exige login - se quiser, pode envolver com PrivateRoute depois) */}
+        <Route path="/escolher-empresa" element={<Empresa />} />
+        {/* Painel público para TV/monitor (mantém comportamento do outro branch) */}
+        <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
 
         {/* Protegidas por login + empresa + PERMISSÃO */}
         <Route
@@ -45,11 +46,22 @@ function App() {
           }
         />
 
+        {/* Configuração com ID opcional: sem ID = cadastro, com ID = edição */}
         <Route
-          path="/configuracao"
+          path="/configuracao/:id?"
           element={
             <PrivateRoute resource="settings" action="view">
-              <FormularioConfiguracaoFila />
+              <ConfiguracaoFila />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Lista de configurações (nova tela) */}
+        <Route
+          path="/filas-cadastradas"
+          element={
+            <PrivateRoute resource="queues" action="view">
+              <FilasCadastradas />
             </PrivateRoute>
           }
         />

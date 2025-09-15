@@ -1,0 +1,308 @@
+/* src/components/PainelFilaExibicao/PainelFilaExibicao.css */
+
+
+/* --- Variáveis CSS (Opcional, mas útil para consistência) --- */
+:root {
+    --primary-color: #3A5AFE; /* Azul principal */
+    --secondary-color: #007bff; /* Azul secundário, pode ser usado para botões */
+    --text-color: #333; /* Texto principal escuro */
+    --light-text-color: #6c757d; /* Texto secundário, informações */
+    --background-light: #f4f7f6; /* Fundo claro */
+    --card-background: #ffffff; /* Fundo dos cartões/componentes */
+    --border-color: #e0e0e0; /* Cor da borda */
+    --shadow-light: rgba(0, 0, 0, 0.08); /* Sombra leve */
+    --shadow-medium: rgba(0, 0, 0, 0.15); /* Sombra média */
+    --border-radius-large: 12px;
+    --border-radius-medium: 8px;
+    --border-radius-small: 5px;
+    --gray-color: #6c757d; /* Nova variável para a cor cinza */
+}
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-light);
+    color: var(--text-color);
+}
+
+/* --- Container Principal do Painel --- */
+.painel-exibicao-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--background-light);
+    padding: 20px;
+    gap: 20px;
+}
+
+/* --- Cabeçalho do Painel --- */
+.painel-header {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    padding: 25px 30px;
+    color: var(--text-color);
+    margin-bottom: 20px;
+}
+
+.painel-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+}
+
+.painel-header h1 {
+    font-size: 2.0rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+    letter-spacing: -0.5px;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.btn-voltar {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: absolute;
+    left: 0;
+}
+
+.btn-voltar:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+.btn-voltar:active {
+    transform: translateY(0);
+}
+
+/* --- Estilo para o botão de Tela Cheia, apenas o ícone --- */
+.btn-fullscreen {
+    background-color: transparent; /* Remove o fundo */
+    color: var(--gray-color); /* Tom de cinza sutil para o ícone */
+    border: none; /* Remove a borda */
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    padding: 8px; /* Mantém o preenchimento para a área de clique */
+    transition: color 0.2s ease;
+    position: absolute;
+    right: 0;
+    font-size: 2.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-fullscreen:hover {
+    color: var(--primary-color); /* Muda a cor para o azul principal no hover */
+}
+
+/* Estilos para o painel no modo normal (quando não está em tela cheia) */
+.coluna-clientes h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.cartao-cliente {
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-medium);
+    padding: 12px 18px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 5px solid;
+}
+
+.cartao-cliente:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.cliente-nome {
+    font-size: 1.0rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+/* Estilos para o painel no modo TELA CHEIA */
+.painel-exibicao-container.fullscreen-ativo .cartao-cliente {
+    padding: 20px 25px; 
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); 
+    transform: scale(1.02);
+}
+
+.painel-exibicao-container.fullscreen-ativo .cliente-nome {
+    font-size: 1.3rem; 
+    font-weight: 700;
+}
+
+/* Aumenta a fonte dos nomes das colunas APENAS no modo de tela cheia */
+.painel-exibicao-container.fullscreen-ativo .coluna-clientes h2 {
+    font-size: 2.0rem;
+}
+
+/* --- Layout das Colunas (Aguardando / Chamados / Confirmados) --- */
+.painel-colunas {
+    display: flex;
+    flex-grow: 1;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.coluna-clientes {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    padding: 25px;
+    flex: 1;
+    min-width: 300px;
+    max-width: 48%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.coluna-clientes.na-fila h2 {
+    color: var(--gray-color);
+    border-color: var(--gray-color);
+}
+.cartao-cliente.aguardando {
+    border-left-color: var(--gray-color);
+}
+
+
+.coluna-clientes.chamados h2 {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+.cartao-cliente.chamado {
+    border-left-color: var(--secondary-color);
+}
+
+
+.coluna-clientes.confirmados h2 {
+    color: #28a745;
+    border-color: #28a745;
+}
+.cartao-cliente.confirmado {
+    border-left-color: #28a745;
+}
+
+
+.lista-clientes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.loading-message,
+.error-message-panel,
+.no-clients {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--light-text-color);
+    margin-top: 30px;
+    padding: 20px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.error-message-panel {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* --- Estilo para o Banner de Mensagens Rotativas --- */
+.mensagens-rotativas-container {
+    width: 100%;
+    padding: 15px 25px;
+    background-color: #e9ecef; /* Um cinza claro */
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 2px 10px var(--shadow-light);
+    margin-top: auto;
+    overflow: hidden; /* Garante que o texto que está fora da tela fique invisível */
+    position: relative;
+}
+
+.mensagem-texto {
+    display: flex;
+    flex-wrap: nowrap;
+    /* Usamos 'inline-block' para que a largura seja determinada pelo conteúdo */
+    display: inline-block;
+    white-space: nowrap;
+    position: absolute;
+    top: 50%;
+    /* Ajustamos o posicionamento e animação para um loop perfeito */
+    left: 0;
+    transform: translateY(-50%);
+    animation: scroll-text 60s linear infinite;
+}
+
+.mensagem-item {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    margin-right: 150px; /* Espaço entre cada mensagem */
+}
+
+/* Define a animação de rolagem para um loop contínuo */
+@keyframes scroll-text {
+    from {
+        transform: translate(0, -50%);
+    }
+    to {
+        transform: translate(-50%, -50%);
+    }
+}
+
+@media (max-width: 1200px) {
+    .painel-header h1 { font-size: 2.5rem; }
+    .btn-voltar { padding: 8px 15px; font-size: 0.9rem; }
+    .coluna-clientes h2 { font-size: 1.6rem; }
+    .cliente-nome { font-size: 1.2rem; }
+}
+
+@media (max-width: 768px) {
+    .painel-exibicao-container { padding: 15px; gap: 15px; }
+    .painel-header { padding: 20px 25px; }
+    .painel-header-content { flex-direction: column; gap: 10px; align-items: center; }
+    .btn-voltar { position: static; margin-bottom: 10px; padding: 10px 18px; font-size: 1rem; }
+    .painel-colunas { flex-direction: column; align-items: center; gap: 15px; }
+    .coluna-clientes { max-width: 95%; min-width: unset; width: 100%; padding: 20px; }
+    .coluna-clientes h2 { font-size: 1.5rem; }
+    .cliente-nome { font-size: 1.1rem; }
+}
+
+@media (max-width: 480px) {
+    .painel-exibicao-container { padding: 10px; }
+    .painel-header { padding: 15px 20px; }
+    .painel-header h1 { font-size: 1.8rem; }
+    .coluna-clientes { padding: 15px; }
+    .coluna-clientes h2 { font-size: 1.3rem; }
+    .cartao-cliente { padding: 12px 15px; }
+    .cliente-nome { font-size: 1rem; }
+    .loading-message, .error-message-panel, .no-clients { font-size: 1rem; padding: 15px; }
+}
+

@@ -105,16 +105,18 @@ body, html {
   margin-bottom: 18px;
 }
 
-.form-group input {
+/* Aplica o estilo base a todos os inputs E selects */
+.form-group input,
+.form-group select { /* Adicionado select aqui */
   width: 100%;
-  padding: 13px 18px 13px 50px; 
+  padding: 13px 18px 13px 50px; /* Padding padrão com espaço para ícone */
   border: 1px solid #E2E8F0;
   border-radius: 30px !important;
   background-color: #F7F8FC;
   font-size: 0.9rem;
   box-sizing: border-box;
   color: #333A47;
-  padding-left: 40px !important;
+  /* Removido o padding-left: 40px !important; duplicado para inputs */
 }
 
 .input-icon {
@@ -152,9 +154,30 @@ body, html {
   margin-bottom: 18px;
 }
 .form-row .form-group {
-  flex: 1;
+  flex: 1; /* Permite que os itens cresçam e encolham igualmente */
   margin-bottom: 0;
 }
+
+/* Ajustes específicos para os campos de telefone */
+.form-ddi {
+  flex: 0 0 40%; /* Ajuste a proporção, por exemplo, 40% */
+  max-width: 40%; /* Garante que não exceda essa largura */
+}
+
+/* Removido padding-left !important do select para usar o padrão */
+/* .form-ddi select {
+  padding-left: 30px !important;
+} */
+
+.form-ddd {
+  flex: 0 0 25%; /* Ajuste a proporção, por exemplo, 25% */
+  max-width: 25%; /* Garante que não exceda essa largura */
+}
+
+.form-telefone {
+  flex: 1; /* Permite que o telefone ocupe o restante do espaço */
+}
+
 
 .btn-submit-cadastro {
   width: 100%;
@@ -190,18 +213,6 @@ body, html {
 
 .login-link a:hover {
   text-decoration: underline;
-}
-
-.form-ddi {
-  flex: 0 0 30% !important;
-}
-
-.form-ddi select{
-  padding-left: 30px !important;
-}
-
-.form-ddd {
-  flex: 0 0 20% !important;
 }
 
 /* Responsividade */
@@ -242,7 +253,9 @@ body, html {
   .login-link {
     text-align: center;
   }
-  .form-group input {
+  /* Ajuste para input e select */
+  .form-group input,
+  .form-group select {
     padding-left: 40px; 
   }
   .input-icon {
@@ -255,5 +268,13 @@ body, html {
   .password-toggle-icon {
     right: 12px;
     font-size: 1rem;
+  }
+
+  /* Resetar flex para mobile para que cada um ocupe a linha inteira */
+  .form-ddi,
+  .form-ddd,
+  .form-telefone {
+    flex: 1 1 100%; /* Cada um ocupa 100% da largura em telas pequenas */
+    max-width: 100%;
   }
 }

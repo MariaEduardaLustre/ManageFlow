@@ -127,10 +127,16 @@
     align-self: flex-start;
 }
 
+.clientes-fila-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
 .clientes-fila-section .section-title {
     font-size: 1.5rem;
     font-weight: bold;
-    margin-bottom: 20px;
     color: #333;
     text-align: left;
 }
@@ -138,19 +144,16 @@
 /* Estilos da Tabela de Clientes */
 .clientes-fila-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
     overflow: hidden;
     border-radius: 8px;
-    table-layout: fixed; /* Isso faz com que as larguras das colunas sejam respeitadas */
+    table-layout: fixed; /* Garante que as larguras de coluna sejam respeitadas */
 }
 
-.clientes-fila-table th, .clientes-fila-table td {
+.clientes-fila-table th,
+.clientes-fila-table td {
     padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
     vertical-align: middle;
-    /* Removido white-space, overflow, text-overflow para a coluna de ações para permitir flexbox */
 }
 
 .clientes-fila-table th {
@@ -160,66 +163,82 @@
     text-transform: uppercase;
     font-size: 0.9em;
     letter-spacing: 0.5px;
+    border-bottom: 1px solid #dee2e6;
+    text-align: center; /* Centraliza TODOS os nomes das colunas (TH) */
 }
-
-.clientes-fila-table th:first-child { border-top-left-radius: 8px; }
-.clientes-fila-table th:last-child { border-top-right-radius: 8px; }
-
-.clientes-fila-table tr:last-child td { border-bottom: none; }
 
 .clientes-fila-table tbody tr:hover { background-color: #f5f5f5; }
 
-/* Definindo larguras para as colunas */
+.clientes-fila-table tbody tr {
+    border-bottom: 1px solid #eee;
+}
+
+.clientes-fila-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+/* Adicionado: Altura mínima para as linhas da tabela para melhor alinhamento */
+.clientes-fila-table tr {
+    height: 55px; /* Ajustado para acomodar badge e botões lado a lado */
+}
+
+/* Definindo larguras e alinhamentos para as colunas - AJUSTADO PARA 4 COLUNAS */
 .clientes-fila-table th:nth-child(1),
-.clientes-fila-table td:nth-child(1) { width: 20%; } /* Nome do Cliente */
+.clientes-fila-table td:nth-child(1) { width: 25%; text-align: left; } /* NOME CLIENTE */
 
 .clientes-fila-table th:nth-child(2),
-.clientes-fila-table td:nth-child(2) { width: 15%; } /* CPF/CNPJ */
+.clientes-fila-table td:nth-child(2) { width: 20%; text-align: left; } /* CPF/CNPJ */
 
 .clientes-fila-table th:nth-child(3),
-.clientes-fila-table td:nth-child(3) { width: 15%; } /* Data de Nascimento */
+.clientes-fila-table td:nth-child(3) {
+    width: 20%;
+    text-align: center; /* Centraliza o conteúdo de ENTRADA */
+} /* ENTRADA */
 
 .clientes-fila-table th:nth-child(4),
-.clientes-fila-table td:nth-child(4) { width: 15%; } /* Celular */
+.clientes-fila-table td:nth-child(4) {
+    width: 35%; /* STATUS E AÇÕES: Mais espaço */
+    min-width: 250px; /* Garante que a coluna não fique muito pequena */
+    /* text-align: center; // Removido para evitar conflitos com flexbox */
+}
 
-.clientes-fila-table th:nth-child(5),
-.clientes-fila-table td:nth-child(5) { width: 15%; } /* Entrada */
 
-.clientes-fila-table th:nth-child(6),
-.clientes-fila-table td:nth-child(6) { 
-    width: 20%; /* Aumenta a largura da coluna Ações / Situação */
-    min-width: 200px; /* Garante uma largura mínima para acomodar a mensagem e o botão */
+/* --- ESTILOS PARA A COLUNA UNIFICADA DE STATUS E AÇÕES --- */
+.conteudo-status-acoes {
+    display: flex; /* Faz com que badge e botões fiquem lado a lado */
+    align-items: center; /* Alinha verticalmente os itens (badge e botões) */
+    gap: 15px; /* Espaçamento fixo entre a badge e os botões */
+    padding-left: 40px; /* NOVO: Adiciona um recuo de 10px à esquerda */
+}
+
+
+
+
+/* Wrapper para a badge de situação */
+.situacao-wrapper {
+    flex-shrink: 0; /* Impede que o wrapper do badge encolha */
+    display: flex;
+    justify-content: center; /* Mantém o texto do badge centralizado dentro dele */
+    align-items: center;
+    min-width: 160px; /* Mantido para garantir o espaço mínimo para o texto mais longo */
+}
+
+
+/* Estilo para o contêiner dos botões de ação */
+.botoes-acoes-contexto {
+    display: flex; /* Habilita Flexbox para os botões dentro dele */
+    gap: 8px; /* Espaçamento entre os botões individuais */
+    opacity: 1; /* Torna os botões VISÍVEIS por padrão */
+    pointer-events: auto; /* Habilita interações (cliques) */
+    transition: none; /* Remove a transição de opacidade */
+    flex-shrink: 0; /* Impede que os botões encolham */
 }
 
 /* Estilos dos Botões de Ação */
-.acao-buttons {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 5px;
-    flex-wrap: nowrap; /* Impede que os itens quebrem linha, preferindo o overflow */
-    width: 100%; /* Ocupa toda a largura disponível da célula */
-}
-
-/* Estilos para o grupo de botões de ícone */
-.icone-buttons-group {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    flex-wrap: nowrap; /* Importante para manter o botão "Editar" na mesma linha da mensagem */
-}
-
-/* Estilo para quando a mensagem de status e o botão de editar estão juntos */
-.icone-buttons-group.status-display {
-    gap: 10px; /* Mais espaço entre a mensagem e o botão de editar */
-    flex-wrap: nowrap; /* Reafirma que não deve quebrar linha */
-}
-
-
 .btn-acao {
     padding: 8px;
     border: none;
-    border-radius: 5px; /* Ajuste para bordas levemente arredondadas */
+    border-radius: 5px;
     width: 38px;
     height: 38px;
     display: flex;
@@ -259,41 +278,59 @@
 .btn-nao-compareceu { background-color: #dc3545; color: white; }
 .btn-nao-compareceu:hover { background-color: #c82333; }
 
-/* REINTRODUZIDO: Estilo para a mensagem de status (badge) */
 .acao-disabled-message {
     color: #495057;
     font-style: italic;
     font-size: 0.9em;
-    padding: 8px 12px; /* Padding para o badge */
-    background-color: #e2e6ea; /* Cor de fundo para o badge */
-    border-radius: 5px; /* Bordas arredondadas como os botões */
-    display: inline-flex; /* Para que o padding e alinhamento funcionem */
+    padding: 8px 12px;
+    background-color: #e2e6ea;
+    border-radius: 5px;
+    display: inline-flex;
     align-items: center;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-    white-space: nowrap; /* Garante que o texto não quebre linha */
-    /* text-overflow: ellipsis; */ /* Removido/Comentado para não cortar o texto */
-    /* overflow: hidden; */ /* Removido/Comentado para não cortar o texto */
-    flex-shrink: 0; /* Impede que a mensagem encolha */
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.error-message {
-    color: #dc3545;
-    text-align: center;
-    margin-top: 20px;
+/* ESTILOS PARA OS BADGES DE SITUAÇÃO (CORES MAIS FORTES) */
+.situacao-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center; /* Centraliza o texto dentro do badge */
+    padding: 5px 10px;
+    border-radius: 20px; /* Bordas arredondadas para parecer um "badge" */
     font-weight: bold;
+    font-size: 0.85em;
+    color: white; /* Texto branco para todas as cores fortes */
+    white-space: nowrap; /* Garante que o texto não quebre linha */
+    text-align: center; /* Garante que o texto fique centralizado dentro do badge */
+    width: 160px; /* NOVO: Define uma largura fixa para o fundo colorido do badge */
 }
 
-.btn-alterar {
-    background-color: #ffc107;
-    color: #343a40;
+.situacao-badge.aguardando {
+    background-color: #6c757d; /* Cinza para "Aguardando" */
 }
-.btn-alterar:hover { background-color: #e0a800; }
 
-.btn-cancelar {
-    background-color: #6c757d;
-    color: white;
+.situacao-badge.presenca-confirmada {
+    background-color: #28a745; /* Verde para sucesso */
 }
-.btn-cancelar:hover { background-color: #5a6268; }
+
+.situacao-badge.nao-compareceu {
+    background-color: #dc3545; /* Vermelho para alerta/problema */
+}
+
+.situacao-badge.chamado {
+    background-color: #007bff; /* Roxo para em andamento */
+}
+
+.situacao-badge.atendido {
+    background-color: #007bff; /* Azul para finalizado */
+}
+
+.situacao-badge.desconhecido {
+    background-color: #6c757d; /* Cinza para status desconhecido */
+}
+
 
 /* ----------------------------------------------------------------------- */
 /* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
@@ -308,17 +345,16 @@
     .empresa-titulo-container { padding: 7px 12px; margin-bottom: 20px; }
     .empresa-nome { font-size: 1em; }
     .section-title { font-size: 1.6em; margin-bottom: 20px; }
-    
+
     .clientes-fila-table th, .clientes-fila-table td { padding: 10px 12px; font-size: 0.8em; }
 
-    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 20%; }
-    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 15%; }
-    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 15%; }
-    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 15%; }
-    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 15%; }
-    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
-        width: 20%; 
-        min-width: 180px; 
+    /* Ajuste as larguras das colunas para 4 colunas */
+    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 25%; text-align: left; }
+    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 20%; text-align: left; }
+    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 20%; text-align: center; }
+    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) {
+        width: 35%;
+        min-width: 220px; /* Ajuste o min-width para telas menores se necessário */
     }
 
     /* Botões de ação em telas menores */
@@ -327,9 +363,7 @@
         height: 34px;
         font-size: 1em;
     }
-    .icone-buttons-group { gap: 3px; }
-    .icone-buttons-group.status-display { gap: 8px; /* Menor espaço em telas menores */ }
-    .acao-disabled-message { font-size: 0.8em; padding: 6px 10px; }
+    .botoes-acoes-contexto { gap: 5px; } /* Ajuste o gap aqui */
 }
 
 /* Ajustes para telas de Tablet (retrato) e Celulares grandes - Até 768px */
@@ -350,47 +384,41 @@
     .section-title { font-size: 1.5em; margin-bottom: 20px; }
 
     .clientes-fila-section {
-        overflow-x: auto;
+        overflow-x: auto; /* Adiciona scroll horizontal se a tabela for muito larga */
         -webkit-overflow-scrolling: touch;
         align-self: stretch;
     }
-    .clientes-fila-table { min-width: 800px; width: auto; } /* Aumente o min-width da tabela */
-    
-    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 18%; }
-    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 14%; }
-    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 14%; }
-    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 14%; }
-    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 14%; }
-    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
-        width: 26%; 
-        min-width: 180px; 
+    .clientes-fila-table { min-width: 750px; width: auto; } /* Min-width para evitar que as colunas fiquem muito apertadas */
+
+    /* Ajuste as larguras das colunas para 4 colunas em mobile */
+    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 22%; text-align: left; }
+    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 18%; text-align: left; }
+    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 18%; text-align: center; }
+    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) {
+        width: 42%; /* Mais espaço para a coluna unificada */
+        min-width: 250px; /* Garante espaço para o conteúdo */
     }
 
     /* Ajustes para os botões de ação em mobile */
-    .acao-buttons {
-        flex-direction: row; /* Permita que os itens quebrem linha */
-        justify-content: center; /* Centraliza os botões quando quebram */
-        flex-wrap: wrap; 
-    }
-
-    .icone-buttons-group {
-        flex-direction: row; 
+    .botoes-acoes-contexto {
+        flex-direction: row;
+        justify-content: center; /* Centraliza os botões */
+        flex-wrap: wrap; /* Permite quebrar linha se não houver espaço */
         gap: 5px;
-        flex-wrap: wrap; /* Permita que a mensagem e o botão quebrem linha */
-        justify-content: center; /* Centraliza */
     }
-    .icone-buttons-group.status-display { 
-        gap: 5px; /* Menor espaço em mobile */ 
-        flex-wrap: wrap; /* Também permite quebra de linha aqui */
+    .coluna-status-acoes {
+        /* Ajustar se o conteudo-status-acoes precisar de mais espaço */
+        flex-wrap: nowrap; /* Não quebrar linha dentro da TD se a TD tiver width suficiente */
         justify-content: center;
+        align-items: center;
     }
 
     .btn-acao {
         width: 32px;
         height: 32px;
-        font-size: 0.9em;
+        font-size: 1em;
     }
-    .acao-disabled-message { font-size: 0.75em; padding: 5px 8px; }
+    .acao-disabled-message { font-size: 0.8em; padding: 6px 10px; }
 }
 
 /* Ajustes para telas de Celular pequenas - Até 480px */
@@ -399,38 +427,43 @@
     .empresa-titulo-container { padding: 5px 10px; }
     .empresa-nome { font-size: 0.9em; }
     .section-title { font-size: 1.2em; margin-bottom: 15px; padding-left: 5px; }
-    
-    .clientes-fila-table th, .clientes-fila-table td { padding: 10px 10px; font-size: 0.8em; }
-    .clientes-fila-table { min-width: 700px; width: auto; } /* Mantenha um min-width para a tabela */
 
-    .clientes-fila-table th:nth-child(1), .clientes-fila-table td:nth-child(1) { width: 18%; }
-    .clientes-fila-table th:nth-child(2), .clientes-fila-table td:nth-child(2) { width: 14%; }
-    .clientes-fila-table th:nth-child(3), .clientes-fila-table td:nth-child(3) { width: 14%; }
-    .clientes-fila-table th:nth-child(4), .clientes-fila-table td:nth-child(4) { width: 14%; }
-    .clientes-fila-table th:nth-child(5), .clientes-fila-table td:nth-child(5) { width: 14%; }
-    .clientes-fila-table th:nth-child(6), .clientes-fila-table td:nth-child(6) { 
-        width: 26%; 
-        min-width: 160px; 
-    }
+    .clientes-fila-table th, .clientes-fila-table td { padding: 8px 8px; font-size: 0.75em; }
+}
 
-    .sidebar nav ul { flex-direction: column; align-items: center; gap: 5px; }
-    .sidebar nav ul li { width: 100%; justify-content: center; text-align: center; margin-bottom: 5px; }
-    .sidebar .user-info { flex-direction: column; align-items: center; margin-left: 0; margin-top: 15px; }
+/* --- ESTILOS PARA AS ABAS --- */
+.tabs-container {
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
 
-    .btn-acao {
-        width: 30px;
-        height: 30px;
-        font-size: 0.85em;
-    }
-    .icone-buttons-group { 
-        gap: 3px; 
-        flex-direction: column; /* Empilha a mensagem e o botão editar */
-        align-items: center;
-    }
-    .icone-buttons-group.status-display { 
-        gap: 3px; 
-        flex-direction: column; 
-        align-items: center;
-    }
-    .acao-disabled-message { font-size: 0.7em; padding: 4px 6px; }
+.tabs-list {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.tab-button {
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab-button:hover {
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+.tab-button.active {
+    color: #1e73be;
+    font-weight: bold;
+    border-bottom: 3px solid #1e73be;
+    background-color: #fff;
 }

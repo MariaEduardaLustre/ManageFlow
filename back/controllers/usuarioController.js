@@ -7,18 +7,24 @@ require('dotenv').config();
 
 exports.loginUsuario = async (req, res) => {
   const { email, senha } = req.body;
+  const token = jwt.sign(
+    { id: usuario.ID, email: usuario.EMAIL, nome: usuario.NOME },
+    process.env.JWT_SECRET,
+    { expiresIn: '8h' }
+  );
 
+  // Salve no front exatamente assim: localStorage.setItem('token', token);
+  return res.json({ token });
   if (!email || !senha) {
     return res.status(400).send('Preencha todos os campos!');
   }
 
   try {
-    // A query de login já está correta, buscando por EMAIL.
     const [results] = await db.query('SELECT * FROM Usuario WHERE EMAIL = ?', [email]);
 
     if (results.length === 0) {
       console.log('[ERRO] Usuário não encontrado');
-      return res.status(401).send('Usuário ou senha inválidos.'); // Mensagem mais segura
+      return res.status(401).send('Usuário ou senha inválidos.');
     }
 
     const usuario = results[0];
@@ -26,7 +32,7 @@ exports.loginUsuario = async (req, res) => {
 
     if (!senhaValida) {
       console.log('[ERRO] Senha incorreta');
-      return res.status(401).send('Usuário ou senha inválidos.'); // Mensagem mais segura
+      return res.status(401).send('Usuário ou senha inválidos.');
     }
 
     const token = jwt.sign(
@@ -51,12 +57,12 @@ exports.loginUsuario = async (req, res) => {
 // FUNÇÃO DE CADASTRO TOTALMENTE ATUALIZADA
 // =================================================================
 exports.cadastrarUsuario = async (req, res) => {
-  // 1. Capturar TODOS os campos que vêm do formulário
+  // 1. Capturar TODOS os campos que vêm do formulário, REMOVENDO nomePet
   const { nome, email, cpfCnpj, senha, cep, endereco, numero, complemento, ddi, ddd, telefone } = req.body;
 
   console.log('[CADASTRO] Dados recebidos:', req.body);
 
-  // 2. Validação mais completa dos campos obrigatórios do formulário
+  // 2. Validação mais completa dos campos obrigatórios do formulário (nomePet não é obrigatório aqui)
   if (!nome || !email || !cpfCnpj || !senha || !cep || !endereco || !numero || !ddi || !ddd || !telefone) {
     return res.status(400).send('Preencha todos os campos obrigatórios.');
   }
@@ -81,10 +87,10 @@ exports.cadastrarUsuario = async (req, res) => {
 
     const senhaCriptografada = await bcrypt.hash(senha, 10);
 
-    // 5. Query INSERT final e correta, com todas as colunas e valores
+    // 5. Query INSERT final e correta, com todas as colunas e valores, AGORA SEM NOMEPET
     await db.query(
       `INSERT INTO Usuario (NOME, EMAIL, CPFCNPJ, SENHA, CEP, ENDERECO, NUMERO, COMPLEMENTO, DDI, DDD, TELEFONE)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [nome, email, cpfCnpj, senhaCriptografada, cep, endereco, numero, complemento, ddi, ddd, telefone]
     );
 
@@ -178,8 +184,8 @@ exports.redefinirSenha = async (req, res) => {
 
     await db.query(
       `UPDATE Usuario
-       SET SENHA = ?, resetPasswordToken = NULL, resetPasswordExpires = NULL
-       WHERE ID = ?`,
+        SET SENHA = ?, resetPasswordToken = NULL, resetPasswordExpires = NULL
+        WHERE ID = ?`,
       [senhaCriptografada, usuario.ID]
     );
 

@@ -1,9 +1,8 @@
-// src/pages/FilaLista/FilaLista.js
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaCog, FaTv, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt } from 'react-icons/fa';
-import './FilaLista.css';
+import './FilaLista.css'; // O CSS do modal será adicionado aqui
 import Menu from '../Menu/Menu';
 
 const FilaLista = () => {
@@ -12,15 +11,14 @@ const FilaLista = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
+    // Estados para o Modal da Empresa
     const [mostrarModalEmpresa, setMostrarModalEmpresa] = useState(false);
     const [detalhesEmpresa, setDetalhesEmpresa] = useState(null);
+    const [loadingEmpresa, setLoadingEmpresa] = useState(false);
 
     const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada'));
     const idEmpresa = empresaSelecionada?.ID_EMPRESA;
     const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
-
-    const nomeUsuario = "Usuário"; // Isso pode vir do localStorage ou de um contexto de autenticação
-    const cargoUsuario = "Gerente de Projeto"; // Isso também
 
     // Função para formatar a data para a URL (YYYYMMDD)
     const formatarDataParaURL = (dataSQL) => {
@@ -95,14 +93,13 @@ const FilaLista = () => {
         return `${dia}/${mes}/${ano}`;
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('idUsuario');
-        localStorage.removeItem('empresaSelecionada');
-        navigate('/');
-    };
-
+    // Função para buscar e exibir os detalhes da empresa
     const exibirDetalhesEmpresa = async () => {
+        if (!idEmpresa) {
+            alert('ID da empresa não disponível.');
+            return;
+        }
+        setLoadingEmpresa(true);
         try {
             const response = await api.get(`/empresas/detalhes/${idEmpresa}`);
             setDetalhesEmpresa(response.data);
@@ -110,7 +107,14 @@ const FilaLista = () => {
         } catch (error) {
             console.error('Erro ao buscar detalhes da empresa:', error);
             alert('Erro ao carregar os detalhes da empresa.');
+        } finally {
+            setLoadingEmpresa(false);
         }
+    };
+
+    const fecharModalEmpresa = () => {
+        setMostrarModalEmpresa(false);
+        setDetalhesEmpresa(null);
     };
 
     return (
@@ -118,10 +122,11 @@ const FilaLista = () => {
             <Menu />
 
             <main className="main-content">
-                {/* ALTERAÇÃO AQUI: Remover o span da label "Empresa" */}
-                <div className="empresa-titulo-container" onClick={exibirDetalhesEmpresa} style={{ cursor: 'pointer' }}>
-                    <span className="empresa-nome">{nomeEmpresa || 'Carregando...'}</span>
-                </div>
+               {/*  <div className="empresa-titulo-container" onClick={exibirDetalhesEmpresa} style={{ cursor: 'pointer' }}>
+                    <span className="empresa-nome">
+                        {loadingEmpresa ? 'Carregando detalhes...' : `${nomeEmpresa || 'Carregando...'}`}
+                    </span>
+                </div>*/}
 
                 <section className="filas-section">
                     <h2 className="section-title">Filas</h2>
@@ -163,17 +168,22 @@ const FilaLista = () => {
                 </section>
             </main>
 
+            {/* Modal de Detalhes da Empresa - Integrado diretamente */}
             {mostrarModalEmpresa && detalhesEmpresa && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h2>Detalhes da Empresa</h2>
-                        <p><strong>Nome:</strong> {detalhesEmpresa.NOME_EMPRESA}</p>
-                        <p><strong>CNPJ:</strong> {detalhesEmpresa.CNPJ}</p>
-                        <p><strong>Email:</strong> {detalhesEmpresa.EMAIL}</p>
-                        <p><strong>Telefone:</strong> ({detalhesEmpresa.DDI}) {detalhesEmpresa.DDD} {detalhesEmpresa.TELEFONE}</p>
-                        <p><strong>Endereço:</strong> {detalhesEmpresa.ENDERECO}, {detalhesEmpresa.NUMERO}</p>
-                        {detalhesEmpresa.LOGO && <p><img src={detalhesEmpresa.LOGO} alt="Logo da Empresa" style={{ maxWidth: '100px', maxHeight: '100px' }} /></p>}
-                        <button onClick={() => setMostrarModalEmpresa(false)}>Fechar</button>
+                        <div className="modal-header">
+                            <h2>Detalhes da Empresa</h2>
+                            <button className="modal-close-button" onClick={fecharModalEmpresa}>&times;</button>
+                        </div>
+                        <div className="modal-body">
+                            {/* Apenas nome e CNPJ serão exibidos conforme solicitado */}
+                            <p><strong>Nome:</strong> {detalhesEmpresa.NOME_EMPRESA}</p>
+                            <p><strong>CNPJ:</strong> {detalhesEmpresa.CNPJ}</p>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="modal-close-button-footer" onClick={fecharModalEmpresa}>Fechar</button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -303,7 +303,7 @@ const Home = () => {
         </section>
       </main>
 
-      {/* --- MODAIS --- */}
+      {/* --- MODAL: Adicionar Membro --- */}
       <Modal show={showAddUserModal} onHide={handleCloseAddUserModal} centered>
         <Form onSubmit={adicionarUsuario}>
           <Modal.Header closeButton>
@@ -346,6 +346,7 @@ const Home = () => {
         </Form>
       </Modal>
 
+      {/* --- MODAL: Confirmar Remoção --- */}
       <Modal show={showConfirmDeleteModal} onHide={handleCloseConfirmDelete} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Exclusão</Modal.Title>
@@ -363,6 +364,7 @@ const Home = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* --- MODAL: Erro --- */}
       <Modal show={showErrorModal} onHide={handleCloseErrorModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Ocorreu um Erro</Modal.Title>
@@ -375,6 +377,7 @@ const Home = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* --- MODAL: Sucesso --- */}
       <Modal show={showSuccessModal} onHide={handleCloseSuccessModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Sucesso!</Modal.Title>
@@ -387,6 +390,7 @@ const Home = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* --- MODAL: Detalhes da Empresa --- */}
       <Modal show={mostrarModalEmpresa} onHide={fecharModalEmpresa} centered>
         <Modal.Header closeButton>
           <Modal.Title>Detalhes da Empresa</Modal.Title>
