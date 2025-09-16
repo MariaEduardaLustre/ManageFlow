@@ -303,35 +303,45 @@ const PainelFilaExibicao = () => {
                                 placeholder="Digite cada mensagem em uma linha separada."
                             />
                         </div>
-
-                        <div className="color-options-container">
-                            <div className="color-option">
-                                <label>Cor de Fundo do Painel:</label>
-                                <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)}/>
+                        
+                        {/* NOVO: Layout com cards de cor */}
+                        <div className="color-card-group">
+                            <div className="color-card">
+                                <h5>Cores do Painel</h5>
+                                <div className="color-option">
+                                    <label>Fundo do Painel:</label>
+                                    <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)}/>
+                                </div>
+                                <div className="color-option">
+                                    <label>Letra do Título:</label>
+                                    <input type="color" value={titleColor} onChange={(e) => setTitleColor(e.target.value)}/>
+                                </div>
                             </div>
-                            <div className="color-option">
-                                <label>Cor da Letra do Título:</label>
-                                <input type="color" value={titleColor} onChange={(e) => setTitleColor(e.target.value)}/>
+                            <div className="color-card">
+                                <h5>Cores das Colunas</h5>
+                                <div className="color-option">
+                                    <label>Fundo das Colunas:</label>
+                                    <input type="color" value={columnBgColor} onChange={(e) => setColumnBgColor(e.target.value)}/>
+                                </div>
+                                <div className="color-option">
+                                    <label>Letras do Título:</label>
+                                    <input type="color" value={columnTitleColor} onChange={(e) => setColumnTitleColor(e.target.value)}/>
+                                </div>
+                                <div className="color-option">
+                                    <label>Letras dos Clientes:</label>
+                                    <input type="color" value={clientNameColor} onChange={(e) => setClientNameColor(e.target.value)}/>
+                                </div>
                             </div>
-                            <div className="color-option">
-                                <label>Cor de Fundo das Colunas:</label>
-                                <input type="color" value={columnBgColor} onChange={(e) => setColumnBgColor(e.target.value)}/>
-                            </div>
-                            <div className="color-option">
-                                <label>Cor da Letra dos Títulos das Colunas:</label>
-                                <input type="color" value={columnTitleColor} onChange={(e) => setColumnTitleColor(e.target.value)}/>
-                            </div>
-                            <div className="color-option">
-                                <label>Cor da Letra dos Clientes:</label>
-                                <input type="color" value={clientNameColor} onChange={(e) => setClientNameColor(e.target.value)}/>
-                            </div>
-                            <div className="color-option">
-                                <label>Cor de Fundo do Banner:</label>
-                                <input type="color" value={bannerBgColor} onChange={(e) => setBannerBgColor(e.target.value)}/>
-                            </div>
-                            <div className="color-option">
-                                <label>Cor da Letra do Banner:</label>
-                                <input type="color" value={bannerTextColor} onChange={(e) => setBannerTextColor(e.target.value)}/>
+                            <div className="color-card">
+                                <h5>Cores do Banner</h5>
+                                <div className="color-option">
+                                    <label>Cor de Fundo:</label>
+                                    <input type="color" value={bannerBgColor} onChange={(e) => setBannerBgColor(e.target.value)}/>
+                                </div>
+                                <div className="color-option">
+                                    <label>Cor da Letra:</label>
+                                    <input type="color" value={bannerTextColor} onChange={(e) => setBannerTextColor(e.target.value)}/>
+                                </div>
                             </div>
                         </div>
 
@@ -473,11 +483,6 @@ const PainelFilaExibicao = () => {
                     ))}
                 </div>
             </div>
-            {showNotification && (
-                <div className="custom-notification fullscreen-notification">
-                    <p>{notificationMessage}</p>
-                </div>
-            )}
         </div>
     );
 };

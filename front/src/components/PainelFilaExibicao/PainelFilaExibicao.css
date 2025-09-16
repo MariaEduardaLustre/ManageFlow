@@ -296,8 +296,7 @@ body {
     background-color: #e9ecef; /* Um cinza claro */
     border-radius: var(--border-radius-large);
     box-shadow: 0 2px 10px var(--shadow-light);
-    margin-top: auto;
-    margin-top: 20px; /* NOVO: Adiciona um espaço no topo do banner */
+    margin-top: 20px;
     overflow: hidden; /* Garante que o texto que está fora da tela fique invisível */
     position: relative;
 }
@@ -305,14 +304,11 @@ body {
 .mensagem-texto {
     display: flex;
     flex-wrap: nowrap;
-    /* Usamos 'inline-block' para que a largura seja determinada pelo conteúdo */
     display: inline-block;
     white-space: nowrap;
     position: absolute;
-    top: 50%;
-    /* Ajustamos o posicionamento e animação para um loop perfeito */
+    bottom: 0;
     left: 0;
-    transform: translateY(-50%);
     animation: scroll-text 60s linear infinite;
 }
 
@@ -323,14 +319,13 @@ body {
     margin-right: 250px; /* Aumenta o espaço entre as mensagens */
 }
 
-
 /* Define a animação de rolagem para um loop contínuo */
 @keyframes scroll-text {
     from {
-        transform: translate(0, -50%);
+        transform: translateX(0); /* Usa apenas translateX para o scroll horizontal */
     }
     to {
-        transform: translate(-50%, -50%);
+        transform: translateX(-50%); /* Usa apenas translateX para o scroll horizontal */
     }
 }
 
@@ -456,19 +451,29 @@ body {
     gap: 8px;
 }
 
-/* Estilo específico para o grupo do campo de cor */
-.config-cor {
+/* NOVO: Estilo para o contêiner de todos os campos de cor */
+.color-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+    margin-top: 10px;
+}
+
+/* NOVO: Estilo para cada item de cor */
+.color-option {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 0;
 }
 
-.config-cor label {
+.color-option label {
+    font-weight: 500;
     font-size: 1rem;
-    font-weight: 400;
     color: var(--text-color);
-    margin: 0;
+    margin-right: 10px;
+    white-space: nowrap;
 }
 
 .painel-configuracao input[type="text"],
@@ -510,9 +515,8 @@ body {
 
 .file-input-wrapper {
     display: flex;
-    flex-direction: column; /* ALTERADO: Alinha os itens em coluna */
-    align-items: flex-start; /* Alinha os itens ao início da coluna */
-    gap: 10px; /* Adiciona um espaço entre o input e o botão */
+    align-items: center;
+    gap: 10px;
 }
 
 /* NOVO: Estilo para a prévia do logo */
