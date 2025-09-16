@@ -24,6 +24,9 @@ const PainelFilaExibicao = () => {
     const [newsError, setNewsError] = useState(null);
     const [showNews, setShowNews] = useState(true);
 
+    const [showBanner, setShowBanner] = useState(true);
+    const [showBannerPreview, setShowBannerPreview] = useState(true);
+
     const [customTitle, setCustomTitle] = useState('');
     const [backgroundColor, setBackgroundColor] = useState('#f4f7f6');
     const [logoBase64, setLogoBase64] = useState('');
@@ -147,11 +150,14 @@ const PainelFilaExibicao = () => {
             clientNameColor,
             bannerTextColor,
             bannerBgColor,
-            messages: messagesInput.split('\n').map(msg => msg.trim()).filter(msg => msg !== '')
+            messages: messagesInput.split('\n').map(msg => msg.trim()).filter(msg => msg !== ''),
+            showBanner: showBannerPreview
         };
         localStorage.setItem('painelSettings', JSON.stringify(settings));
         setCustomMessages(settings.messages);
         
+        setShowBanner(showBannerPreview);
+
         setNotificationMessage('Configurações salvas com sucesso!');
         setShowNotification(true);
         setTimeout(() => {
@@ -191,6 +197,10 @@ const PainelFilaExibicao = () => {
             } else {
                 setCustomMessages([]);
                 setMessagesInput(defaultMessages.join('\n'));
+            }
+            if (settings.hasOwnProperty('showBanner')) {
+                setShowBanner(settings.showBanner);
+                setShowBannerPreview(settings.showBanner);
             }
         }
 
@@ -234,6 +244,10 @@ const PainelFilaExibicao = () => {
         } else {
             document.exitFullscreen();
         }
+    };
+    
+    const handleToggleBannerPreview = () => {
+        setShowBannerPreview(prevShowBanner => !prevShowBanner);
     };
 
     const handleToggleWeather = () => {
@@ -295,16 +309,26 @@ const PainelFilaExibicao = () => {
                             </div>
                         </div>
                         <div className="config-group">
+                            <div className="toggle-switch-container">
+                                <label>Exibir Banner Rotativo:</label>
+                                <label className="toggle-switch">
+                                    <input
+                                        type="checkbox"
+                                        checked={showBannerPreview}
+                                        onChange={handleToggleBannerPreview}
+                                    />
+                                    <span className="slider"></span>
+                                </label>
+                            </div>
                             <label>Mensagens do Banner (uma por linha):</label>
                             <textarea
                                 value={messagesInput}
                                 onChange={(e) => setMessagesInput(e.target.value)}
                                 rows="5"
                                 placeholder="Digite cada mensagem em uma linha separada."
-                            />
+                            />  
                         </div>
                         
-                        {/* NOVO: Layout com cards de cor */}
                         <div className="color-card-group">
                             <div className="color-card">
                                 <h5>Cores do Painel</h5>
@@ -381,17 +405,19 @@ const PainelFilaExibicao = () => {
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="mensagens-rotativas-container" style={{ backgroundColor: bannerBgColor }}>
-                                <div className="mensagem-texto" style={{ color: bannerTextColor }}>
-                                    {messagesInput.split('\n').filter(m => m.trim() !== '').map((msg, index) => (
-                                        <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
-                                    ))}
-                                    {messagesInput.split('\n').filter(m => m.trim() !== '').map((msg, index) => (
-                                        <span key={`segundo-${index}`} className="mensagem-item">{msg}</span>
-                                    ))}
+                            
+                            {showBannerPreview && (
+                                <div className="mensagens-rotativas-container" style={{ backgroundColor: bannerBgColor }}>
+                                    <div className="mensagem-texto" style={{ color: bannerTextColor }}>
+                                        {messagesInput.split('\n').filter(m => m.trim() !== '').map((msg, index) => (
+                                            <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
+                                        ))}
+                                        {messagesInput.split('\n').filter(m => m.trim() !== '').map((msg, index) => (
+                                            <span key={`segundo-${index}`} className="mensagem-item">{msg}</span>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -473,16 +499,18 @@ const PainelFilaExibicao = () => {
                 </div>
             )}
             
-            <div className="mensagens-rotativas-container" style={{ backgroundColor: bannerBgColor }}>
-                <div className="mensagem-texto" style={{ color: bannerTextColor }}>
-                    {messagesToDisplay.map((msg, index) => (
-                        <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
-                    ))}
-                    {messagesToDisplay.map((msg, index) => (
-                        <span key={`segundo-${index}`} className="mensagem-item">{msg}</span>
-                    ))}
+            {showBanner && (
+                <div className="mensagens-rotativas-container" style={{ backgroundColor: bannerBgColor }}>
+                    <div className="mensagem-texto" style={{ color: bannerTextColor }}>
+                        {messagesToDisplay.map((msg, index) => (
+                            <span key={`primeiro-${index}`} className="mensagem-item">{msg}</span>
+                        ))}
+                        {messagesToDisplay.map((msg, index) => (
+                            <span key={`segundo-${index}`} className="mensagem-item">{msg}</span>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
