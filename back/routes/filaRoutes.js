@@ -7,4 +7,5 @@ router.get('/', filaController.listarFilasComConfiguracao); // Este é o endpoin
 router.put('/:id_fila/block', filaController.toggleFilaBlock);
 router.put('/:id_fila/status', filaController.toggleFilaSituacao);
 
+
 module.exports = router;
