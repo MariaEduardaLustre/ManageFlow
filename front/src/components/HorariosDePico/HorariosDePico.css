@@ -1,0 +1,27 @@
+.container-pico {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.destaque-pico {
+    background-color: #e9ecef;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.chart-container {
+    margin-top: 30px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.botoes-exportacao {
+    text-align: center;
+}

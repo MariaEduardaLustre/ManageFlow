@@ -423,6 +423,70 @@ module.exports = (io) => {
             connection.release();
         }
     });
+
+  // --- ROTA: BUSCAR HORÁRIOS DE PICO DA FILA ---
+router.get('/horarios-de-pico/:idEmpresa/:idFila', async (req, res) => {
+    const { idEmpresa, idFila } = req.params;
+
+    try {
+        const [picos] = await db.query(`
+            SELECT
+                HOUR(DT_ENTRA) AS hora,
+                COUNT(ID_CLIENTE) AS total_clientes
+            FROM clientesfila
+            WHERE ID_EMPRESA = ? AND ID_FILA = ? AND SITUACAO <> 2
+            GROUP BY hora
+            ORDER BY total_clientes DESC;
+        `, [idEmpresa, idFila]);
+
+        if (picos.length === 0) {
+            return res.status(404).json({ message: 'Nenhum dado encontrado para identificar horários de pico.' });
+        }
+
+        const horarioDePico = picos[0];
+
+        res.json({
+            horarioDePico: `O horário de pico é às ${horarioDePico.hora}h, com ${horarioDePico.total_clientes} clientes.`,
+            dadosPorHora: picos
+        });
+
+    } catch (err) {
+        console.error('Erro ao buscar horários de pico:', err);
+        res.status(500).json({ error: 'Erro interno ao buscar horários de pico.' });
+    }
+});
+
+// --- NOVA ROTA: TEMPO MÉDIO DE ESPERA POR HORA ---
+router.get('/tempo-espera/:idEmpresa/:idFila', async (req, res) => {
+    const { idEmpresa, idFila } = req.params;
+
+    try {
+        const [tempos] = await db.query(`
+            SELECT
+                HOUR(DT_ENTRA) AS hora,
+                AVG(TIMESTAMPDIFF(MINUTE, DT_ENTRA, DT_APRE)) AS media_espera_minutos
+            FROM clientesfila
+            WHERE
+                ID_EMPRESA = ?
+                AND ID_FILA = ?
+                AND DT_ENTRA IS NOT NULL
+                AND DT_APRE IS NOT NULL
+                AND SITUACAO = 1
+            GROUP BY hora
+            ORDER BY hora;
+        `, [idEmpresa, idFila]);
+
+        if (tempos.length === 0) {
+            return res.status(404).json({ message: 'Nenhum dado de tempo de espera encontrado para esta empresa.' });
+        }
+
+        res.json(tempos);
+
+    } catch (err) {
+        console.error('Erro ao buscar tempo médio de espera:', err);
+        res.status(500).json({ error: 'Erro interno ao buscar tempo médio de espera.' });
+    }
+});
     
     return router;
 };
