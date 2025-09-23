@@ -21,48 +21,31 @@ const GestaoFilaClientes = () => {
   const { idEmpresa, dtMovto, idFila } = useParams();
   const navigate = useNavigate();
 
-<<<<<<< HEAD
+  // Estado base
   const [clientesFila, setClientesFila] = useState([]);
   const [loading, setLoading] = useState(true);
-=======
-    const [clientesFila, setClientesFila] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [showAddModal, setShowAddModal] = useState(false);
-    
-    // RENOMEADO: Agora usa 'MEIO_NOTIFICACAO'
-    const [novoCliente, setNovoCliente] = useState({ 
-        NOME: '', 
-        CPFCNPJ: '', 
-        DT_NASC: '', 
-        DDDCEL: '', 
-        NR_CEL: '',
-        MEIO_NOTIFICACAO: 'whatsapp',
-        EMAIL: ''
-    });
-    
-    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-    const [feedbackMessage, setFeedbackMessage] = useState('');
-    const [feedbackVariant, setFeedbackVariant] = useState('info');
->>>>>>> origin/Notificação_EntradaFila
-
   const [statusLoading, setStatusLoading] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false); // estado real do bloqueio vindo do back
   const [error, setError] = useState(null);
 
+  // Modais e feedback
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackVariant, setFeedbackVariant] = useState('info');
+
+  // Formulário do novo cliente (inclui campos da outra branch)
   const [novoCliente, setNovoCliente] = useState({
     NOME: '',
     CPFCNPJ: '',
     DT_NASC: '',
     DDDCEL: '',
-    NR_CEL: ''
+    NR_CEL: '',
+    MEIO_NOTIFICACAO: 'whatsapp',
+    EMAIL: ''
   });
 
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [feedbackVariant, setFeedbackVariant] = useState('info');
-
+  // Abas
   const [abaAtiva, setAbaAtiva] = useState('aguardando');
 
   const openFeedbackModal = (message, variant = 'info') => {
@@ -112,8 +95,7 @@ const GestaoFilaClientes = () => {
 
   /**
    * Busca o status (BLOCK) do back no mount e sempre que precisar (após toggle, etc.)
-   * Usa a rota disponível: GET /api/filas?idEmpresa=123
-   * Nela já vêm: ID_FILA, BLOCK (como boolean transformado no controller), SITUACAO...
+   * Usa a rota: GET /filas?idEmpresa=123 (com ID_FILA, BLOCK, SITUACAO...)
    */
   const fetchFilaStatus = useCallback(async () => {
     if (!idEmpresa || !idFila) return;
@@ -121,13 +103,12 @@ const GestaoFilaClientes = () => {
     try {
       const { data } = await api.get('/filas', { params: { idEmpresa } });
       const lista = Array.isArray(data) ? data : [];
-      // procura a fila específica pelo ID_FILA
       const item = lista.find((f) => String(f.ID_FILA) === String(idFila));
       if (item && typeof item.BLOCK !== 'undefined') {
         setIsBlocked(Boolean(item.BLOCK));
       }
     } catch (e) {
-      // silencioso (não bloqueia a UI)
+      // silencioso
     } finally {
       setStatusLoading(false);
     }
@@ -157,7 +138,7 @@ const GestaoFilaClientes = () => {
       });
     });
 
-    // Carrega clientes e, em paralelo, o status da fila
+    // Carrega clientes e status
     fetchClientesFilaCompleta();
     fetchFilaStatus();
 
@@ -203,296 +184,9 @@ const GestaoFilaClientes = () => {
   const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
     const situacaoOriginal = cliente.SITUACAO;
 
-<<<<<<< HEAD
+    // Otimista
     setClientesFila((prev) =>
       prev.map((c) => (c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c))
-=======
-        socket.on('cliente_atualizado', (data) => {
-            console.log("Recebida notificação de cliente atualizado:", data);
-            
-            setClientesFila(prevClientes => {
-                const clienteExistente = prevClientes.find(c => c.ID_CLIENTE === data.idCliente);
-                if (clienteExistente) {
-                    return prevClientes.map(cliente =>
-                        cliente.ID_CLIENTE === data.idCliente ? { ...cliente, SITUACAO: data.novaSituacao } : cliente
-                    );
-                } else {
-                    fetchClientesFilaCompleta();
-                    return prevClientes;
-                }
-            });
-        });
-
-        fetchClientesFilaCompleta();
-
-        return () => {
-            socket.disconnect();
-            console.log("Desconectado do servidor WebSocket.");
-        };
-
-    }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFilaCompleta]);
-
-    const getSituacaoText = (situacao) => {
-        switch (Number(situacao)) {
-            case 0: return 'Aguardando';
-            case 1: return 'Presença Confirmada';
-            case 2: return 'Não Compareceu';
-            case 3: return 'Chamado';
-            case 4: return 'Atendido';
-            default: return 'Desconhecido';
-        }
-    };
-
-    const getSituacaoClass = (situacao) => {
-        switch (Number(situacao)) {
-            case 0: return 'aguardando';
-            case 1: return 'presenca-confirmada';
-            case 2: return 'nao-compareceu';
-            case 3: return 'chamado';
-            case 4: return 'atendido';
-            default: return 'desconhecido';
-        }
-    };
-
-    const openFeedbackModal = (message, variant = 'info') => {
-        setFeedbackMessage(message);
-        setFeedbackVariant(variant);
-        setShowFeedbackModal(true);
-    };
-
-    const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
-        const situacaoOriginal = cliente.SITUACAO;
-
-        setClientesFila(prev => prev.map(c =>
-            c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c
-        ));
-
-        try {
-            await api.put(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`, { novaSituacao });
-            openFeedbackModal(mensagemSucesso, 'success');
-        } catch (err) {
-            console.error('Erro ao atualizar situação:', err);
-            openFeedbackModal(mensagemErro, 'danger');
-            setClientesFila(prev => prev.map(c =>
-                c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUacao: situacaoOriginal } : c
-            ));
-        }
-    };
-
-    const handleConfirmarPresenca = (cliente) => handleUpdateSituacao(cliente, 1, `Presença de ${cliente.NOME} confirmada!`, 'Erro ao confirmar presença.');
-    const handleNaoCompareceu = (cliente) => handleUpdateSituacao(cliente, 2, `${cliente.NOME} marcado como não compareceu.`, 'Erro ao marcar ausência.');
-    
-    const handleEnviarNotificacao = async (cliente) => {
-        const url = `/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/enviar-notificacao`;
-        try {
-            const response = await api.post(url, {});
-
-            setClientesFila(prev => prev.map(c =>
-                c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: 3 } : c
-            ));
-
-            openFeedbackModal(response.data.message, 'success');
-        } catch (err) {
-            console.error('Erro ao enviar notificação:', err);
-            const errorMessage = err.response?.data?.error || 'Erro ao agendar o timeout. Tente novamente.';
-            openFeedbackModal(errorMessage, 'danger');
-        }
-    };
-
-    const handleAdicionarCliente = async (e) => {
-        e.preventDefault();
-        try {
-            // Nenhum ajuste necessário aqui, pois a função já envia o estado `novoCliente` completo.
-            await api.post(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/adicionar-cliente`, novoCliente);
-            handleCloseAddModal();
-            openFeedbackModal('Cliente adicionado com sucesso!', 'success');
-            fetchClientesFilaCompleta();
-        } catch (err) {
-            const msg = err.response?.data?.error || 'Erro ao adicionar cliente.';
-            openFeedbackModal(msg, 'danger');
-        }
-    };
-
-    const handleCloseAddModal = () => setShowAddModal(false);
-    
-    // RENOMEADO: Agora usa 'MEIO_NOTIFICACAO' no estado inicial
-    const handleShowAddModal = () => {
-        setNovoCliente({ 
-            NOME: '', 
-            CPFCNPJ: '', 
-            DT_NASC: '', 
-            DDDCEL: '', 
-            NR_CEL: '',
-            MEIO_NOTIFICACAO: 'whatsapp',
-            EMAIL: ''
-        });
-        setShowAddModal(true);
-    };
-    
-    const handleNovoClienteChange = (e) => setNovoCliente(prev => ({ ...prev, [e.target.name]: e.target.value }));
-
-    const handleVerPainel = () => {
-        navigate(`/painel-fila/${idEmpresa}/${dtMovto}/${idFila}`);
-    };
-
-    const filtrarClientes = () => {
-        switch (abaAtiva) {
-            case 'aguardando':
-                return clientesFila.filter(cliente => Number(cliente.SITUACAO) === 0 || Number(cliente.SITUACAO) === 3);
-            case 'confirmados':
-                return clientesFila.filter(cliente => Number(cliente.SITUACAO) === 1 || Number(cliente.SITUACAO) === 4);
-            case 'nao-compareceu':
-                return clientesFila.filter(cliente => Number(cliente.SITUACAO) === 2);
-            default:
-                return [];
-        }
-    };
-
-    const clientesFiltrados = filtrarClientes();
-
-    return (
-        <div className="home-container">
-            <Menu />
-            <main className="main-content">
-                <section className="clientes-fila-section">
-                    <div className="section-header">
-                        <h2 className="section-title">Clientes na Fila</h2>
-                        <div className="header-buttons">
-                            <Button variant="primary" onClick={handleShowAddModal} className="me-2"><FaPlus /> Adicionar Cliente</Button>
-                            <Button variant="info" onClick={handleVerPainel}><FaTv /> Ver Painel</Button>
-                        </div>
-                    </div>
-                    
-                    <div className="tabs-container">
-                        <div className="tabs-list">
-                            <button
-                                className={`tab-button ${abaAtiva === 'aguardando' ? 'active' : ''}`}
-                                onClick={() => setAbaAtiva('aguardando')}
-                            >
-                                Aguardando & Chamados
-                            </button>
-                            <button
-                                className={`tab-button ${abaAtiva === 'confirmados' ? 'active' : ''}`}
-                                onClick={() => setAbaAtiva('confirmados')}
-                            >
-                                Confirmados
-                            </button>
-                            <button
-                                className={`tab-button ${abaAtiva === 'nao-compareceu' ? 'active' : ''}`}
-                                onClick={() => setAbaAtiva('nao-compareceu')}
-                            >
-                                Não Compareceu
-                            </button>
-                        </div>
-                    </div>
-
-                    {loading && <p>Carregando clientes...</p>}
-                    {error && <p className="error-message">{error}</p>}
-                    {!loading && clientesFiltrados.length === 0 && !error && (
-                        <p>Nenhum cliente na fila.</p>
-                    )}
-
-                    {!loading && clientesFiltrados.length > 0 && (
-                        <div className="table-responsive">
-                            <table className="clientes-fila-table">
-                                <thead>
-                                    <tr>
-                                        <th>NOME CLIENTE</th>
-                                        <th>CPF/CNPJ</th>
-                                        <th>ENTRADA</th>
-                                        <th>STATUS E AÇÕES</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {clientesFiltrados.map((cliente) => (
-                                        <tr key={String(cliente.ID_EMPRESA) + '-' + String(cliente.DT_MOVTO) + '-' + String(cliente.ID_FILA) + '-' + String(cliente.ID_CLIENTE)} className="linha-cliente">
-                                            <td>{cliente.NOME || 'N/A'}</td>
-                                            <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
-                                            <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
-                                            <td className="coluna-status-acoes">
-                                                <div className="conteudo-status-acoes">
-                                                    <div className="situacao-wrapper">
-                                                        <span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>
-                                                            {getSituacaoText(cliente.SITUACAO)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="botoes-acoes-contexto">
-                                                        <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title="Enviar Notificação"><FaPaperPlane /></button>
-                                                        <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title="Confirmar Presença"><FaCheckCircle /></button>
-                                                        <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title="Não Compareceu"><FaTimesCircle /></button>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </section>
-            </main>
-
-            <Modal show={showAddModal} onHide={handleCloseAddModal} centered>
-                <Modal.Header closeButton><Modal.Title>Adicionar Novo Cliente</Modal.Title></Modal.Header>
-                <Form onSubmit={handleAdicionarCliente}>
-                    <Modal.Body>
-                        {/* CAMPOS EXISTENTES */}
-                        <Form.Group className="mb-3"><Form.Label>Nome Completo*</Form.Label><Form.Control type="text" name="NOME" value={novoCliente.NOME} onChange={handleNovoClienteChange} required /></Form.Group>
-                        <Form.Group className="mb-3"><Form.Label>CPF/CNPJ*</Form.Label><Form.Control type="text" name="CPFCNPJ" value={novoCliente.CPFCNPJ} onChange={handleNovoClienteChange} required /></Form.Group>
-                        <Form.Group className="mb-3"><Form.Label>Data de Nascimento</Form.Label><Form.Control type="date" name="DT_NASC" value={novoCliente.DT_NASC} onChange={handleNovoClienteChange} /></Form.Group>
-                        
-                        {/* NOVO CAMPO: SELEÇÃO DA FORMA DE NOTIFICAÇÃO */}
-                        <Form.Group className="mb-3">
-                            <Form.Label>Forma de Notificação</Form.Label>
-                            <Form.Select 
-                                name="MEIO_NOTIFICACAO" 
-                                value={novoCliente.MEIO_NOTIFICACAO} 
-                                onChange={handleNovoClienteChange} 
-                                required
-                            >
-                                <option value="whatsapp">WhatsApp</option>
-                                <option value="sms">SMS</option>
-                                <option value="email">E-mail</option>
-                            </Form.Select>
-                        </Form.Group>
-                        
-                        {/* NOVO CAMPO CONDICIONAL: E-MAIL */}
-                        {novoCliente.MEIO_NOTIFICACAO === 'email' && (
-                            <Form.Group className="mb-3">
-                                <Form.Label>E-mail</Form.Label>
-                                <Form.Control 
-                                    type="email" 
-                                    name="EMAIL" 
-                                    value={novoCliente.EMAIL} 
-                                    onChange={handleNovoClienteChange} 
-                                    required={novoCliente.MEIO_NOTIFICACAO === 'email'}
-                                />
-                            </Form.Group>
-                        )}
-                        
-                        <div className="d-flex gap-3">
-                            <Form.Group><Form.Label>DDD</Form.Label><Form.Control type="text" name="DDDCEL" value={novoCliente.DDDCEL} onChange={handleNovoClienteChange} /></Form.Group>
-                            <Form.Group className="flex-grow-1"><Form.Label>Celular</Form.Label><Form.Control type="text" name="NR_CEL" value={novoCliente.NR_CEL} onChange={handleNovoClienteChange} /></Form.Group>
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={handleCloseAddModal}>Cancelar</Button>
-                        <Button variant="primary" type="submit">Adicionar à Fila</Button>
-                    </Modal.Footer>
-                </Form>
-            </Modal>
-
-            <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>{feedbackVariant === 'success' ? 'Sucesso!' : 'Aviso'}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>{feedbackMessage}</Modal.Body>
-                <Modal.Footer>
-                    <Button variant={feedbackVariant} onClick={() => setShowFeedbackModal(false)}>OK</Button>
-                </Modal.Footer>
-            </Modal>
-        </div>
->>>>>>> origin/Notificação_EntradaFila
     );
 
     try {
@@ -505,7 +199,9 @@ const GestaoFilaClientes = () => {
       openFeedbackModal(mensagemErro, 'danger');
       // rollback
       setClientesFila((prev) =>
-        prev.map((c) => (c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: situacaoOriginal } : c))
+        prev.map((c) =>
+          c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: situacaoOriginal } : c
+        )
       );
     }
   };
@@ -545,7 +241,15 @@ const GestaoFilaClientes = () => {
 
   const handleCloseAddModal = () => setShowAddModal(false);
   const handleShowAddModal = () => {
-    setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '' });
+    setNovoCliente({
+      NOME: '',
+      CPFCNPJ: '',
+      DT_NASC: '',
+      DDDCEL: '',
+      NR_CEL: '',
+      MEIO_NOTIFICACAO: 'whatsapp',
+      EMAIL: ''
+    });
     setShowAddModal(true);
   };
   const handleNovoClienteChange = (e) =>
@@ -561,10 +265,8 @@ const GestaoFilaClientes = () => {
    * - desired = false -> desbloqueia (BLOCK=0) e ativa (SITUACAO=1)
    *
    * Usa:
-   *   PUT /api/filas/:id_fila/block   { block: boolean }
-   *   PUT /api/filas/:id_fila/status  { situacao: boolean }
-   *
-   * E DEPOIS chama fetchFilaStatus() para, ao voltar na tela, a UI começar já com o estado certo.
+   *   PUT /filas/:id_fila/block   { block: boolean }
+   *   PUT /filas/:id_fila/status  { situacao: boolean }
    */
   const toggleBlockFila = async () => {
     if (!idFila) return;
@@ -582,7 +284,7 @@ const GestaoFilaClientes = () => {
       // 3) Atualiza UI imediata
       setIsBlocked(desired);
 
-      // 4) Garante que o estado inicial (quando reabrir a tela) venha correto
+      // 4) Garante estado correto quando reabrir a tela
       await fetchFilaStatus();
 
       openFeedbackModal(
@@ -772,6 +474,7 @@ const GestaoFilaClientes = () => {
         </section>
       </main>
 
+      {/* Modal Adicionar Cliente */}
       <Modal show={showAddModal} onHide={handleCloseAddModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Adicionar Novo Cliente</Modal.Title>
@@ -788,6 +491,7 @@ const GestaoFilaClientes = () => {
                 required
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>CPF/CNPJ*</Form.Label>
               <Form.Control
@@ -798,6 +502,7 @@ const GestaoFilaClientes = () => {
                 required
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Data de Nascimento</Form.Label>
               <Form.Control
@@ -807,6 +512,36 @@ const GestaoFilaClientes = () => {
                 onChange={handleNovoClienteChange}
               />
             </Form.Group>
+
+            {/* Forma de Notificação (da outra branch) */}
+            <Form.Group className="mb-3">
+              <Form.Label>Forma de Notificação</Form.Label>
+              <Form.Select
+                name="MEIO_NOTIFICACAO"
+                value={novoCliente.MEIO_NOTIFICACAO}
+                onChange={handleNovoClienteChange}
+                required
+              >
+                <option value="whatsapp">WhatsApp</option>
+                <option value="sms">SMS</option>
+                <option value="email">E-mail</option>
+              </Form.Select>
+            </Form.Group>
+
+            {/* Campo condicional: E-mail */}
+            {novoCliente.MEIO_NOTIFICACAO === 'email' && (
+              <Form.Group className="mb-3">
+                <Form.Label>E-mail</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="EMAIL"
+                  value={novoCliente.EMAIL}
+                  onChange={handleNovoClienteChange}
+                  required={novoCliente.MEIO_NOTIFICACAO === 'email'}
+                />
+              </Form.Group>
+            )}
+
             <div className="d-flex gap-3">
               <Form.Group>
                 <Form.Label>DDD</Form.Label>
@@ -839,6 +574,7 @@ const GestaoFilaClientes = () => {
         </Form>
       </Modal>
 
+      {/* Modal Feedback */}
       <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>{feedbackVariant === 'success' ? 'Sucesso!' : 'Aviso'}</Modal.Title>

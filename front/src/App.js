@@ -14,18 +14,12 @@ import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha';
 import Empresa from './components/Empresa/Empresa';
 import FilaLista from './components/ListarFilas/FilaLista';
 import GestaoFilaClientes from './components/GestaoFilaClientes/GestaoFilaClientes';
-<<<<<<< HEAD
 // Novo componente para a tela de listagem de filas configuradas
 import FilasCadastradas from './components/FilasCadastradas/FilasCadastradas';
 import Dashboard from './components/Dashboard/Dashboard';
 import Relatorio from './components/Relatorio/Relatorio';
 import Forbidden from './pages/Forbidden';
 import EntrarFilaPage from './pages/EntrarFilaPage';
-=======
-import FilasCadastradas from './components/FilasCadastradas/FilasCadastradas';
-import Dashboard from './components/Dashboard/Dashboard';
-import Relatorio from './components/Relatorio/Relatorio';
->>>>>>> origin/Notificação_EntradaFila
 import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao';
 
 function App() {
@@ -44,7 +38,6 @@ function App() {
         <Route path="/entrar-fila/:token" element={<EntrarFilaPage />} />
         {/* Seleção de empresa (apenas exige login - se quiser, pode envolver com PrivateRoute depois) */}
         <Route path="/escolher-empresa" element={<Empresa />} />
-<<<<<<< HEAD
         {/* Painel público para TV/monitor (mantém comportamento do outro branch) */}
         <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
 
@@ -106,16 +99,6 @@ function App() {
         />
 
         {/* Home: só exige login + empresa */}
-=======
-        <Route path="/configuracao/:id?" element={<ConfiguracaoFila />} />
-        <Route path="/filas-cadastradas" element={<FilasCadastradas />} />
-        <Route path="/filas" element={<FilaLista />} />
-        <Route path="/gestao-fila/:idEmpresa/:dtMovto/:idFila" element={<GestaoFilaClientes />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/relatorio" element={<Relatorio />} />
-        <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
-
->>>>>>> origin/Notificação_EntradaFila
         <Route
           path="/home"
           element={
@@ -124,6 +107,8 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
 
         {/* 403 */}
         <Route path="/403" element={<Forbidden />} />

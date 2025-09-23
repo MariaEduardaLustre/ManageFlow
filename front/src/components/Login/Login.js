@@ -1,13 +1,6 @@
-<<<<<<< HEAD
 import React, { useState } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
-=======
-import React, { useState } from 'react';
-import api from '../../services/api';
-import { useNavigate, Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; // Importe o hook de tradução
->>>>>>> origin/Notificação_EntradaFila
 
 // Ícones
 import { FaEnvelope, FaLock, FaApple } from "react-icons/fa";
@@ -21,7 +14,6 @@ import "./Login.css";
 import { Modal, Button } from "react-bootstrap";
 
 const Login = () => {
-<<<<<<< HEAD
   // A lógica de state e as funções permanecem as mesmas
   const [formData, setFormData] = useState({ email: "", senha: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -30,17 +22,6 @@ const Login = () => {
   const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
   const [mensagemSucessoModal, setMensagemSucessoModal] = useState("");
   const [loading, setLoading] = useState(false);
-=======
-    const { t } = useTranslation(); // Use o hook de tradução
-
-    const [formData, setFormData] = useState({ email: '', senha: '' });
-    const [showPassword, setShowPassword] = useState(false);
-    const [mostrarModalErro, setMostrarModalErro] = useState(false);
-    const [mensagemErroModal, setMensagemErroModal] = useState('');
-    const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
-    const [mensagemSucessoModal, setMensagemSucessoModal] = useState('');
-    const [loading, setLoading] = useState(false);
->>>>>>> origin/Notificação_EntradaFila
 
   const navigate = useNavigate();
 
@@ -75,7 +56,6 @@ const Login = () => {
       // (Opcional) disponibiliza a lista para a tela de escolha usar imediatamente
       sessionStorage.setItem("empresasDoUsuario", JSON.stringify(empresas));
 
-<<<<<<< HEAD
       setFormData({ email: "", senha: "" });
       setMensagemSucessoModal("Login realizado! Escolha sua empresa.");
       setMostrarModalSucesso(true);
@@ -89,25 +69,6 @@ const Login = () => {
   };
 
   const fecharModalErro = () => setMostrarModalErro(false);
-=======
-            if (empresas.length === 1) {
-                localStorage.setItem('empresaSelecionada', JSON.stringify(empresas[0]));
-                setMensagemSucessoModal(t('login.mensagens.sucesso.bodyEmpresaUnica'));
-            } else {
-                localStorage.removeItem('empresaSelecionada');
-                setMensagemSucessoModal(t('login.mensagens.sucesso.bodyMaisEmpresas'));
-            }
-            setMostrarModalSucesso(true);
-
-        } catch (err) {
-            const msg = err.response?.data || t('login.mensagens.erro.generico');
-            setMensagemErroModal(msg);
-            setMostrarModalErro(true);
-        } finally {
-            setLoading(false);
-        }
-    };
->>>>>>> origin/Notificação_EntradaFila
 
   const fecharModalSucesso = () => {
     setMostrarModalSucesso(false);
@@ -115,7 +76,6 @@ const Login = () => {
     navigate("/escolher-empresa");
   };
 
-<<<<<<< HEAD
   return (
     <div className="login-page-container">
       <div className="login-image-panel">
@@ -125,13 +85,6 @@ const Login = () => {
           className="responsive-image-cad"
         />
       </div>
-=======
-    const fecharModalSucesso = () => {
-        setMostrarModalSucesso(false);
-        const empresaSelecionada = localStorage.getItem('empresaSelecionada');
-        navigate(empresaSelecionada ? '/home' : '/escolher-empresa');
-    };
->>>>>>> origin/Notificação_EntradaFila
 
       <div className="login-form-section">
         <div className="cadastro-form-wrapper">
@@ -150,7 +103,6 @@ const Login = () => {
               />
             </div>
 
-<<<<<<< HEAD
             <div className="form-group password-group">
               <FaLock className="input-icon" />
               <input
@@ -167,68 +119,6 @@ const Login = () => {
               >
                 {showPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
               </span>
-=======
-            <div className="login-form-section">
-                <div className="cadastro-form-wrapper">
-                    <h2 className="form-title">{t('login.titulo')}</h2>
-                    <form onSubmit={handleSubmit} noValidate>
-                        <div className="form-group">
-                            <FaEnvelope className="input-icon" />
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder={t('login.placeholder.email')}
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group password-group">
-                            <FaLock className="input-icon" />
-                            <input
-                                type={showPassword ? 'text' : 'password'}
-                                name="senha"
-                                placeholder={t('login.placeholder.senha')}
-                                value={formData.senha}
-                                onChange={handleChange}
-                                required
-                            />
-                            <span
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="password-toggle-icon">
-                                {showPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
-                            </span>
-                        </div>
-
-                        <p className="login-link">
-                            {t('login.links.esqueciSenha')} <Link to="/esqueci-senha">{t('login.links.cliqueAqui')}</Link>
-                        </p>
-
-                        <button
-                            type="submit"
-                            className="btn-submit-cadastro"
-                            disabled={loading}>
-                            {loading ? t('login.botoes.entrando') : t('login.botoes.entrar')}
-                        </button>
-                    </form>
-
-                    <div className="social-login">
-                        <button className="btn-google">
-                            <FcGoogle className="social-icon" />
-                            {t('login.botoes.google')}
-                        </button>
-                        <button className="btn-apple">
-                            <FaApple className="social-icon" />
-                            {t('login.botoes.apple')}
-                        </button>
-                    </div>
-
-                    <p className="login-link">
-                        {t('login.links.semConta')} <Link to="/cadastro">{t('login.links.cadastreSe')}</Link>
-                    </p>
-                </div>
->>>>>>> origin/Notificação_EntradaFila
             </div>
             <p className="login-link">
               Esqueceu sua senha? <a href="/esqueci-senha">Clique aqui!</a>
@@ -243,7 +133,6 @@ const Login = () => {
             </button>
           </form>
 
-<<<<<<< HEAD
           <div className="social-login">
             <button className="btn-google">
               <FcGoogle className="social-icon" />
@@ -258,33 +147,6 @@ const Login = () => {
           <p className="login-link">
             Ainda não possui uma conta? <a href="/cadastro">Cadastre-se</a>
           </p>
-=======
-            {/* Modal de Sucesso */}
-            <Modal show={mostrarModalSucesso} onHide={fecharModalSucesso} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('login.mensagens.sucesso.titulo')}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>{mensagemSucessoModal}</Modal.Body>
-                <Modal.Footer>
-                    <Button variant="success" onClick={fecharModalSucesso}>
-                        {t('login.mensagens.modal.ok')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
-            {/* Modal de Erro */}
-            <Modal show={mostrarModalErro} onHide={fecharModalErro} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('login.mensagens.erro.titulo')}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>{mensagemErroModal}</Modal.Body>
-                <Modal.Footer>
-                    <Button variant="danger" onClick={fecharModalErro}>
-                        {t('login.mensagens.modal.fechar')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
->>>>>>> origin/Notificação_EntradaFila
         </div>
       </div>
 

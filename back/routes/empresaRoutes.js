@@ -1,9 +1,13 @@
+// routes/empresaRoutes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/connection');
-const { sendNotification, scheduleTimeoutForAbsence, sendInitialNotification } = require('../services/notificationService');
+const {
+  sendNotification,
+  scheduleTimeoutForAbsence,
+  sendInitialNotification
+} = require('../services/notificationService');
 
-<<<<<<< HEAD
 /**
  * Exporta uma fábrica opcional (io). Se seu server.js chamar sem io, funciona igual.
  *
@@ -18,17 +22,11 @@ const { sendNotification, scheduleTimeoutForAbsence, sendInitialNotification } =
 module.exports = (io = null) => {
   /**
    * POST /criar-empresa
-   * Mantém seu comportamento:
    * - Cria empresa
-   * - Cria perfis padrão (Administrador, Staff, Analista, Cliente) de forma idempotente
-   * - Vincula o criador como Administrador (NIVEL=1) de forma idempotente
+   * - Cria perfis padrão (Administrador, Staff, Analista, Cliente) (idempotente)
+   * - Vincula o criador como Administrador (NIVEL=1) (idempotente)
    */
   router.post('/criar-empresa', async (req, res) => {
-    console.log('Dados recebidos:', req.body);
-=======
-module.exports = (io) => {
->>>>>>> origin/Notificação_EntradaFila
-
     const {
       nomeEmpresa,
       cnpj,
@@ -41,7 +39,7 @@ module.exports = (io) => {
       logo
     } = req.body;
 
-    // Aceita tanto idUsuario quanto idUsuarioCriador (mantém compat)
+    // Aceita tanto idUsuario quanto idUsuarioCriador (compat)
     const idUsuarioCriador = req.body.idUsuario ?? req.body.idUsuarioCriador;
     if (!idUsuarioCriador) {
       return res.status(400).json({ error: 'idUsuario (ou idUsuarioCriador) é obrigatório.' });
@@ -60,7 +58,7 @@ module.exports = (io) => {
       );
       const idEmpresa = empresaResult.insertId;
 
-      // 2) Cria os 4 perfis padrão (idempotente)
+      // 2) Cria perfis padrão
       await connection.query(
         `INSERT IGNORE INTO perfil (NOME_PERFIL, ID_EMPRESA, NIVEL)
          VALUES
@@ -81,7 +79,7 @@ module.exports = (io) => {
       );
       if (!perfilAdmin) throw new Error('Perfil Administrador não encontrado após criar empresa.');
 
-      // 4) Vincula o criador como Administrador (idempotente)
+      // 4) Vincula o criador como Administrador
       await connection.query(
         `INSERT IGNORE INTO permissoes (ID_EMPRESA, ID_PERFIL, ID_USUARIO)
          VALUES (?,?,?)`,
@@ -101,7 +99,6 @@ module.exports = (io) => {
 
   /**
    * GET /empresas-do-usuario/:idUsuario
-   * Mantém a garantia de que o perfil é da MESMA empresa (join com p.ID_EMPRESA)
    */
   router.get('/empresas-do-usuario/:idUsuario', async (req, res) => {
     const { idUsuario } = req.params;
@@ -180,7 +177,7 @@ module.exports = (io) => {
 
   /**
    * GET /filas/:idEmpresa
-   * Mantém seu SELECT completo (com QDTE_MIN/QTDE_MAX)
+   * Mantém SELECT completo
    */
   router.get('/filas/:idEmpresa', async (req, res) => {
     const { idEmpresa } = req.params;
@@ -224,17 +221,19 @@ module.exports = (io) => {
 
   /**
    * GET /fila/:idEmpresa/:dtMovto/:idFila/clientes
-   * Mantém seu comportamento (match exato), mas com fallback para DATE(DT_MOVTO) se vier ISO.
+   * - Match exato por DT_MOVTO
+   * - Fallback por DATE(DT_MOVTO) quando vier ISO
+   * - Inclui MEIO_NOTIFICACAO para a UI
    */
   router.get('/fila/:idEmpresa/:dtMovto/:idFila/clientes', async (req, res) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
 
     try {
-      // 1) tenta match exato (seu comportamento original)
+      // 1) tenta match exato
       let [clientes] = await db.query(
         `SELECT
            ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, CPFCNPJ, RG, NOME,
-           DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, CAMPOS,
+           DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, MEIO_NOTIFICACAO, CAMPOS,
            DT_ENTRA, DT_CHAMA, DT_LIMAPRE, DT_APRE, DT_SAIDA,
            DV133_NR_USRDEL, SITUACAO
          FROM clientesfila
@@ -243,13 +242,13 @@ module.exports = (io) => {
         [idEmpresa, dtMovto, idFila]
       );
 
-      // 2) fallback: se veio ISO e não achou nada, tenta por DATE(DT_MOVTO)
+      // 2) fallback por DATE(DT_MOVTO), se veio ISO e não achou nada
       if (clientes.length === 0 && dtMovto.includes('T')) {
         const dtMovtoFormatted = dtMovto.split('T')[0];
         [clientes] = await db.query(
           `SELECT
              ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, CPFCNPJ, RG, NOME,
-             DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, CAMPOS,
+             DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, MEIO_NOTIFICACAO, CAMPOS,
              DT_ENTRA, DT_CHAMA, DT_LIMAPRE, DT_APRE, DT_SAIDA,
              DV133_NR_USRDEL, SITUACAO
            FROM clientesfila
@@ -259,21 +258,9 @@ module.exports = (io) => {
         );
       }
 
-<<<<<<< HEAD
       if (clientes.length === 0) {
         return res.status(404).json({ message: 'Nenhum cliente encontrado para esta fila.' });
       }
-=======
-        try {
-            const [clientes] = await db.query(`
-                SELECT
-                    ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, CPFCNPJ, RG, NOME, DT_NASC, EMAIL,
-                    NR_QTDPES, DDDCEL, NR_CEL, MEIO_NOTIFICACAO, CAMPOS, DT_ENTRA, DT_CHAMA, DT_LIMAPRE, DT_APRE, DT_SAIDA, SITUACAO
-                FROM clientesfila
-                WHERE ID_EMPRESA = ? AND DATE(DT_MOVTO) = ? AND ID_FILA = ?
-                ORDER BY DT_ENTRA ASC
-            `, [idEmpresa, dtMovtoFormatted, idFila]);
->>>>>>> origin/Notificação_EntradaFila
 
       return res.json(clientes);
     } catch (err) {
@@ -284,7 +271,6 @@ module.exports = (io) => {
 
   /**
    * GET /fila/:idEmpresa/:dtMovto/:idFila/clientes-nao-compareceu
-   * (Preservado do outro branch)
    */
   router.get('/fila/:idEmpresa/:dtMovto/:idFila/clientes-nao-compareceu', async (req, res) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
@@ -307,7 +293,7 @@ module.exports = (io) => {
 
   /**
    * PUT /fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/atualizar-situacao
-   * Mantém seu fluxo, mas aceita também 3(Chamado) e 4(Atendido) e emite via io se existir.
+   * Aceita 0,1,2,3,4. Atualiza carimbos quando aplicável e emite via io.
    */
   router.put('/fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/atualizar-situacao', async (req, res) => {
     const { idEmpresa, dtMovto, idFila, idCliente } = req.params;
@@ -321,17 +307,17 @@ module.exports = (io) => {
 
     let updateField = '';
     switch (Number(novaSituacao)) {
-      case 1: updateField = 'DT_APRE = ?'; break;   // Confirmado Presença
+      case 0: updateField = ''; break;              // Aguardando
+      case 1: updateField = 'DT_APRE = ?'; break;   // Presença Confirmada
       case 2: updateField = 'DT_SAIDA = ?'; break;  // Não Compareceu
       case 3: // Chamado
       case 4: // Atendido
-        updateField = '';                           // sem campo de carimbo adicional
+        updateField = '';                           // sem carimbo adicional
         break;
       default:
         return res.status(400).json({ error: 'Situação inválida fornecida.' });
     }
 
-    // Tenta exato; se não afetar linhas e dtMovto tiver T, tenta por DATE(DT_MOVTO)
     try {
       let query, params;
 
@@ -373,17 +359,9 @@ module.exports = (io) => {
         [result] = await db.query(query, params);
       }
 
-<<<<<<< HEAD
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'Cliente da fila não encontrado ou dados já atualizados.' });
       }
-=======
-    // ROTA CRÍTICA: ATUALIZAR STATUS DO CLIENTE NA FILA
-    router.put('/fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/atualizar-situacao', async (req, res) => {
-        const { idEmpresa, dtMovto, idFila, idCliente } = req.params;
-        const { novaSituacao } = req.body;
-        const dtMovtoFormatted = dtMovto.split('T')[0];
->>>>>>> origin/Notificação_EntradaFila
 
       // Emite notificação via WebSocket (se io foi passado)
       if (io) {
@@ -404,7 +382,9 @@ module.exports = (io) => {
 
   /**
    * POST /fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/enviar-notificacao
-   * (Preservado do outro branch; atualiza SITUACAO=3 e carimbo)
+   * - Atualiza SITUACAO=3 e DT_NOTIFICACAO
+   * - Agenda timeout (15min) para ausência
+   * - Emite via io
    */
   router.post('/fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/enviar-notificacao', async (req, res) => {
     const { idEmpresa, dtMovto, idFila, idCliente } = req.params;
@@ -420,6 +400,15 @@ module.exports = (io) => {
 
       if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'Cliente não encontrado para o agendamento.' });
+      }
+
+      // Agenda ausência em 15 minutos
+      const timeout = 15 * 60 * 1000;
+      try {
+        scheduleTimeoutForAbsence(idEmpresa, dtMovto, idFila, idCliente, timeout, io);
+      } catch (e) {
+        // não falha a requisição por conta do agendamento
+        console.warn('Falha ao agendar timeout de ausência:', e?.message || e);
       }
 
       if (io) {
@@ -440,20 +429,27 @@ module.exports = (io) => {
 
   /**
    * POST /fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente
-   * Mantém seu fluxo; emite via io se disponível.
+   * - Garante unicidade no dia/fila
+   * - Suporta MEIO_NOTIFICACAO (whatsapp|sms|email); se email for escolhido, exige EMAIL
+   * - Emite via io
+   * - Envia notificação inicial (opcional) com posição na fila
    */
   router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, res) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
-    const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES } = req.body;
+    const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES, MEIO_NOTIFICACAO } = req.body;
 
     if (!NOME || !CPFCNPJ) {
       return res.status(400).json({ error: 'Nome e CPF/CNPJ são obrigatórios.' });
+    }
+    if (MEIO_NOTIFICACAO === 'email' && !EMAIL) {
+      return res.status(400).json({ error: 'O campo E-mail é obrigatório para esta forma de notificação.' });
     }
 
     const connection = await db.getConnection();
     try {
       await connection.beginTransaction();
 
+      // Verifica se já há ID_CLIENTE (reutiliza) ou cria próximo
       const [clienteExistente] = await connection.query(
         'SELECT ID_CLIENTE FROM clientesfila WHERE CPFCNPJ = ? ORDER BY DT_ENTRA DESC LIMIT 1',
         [CPFCNPJ]
@@ -469,7 +465,7 @@ module.exports = (io) => {
         idCliente = (maxIdResult.maxId || 0) + 1;
       }
 
-<<<<<<< HEAD
+      // Evita duplicidade no mesmo dia/fila
       const [jaNaFila] = await connection.query(
         'SELECT 1 FROM clientesfila WHERE ID_EMPRESA = ? AND DT_MOVTO = ? AND ID_FILA = ? AND ID_CLIENTE = ?',
         [idEmpresa, dtMovto, idFila, idCliente]
@@ -479,58 +475,50 @@ module.exports = (io) => {
         await connection.rollback();
         return res.status(409).json({ error: 'Este cliente já se encontra na fila.' });
       }
-=======
-        try {
-            // Busque as informações do cliente, incluindo o MEIO_NOTIFICACAO
-            const [clientes] = await db.query(
-                'SELECT NOME, DDDCEL, NR_CEL, EMAIL, MEIO_NOTIFICACAO FROM clientesfila WHERE ID_EMPRESA = ? AND DT_MOVTO = ? AND ID_FILA = ? AND ID_CLIENTE = ?',
-                [idEmpresa, dtMovto, idFila, idCliente]
-            );
-            
-            if (clientes.length === 0) {
-                return res.status(404).json({ error: 'Cliente não encontrado.' });
-            }
-            
-            const cliente = clientes[0];
 
-            // A chamada para a função sendNotification estava aqui
-            await sendNotification(cliente);
-            
-            // Atualize a situação do cliente e o carimbo de data/hora
-            const [result] = await db.query(
-                'UPDATE clientesfila SET DT_NOTIFICACAO = NOW(), SITUACAO = 3 WHERE ID_EMPRESA = ? AND ID_FILA = ? AND ID_CLIENTE = ? AND DATE(DT_MOVTO) = ?',
-                [idEmpresa, idFila, idCliente, dtMovto.split('T')[0]]
-            );
-            
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ error: 'Cliente não encontrado para o agendamento.' });
-            }
-
-            // Agende o timeout
-            const timeout = 15 * 60 * 1000;
-            scheduleTimeoutForAbsence(idEmpresa, dtMovto, idFila, idCliente, timeout, io);
-
-            // Emita a notificação via WebSocket
-            io.emit('cliente_atualizado', { 
-                idEmpresa: idEmpresa,
-                idFila: idFila,
-                idCliente: idCliente,
-                novaSituacao: 3
-            });
->>>>>>> origin/Notificação_EntradaFila
-
+      // Insere
       await connection.query(
         `INSERT INTO clientesfila
           (ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE,
            CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL,
-           DT_ENTRA, SITUACAO)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?, NOW(), 0)`,
-        [idEmpresa, dtMovto, idFila, idCliente,
-         CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES || 0, DDDCEL, NR_CEL]
+           DT_ENTRA, SITUACAO, MEIO_NOTIFICACAO)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?, NOW(), 0, ?)`,
+        [
+          idEmpresa, dtMovto, idFila, idCliente,
+          CPFCNPJ, RG, NOME, DT_NASC, EMAIL || null, NR_QTDPES || 0, DDDCEL, NR_CEL,
+          MEIO_NOTIFICACAO || null
+        ]
       );
 
-<<<<<<< HEAD
+      // Posição atual na fila (aguardando/chamado)
+      const [[{ posicaoAtual }]] = await connection.query(
+        `SELECT COUNT(*) AS posicaoAtual
+           FROM clientesfila
+          WHERE ID_EMPRESA = ?
+            AND DATE(DT_MOVTO) = ?
+            AND ID_FILA = ?
+            AND (SITUACAO = 0 OR SITUACAO = 3)`,
+        [idEmpresa, (dtMovto.includes('T') ? dtMovto.split('T')[0] : dtMovto), idFila]
+      );
+
       await connection.commit();
+
+      // Envia notificação inicial se configurado
+      try {
+        const clienteCompleto = {
+          ...req.body,
+          ID_CLIENTE: idCliente,
+          ID_EMPRESA: idEmpresa,
+          ID_FILA: idFila,
+          DT_MOVTO: dtMovto
+        };
+        if (clienteCompleto.MEIO_NOTIFICACAO) {
+          await sendInitialNotification(clienteCompleto, posicaoAtual);
+        }
+      } catch (e) {
+        // Apenas loga; não falha o fluxo principal
+        console.warn('Falha ao enviar notificação inicial:', e?.message || e);
+      }
 
       if (io) {
         io.emit('cliente_atualizado', {
@@ -540,20 +528,6 @@ module.exports = (io) => {
           novaSituacao: 0
         });
       }
-=======
-    // Rota para adicionar cliente na fila
-    router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, res) => {
-        const { idEmpresa, dtMovto, idFila } = req.params;
-        const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES, MEIO_NOTIFICACAO } = req.body;
-
-        if (!NOME || !CPFCNPJ) {
-            return res.status(400).json({ error: 'Nome e CPF/CNPJ são obrigatórios.' });
-        }
-        
-        if (MEIO_NOTIFICACAO === 'email' && !EMAIL) {
-            return res.status(400).json({ error: 'O campo E-mail é obrigatório para esta forma de notificação.' });
-        }
->>>>>>> origin/Notificação_EntradaFila
 
       return res.status(201).json({ message: 'Cliente adicionado à fila com sucesso!' });
     } catch (error) {
@@ -565,156 +539,75 @@ module.exports = (io) => {
     }
   });
 
-<<<<<<< HEAD
+  /* ===================== ROTAS ANALÍTICAS (dashboard detalhado) ===================== */
+
+  // Horários de pico por fila (sem clientes com SITUACAO=2 "Não compareceu")
+  router.get('/horarios-de-pico/:idEmpresa/:idFila', async (req, res) => {
+    const { idEmpresa, idFila } = req.params;
+
+    try {
+      const [picos] = await db.query(
+        `
+        SELECT
+          HOUR(DT_ENTRA) AS hora,
+          COUNT(ID_CLIENTE) AS total_clientes
+        FROM clientesfila
+        WHERE ID_EMPRESA = ? AND ID_FILA = ? AND SITUACAO <> 2
+        GROUP BY hora
+        ORDER BY total_clientes DESC
+        `,
+        [idEmpresa, idFila]
+      );
+
+      if (picos.length === 0) {
+        return res.status(404).json({ message: 'Nenhum dado encontrado para identificar horários de pico.' });
+      }
+
+      const horarioDePico = picos[0];
+
+      res.json({
+        horarioDePico: `O horário de pico é às ${horarioDePico.hora}h, com ${horarioDePico.total_clientes} clientes.`,
+        dadosPorHora: picos
+      });
+    } catch (err) {
+      console.error('Erro ao buscar horários de pico:', err);
+      res.status(500).json({ error: 'Erro interno ao buscar horários de pico.' });
+    }
+  });
+
+  // Tempo médio de espera por hora (clientes com presença confirmada)
+  router.get('/tempo-espera/:idEmpresa/:idFila', async (req, res) => {
+    const { idEmpresa, idFila } = req.params;
+
+    try {
+      const [tempos] = await db.query(
+        `
+        SELECT
+          HOUR(DT_ENTRA) AS hora,
+          AVG(TIMESTAMPDIFF(MINUTE, DT_ENTRA, DT_APRE)) AS media_espera_minutos
+        FROM clientesfila
+        WHERE
+          ID_EMPRESA = ?
+          AND ID_FILA = ?
+          AND DT_ENTRA IS NOT NULL
+          AND DT_APRE IS NOT NULL
+          AND SITUACAO = 1
+        GROUP BY hora
+        ORDER BY hora
+        `,
+        [idEmpresa, idFila]
+      );
+
+      if (tempos.length === 0) {
+        return res.status(404).json({ message: 'Nenhum dado de tempo de espera encontrado para esta empresa.' });
+      }
+
+      res.json(tempos);
+    } catch (err) {
+      console.error('Erro ao buscar tempo médio de espera:', err);
+      res.status(500).json({ error: 'Erro interno ao buscar tempo médio de espera.' });
+    }
+  });
+
   return router;
 };
-=======
-        try {
-            await connection.beginTransaction();
-
-            const [clienteExistente] = await connection.query(
-                'SELECT ID_CLIENTE FROM clientesfila WHERE CPFCNPJ = ? ORDER BY DT_ENTRA DESC LIMIT 1',
-                [CPFCNPJ]
-            );
-
-            let idCliente;
-
-            if (clienteExistente.length > 0) {
-                idCliente = clienteExistente[0].ID_CLIENTE;
-            } else {
-                const [[maxIdResult]] = await connection.query(
-                    'SELECT MAX(ID_CLIENTE) as maxId FROM clientesfila'
-                );
-                idCliente = (maxIdResult.maxId || 0) + 1;
-            }
-
-            const [jaNaFila] = await connection.query(
-                'SELECT 1 FROM clientesfila WHERE ID_EMPRESA = ? AND DT_MOVTO = ? AND ID_FILA = ? AND ID_CLIENTE = ?',
-                [idEmpresa, dtMovto, idFila, idCliente]
-            );
-
-            if (jaNaFila.length > 0) {
-                await connection.rollback();
-                return res.status(409).json({ error: 'Este cliente já se encontra na fila.' });
-            }
-
-            await connection.query(
-                `INSERT INTO clientesfila (
-                    ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, 
-                    CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, 
-                    DT_ENTRA, SITUACAO, MEIO_NOTIFICACAO
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, ?)`,
-                [
-                    idEmpresa, dtMovto, idFila, idCliente,
-                    CPFCNPJ, RG, NOME, DT_NASC, EMAIL || null, NR_QTDPES || 0, DDDCEL, NR_CEL,
-                    MEIO_NOTIFICACAO
-                ]
-            );
-
-            const [[{ posicaoAtual }]] = await connection.query(
-                `SELECT COUNT(*) AS posicaoAtual 
-                 FROM clientesfila 
-                 WHERE ID_EMPRESA = ? 
-                   AND DATE(DT_MOVTO) = ? 
-                   AND ID_FILA = ? 
-                   AND (SITUACAO = 0 OR SITUACAO = 3)`,
-                [idEmpresa, dtMovto.split('T')[0], idFila]
-            );
-
-            const posicaoNaFila = posicaoAtual;
-            
-            await connection.commit();
-            
-            const clienteCompleto = { ...req.body, ID_CLIENTE: idCliente };
-            
-            if (clienteCompleto.MEIO_NOTIFICACAO) {
-                await sendInitialNotification(clienteCompleto, posicaoNaFila);
-            }
-
-            io.emit('cliente_atualizado', {
-                idEmpresa: idEmpresa,
-                idFila: idFila,
-                idCliente: idCliente,
-                novaSituacao: 0
-            });
-            
-            res.status(201).json({ 
-                message: 'Cliente adicionado à fila com sucesso! Notificação inicial enviada.' 
-            });
-
-        } catch (error) {
-            await connection.rollback();
-            console.error('Erro ao adicionar cliente na fila:', error);
-            res.status(500).json({ error: 'Erro interno ao adicionar cliente.' });
-        } finally {
-            connection.release();
-        }
-    });
-
-  // --- ROTA: BUSCAR HORÁRIOS DE PICO DA FILA ---
-router.get('/horarios-de-pico/:idEmpresa/:idFila', async (req, res) => {
-    const { idEmpresa, idFila } = req.params;
-
-    try {
-        const [picos] = await db.query(`
-            SELECT
-                HOUR(DT_ENTRA) AS hora,
-                COUNT(ID_CLIENTE) AS total_clientes
-            FROM clientesfila
-            WHERE ID_EMPRESA = ? AND ID_FILA = ? AND SITUACAO <> 2
-            GROUP BY hora
-            ORDER BY total_clientes DESC;
-        `, [idEmpresa, idFila]);
-
-        if (picos.length === 0) {
-            return res.status(404).json({ message: 'Nenhum dado encontrado para identificar horários de pico.' });
-        }
-
-        const horarioDePico = picos[0];
-
-        res.json({
-            horarioDePico: `O horário de pico é às ${horarioDePico.hora}h, com ${horarioDePico.total_clientes} clientes.`,
-            dadosPorHora: picos
-        });
-
-    } catch (err) {
-        console.error('Erro ao buscar horários de pico:', err);
-        res.status(500).json({ error: 'Erro interno ao buscar horários de pico.' });
-    }
-});
-
-// --- NOVA ROTA: TEMPO MÉDIO DE ESPERA POR HORA ---
-router.get('/tempo-espera/:idEmpresa/:idFila', async (req, res) => {
-    const { idEmpresa, idFila } = req.params;
-
-    try {
-        const [tempos] = await db.query(`
-            SELECT
-                HOUR(DT_ENTRA) AS hora,
-                AVG(TIMESTAMPDIFF(MINUTE, DT_ENTRA, DT_APRE)) AS media_espera_minutos
-            FROM clientesfila
-            WHERE
-                ID_EMPRESA = ?
-                AND ID_FILA = ?
-                AND DT_ENTRA IS NOT NULL
-                AND DT_APRE IS NOT NULL
-                AND SITUACAO = 1
-            GROUP BY hora
-            ORDER BY hora;
-        `, [idEmpresa, idFila]);
-
-        if (tempos.length === 0) {
-            return res.status(404).json({ message: 'Nenhum dado de tempo de espera encontrado para esta empresa.' });
-        }
-
-        res.json(tempos);
-
-    } catch (err) {
-        console.error('Erro ao buscar tempo médio de espera:', err);
-        res.status(500).json({ error: 'Erro interno ao buscar tempo médio de espera.' });
-    }
-});
-    
-    return router;
-};
->>>>>>> origin/Notificação_EntradaFila
