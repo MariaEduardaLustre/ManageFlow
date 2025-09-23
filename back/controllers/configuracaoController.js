@@ -746,3 +746,62 @@ exports.publicJoinByToken = async (req, res) => {
     conn.release();
   }
 };
+
+// Função para contar quantas filas uma empresa tem configuradas
+exports.contarFilasPorEmpresa = async (req, res) => {
+    const { id_empresa } = req.params; // Ou extraia da sessão/token
+
+    if (!id_empresa) {
+        return res.status(400).json({ erro: 'ID da empresa é obrigatório.' });
+    }
+
+    const sql = `SELECT COUNT(*) AS totalFilas FROM ConfiguracaoFila WHERE ID_EMPRESA = ?`;
+
+    try {
+        const [results] = await db.execute(sql, [id_empresa]);
+        const totalFilas = results[0].totalFilas || 0;
+
+        res.status(200).json({ id_empresa, totalFilas });
+    } catch (err) {
+        console.error('Erro ao contar filas por empresa:', err);
+        res.status(500).json({ erro: 'Erro interno ao contar filas.', detalhes: err.message });
+    }
+};
+
+exports.listarFilasPorEmpresa = async (req, res) => {
+  const { id_empresa } = req.params;
+
+  if (!id_empresa) {
+    return res.status(400).json({ erro: 'ID da empresa é obrigatório.' });
+  }
+
+  const sql = `
+  SELECT 
+    cf.ID_CONF_FILA,
+    cf.NOME_FILA,
+    COALESCE(COUNT(clf.ID_CLIENTE), 0) AS contagem,
+    cf.DT_CRIACAO AS data_configuracao,
+    cf.DT_ALTERACAO AS data_atualizacao
+  FROM 
+    configuracaofila cf
+  LEFT JOIN 
+    fila f ON f.ID_CONF_FILA = cf.ID_CONF_FILA
+  LEFT JOIN 
+    clientesfila clf ON clf.ID_FILA = f.ID_FILA AND clf.ID_EMPRESA = ?
+  WHERE 
+    cf.ID_EMPRESA = ?
+  GROUP BY 
+    cf.ID_CONF_FILA, cf.NOME_FILA, cf.DT_CRIACAO, cf.DT_ALTERACAO
+  ORDER BY 
+    data_configuracao DESC;
+`;
+
+  try {
+    const [results] = await db.execute(sql, [id_empresa, id_empresa]);
+    res.status(200).json(results);
+  } catch (err) {
+    console.error('Erro ao listar filas por empresa:', err);
+    res.status(500).json({ erro: 'Erro interno ao listar filas.', detalhes: err.message });
+  }
+};
+

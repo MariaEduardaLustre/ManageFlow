@@ -10,3 +10,39 @@
   padding: 40px;
   box-sizing: border-box;
 }
+
+.btn-exportar {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  margin: 10px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.btn-exportar:hover {
+  background-color: #45a049;
+}
+
+.tabela-container {
+  margin-top: 30px;
+  overflow-x: auto;
+}
+
+.tabela-relatorio {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabela-relatorio th,
+.tabela-relatorio td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.tabela-relatorio th {
+  background-color: #f5f5f5;
+}

@@ -322,3 +322,36 @@ exports.applyConfigToToday = async (req, res) => {
     conn.release();
   }
 };
+// Função para listar as filas configuradas por empresa
+exports.listarFilasPorEmpresa = async (req, res) => {
+    const { id_empresa } = req.params; // ID da empresa passada como parâmetro
+
+    if (!id_empresa) {
+        return res.status(400).json({ erro: 'ID da empresa é obrigatório.' });
+    }
+
+    const sql = `
+        SELECT 
+            f.NOME_FILA, 
+            COUNT(cf.ID_FILA) AS contagem, 
+            COALESCE(f.DT_ALTERACAO, f.INI_VIG, NOW()) AS data_configuracao
+        FROM 
+            clientesfila cf
+        JOIN 
+            ConfiguracaoFila f ON f.ID_FILA = cf.ID_FILA
+        WHERE 
+            cf.ID_EMPRESA = ?
+        GROUP BY 
+            f.NOME_FILA
+        ORDER BY 
+            data_configuracao DESC
+    `;
+
+    try {
+        const [results] = await db.execute(sql, [id_empresa]);
+        res.status(200).json(results); // Retorna as filas encontradas
+    } catch (err) {
+        console.error('Erro ao listar filas por empresa:', err);
+        res.status(500).json({ erro: 'Erro interno ao listar filas.', detalhes: err.message });
+    }
+};
