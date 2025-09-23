@@ -1,34 +1,47 @@
+:root {
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 70px;
+}
+
+/* Compensa o conteúdo para não ficar por baixo da sidebar fixa */
+body.has-sidebar {
+  padding-left: var(--sidebar-width);
+  transition: padding-left 0.3s ease;
+}
+body.has-sidebar.sidebar-collapsed {
+  padding-left: var(--sidebar-collapsed-width);
+}
+
+/* ===== SIDEBAR ===== */
 .sidebar {
-  width: 240px;
-  height: 100vh;
+  position: fixed;          /* <- mantém fixa */
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  height: 100dvh;           /* considera barras móveis do mobile */
   background-color: #fff;
   border-right: 1px solid #e5e5e5;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
-  overflow: hidden;
+  transition: width 0.3s ease, padding 0.3s ease;
+  overflow: hidden;         /* esconde conteúdo quando colapsa */
   box-sizing: border-box;
   padding: 20px;
-}
-.sidebar.sidebar.collapsed {
-  padding: 0 !important;
-  align-items: center;
+  z-index: 1000;            /* fica sobre o conteúdo */
 }
 
 .sidebar.collapsed {
-  width: 70px;
+  width: var(--sidebar-collapsed-width);
+  padding: 12px 8px;
 }
 
+/* Cabeçalho */
 .sidebar-header {
   display: flex;
   align-items: center;
-  padding: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   justify-content: space-between;
-}
-
-.sidebar-footer{
-    margin-top: auto;
 }
 
 .sidebar-logo img {
@@ -40,14 +53,25 @@
 
 .sidebar.collapsed .sidebar-logo img {
   width: 30px;
+  max-height: 30px;
 }
 
+/* Botão de toggle */
 .toggle-btn {
   background-color: transparent;
   border: none;
   cursor: pointer;
   font-size: 1.2rem;
   color: #a0a4b8;
+  display: grid;
+  place-items: center;
+}
+
+/* Menu */
+.sidebar-menu {
+  flex: 1;                  /* ocupa o meio, permitindo footer grudar embaixo */
+  overflow-y: auto;         /* se o menu passar da tela, scrolla só dentro da sidebar */
+  scrollbar-width: thin;
 }
 
 .sidebar-menu ul {
@@ -55,31 +79,17 @@
   padding: 0;
   margin: 0;
 }
-.sidebar nav ul li {
-    margin-bottom: 0;
-}
-.sidebar-menu li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #a0a4b8;
-  font-size: 0.95rem;
-  padding: 12px 15px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
 
 .sidebar-menu a.sidebar-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #a0a4b8;
+  color: #6b7280;           /* cinza 500 */
   font-size: 0.95rem;
-  padding: 12px 15px;
+  padding: 12px 12px;
   border-radius: 8px;
   text-decoration: none;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar-menu a.sidebar-link:hover {
@@ -89,26 +99,16 @@
 .sidebar-menu a.sidebar-link.active {
   background-color: #e9efff;
   color: #3A5AFE;
-  font-weight: bold;
-}
-
-
-.sidebar-menu li:hover {
-  background-color: #f2f4ff;
-}
-
-.sidebar-menu li.active {
-  background-color: #e9efff;
-  color: #3A5AFE;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .sidebar.collapsed .sidebar-menu .sidebar-link span {
-  display: none;
+  display: none;            /* esconde textos no estado colapsado */
 }
 
+/* Rodapé */
 .sidebar-footer {
-  padding: 15px;
+  padding-top: 12px;
   border-top: 1px solid #e0e0e0;
 }
 
@@ -118,47 +118,38 @@
   gap: 8px;
   background: none;
   border: none;
-  color: red;
-  font-weight: bold;
+  color: #e11d48;           /* vermelho */
+  font-weight: 600;
   cursor: pointer;
+  padding: 8px 0;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 15px;
+  margin-top: 12px;
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
+.avatar-icon {
+  font-size: 28px;
+  opacity: 0.85;
 }
 
 .user-name {
   font-weight: 600;
-  color: #333;
+  color: #111827;
 }
 
 .user-role {
   font-size: 0.8rem;
-  color: #888;
+  color: #6b7280;
 }
 
+/* Responsivo */
 @media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    z-index: 1000;
-    height: 100vh;
-    left: 0;
-    top: 0;
-  }
-
-  .home-content, .main-content {
-    margin-left: 70px; /* ou 240px se expandido */
-    transition: margin 0.3s ease;
+  /* Em mobile, já iniciamos colapsado via JS e mantemos fixo igual */
+  body.has-sidebar {
+    padding-left: var(--sidebar-collapsed-width);
   }
 }
-

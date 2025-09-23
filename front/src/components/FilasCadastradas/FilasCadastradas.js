@@ -1,7 +1,7 @@
 // src/components/FilasCadastradas/FilasCadastradas.js
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { FaPlus, FaSearch } from 'react-icons/fa';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaPlus, FaSearch, FaDownload, FaTimes, FaCopy, FaQrcode, FaEdit, FaLink } from 'react-icons/fa';
 import Menu from '../Menu/Menu';
 import api from '../../services/api';
 import './FilasCadastradas.css';
@@ -10,8 +10,16 @@ const FilasCadastradas = () => {
   const [filas, setFilas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Modal de QR
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrUrl, setQrUrl] = useState(null);
+  const [qrToken, setQrToken] = useState(null);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState(null);
+
+  const [search, setSearch] = useState('');
   const navigate = useNavigate();
-  const location = useLocation();
 
   const empresaSelecionada = JSON.parse(localStorage.getItem('empresaSelecionada') || 'null');
   const idEmpresa = empresaSelecionada?.ID_EMPRESA || null;
@@ -38,7 +46,7 @@ const FilasCadastradas = () => {
 
   const handleEditFila = (id_conf_fila) => navigate(`/configuracao/${id_conf_fila}`);
 
-  // --- copiar com fallback para HTTP em IP local ---
+  // copiar com fallback
   const copyToClipboard = async (text) => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -57,45 +65,89 @@ const FilasCadastradas = () => {
       }
       alert('Link copiado!');
     } catch (e) {
-      // último recurso: mostra o prompt pro usuário copiar manualmente
       console.error('Falha ao copiar', e);
       window.prompt('Copie o link:', text);
     }
   };
 
-  // Baixar QR (rota protegida com JWT)
-  const handleDownloadQr = async (f) => {
+  // Abre modal, define token e já GERA o QR automaticamente
+  const openQrModal = (f) => {
+    const tokenFila =
+      f.token_fila ||
+      (f.join_url ? String(f.join_url).split('/').pop() : null);
+
+    // limpa estado anterior
+    if (qrUrl) URL.revokeObjectURL(qrUrl);
+    setQrUrl(null);
+    setQrError(null);
+    setQrLoading(false);
+    setQrToken(null);
+
+    if (!tokenFila) {
+      setQrError('Token da fila não encontrado.');
+      setQrOpen(true);
+      return;
+    }
+
+    setQrToken(tokenFila);
+    setQrOpen(true);
+    // gera automaticamente
+    generateQr(tokenFila);
+  };
+
+  const generateQr = async (token) => {
+    setQrError(null);
+    setQrLoading(true);
     try {
-      const tokenFila =
-        f.token_fila ||
-        (f.join_url ? String(f.join_url).split('/').pop() : null);
-
-      if (!tokenFila) {
-        alert('Token da fila não encontrado.');
-        return;
-      }
-
       const apiBase = String(api.defaults.baseURL || '').replace(/\/$/, '');
-      const url = `${apiBase}/configuracao/qr/${tokenFila}`;
+      const url = `${apiBase}/configuracao/qr/${token}`;
       const jwt = localStorage.getItem('token');
 
       const resp = await fetch(url, { headers: jwt ? { Authorization: `Bearer ${jwt}` } : {} });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
       const blob = await resp.blob();
+      if (qrUrl) URL.revokeObjectURL(qrUrl);
       const href = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = href;
-      a.download = `qr-fila-${tokenFila}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(href);
+      setQrUrl(href);
     } catch (e) {
-      console.error('Erro ao gerar/baixar QR:', e);
-      alert('Não foi possível gerar o QR Code.');
+      console.error('Erro ao gerar QR:', e);
+      setQrError('Não foi possível gerar o QR Code.');
+    } finally {
+      setQrLoading(false);
     }
   };
+
+  const handleCloseQr = () => {
+    setQrOpen(false);
+    if (qrUrl) {
+      URL.revokeObjectURL(qrUrl);
+      setQrUrl(null);
+    }
+    setQrToken(null);
+    setQrError(null);
+    setQrLoading(false);
+  };
+
+  const handleDownloadQrFromModal = () => {
+    if (!qrUrl || !qrToken) return;
+    const a = document.createElement('a');
+    a.href = qrUrl;
+    a.download = `qr-fila-${qrToken}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const filteredFilas = useMemo(() => {
+    const txt = (search || '').trim().toLowerCase();
+    if (!txt) return filas;
+    return filas.filter(f =>
+      String(f.nome_fila || '').toLowerCase().includes(txt) ||
+      String(f.join_url || '').toLowerCase().includes(txt) ||
+      String(f.id_conf_fila || '').toLowerCase().includes(txt)
+    );
+  }, [filas, search]);
 
   return (
     <div className="dashboard-container">
@@ -122,9 +174,18 @@ const FilasCadastradas = () => {
             <div className="search-sort-section">
               <div className="search-bar">
                 <FaSearch />
-                <input type="text" placeholder="Search" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome, link ou ID"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
-              <div className="sort-by">Short by: <select><option>Newest</option></select></div>
+              <div className="sort-by">Ordenar por:
+                <select defaultValue="Newest">
+                  <option>Newest</option>
+                </select>
+              </div>
             </div>
 
             <table>
@@ -135,7 +196,7 @@ const FilasCadastradas = () => {
                   <th>Link de entrada</th>
                   <th>QR Code</th>
                   <th>Status</th>
-                  <th>Ações</th>
+                  <th style={{ textAlign: 'right' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,47 +204,100 @@ const FilasCadastradas = () => {
                   <tr><td colSpan="6" style={{ textAlign: 'center' }}>Carregando…</td></tr>
                 ) : error ? (
                   <tr><td colSpan="6" style={{ textAlign: 'center', color: 'red' }}>{error}</td></tr>
-                ) : filas.length === 0 ? (
+                ) : filteredFilas.length === 0 ? (
                   <tr><td colSpan="6" style={{ textAlign: 'center' }}>Nenhuma configuração encontrada.</td></tr>
-                ) : filas.map((f) => (
-                  <tr key={f.id_conf_fila}>
-                    <td
-                      onClick={() => handleEditFila(f.id_conf_fila)}
-                      style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline' }}
-                    >
-                      {f.nome_fila}
-                    </td>
-                    <td>{f.id_conf_fila}</td>
-                    <td>
-                      {f.join_url ? (
-                        <>
-                          <a href={f.join_url} target="_blank" rel="noreferrer">{f.join_url}</a>
-                          <button style={{ marginLeft: 8 }} onClick={() => copyToClipboard(f.join_url)}>
-                            Copiar
+                ) : filteredFilas.map((f) => {
+                  const joinUrl = f.join_url || '';
+                  const canQr = Boolean(f.token_fila || f.join_url);
+                  return (
+                    <tr key={f.id_conf_fila}>
+                      <td
+                        onClick={() => handleEditFila(f.id_conf_fila)}
+                        className="link-cell"
+                        title="Editar configuração"
+                      >
+                        {f.nome_fila}
+                      </td>
+                      <td>{f.id_conf_fila}</td>
+                      <td>
+                        {joinUrl ? (
+                          <div className="link-group">
+                            <a className="link" href={joinUrl} target="_blank" rel="noreferrer">
+                              <FaLink style={{ marginRight: 6 }} />
+                              {joinUrl}
+                            </a>
+                            <button className="btn btn-outline btn-sm" onClick={() => copyToClipboard(joinUrl)}>
+                              <FaCopy /> <span>Copiar</span>
+                            </button>
+                          </div>
+                        ) : '—'}
+                      </td>
+                      <td>
+                        {canQr ? (
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => openQrModal(f)}
+                            title="Abrir modal do QR (gera automático)"
+                          >
+                            <FaQrcode /> <span>QR Code</span>
                           </button>
-                        </>
-                      ) : '—'}
-                    </td>
-                    <td>
-                      {(f.token_fila || f.join_url) ? (
-                        <button onClick={() => handleDownloadQr(f)}>Gerar QR Code</button>
-                      ) : '—'}
-                    </td>
-                    <td>{f.situacao ? 'Ativa' : 'Inativa'}</td>
-                    <td>
-                      <button onClick={() => handleEditFila(f.id_conf_fila)}>Editar</button>
-                    </td>
-                  </tr>
-                ))}
+                        ) : '—'}
+                      </td>
+                      <td>
+                        <span className={`badge ${f.situacao ? 'badge-success' : 'badge-danger'}`}>
+                          {f.situacao ? 'Ativa' : 'Inativa'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button className="btn btn-primary btn-sm" onClick={() => handleEditFila(f.id_conf_fila)}>
+                          <FaEdit /> <span>Editar</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
             <div className="pagination">
-              <span>Mostrando {filas.length} itens</span>
+              <span>Mostrando {filteredFilas.length} itens</span>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Modal de QR */}
+      {qrOpen && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+          <div className="modal">
+            <div className="modal-header">
+              <h3 id="qr-title">QR Code da Fila {qrToken ? `(${qrToken})` : ''}</h3>
+              <button className="icon-btn" onClick={handleCloseQr} aria-label="Fechar">
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {qrLoading && <div className="qr-loading">Gerando QR…</div>}
+              {qrError && <div className="qr-error">{qrError}</div>}
+              {!qrLoading && !qrError && qrUrl && (
+                <div className="qr-wrap">
+                  <img src={qrUrl} alt="QR Code" className="qr-image" />
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+
+              <div className="spacer" />
+
+              <button className="btn btn-primary" onClick={handleDownloadQrFromModal} disabled={!qrUrl}>
+                <FaDownload /> <span>Baixar PNG</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

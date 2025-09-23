@@ -12,7 +12,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.0.52:3000',
+  'http://192.168.0.53:3000',
   process.env.PUBLIC_FRONT_BASE_URL,
   process.env.FRONT_ORIGIN
 ].filter(Boolean);
@@ -42,6 +42,9 @@ app.use((req, _res, next) => {
 const configuracaoPublic = require('./routes/configuracaoPublicRoutes');
 app.use('/api/configuracao', configuracaoPublic);
 
+const dashboardRoutes = require('./routes/dashboardRoutes')(io);
+app.use('/api/dashboard', dashboardRoutes);
+
 // 🔸 Restante das rotas...
 const usuarioRoutes = require('./routes/usuarioRoutes');
 app.use('/api', usuarioRoutes);
@@ -55,9 +58,11 @@ app.use('/api/empresas', authMiddleware, empresaRoutesResolved);
 const configuracaoRoutes = require('./routes/configuracaoRoutes');
 app.use('/api/configuracao', authMiddleware, configuracaoRoutes);
 
-let filaRoutes;
+const filaRoutes = require('./routes/filaRoutes');
 try { filaRoutes = require('./routes/filaRoutes'); } catch {}
 if (filaRoutes) app.use('/api/filas', authMiddleware, filaRoutes);
+
+app.use('/api/filas', /* opcional: authMiddleware, */ filaRoutes);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => console.log(`API ouvindo em http://0.0.0.0:${PORT}`));

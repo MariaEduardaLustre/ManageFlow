@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/FormularioConfiguracaoFila.js
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../services/api';        // <<< use o axios com interceptor
+import api from '../../services/api';
 import './configuracao.css';
 
 const FormularioConfiguracaoFila = () => {
@@ -21,7 +22,7 @@ const FormularioConfiguracaoFila = () => {
     },
     mensagem: '',
     img_banner: { url: '' },
-    img_logo: { url: '' }, // só front
+    img_logo: { url: '' },
     temp_tol: '',
     qtde_min: '',
     qtde_max: '',
@@ -41,8 +42,30 @@ const FormularioConfiguracaoFila = () => {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [tokenFila, setTokenFila] = useState('');
 
+  // helpers de data
+  const todayYmd = useMemo(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return Number(`${y}${m}${day}`);
+  }, []);
+
+  const dentroDaVigencia = useMemo(() => {
+    const ini = formData.ini_vig ? Number(String(formData.ini_vig).replace(/-/g, '')) : null;
+    const fim = formData.fim_vig ? Number(String(formData.fim_vig).replace(/-/g, '')) : null;
+    const okIni = ini == null || todayYmd >= ini;
+    const okFim = fim == null || todayYmd <= fim;
+    return okIni && okFim;
+  }, [formData.ini_vig, formData.fim_vig, todayYmd]);
+
+  const statusEfetivo = useMemo(() => {
+    if (!dentroDaVigencia) return 'Inativa (fora de vigência)';
+    return formData.situacao === 1 ? 'Ativa' : 'Inativa';
+  }, [formData.situacao, dentroDaVigencia]);
+
   useEffect(() => {
-    const fetchConfiguracaoFila = async () => {
+    const fetchAll = async () => {
       if (!id) { setLoading(false); return; }
       try {
         const { data } = await api.get(`/configuracao/configuracao-fila/${id}`);
@@ -64,7 +87,7 @@ const FormularioConfiguracaoFila = () => {
               : (typeof data.campos === 'object' && data.campos ? data.campos : {}))
           },
           img_banner: data.img_banner || { url: '' },
-          img_logo: { url: '' },
+          img_logo: data.img_logo || { url: '' },
           temp_tol: data.temp_tol ?? '',
           qtde_min: data.qtde_min ?? '',
           qtde_max: data.qtde_max ?? '',
@@ -81,7 +104,7 @@ const FormularioConfiguracaoFila = () => {
         setLoading(false);
       }
     };
-    fetchConfiguracaoFila();
+    fetchAll();
   }, [id, idEmpresa]);
 
   const handleChange = (e) => {
@@ -142,7 +165,7 @@ const FormularioConfiguracaoFila = () => {
 
     // imagens
     dataToSend.img_banner = dataToSend.img_banner?.url ? { url: dataToSend.img_banner.url } : { url: '' };
-    dataToSend.img_logo = dataToSend.img_logo?.url ? { url: dataToSend.img_logo.url } : { url: '' };
+    dataToSend.img_logo   = dataToSend.img_logo?.url   ? { url: dataToSend.img_logo.url }   : { url: '' };
 
     // booleanos -> tinyint
     dataToSend.per_sair = dataToSend.per_sair ? 1 : 0;
@@ -167,6 +190,19 @@ const FormularioConfiguracaoFila = () => {
         setTokenFila(data.token_fila || '');
         setLinkConvite(data.join_url || '');
         setQrDataUrl(data.qr_data_url || '');
+      }
+
+      // ✅ aplica a configuração na fila do dia (somente INATIVAR/ATIVAR, sem bloquear aqui)
+      try {
+        const idConf = Number(id || data.id_conf_fila || data.ID_CONF_FILA);
+        if (idConf) {
+          await api.post('/filas/apply-config', { idConfFila: idConf });
+        }
+      } catch (e2) {
+        console.error('Falha ao aplicar estado da configuração na fila de hoje:', e2);
+        // Não bloqueia o fluxo; apenas alerta
+        setMensagemErroModal('Configuração salva, mas não foi possível refletir na fila de hoje.');
+        setMostrarModalErro(true);
       }
 
       setMensagemSucessoModal(`Configuração de fila ${id ? 'atualizada' : 'cadastrada'} com sucesso!${!id && data.token_fila ? ' Token: ' + data.token_fila : ''}`);
@@ -211,25 +247,19 @@ const FormularioConfiguracaoFila = () => {
   };
   const fecharModalErro = () => setMostrarModalErro(false);
 
-  const camposIcons = {
-    cpf: '/imagens/cpf.png',
-    rg: '/imagens/rg.png',
-    telefone: '/imagens/telefone.png',
-    endereco: '/imagens/endereco.png',
-    data_nascimento: '/imagens/data-nascimento.png',
-    email: '/imagens/o-email.png',
-    qtde_pessoas: '/imagens/pessoas-icon.png',
-  };
-  const uploadIconPath = '/imagens/upload-icon.png';
-
   if (loading) return <p>Carregando formulário...</p>;
 
   return (
     <div className="configuracao-fila">
       <div className="header">
         <button className="voltar-btn" onClick={() => navigate('/filas-cadastradas')}>← Voltar</button>
-        <h2>{id ? 'Editar Configuração de Fila' : 'Configuração de Fila'}</h2>
-        <p className="subtitle">Preencha os dados abaixo para {id ? 'editar a' : 'configurar a sua'} fila de espera</p>
+        <div>
+          <h2>{id ? 'Editar Configuração de Fila' : 'Configuração de Fila'}</h2>
+          <p className="subtitle">
+            Status efetivo: <strong>{statusEfetivo}</strong>
+            {!dentroDaVigencia && ' — ajuste a vigência para reativar.'}
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -274,6 +304,23 @@ const FormularioConfiguracaoFila = () => {
                 <span>Bloqueia entrada de clientes a mais de 8km do estabelecimento.</span>
               </div>
             </div>
+
+            {/* Situação da configuração */}
+            <div className="toggle-switch-container">
+              <div className="toggle-text">
+                <p>Situação</p>
+                <span>Disponibilidade manual da configuração (respeita vigência).</span>
+              </div>
+              <select
+                name="situacao"
+                value={formData.situacao}
+                onChange={handleChange}
+                style={{ marginLeft: 'auto', padding: 8, borderRadius: 6 }}
+              >
+                <option value={1}>Ativa</option>
+                <option value={0}>Inativa</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -296,7 +343,7 @@ const FormularioConfiguracaoFila = () => {
             </div>
           </div>
 
-          {/* Logo (somente front) */}
+          {/* Logo */}
           <div className="upload-box">
             <label>Logo</label>
             <div className="upload-area" onClick={() => document.getElementById('logo-upload').click()}>
@@ -318,12 +365,13 @@ const FormularioConfiguracaoFila = () => {
             />
           </div>
 
+          {/* Mensagem */}
           <div className="input-field full-width">
             <label>Mensagem Whatsapp/SMS</label>
             <textarea name="mensagem" value={formData.mensagem} onChange={handleChange} placeholder="Digite sua mensagem..." />
           </div>
 
-          {/* Banner (vai ao backend como {url}) */}
+          {/* Banner */}
           <div className="upload-box">
             <label>Imagem para banner</label>
             <div className="upload-area" onClick={() => document.getElementById('banner-upload').click()}>
