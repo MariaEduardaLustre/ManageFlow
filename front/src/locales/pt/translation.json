@@ -1,0 +1,128 @@
+{
+  "cadastro": {
+    "titulo": "Cadastre-se",
+    "placeholder": {
+      "nome": "Nome Completo",
+      "email": "E-mail",
+      "cpfCnpj": "CPF/CNPJ",
+      "senha": "Senha",
+      "confirmarSenha": "Confirme sua senha",
+      "ddd": "DDD",
+      "telefone": "Telefone",
+      "cep": "CEP",
+      "numero": "Número",
+      "endereco": "Endereço (Logradouro)",
+      "complemento": "Complemento (Opcional)"
+    },
+    "botoes": {
+      "cadastrar": "Cadastrar"
+    },
+    "links": {
+      "login": "Já possui uma conta?",
+      "loginLink": "Faça o login"
+    },
+    "mensagens": {
+      "alerta": {
+        "nomeInvalido": "Digite um nome válido com pelo menos 3 letras.",
+        "emailInvalido": "Digite um e-mail válido.",
+        "cpfCnpjInvalido": "CPF ou CNPJ inválidos!",
+        "senhaInvalida": "A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caracter especial.",
+        "senhasNaoCoincidem": "As senhas não coincidem!",
+        "camposObrigatorios": "Por favor, preencha todos os campos obrigatórios.",
+        "erroCep": "CEP não encontrado.",
+        "erroGeralCep": "Erro ao buscar CEP.",
+        "erroGenerico": "Ocorreu um erro ao cadastrar o usuário."
+      },
+      "modal": {
+        "confirmacaoTitulo": "Confirmar Cadastro",
+        "confirmacaoBody": "Deseja realmente confirmar o cadastro com os dados informados?",
+        "confirmacaoBotaoCancelar": "Cancelar",
+        "confirmacaoBotaoSim": "Sim, Cadastrar",
+        "sucessoTitulo": "Sucesso!",
+        "sucessoBotaoFechar": "Fechar",
+        "erroTitulo": "Ocorreu um Erro",
+        "erroBotaoFechar": "Fechar"
+      }
+    },
+    "selects": {
+      "pais": "Selecione o país"
+    }
+  },
+  "login": {
+    "titulo": "Entrar na sua conta",
+    "placeholder": {
+      "email": "E-mail",
+      "senha": "Senha"
+    },
+    "links": {
+      "esqueciSenha": "Esqueceu sua senha?",
+      "cliqueAqui": "Clique aqui!",
+      "semConta": "Ainda não possui uma conta?",
+      "cadastreSe": "Cadastre-se"
+    },
+    "botoes": {
+      "entrar": "Entrar",
+      "entrando": "Entrando...",
+      "google": "Entrar com o Google",
+      "apple": "Entrar com a Apple"
+    },
+    "mensagens": {
+      "sucesso": {
+        "titulo": "Login Realizado",
+        "bodyEmpresaUnica": "Login realizado com sucesso! Redirecionando...",
+        "bodyMaisEmpresas": "Login realizado! Agora, escolha sua empresa."
+      },
+      "erro": {
+        "titulo": "Erro no Login",
+        "generico": "E-mail ou senha inválidos."
+      },
+      "modal": {
+        "ok": "OK",
+        "fechar": "Fechar"
+      }
+    }
+  },
+  "landing": {
+    "nav": {
+      "home": "Home",
+      "servicos": "Serviços",
+      "sobre": "Sobre Nós",
+      "entrar": "Entrar",
+      "cadastrar": "Cadastrar-se"
+    },
+    "hero": {
+      "titulo": "Gerencie filas de forma inteligente e melhore a experiência de seus clientes",
+      "descricao": "O ManageFlow é a solução digital completa para restaurantes que desejam automatizar o gerenciamento de filas, reduzir o tempo de espera dos clientes e melhorar a organização do atendimento.",
+      "comeceAgora": "Comece Agora"
+    },
+    "servicos": {
+      "titulo": "Nossos Serviços",
+      "subtitulo": "Nosso compromisso é simplificar a gestão do seu estabelecimento, proporcionando uma experiência fluida e organizada.",
+      "fila": {
+        "titulo": "Fila de Espera",
+        "descricao": "Organize sua fila de forma digital e eficiente, informando o tempo estimado de espera."
+      },
+      "reserva": {
+        "titulo": "Reserva de Mesa",
+        "descricao": "Permita que seus clientes reservem mesas com antecedência, otimizando o fluxo."
+      },
+      "painel": {
+        "titulo": "Painel de TV",
+        "descricao": "Exiba o status da fila em tempo real em um painel visível para todos no local."
+      },
+      "avaliacoes": {
+        "titulo": "Avaliações",
+        "descricao": "Colete feedbacks dos seus clientes para aprimorar continuamente seus serviços."
+      }
+    },
+    "sobre": {
+      "titulo": "O que nossos clientes dizem?",
+      "depoimento": "O Flow transformou a maneira como gerenciamos nossos clientes. A organização melhorou 100% e os feedbacks são incríveis!",
+      "cargo": "Founder Circle"
+    },
+    "rodape": {
+      "slogan": "Gerenciamento de filas simplificado para otimizar a experiência do cliente.",
+      "direitos": "2025 ManageFlow. Todos os direitos reservados."
+    }
+  }
+}

@@ -6,6 +6,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+<<<<<<< HEAD
     "axios": "^1.12.2",
     "bootstrap": "^5.3.3",
     "dayjs": "^1.11.18",
@@ -13,6 +14,11 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.6",
     "qrcode": "^1.5.4",
+=======
+    "axios": "^1.7.2",
+    "bootstrap": "^5.3.6",
+    "i18next": "^25.4.2",
+>>>>>>> origin/Notificação_EntradaFila
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.10",
     "react-countup": "^6.5.3",
@@ -21,10 +27,14 @@
     "react-icons": "^5.2.1",
     "react-router-dom": "^6.25.1",
     "react-scripts": "5.0.1",
+<<<<<<< HEAD
     "recharts": "^3.2.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "twilio": "^5.9.0",
+=======
+    "recharts": "^3.2.1",
+>>>>>>> origin/Notificação_EntradaFila
     "web-vitals": "^2.1.4"
   },
   "scripts": {

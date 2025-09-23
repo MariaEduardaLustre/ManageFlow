@@ -1,0 +1,128 @@
+{
+  "cadastro": {
+    "titulo": "Sign Up",
+    "placeholder": {
+      "nome": "Full Name",
+      "email": "E-mail",
+      "cpfCnpj": "SSN/EIN",
+      "senha": "Password",
+      "confirmarSenha": "Confirm your password",
+      "ddd": "Area Code",
+      "telefone": "Phone",
+      "cep": "Zip Code",
+      "numero": "Number",
+      "endereco": "Address",
+      "complemento": "Complement (Optional)"
+    },
+    "botoes": {
+      "cadastrar": "Register"
+    },
+    "links": {
+      "login": "Already have an account?",
+      "loginLink": "Login here"
+    },
+    "mensagens": {
+      "alerta": {
+        "nomeInvalido": "Please enter a valid name with at least 3 letters.",
+        "emailInvalido": "Please enter a valid e-mail.",
+        "cpfCnpjInvalido": "Invalid SSN or EIN!",
+        "senhaInvalida": "The password must contain at least 8 characters, one uppercase letter, and one special character.",
+        "senhasNaoCoincidem": "Passwords do not match!",
+        "camposObrigatorios": "Please fill out all required fields.",
+        "erroCep": "Zip code not found.",
+        "erroGeralCep": "Error fetching zip code.",
+        "erroGenerico": "An error occurred while registering the user."
+      },
+      "modal": {
+        "confirmacaoTitulo": "Confirm Registration",
+        "confirmacaoBody": "Do you really want to confirm the registration with the information provided?",
+        "confirmacaoBotaoCancelar": "Cancel",
+        "confirmacaoBotaoSim": "Yes, Register",
+        "sucessoTitulo": "Success!",
+        "sucessoBotaoFechar": "Close",
+        "erroTitulo": "An Error Occurred",
+        "erroBotaoFechar": "Close"
+      }
+    },
+    "selects": {
+      "pais": "Select a country"
+    }
+  },
+  "login": {
+    "titulo": "Log in to your account",
+    "placeholder": {
+      "email": "E-mail",
+      "senha": "Password"
+    },
+    "links": {
+      "esqueciSenha": "Forgot your password?",
+      "cliqueAqui": "Click here!",
+      "semConta": "Don't have an account yet?",
+      "cadastreSe": "Sign Up"
+    },
+    "botoes": {
+      "entrar": "Log In",
+      "entrando": "Logging in...",
+      "google": "Log in with Google",
+      "apple": "Log in with Apple"
+    },
+    "mensagens": {
+      "sucesso": {
+        "titulo": "Login Successful",
+        "bodyEmpresaUnica": "Login successful! Redirecting...",
+        "bodyMaisEmpresas": "Login successful! Now, choose your company."
+      },
+      "erro": {
+        "titulo": "Login Error",
+        "generico": "Invalid e-mail or password."
+      },
+      "modal": {
+        "ok": "OK",
+        "fechar": "Close"
+      }
+    }
+  },
+  "landing": {
+    "nav": {
+      "home": "Home",
+      "servicos": "Services",
+      "sobre": "About Us",
+      "entrar": "Login",
+      "cadastrar": "Sign Up"
+    },
+    "hero": {
+      "titulo": "Manage queues intelligently and improve your customers' experience",
+      "descricao": "ManageFlow is the complete digital solution for restaurants that want to automate queue management, reduce customer waiting time, and improve service organization.",
+      "comeceAgora": "Get Started Now"
+    },
+    "servicos": {
+      "titulo": "Our Services",
+      "subtitulo": "Our commitment is to simplify the management of your establishment, providing a fluid and organized experience.",
+      "fila": {
+        "titulo": "Waiting Queue",
+        "descricao": "Organize your queue digitally and efficiently, informing the estimated waiting time."
+      },
+      "reserva": {
+        "titulo": "Table Reservation",
+        "descricao": "Allow your customers to reserve tables in advance, optimizing the flow."
+      },
+      "painel": {
+        "titulo": "TV Panel",
+        "descricao": "Display the queue status in real time on a visible panel for everyone on-site."
+      },
+      "avaliacoes": {
+        "titulo": "Reviews",
+        "descricao": "Collect feedback from your customers to continuously improve your services."
+      }
+    },
+    "sobre": {
+      "titulo": "What our customers say?",
+      "depoimento": "Flow has transformed the way we manage our customers. Our organization has improved by 100% and the feedback is incredible!",
+      "cargo": "Founder Circle"
+    },
+    "rodape": {
+      "slogan": "Simplified queue management to optimize customer experience.",
+      "direitos": "2025 ManageFlow. All rights reserved."
+    }
+  }
+}
