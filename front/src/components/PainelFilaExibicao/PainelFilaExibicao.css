@@ -17,7 +17,7 @@
     --gray-color: #6c757d; /* Nova variável para a cor cinza */
 }
 
-body {
+body .painel-exibicao-container {
     margin: 0;
     font-family: 'Poppins', sans-serif;
     background-color: var(--background-light);

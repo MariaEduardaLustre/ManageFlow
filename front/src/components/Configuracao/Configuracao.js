@@ -250,7 +250,7 @@ const FormularioConfiguracaoFila = () => {
   if (loading) return <p>Carregando formulário...</p>;
 
   return (
-    <div className="configuracao-fila">
+    <div className="mf-config configuracao-fila">
       <div className="header">
         <button className="voltar-btn" onClick={() => navigate('/filas-cadastradas')}>← Voltar</button>
         <div>

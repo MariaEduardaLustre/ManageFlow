@@ -7,14 +7,13 @@ import { FaEnvelope, FaLock, FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { BsEyeFill, BsEyeSlashFill } from "react-icons/bs";
 
-// Estilos
+// Estilos (isolado)
 import "./Login.css";
 
-// --- IMPORTAÇÕES DO REACT BOOTSTRAP ---
+// React Bootstrap
 import { Modal, Button } from "react-bootstrap";
 
 const Login = () => {
-  // A lógica de state e as funções permanecem as mesmas
   const [formData, setFormData] = useState({ email: "", senha: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
@@ -43,17 +42,11 @@ const Login = () => {
       localStorage.setItem("nomeUsuario", nome);
 
       // Busca empresas do usuário
-      const empresasResponse = await api.get(
-        `/empresas/empresas-do-usuario/${idUsuario}`
-      );
-      const empresas = Array.isArray(empresasResponse.data)
-        ? empresasResponse.data
-        : [];
+      const empresasResponse = await api.get(`/empresas/empresas-do-usuario/${idUsuario}`);
+      const empresas = Array.isArray(empresasResponse.data) ? empresasResponse.data : [];
 
-      // Limpa seleção forçada para SEMPRE passar pela tela de escolha
+      // Limpa seleção de empresa para SEMPRE passar pela tela de escolha
       localStorage.removeItem("empresaSelecionada");
-
-      // (Opcional) disponibiliza a lista para a tela de escolha usar imediatamente
       sessionStorage.setItem("empresasDoUsuario", JSON.stringify(empresas));
 
       setFormData({ email: "", senha: "" });
@@ -72,27 +65,26 @@ const Login = () => {
 
   const fecharModalSucesso = () => {
     setMostrarModalSucesso(false);
-    // Sempre vai para a tela de escolha de empresa
     navigate("/escolher-empresa");
   };
 
   return (
-    <div className="login-page-container">
-      <div className="login-image-panel">
+    <div className="mf-login">
+      <div className="mf-login__image">
         <img
           src="/imagens/cadastro.png"
           alt="Login decorativo"
-          className="responsive-image-cad"
+          className="mf-login__hero"
         />
       </div>
 
-      <div className="login-form-section">
-        <div className="cadastro-form-wrapper">
-          <h2 className="form-title">Login</h2>
-          <form onSubmit={handleSubmit} noValidate>
-            {/* Seus inputs e formulário continuam aqui... */}
-            <div className="form-group">
-              <FaEnvelope className="input-icon" />
+      <div className="mf-login__form-section">
+        <div className="mf-login__wrapper">
+          <h2 className="mf-login__title">Login</h2>
+
+          <form className="mf-login__form" onSubmit={handleSubmit} noValidate>
+            <div className="mf-login__group">
+              <FaEnvelope className="mf-login__icon" />
               <input
                 type="email"
                 name="email"
@@ -103,8 +95,8 @@ const Login = () => {
               />
             </div>
 
-            <div className="form-group password-group">
-              <FaLock className="input-icon" />
+            <div className="mf-login__group mf-login__group--password">
+              <FaLock className="mf-login__icon" />
               <input
                 type={showPassword ? "text" : "password"}
                 name="senha"
@@ -115,44 +107,44 @@ const Login = () => {
               />
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="password-toggle-icon"
+                className="mf-login__pass-toggle"
+                aria-label="Mostrar/ocultar senha"
               >
                 {showPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
               </span>
             </div>
-            <p className="login-link">
+
+            <p className="mf-login__link">
               Esqueceu sua senha? <a href="/esqueci-senha">Clique aqui!</a>
             </p>
 
             <button
               type="submit"
-              className="btn-submit-cadastro"
+              className="mf-login__submit"
               disabled={loading}
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
           </form>
 
-          <div className="social-login">
-            <button className="btn-google">
-              <FcGoogle className="social-icon" />
+          <div className="mf-login__social">
+            <button type="button" className="mf-login__btn-google">
+              <FcGoogle className="mf-login__social-icon" />
               Entrar com o Google
             </button>
-            <button className="btn-apple">
-              <FaApple className="social-icon" />
+            <button type="button" className="mf-login__btn-apple">
+              <FaApple className="mf-login__social-icon" />
               Entrar com a Apple
             </button>
           </div>
 
-          <p className="login-link">
+          <p className="mf-login__link">
             Ainda não possui uma conta? <a href="/cadastro">Cadastre-se</a>
           </p>
         </div>
       </div>
 
-      {/* --- SEÇÃO DE MODAIS ATUALIZADA COM REACT BOOTSTRAP --- */}
-
-      {/* Modal de Sucesso */}
+      {/* Modais */}
       <Modal show={mostrarModalSucesso} onHide={fecharModalSucesso} centered>
         <Modal.Header closeButton>
           <Modal.Title>Login Realizado</Modal.Title>
@@ -165,7 +157,6 @@ const Login = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Modal de Erro */}
       <Modal show={mostrarModalErro} onHide={fecharModalErro} centered>
         <Modal.Header closeButton>
           <Modal.Title>Erro no Login</Modal.Title>

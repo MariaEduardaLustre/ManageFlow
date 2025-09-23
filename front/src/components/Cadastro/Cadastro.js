@@ -3,14 +3,17 @@ import './Cadastro.css';
 import api from '../../services/api';
 import { paisesComDdi } from '../../utils/paisesComDdi';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom'; // Importando o Link
-import { FaUser, FaEnvelope, FaIdCard, FaLock, FaMapMarkerAlt, FaHome, FaBuilding, FaPhone, FaGlobe, FaMapPin } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import {
+  FaUser, FaEnvelope, FaIdCard, FaLock, FaMapMarkerAlt,
+  FaHome, FaBuilding, FaPhone, FaGlobe, FaMapPin
+} from 'react-icons/fa';
 import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs';
 import { MdConfirmationNumber } from "react-icons/md";
 import { Modal, Button } from 'react-bootstrap';
 
 const Cadastro = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -29,31 +32,47 @@ const Cadastro = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
   const [mensagemErroModal, setMensagemErroModal] = useState('');
   const [mostrarModalSucesso, setMostrarModalSucesso] = useState(false);
   const [mensagemSucessoModal, setMensagemSucessoModal] = useState('');
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+
   const [senhaValida, setSenhaValida] = useState(true);
   const [senhasCoincidem, setSenhasCoincidem] = useState(true);
   const [cpfCnpjValido, setCpfCnpjValido] = useState(true);
-  const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
   const [emailValido, setEmailValido] = useState(true);
   const [nomeValido, setNomeValido] = useState(true);
-  const [camposNumericosValidos, setCamposNumericosValidos] = useState({
-    cpfCnpj: true,
-    cep: true,
-    numero: true,
-    ddd: true,
-    telefone: true
-  });
 
   const validarEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const validarNome = (nome) => {
     const apenasLetras = /^[A-Za-zÀ-ÿ\s]+$/.test(nome);
     return apenasLetras && nome.trim().length >= 3;
+  };
+
+  const validarCPF = (cpf) => {
+    cpf = cpf.replace(/\D/g, '');
+    if (cpf.length !== 11 || Array.from(cpf).every(char => char === cpf[0])) return false;
+    let soma = 0;
+    for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+    let resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.charAt(9))) return false;
+    soma = 0;
+    for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.charAt(10))) return false;
+    return true;
+  };
+
+  const validarSenhaSegura = (senha) => {
+    const temOitoCaracteres = senha.length >= 8;
+    const temLetraMaiuscula = /[A-Z]/.test(senha);
+    const temCaractereEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
+    return temOitoCaracteres && temLetraMaiuscula && temCaractereEspecial;
   };
 
   const handleChange = (e) => {
@@ -65,27 +84,18 @@ const Cadastro = () => {
 
     if (name === 'nome') {
       const apenasLetras = value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
-      setFormData({
-        ...formData,
-        [name]: apenasLetras,
-      });
+      setFormData(prev => ({ ...prev, [name]: apenasLetras }));
       setNomeValido(validarNome(apenasLetras));
       return;
     }
 
     if (['cpfCnpj', 'cep', 'numero', 'ddd', 'telefone'].includes(name)) {
       const apenasNumeros = value.replace(/\D/g, '');
-      setFormData({
-        ...formData,
-        [name]: apenasNumeros,
-      });
+      setFormData(prev => ({ ...prev, [name]: apenasNumeros }));
       return;
     }
 
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData(prev => ({ ...prev, [name]: value }));
 
     if (name === 'senha') {
       setSenhaValida(validarSenhaSegura(value));
@@ -107,29 +117,6 @@ const Cadastro = () => {
     });
   };
 
-  const validarCPF = (cpf) => {
-    cpf = cpf.replace(/\D/g, '');
-    if (cpf.length !== 11 || Array.from(cpf).every(char => char === cpf[0])) return false;
-    let soma = 0;
-    for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
-    let resto = (soma * 10) % 11;
-    if ((resto === 10) || (resto === 11)) resto = 0;
-    if (resto !== parseInt(cpf.charAt(9))) return false;
-    soma = 0;
-    for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
-    resto = (soma * 10) % 11;
-    if ((resto === 10) || (resto === 11)) resto = 0;
-    if (resto !== parseInt(cpf.charAt(10))) return false;
-    return true;
-  };
-
-  const validarSenhaSegura = (senha) => {
-    const temOitoCaracteres = senha.length >= 8;
-    const temLetraMaiuscula = /[A-Z]/.test(senha);
-    const temCaractereEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
-    return temOitoCaracteres && temLetraMaiuscula && temCaractereEspecial;
-  };
-
   const buscarEndereco = async (cep) => {
     cep = cep.replace(/\D/g, '');
     if (cep.length !== 8) return;
@@ -138,17 +125,16 @@ const Cadastro = () => {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
       if (!data.erro) {
-        setFormData({ ...formData, endereco: data.logradouro || '' });
+        setFormData(prev => ({ ...prev, endereco: data.logradouro || '' }));
       } else {
         setMensagemErroModal(t('cadastro.mensagens.alerta.erroCep'));
         setMostrarModalErro(true);
-        setFormData({ ...formData, endereco: '' });
+        setFormData(prev => ({ ...prev, endereco: '' }));
       }
     } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
       setMensagemErroModal(t('cadastro.mensagens.alerta.erroGeralCep'));
       setMostrarModalErro(true);
-      setFormData({ ...formData, endereco: '' });
+      setFormData(prev => ({ ...prev, endereco: '' }));
     }
   };
 
@@ -185,7 +171,6 @@ const Cadastro = () => {
       setMostrarModalSucesso(true);
       limparCampos();
     } catch (error) {
-      console.error('Erro no cadastro:', error);
       if (error.response && error.response.data) {
         setMensagemErroModal(error.response.data.message || error.response.data);
       } else {
@@ -199,61 +184,85 @@ const Cadastro = () => {
   const fecharModalSucesso = () => setMostrarModalSucesso(false);
   const fecharModalErro = () => setMostrarModalErro(false);
 
-  const alternarMostrarSenha = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const alternarMostrarConfirmarSenha = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
   return (
-    <div className="cadastro-page-container">
-      <div className="cadastro-image-panel">
-        <img src="/imagens/cadastro.png" alt="Decoração cadastro" className="responsive-image-cad"/>
+    <div className="mf-cad">
+      <div className="mf-cad__image">
+        <img src="/imagens/cadastro.png" alt="Decoração cadastro" className="mf-cad__hero" />
       </div>
-      <div className="cadastro-form-section">
-        <div className="cadastro-form-wrapper">
-          <h2 className="form-title">{t('cadastro.titulo')}</h2>
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="form-group">
-              <div className="wrapper-password">
-                <FaUser className="input-icon" />
-                <input name="nome" placeholder={t('cadastro.placeholder.nome')} value={formData.nome} onChange={handleChange} required id="nome" maxLength={100}/>
-              </div>
-              {!nomeValido && formData.nome.length > 0 && (
-                <p className="mensagem-alerta">{t('cadastro.mensagens.alerta.nomeInvalido')}</p>
-              )}
-            </div>
 
-            <div className="form-group">
-              <div className="wrapper-password">
-                <FaEnvelope className="input-icon" />
-                <input type="email" name="email" placeholder={t('cadastro.placeholder.email')} value={formData.email} onChange={handleChange} required id="email" maxLength={100} />
-              </div>
-              {!emailValido && formData.email.length > 0 && (
-                <p className="mensagem-alerta">{t('cadastro.mensagens.alerta.emailInvalido')}</p>
-              )}
-            </div>
-            <div className="form-group">
-              <div className="wrapper-password">
-                <FaIdCard className="input-icon" />
-                <input name="cpfCnpj" placeholder={t('cadastro.placeholder.cpfCnpj')} maxLength={14} value={formData.cpfCnpj} onChange={handleChange} required id="cpfCnpj" onBlur={(e) => {
-                  if (e.target.value && !validarCPF(e.target.value)) {
-                    setMensagemErroModal(t('cadastro.mensagens.alerta.cpfCnpjInvalido'));
-                    setMostrarModalErro(true);
-                  }
-                }}
+      <div className="mf-cad__form-section">
+        <div className="mf-cad__form-wrapper">
+          <h2 className="mf-cad__title">{t('cadastro.titulo')}</h2>
+
+          <form className="mf-cad__form" onSubmit={handleSubmit} noValidate>
+            {/* Nome */}
+            <div className="mf-cad__group">
+              <div className="mf-cad__wrap">
+                <FaUser className="mf-cad__icon" />
+                <input
+                  name="nome"
+                  placeholder={t('cadastro.placeholder.nome')}
+                  value={formData.nome}
+                  onChange={handleChange}
+                  required
+                  id="nome"
+                  maxLength={100}
                 />
               </div>
-
-            {!cpfCnpjValido && formData.cpfCnpj.length > 0 && (
-              <p className="mensagem-alerta">{t('cadastro.mensagens.alerta.cpfCnpjInvalido')}</p>
-            )}
+              {!nomeValido && formData.nome.length > 0 && (
+                <p className="mf-cad__alert">{t('cadastro.mensagens.alerta.nomeInvalido')}</p>
+              )}
             </div>
-            <div className="form-group password-group">
-              <div className="wrapper-password">
-                <FaLock className="input-icon" />
+
+            {/* Email */}
+            <div className="mf-cad__group">
+              <div className="mf-cad__wrap">
+                <FaEnvelope className="mf-cad__icon" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder={t('cadastro.placeholder.email')}
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  id="email"
+                  maxLength={100}
+                />
+              </div>
+              {!emailValido && formData.email.length > 0 && (
+                <p className="mf-cad__alert">{t('cadastro.mensagens.alerta.emailInvalido')}</p>
+              )}
+            </div>
+
+            {/* CPF */}
+            <div className="mf-cad__group">
+              <div className="mf-cad__wrap">
+                <FaIdCard className="mf-cad__icon" />
+                <input
+                  name="cpfCnpj"
+                  placeholder={t('cadastro.placeholder.cpfCnpj')}
+                  maxLength={14}
+                  value={formData.cpfCnpj}
+                  onChange={handleChange}
+                  required
+                  id="cpfCnpj"
+                  onBlur={(e) => {
+                    if (e.target.value && !validarCPF(e.target.value)) {
+                      setMensagemErroModal(t('cadastro.mensagens.alerta.cpfCnpjInvalido'));
+                      setMostrarModalErro(true);
+                    }
+                  }}
+                />
+              </div>
+              {!cpfCnpjValido && formData.cpfCnpj.length > 0 && (
+                <p className="mf-cad__alert">{t('cadastro.mensagens.alerta.cpfCnpjInvalido')}</p>
+              )}
+            </div>
+
+            {/* Senha */}
+            <div className="mf-cad__group mf-cad__group--password">
+              <div className="mf-cad__wrap">
+                <FaLock className="mf-cad__icon" />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="senha"
@@ -264,20 +273,22 @@ const Cadastro = () => {
                   required
                   id="senha"
                 />
-                <span onClick={() => setShowPassword(!showPassword)} className="password-toggle-icon">
+                <span
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="mf-cad__pass-toggle"
+                >
                   {showPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
                 </span>
               </div>
               {!senhaValida && formData.senha.length > 0 && (
-                <p className="mensagem-alerta">
-                  {t('cadastro.mensagens.alerta.senhaInvalida')}
-                </p>
+                <p className="mf-cad__alert">{t('cadastro.mensagens.alerta.senhaInvalida')}</p>
               )}
             </div>
 
-            <div className="form-group password-group">
-                <div className="wrapper-password">
-                  <FaLock className="input-icon" />
+            {/* Confirmar Senha */}
+            <div className="mf-cad__group mf-cad__group--password">
+              <div className="mf-cad__wrap">
+                <FaLock className="mf-cad__icon" />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmarSenha"
@@ -285,26 +296,32 @@ const Cadastro = () => {
                   maxLength={64}
                   value={formData.confirmarSenha}
                   onChange={handleChange}
-                  required id="confirmarSenha"/>
-                <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="password-toggle-icon">
+                  required
+                  id="confirmarSenha"
+                />
+                <span
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="mf-cad__pass-toggle"
+                >
                   {showConfirmPassword ? <BsEyeFill /> : <BsEyeSlashFill />}
                 </span>
-                </div>
-
+              </div>
               {!senhasCoincidem && formData.confirmarSenha.length > 0 && (
-                <p className="mensagem-alerta">{t('cadastro.mensagens.alerta.senhasNaoCoincidem')}</p>
+                <p className="mf-cad__alert">{t('cadastro.mensagens.alerta.senhasNaoCoincidem')}</p>
               )}
             </div>
 
-            <div className="form-row">
-              <div className="form-group form-ddi">
-                <FaGlobe className="input-icon" />
+            {/* DDI / DDD / Telefone */}
+            <div className="mf-cad__row">
+              <div className="mf-cad__group mf-cad__group--ddi">
+                <FaGlobe className="mf-cad__icon" />
                 <select
                   name="ddi"
                   value={formData.ddi}
                   onChange={handleChange}
                   required
-                  id="ddi">
+                  id="ddi"
+                >
                   <option value="">{t('cadastro.selects.pais')}</option>
                   {paisesComDdi.map((pais) => (
                     <option key={`${pais.ddi}-${pais.nome}`} value={pais.ddi}>
@@ -313,8 +330,8 @@ const Cadastro = () => {
                   ))}
                 </select>
               </div>
-              <div className="form-group form-ddd">
-                <FaMapPin className="input-icon" />
+              <div className="mf-cad__group mf-cad__group--ddd">
+                <FaMapPin className="mf-cad__icon" />
                 <input
                   name="ddd"
                   placeholder={t('cadastro.placeholder.ddd')}
@@ -322,10 +339,11 @@ const Cadastro = () => {
                   value={formData.ddd}
                   onChange={handleChange}
                   required
-                  id="ddd"/>
+                  id="ddd"
+                />
               </div>
-              <div className="form-group form-telefone">
-                <FaPhone className="input-icon" />
+              <div className="mf-cad__group mf-cad__group--fone">
+                <FaPhone className="mf-cad__icon" />
                 <input
                   name="telefone"
                   placeholder={t('cadastro.placeholder.telefone')}
@@ -333,39 +351,79 @@ const Cadastro = () => {
                   value={formData.telefone}
                   onChange={handleChange}
                   required
-                  id="telefone"/>
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <FaMapMarkerAlt className="input-icon" />
-                <input name="cep" placeholder={t('cadastro.placeholder.cep')} maxLength={8} value={formData.cep} onChange={handleChange} onBlur={(e) => buscarEndereco(e.target.value)} required id="cep" />
-              </div>
-              <div className="form-group">
-                <MdConfirmationNumber className="input-icon" />
-                <input name="numero" placeholder={t('cadastro.placeholder.numero')} maxLength={6} value={formData.numero} onChange={handleChange} required id="numero" />
+                  id="telefone"
+                />
               </div>
             </div>
 
-            <div className="form-group">
-              <FaHome className="input-icon" />
-              <input name="endereco" placeholder={t('cadastro.placeholder.endereco')} maxLength={80} value={formData.endereco} onChange={handleChange} required id="endereco" />
+            {/* CEP / Número */}
+            <div className="mf-cad__row">
+              <div className="mf-cad__group">
+                <FaMapMarkerAlt className="mf-cad__icon" />
+                <input
+                  name="cep"
+                  placeholder={t('cadastro.placeholder.cep')}
+                  maxLength={8}
+                  value={formData.cep}
+                  onChange={handleChange}
+                  onBlur={(e) => buscarEndereco(e.target.value)}
+                  required
+                  id="cep"
+                />
+              </div>
+              <div className="mf-cad__group">
+                <MdConfirmationNumber className="mf-cad__icon" />
+                <input
+                  name="numero"
+                  placeholder={t('cadastro.placeholder.numero')}
+                  maxLength={6}
+                  value={formData.numero}
+                  onChange={handleChange}
+                  required
+                  id="numero"
+                />
+              </div>
             </div>
 
-            <div className="form-group">
-              <FaBuilding className="input-icon" />
-              <input name="complemento" maxLength={30} placeholder={t('cadastro.placeholder.complemento')} value={formData.complemento} onChange={handleChange} id="complemento" />
+            {/* Endereço */}
+            <div className="mf-cad__group">
+              <FaHome className="mf-cad__icon" />
+              <input
+                name="endereco"
+                placeholder={t('cadastro.placeholder.endereco')}
+                maxLength={80}
+                value={formData.endereco}
+                onChange={handleChange}
+                required
+                id="endereco"
+              />
             </div>
 
-            <button className='btn-submit-cadastro' type="submit">{t('cadastro.botoes.cadastrar')}</button>
+            {/* Complemento */}
+            <div className="mf-cad__group">
+              <FaBuilding className="mf-cad__icon" />
+              <input
+                name="complemento"
+                maxLength={30}
+                placeholder={t('cadastro.placeholder.complemento')}
+                value={formData.complemento}
+                onChange={handleChange}
+                id="complemento"
+              />
+            </div>
+
+            <button className="mf-cad__submit" type="submit">
+              {t('cadastro.botoes.cadastrar')}
+            </button>
           </form>
-          {/* Onde a mudança deve ser feita: */}
-          <p className="login-link">
+
+          <p className="mf-cad__login-link">
             {t('cadastro.links.login')} <Link to="/login">{t('cadastro.links.loginLink')}</Link>
           </p>
         </div>
       </div>
 
+      {/* Modais */}
       <Modal show={mostrarConfirmacao} onHide={cancelarCadastro} centered backdrop="static" keyboard={false}>
         <Modal.Header closeButton>
           <Modal.Title>{t('cadastro.mensagens.modal.confirmacaoTitulo')}</Modal.Title>

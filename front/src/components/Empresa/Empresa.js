@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import "./Empresa.css";
+import { BarChart } from "recharts";
 
 const initialEmpresa = {
   nome: "",
@@ -26,11 +27,9 @@ const Empresa = ({ idUsuario }) => {
   const [ordenacao, setOrdenacao] = useState("nomeAsc");
   const [fetchingPerm, setFetchingPerm] = useState(false);
 
-  // use um nome diferente para não conflitar com o campo "logo" do form
   const logoSrc = "/imagens/logo.png";
   const navigate = useNavigate();
 
-  // Resolve o id do usuário: prop > localStorage
   const userId = useMemo(() => {
     const fromProp = Number(idUsuario);
     if (fromProp) return fromProp;
@@ -38,11 +37,8 @@ const Empresa = ({ idUsuario }) => {
     return Number.isFinite(fromStorage) ? fromStorage : null;
   }, [idUsuario]);
 
-  // Hidrata com cache e busca do backend
   useEffect(() => {
     let ativo = true;
-
-    // 1) Hidrata com cache (se existir)
     const cache = sessionStorage.getItem("empresasDoUsuario");
     if (cache) {
       try {
@@ -53,15 +49,11 @@ const Empresa = ({ idUsuario }) => {
         }
       } catch {}
     }
-
-    // 2) Sem userId -> voltar para login
     if (!userId) {
       setLoading(false);
       navigate("/login");
       return;
     }
-
-    // 3) Busca oficial no backend
     async function fetchEmpresas() {
       if (!cache) setLoading(true);
       setErro("");
@@ -79,21 +71,16 @@ const Empresa = ({ idUsuario }) => {
         if (ativo) setLoading(false);
       }
     }
-
     fetchEmpresas();
-    return () => {
-      ativo = false;
-    };
+    return () => { ativo = false; };
   }, [userId, navigate]);
 
-  // Selecionar empresa: busca papel+permissões e navega
   const escolherEmpresa = async (empresa) => {
     try {
       setFetchingPerm(true);
       const { data } = await api.get("/me/permissions", {
         params: { empresaId: empresa.ID_EMPRESA },
       });
-
       const payload = {
         ...empresa,
         ROLE: data.role,
@@ -102,11 +89,9 @@ const Empresa = ({ idUsuario }) => {
         NIVEL: data.nivel ?? empresa.NIVEL,
         ID_PERFIL: data.idPerfil,
       };
-
       localStorage.setItem("empresaSelecionada", JSON.stringify(payload));
     } catch (e) {
       console.error("Falha ao obter permissões", e);
-      // fallback: salva sem o snapshot para não travar o fluxo
       localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
     } finally {
       setFetchingPerm(false);
@@ -114,7 +99,6 @@ const Empresa = ({ idUsuario }) => {
     }
   };
 
-  // Validações simples do form
   const errosForm = useMemo(() => {
     const e = {};
     if (!novaEmpresa.nome?.trim()) e.nome = "Informe o nome da empresa.";
@@ -135,26 +119,14 @@ const Empresa = ({ idUsuario }) => {
     try {
       const { nome, cnpj, email, ddi, ddd, telefone, endereco, numero, logo } =
         novaEmpresa;
-
       const response = await api.post("/empresas/criar-empresa", {
         nomeEmpresa: nome,
         cnpj: cnpj.replace(/\D/g, ""),
-        email,
-        ddi,
-        ddd,
-        telefone,
-        endereco,
-        numero,
-        logo,
+        email, ddi, ddd, telefone, endereco, numero, logo,
         idUsuario: userId,
       });
-
       const idEmpresa = response?.data?.idEmpresa;
-      if (!idEmpresa) {
-        throw new Error("Resposta inválida da API (idEmpresa ausente).");
-      }
-
-      // monta o objeto mínimo para seleção; escolherEmpresa vai buscar permissões
+      if (!idEmpresa) throw new Error("Resposta inválida da API (idEmpresa ausente).");
       const novaSelecionavel = {
         ID_EMPRESA: idEmpresa,
         NOME_EMPRESA: nome,
@@ -162,7 +134,6 @@ const Empresa = ({ idUsuario }) => {
         NIVEL: 1,
         LOGO: logo,
       };
-
       await escolherEmpresa(novaSelecionavel);
     } catch (error) {
       console.error("Erro ao criar empresa", error);
@@ -172,29 +143,22 @@ const Empresa = ({ idUsuario }) => {
     }
   };
 
-  const handleEnter = (e) => {
-    if (e.key === "Enter") handleCriar();
-  };
+  const handleEnter = (e) => { if (e.key === "Enter") handleCriar(); };
 
   const listaFiltrada = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     let base = empresas;
-
     if (termo) {
       base = empresas.filter((emp) =>
-        `${emp.NOME_EMPRESA ?? ""} ${emp.NOME_PERFIL ?? ""}`
-          .toLowerCase()
-          .includes(termo)
+        `${emp.NOME_EMPRESA ?? ""} ${emp.NOME_PERFIL ?? ""}`.toLowerCase().includes(termo)
       );
     }
-
     const ordenadores = {
       nomeAsc: (a, b) => (a.NOME_EMPRESA ?? "").localeCompare(b.NOME_EMPRESA ?? ""),
       nomeDesc: (a, b) => (b.NOME_EMPRESA ?? "").localeCompare(a.NOME_EMPRESA ?? ""),
       nivelAsc: (a, b) => (a.NIVEL ?? 0) - (b.NIVEL ?? 0),
       nivelDesc: (a, b) => (b.NIVEL ?? 0) - (a.NIVEL ?? 0),
     };
-
     return [...base].sort(ordenadores[ordenacao]);
   }, [empresas, busca, ordenacao]);
 
@@ -204,46 +168,33 @@ const Empresa = ({ idUsuario }) => {
         <img
           src={logoUrl}
           alt={nome}
-          className="empresa-card__logo"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
+          className="mf-emp-card__logo"
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
       );
     }
-    const iniciais = (nome || "?")
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-    return (
-      <div className="empresa-card__avatar" aria-hidden>
-        {iniciais}
-      </div>
-    );
+    const iniciais = (nome || "?").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+    return <div className="mf-emp-card__avatar" aria-hidden>{iniciais}</div>;
   };
 
   return (
-    <div className="empresa">
-      {/* NAVBAR fixa ao topo */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white fixed-top flow-header shadow-sm">
+    <div className="mf-emp" >
+      {/* NAVBAR (Bootstrap) */}
+      <nav className="navbar navbar-expand-lg navbar-light bg-white fixed-top mf-emp__header shadow-sm">
         <div className="container">
           <a className="navbar-brand" href="#home">
-            <img src={logoSrc} alt="Manage Flow Logo" className="flow-logo" />
+            <img src={logoSrc} alt="Manage Flow Logo" className="mf-emp__logo" />
           </a>
         </div>
       </nav>
 
       {/* TÍTULO + FILTROS */}
-      <section className="empresa__heading">
-        <h1 className="empresa__title">Selecione sua empresa</h1>
-        <p className="empresa__subtitle">
-          Entre em uma empresa existente ou crie uma nova para começar.
-        </p>
+      <section className="mf-emp__heading">
+        <h1 className="mf-emp__title">Selecione sua empresa</h1>
+        <p className="mf-emp__subtitle">Entre em uma empresa existente ou crie uma nova para começar.</p>
 
-        <div className="empresa__actions">
-          <div className="input-search">
+        <div className="mf-emp__actions">
+          <div className="mf-emp__search">
             <input
               type="search"
               placeholder="Buscar por nome ou perfil…"
@@ -254,7 +205,7 @@ const Empresa = ({ idUsuario }) => {
           </div>
 
           <select
-            className="select"
+            className="mf-emp__select"
             value={ordenacao}
             onChange={(e) => setOrdenacao(e.target.value)}
             aria-label="Ordenar lista"
@@ -266,7 +217,7 @@ const Empresa = ({ idUsuario }) => {
           </select>
 
           <button
-            className="btn btn-primary"
+            className="mf-emp__btn mf-emp__btn--primary"
             onClick={() => setMostrarFormulario((v) => !v)}
             aria-expanded={mostrarFormulario}
           >
@@ -275,54 +226,44 @@ const Empresa = ({ idUsuario }) => {
         </div>
       </section>
 
-      {/* Estado de erro */}
-      {erro && (
-        <div className="alert alert-error" role="alert">
-          {erro}
-        </div>
-      )}
+      {erro && <div className="mf-emp__alert" role="alert">{erro}</div>}
 
       {/* Lista / Loading / Vazio */}
       {loading ? (
-        <div className="empresa-grid">
+        <div className="mf-emp__grid">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="empresa-card empresa-card--skeleton" />
+            <div key={i} className="mf-emp-card mf-emp-card--skeleton" />
           ))}
         </div>
       ) : listaFiltrada.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state__icon" aria-hidden>
-            🏷️
-          </div>
+        <div className="mf-emp__empty">
+          <div className="mf-emp__empty-icon" aria-hidden>🏷️</div>
           <h3>Nenhuma empresa encontrada</h3>
           <p>Você pode ajustar a busca ou criar uma nova empresa.</p>
         </div>
       ) : (
-        <div className="empresa-grid">
+        <div className="mf-emp__grid">
           {listaFiltrada.map((empresa) => (
             <article
               key={empresa.ID_EMPRESA}
-              className="empresa-card"
+              className="mf-emp-card"
               tabIndex={0}
               role="button"
               onClick={() => escolherEmpresa(empresa)}
               onKeyDown={(e) => e.key === "Enter" && escolherEmpresa(empresa)}
             >
               {avatar(empresa.NOME_EMPRESA, empresa.LOGO)}
-              <div className="empresa-card__body">
-                <h3 className="empresa-card__title">{empresa.NOME_EMPRESA}</h3>
-                <p className="empresa-card__meta">
+              <div className="mf-emp-card__body">
+                <h3 className="mf-emp-card__title">{empresa.NOME_EMPRESA}</h3>
+                <p className="mf-emp-card__meta">
                   {empresa.NOME_PERFIL ?? "Perfil"} • Nível {empresa.NIVEL ?? "—"}
                 </p>
               </div>
-              <div className="empresa-card__footer">
+              <div className="mf-emp-card__footer">
                 <button
-                  className="btn btn-ghost"
+                  className="mf-emp__btn mf-emp__btn--ghost"
                   disabled={fetchingPerm}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    escolherEmpresa(empresa);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); escolherEmpresa(empresa); }}
                 >
                   {fetchingPerm ? "Entrando..." : "Entrar"}
                 </button>
@@ -334,29 +275,25 @@ const Empresa = ({ idUsuario }) => {
 
       {/* Formulário de criação */}
       {mostrarFormulario && (
-        <section className="drawer">
-          <div className="drawer__content" onKeyDown={handleEnter}>
-            <header className="drawer__header">
+        <section className="mf-emp__drawer">
+          <div className="mf-emp__drawer-content" onKeyDown={handleEnter}>
+            <header className="mf-emp__drawer-header">
               <h2>Criar nova empresa</h2>
             </header>
 
-            <div className="form-grid">
-              <div className="form-field">
+            <div className="mf-emp__form-grid">
+              <div className="mf-emp__field">
                 <label>Nome da empresa *</label>
                 <input
                   type="text"
                   placeholder="Ex.: Tech LTDA"
                   value={novaEmpresa.nome}
-                  onChange={(e) =>
-                    setNovaEmpresa({ ...novaEmpresa, nome: e.target.value })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, nome: e.target.value })}
                 />
-                {errosForm.nome && (
-                  <span className="field-error">{errosForm.nome}</span>
-                )}
+                {errosForm.nome && <span className="mf-emp__field-error">{errosForm.nome}</span>}
               </div>
 
-              <div className="form-field">
+              <div className="mf-emp__field">
                 <label>CNPJ (14 dígitos) *</label>
                 <input
                   type="text"
@@ -365,136 +302,99 @@ const Empresa = ({ idUsuario }) => {
                   maxLength={18}
                   value={novaEmpresa.cnpj}
                   onChange={(e) => {
-                    const onlyDigits = e.target.value
-                      .replace(/\D/g, "")
-                      .slice(0, 14);
+                    const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 14);
                     setNovaEmpresa({ ...novaEmpresa, cnpj: onlyDigits });
                   }}
                 />
-                {errosForm.cnpj && (
-                  <span className="field-error">{errosForm.cnpj}</span>
-                )}
+                {errosForm.cnpj && <span className="mf-emp__field-error">{errosForm.cnpj}</span>}
               </div>
 
-              <div className="form-field">
+              <div className="mf-emp__field">
                 <label>E-mail *</label>
                 <input
                   type="email"
                   placeholder="contato@empresa.com"
                   value={novaEmpresa.email}
-                  onChange={(e) =>
-                    setNovaEmpresa({ ...novaEmpresa, email: e.target.value })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, email: e.target.value })}
                 />
-                {errosForm.email && (
-                  <span className="field-error">{errosForm.email}</span>
-                )}
+                {errosForm.email && <span className="mf-emp__field-error">{errosForm.email}</span>}
               </div>
 
-              <div className="form-field">
+              <div className="mf-emp__field">
                 <label>DDI</label>
                 <input
                   type="text"
                   inputMode="numeric"
                   placeholder="55"
                   value={novaEmpresa.ddi}
-                  onChange={(e) =>
-                    setNovaEmpresa({
-                      ...novaEmpresa,
-                      ddi: e.target.value.replace(/\D/g, "").slice(0, 3),
-                    })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, ddi: e.target.value.replace(/\D/g, "").slice(0, 3) })}
                 />
               </div>
 
-              <div className="form-field">
+              <div className="mf-emp__field">
                 <label>DDD</label>
                 <input
                   type="text"
                   inputMode="numeric"
                   placeholder="11"
                   value={novaEmpresa.ddd}
-                  onChange={(e) =>
-                    setNovaEmpresa({
-                      ...novaEmpresa,
-                      ddd: e.target.value.replace(/\D/g, "").slice(0, 3),
-                    })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, ddd: e.target.value.replace(/\D/g, "").slice(0, 3) })}
                 />
               </div>
 
-              <div className="form-field">
+              <div className="mf-emp__field">
                 <label>Telefone</label>
                 <input
                   type="text"
                   inputMode="numeric"
                   placeholder="999999999"
                   value={novaEmpresa.telefone}
-                  onChange={(e) =>
-                    setNovaEmpresa({
-                      ...novaEmpresa,
-                      telefone: e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 11),
-                    })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, telefone: e.target.value.replace(/\D/g, "").slice(0, 11) })}
                 />
               </div>
 
-              <div className="form-field form-field--col2">
+              <div className="mf-emp__field mf-emp__field--col2">
                 <label>Endereço</label>
                 <input
                   type="text"
                   placeholder="Rua, bairro, cidade"
                   value={novaEmpresa.endereco}
-                  onChange={(e) =>
-                    setNovaEmpresa({ ...novaEmpresa, endereco: e.target.value })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, endereco: e.target.value })}
                 />
               </div>
 
-              <div className="form-field">
+              <div className="mf-emp__field">
                 <label>Número</label>
                 <input
                   type="text"
                   inputMode="numeric"
                   placeholder="123"
                   value={novaEmpresa.numero}
-                  onChange={(e) =>
-                    setNovaEmpresa({
-                      ...novaEmpresa,
-                      numero: e.target.value.replace(/\D/g, "").slice(0, 6),
-                    })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, numero: e.target.value.replace(/\D/g, "").slice(0, 6) })}
                 />
               </div>
 
-              <div className="form-field form-field--col2">
+              <div className="mf-emp__field mf-emp__field--col2">
                 <label>Logo (URL)</label>
                 <input
                   type="url"
                   placeholder="https://.../logo.png"
                   value={novaEmpresa.logo}
-                  onChange={(e) =>
-                    setNovaEmpresa({ ...novaEmpresa, logo: e.target.value })
-                  }
+                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, logo: e.target.value })}
                 />
               </div>
             </div>
 
-            <footer className="drawer__footer">
+            <footer className="mf-emp__drawer-footer">
               <button
-                className="btn"
-                onClick={() => {
-                  setNovaEmpresa(initialEmpresa);
-                  setMostrarFormulario(false);
-                }}
+                className="mf-emp__btn"
+                onClick={() => { setNovaEmpresa(initialEmpresa); setMostrarFormulario(false); }}
                 disabled={submitting}
               >
                 Cancelar
               </button>
               <button
-                className="btn btn-primary"
+                className="mf-emp__btn mf-emp__btn--primary"
                 onClick={handleCriar}
                 disabled={!podeSalvar || submitting}
               >

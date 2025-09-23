@@ -34,10 +34,9 @@ const Home = () => {
 
   const idEmpresa = empresaSelecionada?.ID_EMPRESA;
   const nomeEmpresa = empresaSelecionada?.NOME_EMPRESA;
-  const nivel = Number(empresaSelecionada?.NIVEL); // fallback
+  const nivel = Number(empresaSelecionada?.NIVEL);
   const myUserId = Number(localStorage.getItem('idUsuario'));
 
-  // --- RBAC do front: usa snapshot do /me/permissions; fallback por NIVEL ---
   const snapshotPerms = Array.isArray(empresaSelecionada?.PERMISSIONS)
     ? empresaSelecionada.PERMISSIONS
     : [];
@@ -49,17 +48,14 @@ const Home = () => {
       }
       return snapshotPerms.includes(`${resource}:${action}`);
     }
-    // Fallback por nível (ADM = 1 gerencia usuários/roles)
     if (resource === 'usersRoles') return nivel === 1;
-    // Sem snapshot e sem mapeamento explícito → conservador
     return false;
   };
 
-  const canInvite = hasPerm('usersRoles', 'create'); // adicionar usuário
-  const canEdit = hasPerm('usersRoles', 'edit');     // trocar perfil
-  const canDelete = hasPerm('usersRoles', 'delete'); // remover da empresa
+  const canInvite = hasPerm('usersRoles', 'create');
+  const canEdit   = hasPerm('usersRoles', 'edit');
+  const canDelete = hasPerm('usersRoles', 'delete');
 
-  // --- EFEITOS / FETCH ---
   useEffect(() => {
     if (!idEmpresa) {
       navigate('/escolher-empresa');
@@ -71,15 +67,14 @@ const Home = () => {
     async function fetchData() {
       try {
         const [usuariosRes, perfisRes] = await Promise.all([
-          api.get(`/empresa/${idEmpresa}`),              // lista de usuários da empresa
-          api.get(`/empresas/perfis/${idEmpresa}`),      // perfis da empresa
+          api.get(`/empresa/${idEmpresa}`),
+          api.get(`/empresas/perfis/${idEmpresa}`),
         ]);
 
         setUsuarios(Array.isArray(usuariosRes.data) ? usuariosRes.data : []);
         const listaPerfis = Array.isArray(perfisRes.data) ? perfisRes.data : [];
         setPerfis(listaPerfis);
 
-        // Perfil padrão para o modal: tenta Analista (NIVEL=3) senão o 1º
         const perfilPadrao =
           listaPerfis.find((p) => Number(p.NIVEL) === 3)?.ID_PERFIL ||
           listaPerfis[0]?.ID_PERFIL ||
@@ -96,24 +91,12 @@ const Home = () => {
   }, [idEmpresa, navigate]);
 
   // --- MODALS ---
-  const handleShowErrorModal = (message) => {
-    setErrorMessage(message);
-    setShowErrorModal(true);
-  };
+  const handleShowErrorModal = (message) => { setErrorMessage(message); setShowErrorModal(true); };
   const handleCloseErrorModal = () => setShowErrorModal(false);
-  const handleShowSuccessModal = (message) => {
-    setSuccessMessage(message);
-    setShowSuccessModal(true);
-  };
+  const handleShowSuccessModal = (message) => { setSuccessMessage(message); setShowSuccessModal(true); };
   const handleCloseSuccessModal = () => setShowSuccessModal(false);
-  const handleShowConfirmDelete = (usuario) => {
-    setUsuarioParaExcluir(usuario);
-    setShowConfirmDeleteModal(true);
-  };
-  const handleCloseConfirmDelete = () => {
-    setUsuarioParaExcluir(null);
-    setShowConfirmDeleteModal(false);
-  };
+  const handleShowConfirmDelete = (usuario) => { setUsuarioParaExcluir(usuario); setShowConfirmDeleteModal(true); };
+  const handleCloseConfirmDelete = () => { setUsuarioParaExcluir(null); setShowConfirmDeleteModal(false); };
   const handleShowAddUserModal = () => setShowAddUserModal(true);
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
   const fecharModalEmpresa = () => setMostrarModalEmpresa(false);
@@ -121,12 +104,9 @@ const Home = () => {
   // --- AÇÕES ---
   const adicionarUsuario = async (event) => {
     event.preventDefault();
-    if (!canInvite) {
-      return handleShowErrorModal('Você não tem permissão para adicionar membros.');
-    }
-    if (!novoUsuario || !perfilSelecionado) {
-      return handleShowErrorModal('Por favor, preencha o CPF/Email e selecione um perfil.');
-    }
+    if (!canInvite) return handleShowErrorModal('Você não tem permissão para adicionar membros.');
+    if (!novoUsuario || !perfilSelecionado) return handleShowErrorModal('Por favor, preencha o CPF/Email e selecione um perfil.');
+
     try {
       await api.post(`/empresa/${idEmpresa}/adicionar-usuario`, {
         cpfOuEmail: novoUsuario,
@@ -148,15 +128,8 @@ const Home = () => {
 
   const removerUsuario = async () => {
     if (!usuarioParaExcluir) return;
-    if (!canDelete) {
-      handleShowErrorModal('Você não tem permissão para remover membros.');
-      return;
-    }
-    // (opcional) não permitir remover a si mesmo via UI
-    if (usuarioParaExcluir.ID === myUserId) {
-      handleShowErrorModal('Você não pode se remover da empresa por aqui.');
-      return;
-    }
+    if (!canDelete) return handleShowErrorModal('Você não tem permissão para remover membros.');
+    if (usuarioParaExcluir.ID === myUserId) return handleShowErrorModal('Você não pode se remover da empresa por aqui.');
 
     try {
       await api.delete(`/empresa/${idEmpresa}/remover-usuario/${usuarioParaExcluir.ID}`);
@@ -176,12 +149,9 @@ const Home = () => {
   };
 
   const handleMudarPermissao = async (idUsuario, novoIdPerfil) => {
-    if (!canEdit) {
-      return handleShowErrorModal('Você não tem permissão para alterar perfis.');
-    }
+    if (!canEdit) return handleShowErrorModal('Você não tem permissão para alterar perfis.');
     try {
       await api.put(`/permissoes/${idEmpresa}/${idUsuario}`, { idPerfil: novoIdPerfil });
-
       setUsuarios((prev) =>
         prev.map((user) =>
           user.ID === idUsuario
@@ -221,7 +191,7 @@ const Home = () => {
   };
 
   return (
-    <div className="home-container">
+    <div className="mf-home home-container">
       <Menu />
       <main className="home-main-content">
         <header className="home-header">
@@ -303,7 +273,7 @@ const Home = () => {
         </section>
       </main>
 
-      {/* --- MODAL: Adicionar Membro --- */}
+      {/* Modais iguais... */}
       <Modal show={showAddUserModal} onHide={handleCloseAddUserModal} centered>
         <Form onSubmit={adicionarUsuario}>
           <Modal.Header closeButton>
@@ -346,7 +316,6 @@ const Home = () => {
         </Form>
       </Modal>
 
-      {/* --- MODAL: Confirmar Remoção --- */}
       <Modal show={showConfirmDeleteModal} onHide={handleCloseConfirmDelete} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Exclusão</Modal.Title>
@@ -364,7 +333,6 @@ const Home = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* --- MODAL: Erro --- */}
       <Modal show={showErrorModal} onHide={handleCloseErrorModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Ocorreu um Erro</Modal.Title>
@@ -377,7 +345,6 @@ const Home = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* --- MODAL: Sucesso --- */}
       <Modal show={showSuccessModal} onHide={handleCloseSuccessModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Sucesso!</Modal.Title>
@@ -390,7 +357,6 @@ const Home = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* --- MODAL: Detalhes da Empresa --- */}
       <Modal show={mostrarModalEmpresa} onHide={fecharModalEmpresa} centered>
         <Modal.Header closeButton>
           <Modal.Title>Detalhes da Empresa</Modal.Title>
@@ -398,12 +364,8 @@ const Home = () => {
         <Modal.Body>
           {detalhesEmpresa && (
             <>
-              <p>
-                <strong>Nome:</strong> {detalhesEmpresa.NOME_EMPRESA}
-              </p>
-              <p>
-                <strong>CNPJ:</strong> {detalhesEmpresa.CNPJ}
-              </p>
+              <p><strong>Nome:</strong> {detalhesEmpresa.NOME_EMPRESA}</p>
+              <p><strong>CNPJ:</strong> {detalhesEmpresa.CNPJ}</p>
             </>
           )}
         </Modal.Body>
