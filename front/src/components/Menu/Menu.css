@@ -1,34 +1,53 @@
 :root {
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 70px;
+
+  --bottomnav-height: 64px;
+  --brand-primary: #3A5AFE;
+
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-500: #6b7280;
+  --gray-700: #374151;
 }
 
-/* Compensa o conteúdo para não ficar por baixo da sidebar fixa */
+/* =========================
+   LAYOUT PADDING DO BODY
+   ========================= */
 body.has-sidebar {
   padding-left: var(--sidebar-width);
-  transition: padding-left 0.3s ease;
+  transition: padding 0.3s ease;
 }
+
 body.has-sidebar.sidebar-collapsed {
   padding-left: var(--sidebar-collapsed-width);
 }
 
-/* ===== SIDEBAR ===== */
+body.has-bottomnav {
+  padding-left: 0 !important;
+  padding-bottom: calc(var(--bottomnav-height) + env(safe-area-inset-bottom));
+  transition: padding 0.2s ease;
+}
+
+/* =========================
+   SIDEBAR (DESKTOP/TABLET)
+   ========================= */
 .sidebar {
-  position: fixed;          /* <- mantém fixa */
-  top: 0;
-  left: 0;
-  bottom: 0;
+  position: fixed;
+  inset: 0 auto 0 0; /* top:0; bottom:0; left:0 */
   width: var(--sidebar-width);
-  height: 100dvh;           /* considera barras móveis do mobile */
+  height: 100dvh;
   background-color: #fff;
-  border-right: 1px solid #e5e5e5;
+  border-right: 1px solid var(--gray-200);
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease, padding 0.3s ease;
-  overflow: hidden;         /* esconde conteúdo quando colapsa */
+  overflow: hidden;
   box-sizing: border-box;
   padding: 20px;
-  z-index: 1000;            /* fica sobre o conteúdo */
+  z-index: 1000;
 }
 
 .sidebar.collapsed {
@@ -69,8 +88,8 @@ body.has-sidebar.sidebar-collapsed {
 
 /* Menu */
 .sidebar-menu {
-  flex: 1;                  /* ocupa o meio, permitindo footer grudar embaixo */
-  overflow-y: auto;         /* se o menu passar da tela, scrolla só dentro da sidebar */
+  flex: 1;
+  overflow-y: auto;
   scrollbar-width: thin;
 }
 
@@ -84,7 +103,7 @@ body.has-sidebar.sidebar-collapsed {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #6b7280;           /* cinza 500 */
+  color: var(--gray-500);
   font-size: 0.95rem;
   padding: 12px 12px;
   border-radius: 8px;
@@ -98,18 +117,18 @@ body.has-sidebar.sidebar-collapsed {
 
 .sidebar-menu a.sidebar-link.active {
   background-color: #e9efff;
-  color: #3A5AFE;
+  color: var(--brand-primary);
   font-weight: 600;
 }
 
 .sidebar.collapsed .sidebar-menu .sidebar-link span {
-  display: none;            /* esconde textos no estado colapsado */
+  display: none;
 }
 
 /* Rodapé */
 .sidebar-footer {
   padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--gray-200);
 }
 
 .logout-btn {
@@ -118,7 +137,7 @@ body.has-sidebar.sidebar-collapsed {
   gap: 8px;
   background: none;
   border: none;
-  color: #e11d48;           /* vermelho */
+  color: #e11d48;
   font-weight: 600;
   cursor: pointer;
   padding: 8px 0;
@@ -143,13 +162,77 @@ body.has-sidebar.sidebar-collapsed {
 
 .user-role {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--gray-500);
 }
 
-/* Responsivo */
+/* =========================
+   BOTTOM NAV (MOBILE)
+   ========================= */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--bottomnav-height) + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid var(--gray-200);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr); /* 5 abas + sair */
+  align-items: stretch;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--gray-500);
+  padding: 6px 4px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.bottom-nav-item:hover {
+  background-color: var(--gray-50);
+}
+
+.bottom-nav-item.active {
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+.bottom-nav-item.logout {
+  color: #e11d48;
+}
+
+.bottom-nav-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.bottom-nav-label {
+  display: block;
+}
+
+/* =========================
+   BREAKPOINTS
+   ========================= */
 @media (max-width: 768px) {
-  /* Em mobile, já iniciamos colapsado via JS e mantemos fixo igual */
-  body.has-sidebar {
-    padding-left: var(--sidebar-collapsed-width);
+  /* Oculta a sidebar em mobile; quem aparece é a bottom-nav */
+  .sidebar {
+    display: none;
+  }
+
+  /* Body padding já tratado com .has-bottomnav via JS */
+}
+
+@media (min-width: 769px) {
+  /* Oculta a bottom-nav no desktop */
+  .bottom-nav {
+    display: none;
   }
 }
