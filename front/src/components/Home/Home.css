@@ -1,8 +1,3 @@
-/* Escopo do módulo Home */
-.mf-home {
-  /* nada global aqui pra não poluir outras páginas */
-}
-
 /* Estrutura geral da página Home */
 .mf-home .home-container {
   display: flex;

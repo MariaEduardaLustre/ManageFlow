@@ -3,8 +3,12 @@ const db = require('../database/connection'); // mysql2 (promise ou callback)
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
 const { getPublicFrontBaseUrl } = require('../utils/url');
-const fs = require('fs');
-const path = require('path');
+const { makePublicImageUrl } = require('../utils/image');
+const {
+  putToS3,
+  keyEmpresaLogoConfig,
+  keyEmpresaBannerConfig
+} = require('../middlewares/s3Upload');
 
 /* ========================= Helpers ========================= */
 function parseDateYyyyMmDdToInt(v) {
@@ -21,43 +25,10 @@ function toIntOrNull(v) {
   const n = parseInt(v, 10);
   return Number.isFinite(n) ? n : null;
 }
-function normalizeUrl(input) {
-  if (!input) return '';
-  if (typeof input === 'string') return input.trim();
-  if (typeof input === 'object' && typeof input.url === 'string') return input.url.trim();
-  return '';
-}
-function parseJsonUrl(raw) {
-  if (raw == null || raw === '') return { url: '' };
-  if (typeof raw === 'object' && raw.url) return { url: String(raw.url) };
-  try {
-    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    const url = obj && obj.url ? String(obj.url) : '';
-    return { url };
-  } catch {
-    return { url: normalizeUrl(raw) };
-  }
-}
 
+// Retorna a base da API (para normalizar URLs antigas, se chegarem)
 function getApiBase(req) {
   return (process.env.PUBLIC_API_BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-}
-function toPublicUrl(url, req) {
-  if (!url) return '';
-  const base = getApiBase(req);
-  if (url.startsWith('/')) return `${base}${url}`;
-  try {
-    const u = new URL(url);
-    const baseUrl = new URL(base);
-    if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
-      u.protocol = baseUrl.protocol;
-      u.host = baseUrl.host;
-      return u.toString();
-    }
-    return url;
-  } catch {
-    return url;
-  }
 }
 function isWithinRange(ini_vig, fim_vig) {
   const today = parseInt(new Date().toISOString().slice(0,10).replace(/-/g,''), 10);
@@ -80,51 +51,111 @@ async function execDb(sql, params = []) {
   });
 }
 
-/* ============ Upload helper (dataURL -> arquivo -> caminho relativo) ============ */
-async function ensureImageUrl(value, req, subdir) {
-  const raw = typeof value === 'string' ? value : (value?.url || '');
-  if (!raw) return { url: '' };
+/* ============================================================
+ *  Helpers de imagem p/ S3 nos campos JSON (IMG_LOGO / IMG_BANNER)
+ * ============================================================ */
 
-  // Já é caminho relativo aceito
-  if (raw.startsWith('/uploads/')) return { url: raw };
+/**
+ * Converte JSON/texto vindo do banco para objeto { url?: string, key?: string }
+ */
+function parseJsonKeyOrUrl(raw) {
+  if (raw == null || raw === '') return { url: '', key: '' };
+  try {
+    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    const url = obj?.url ? String(obj.url) : '';
+    const key = obj?.key ? String(obj.key) : '';
+    return { url, key };
+  } catch {
+    // pode ser string simples
+    const s = String(raw);
+    if (s.startsWith('/uploads/')) return { key: s, url: '' };
+    if (/^https?:\/\//i.test(s)) return { url: s, key: '' };
+    return { url: s, key: '' };
+  }
+}
 
-  // Já é http(s): se for do mesmo host do back, converte para relativo; senão mantém absoluto (ex.: CDN)
-  if (/^https?:\/\//i.test(raw)) {
-    try {
-      const u = new URL(raw);
-      const base = new URL(getApiBase(req));
-      if (u.host === base.host) {
-        return { url: u.pathname + (u.search || '') };
-      }
-      return { url: raw };
-    } catch { return { url: raw }; }
+/**
+ * Recebe valor do body (pode ser dataURL, http(s), {url}, {key}, ou key '/uploads/...'),
+ * e retorna um JSON pronto para gravar no banco: { key: '/uploads/...' }
+ * - Se for dataURL: sobe pro S3 com key específica (logo/banner) usando idEmpresa
+ * - Se for http(s) da sua CDN S3/CloudFront ou endpoint S3: extrai a key relativa
+ * - Se for '/uploads/...': mantém
+ * - Se for http externo (não S3/CDN): mantemos como URL absoluta dentro do JSON (fallback),
+ *   mas **recomendado** padronizar para key (CDN própria).
+ */
+async function ensureImgJsonForConfig(input, { idEmpresa, tipo /* 'logo' | 'banner' */ }) {
+  if (!input) return { key: '' };
+
+  // Normaliza entrada em { url, key }
+  const val = typeof input === 'object' ? input : { url: String(input) };
+  const str = (val.key || val.url || '').trim();
+  if (!str) return { key: '' };
+
+  // Caso 1: já é key relativa
+  if (str.startsWith('/uploads/')) {
+    return { key: str };
   }
 
-  // Data URL base64?
-  const m = raw.match(/^data:[^;]+;base64,(.+)$/i);
-  if (!m) return { url: '' };
-  const b64 = m[1].replace(/\s/g, '');
-  const extMatch = raw.match(/^data:([^/]+)\/([^;]+);base64,/i);
-  const ext = (extMatch?.[2] || 'png').toLowerCase();
+  // Caso 2: http(s)
+  if (/^https?:\/\//i.test(str)) {
+    try {
+      const u = new URL(str);
 
-  const dir = path.join(__dirname, '..', 'uploads', subdir);
-  await fs.promises.mkdir(dir, { recursive: true });
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
-  const filePath = path.join(dir, filename);
-  await fs.promises.writeFile(filePath, Buffer.from(b64, 'base64'));
+      // Se for sua CDN (S3_PUBLIC_BASE_URL), extraímos a key relativa
+      const cdn = (process.env.S3_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
+      if (cdn) {
+        const cdnUrl = new URL(cdn);
+        if (u.host === cdnUrl.host) {
+          // Mantém pathname como key (com barra inicial)
+          return { key: u.pathname };
+        }
+      }
 
-  // Salva RELATIVO no banco
-  return { url: `/uploads/${subdir}/${filename}` };
+      // Se for URL pública do S3 (https://bucket.s3.region.amazonaws.com/<key>)
+      const bucket = process.env.S3_BUCKET;
+      const region = process.env.AWS_REGION;
+      const s3Host = `${bucket}.s3.${region}.amazonaws.com`;
+      if (u.host === s3Host) {
+        return { key: u.pathname };
+      }
+
+      // Se for URL da própria API (antigo), converte para relativo
+      const apiBase = getApiBase({ protocol: u.protocol.replace(':',''), get: () => u.host });
+      const apiUrl = new URL(apiBase);
+      if (u.host === apiUrl.host && u.pathname.startsWith('/uploads/')) {
+        return { key: u.pathname };
+      }
+
+      // URL externa desconhecida → mantém como URL no JSON (não recomendado)
+      return { url: str, key: '' };
+    } catch {
+      return { key: '' };
+    }
+  }
+
+  // Caso 3: data URL base64 -> upload no S3
+  const m = str.match(/^data:([^/]+)\/([^;]+);base64,(.+)$/i);
+  if (m && m[3]) {
+    const mimetype = `${m[1]}/${m[2]}`.toLowerCase();
+    const buffer = Buffer.from(m[3].replace(/\s/g, ''), 'base64');
+
+    const key =
+      tipo === 'logo'
+        ? keyEmpresaLogoConfig(idEmpresa, mimetype)
+        : keyEmpresaBannerConfig(idEmpresa, mimetype);
+
+    const savedKey = await putToS3(buffer, key, mimetype);
+    return { key: savedKey };
+  }
+
+  // Caso desconhecido
+  return { key: '' };
 }
 
 /* ============================================================
  *  Função interna: reflete estado efetivo da configuração na fila do dia
- *  - Se inativa (ou fora de vigência): SITUACAO=0, BLOCK=1
- *  - Se ativa (e dentro da vigência): SITUACAO=1, BLOCK preservado (se existir fila); se não existir, cria com BLOCK=0
- *  Usa a MESMA conexão/transaction recebida.
  * ============================================================ */
 async function reflectConfigIntoTodayQueue(conn, idConfFila) {
-  // Carrega configuração atual do banco
   const [[cfg]] = await conn.query(
     `SELECT ID_EMPRESA, INI_VIG, FIM_VIG, SITUACAO
        FROM ConfiguracaoFila
@@ -137,7 +168,6 @@ async function reflectConfigIntoTodayQueue(conn, idConfFila) {
   const within_range = isWithinRange(cfg.INI_VIG, cfg.FIM_VIG);
   const effective_active = (cfg.SITUACAO === 1) && within_range;
 
-  // Busca/garante fila de hoje
   const [rowsFila] = await conn.execute(
     `SELECT ID_FILA, BLOCK, SITUACAO
        FROM fila
@@ -148,7 +178,6 @@ async function reflectConfigIntoTodayQueue(conn, idConfFila) {
   );
 
   if (!effective_active) {
-    // Inativa e bloqueia
     if (rowsFila.length) {
       await conn.execute(`UPDATE fila SET BLOCK = 1, SITUACAO = 0 WHERE ID_FILA = ?`, [rowsFila[0].ID_FILA]);
     } else {
@@ -159,7 +188,6 @@ async function reflectConfigIntoTodayQueue(conn, idConfFila) {
       );
     }
   } else {
-    // Ativa (preserva BLOCK se existir)
     if (rowsFila.length) {
       const currentBlock = rowsFila[0].BLOCK ? 1 : 0;
       await conn.execute(`UPDATE fila SET BLOCK = ?, SITUACAO = 1 WHERE ID_FILA = ?`, [currentBlock, rowsFila[0].ID_FILA]);
@@ -175,8 +203,107 @@ async function reflectConfigIntoTodayQueue(conn, idConfFila) {
   return { effective_active, within_range };
 }
 
+/**
+ * POST /uploads/configuracoes/:id/imagens
+ * Campos multipart: img_logo?, img_banner?
+ * - Sobe no S3 e grava nas colunas JSON (IMG_LOGO / IMG_BANNER) da tabela configuracaofila:
+ *   { "key": "/uploads/..." }
+ */
+exports.uploadImagensConfiguracao = async(req, res) => {
+  const idConfig = parseInt(req.params.id, 10);
+  if (!Number.isFinite(idConfig)) {
+    return res.status(400).json({ error: 'ID da configuração inválido.' });
+  }
+
+  try {
+    const [cfgRows] = await db.query(
+      'SELECT ID_EMPRESA, IMG_LOGO, IMG_BANNER FROM configuracaofila WHERE ID_CONF_FILA = ? LIMIT 1',
+      [idConfig]
+    );
+    if (!cfgRows.length) return res.status(404).json({ error: 'Configuração não encontrada.' });
+
+    const idEmpresa = cfgRows[0].ID_EMPRESA;
+    const files = req.files || {};
+    const updates = {};
+    const retorno = {};
+
+    if (files.img_logo?.[0]) {
+      const f = files.img_logo[0];
+      const key = keyEmpresaLogoConfig(idEmpresa, f.mimetype);
+      const savedKey = await putToS3(f.buffer, key, f.mimetype);
+      updates.IMG_LOGO = JSON.stringify({ key: savedKey });
+      retorno.img_logo = { key: savedKey, url: makePublicImageUrl(savedKey) };
+    }
+
+    if (files.img_banner?.[0]) {
+      const f = files.img_banner[0];
+      const key = keyEmpresaBannerConfig(idEmpresa, f.mimetype);
+      const savedKey = await putToS3(f.buffer, key, f.mimetype);
+      updates.IMG_BANNER = JSON.stringify({ key: savedKey });
+      retorno.img_banner = { key: savedKey, url: makePublicImageUrl(savedKey) };
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+    }
+
+    const fields = Object.keys(updates).map(k => `${k} = ?`).join(', ');
+    const values = Object.values(updates);
+
+    await db.query(
+      `UPDATE configuracaofila SET ${fields} WHERE ID_CONF_FILA = ?`,
+      [...values, idConfig]
+    );
+
+    return res.json({
+      message: 'Imagens da configuração atualizadas com sucesso.',
+      configuracaoId: idConfig,
+      imagens: retorno
+    });
+  } catch (err) {
+    console.error('[uploadImagensConfiguracao] Erro:', err);
+    return res.status(500).json({ error: 'Falha ao subir imagens da configuração.' });
+  }
+}
+
+/**
+ * GET /uploads/configuracoes/:id
+ * Retorna IMG_LOGO/IMG_BANNER normalizados (com URL pública)
+ */
+exports.getConfiguracao = async(req, res) => {
+  const idConfig = parseInt(req.params.id, 10);
+  if (!Number.isFinite(idConfig)) {
+    return res.status(400).json({ error: 'ID da configuração inválido.' });
+  }
+  try {
+    const [rows] = await db.query(
+      `SELECT ID_CONF_FILA, ID_EMPRESA, NOME_FILA, IMG_LOGO, IMG_BANNER
+         FROM configuracaofila
+        WHERE ID_CONF_FILA = ?`,
+      [idConfig]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Configuração não encontrada.' });
+
+    const c = rows[0];
+    const parseJson = (v) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
+    const logoJson = parseJson(c.IMG_LOGO);
+    const bannerJson = parseJson(c.IMG_BANNER);
+
+    return res.json({
+      id: c.ID_CONF_FILA,
+      id_empresa: c.ID_EMPRESA,
+      nome: c.NOME_FILA,
+      img_logo:   logoJson   ? { key: logoJson.key,   url: makePublicImageUrl(logoJson.key) }   : null,
+      img_banner: bannerJson ? { key: bannerJson.key, url: makePublicImageUrl(bannerJson.key) } : null
+    });
+  } catch (err) {
+    console.error('[getConfiguracao] Erro:', err);
+    return res.status(500).json({ error: 'Erro ao buscar configuração.' });
+  }
+}
+
 /* ============================================================
- *  Cadastrar configuração  (reflete na fila do dia)
+ *  Cadastrar configuração (reflete na fila do dia)
  * ============================================================ */
 exports.cadastrarConfiguracaoFila = async (req, res) => {
   const {
@@ -211,8 +338,9 @@ exports.cadastrarConfiguracaoFila = async (req, res) => {
 
   const token_fila = uuidv4();
 
-  const bannerObj = await ensureImageUrl(img_banner, req, 'banners');
-  const logoObj   = await ensureImageUrl(img_logo,   req, 'logos');
+  // 👇 agora salva em S3/JSON { key }
+  const bannerJson = await ensureImgJsonForConfig(img_banner, { idEmpresa: id_empresa, tipo: 'banner' });
+  const logoJson   = await ensureImgJsonForConfig(img_logo,   { idEmpresa: id_empresa, tipo: 'logo' });
 
   const conn = await db.getConnection();
   try {
@@ -234,8 +362,8 @@ exports.cadastrarConfiguracaoFila = async (req, res) => {
         fimVigInt,
         JSON.stringify(campos || {}),
         mensagem || '',
-        JSON.stringify(bannerObj),
-        JSON.stringify(logoObj),
+        JSON.stringify(bannerJson),
+        JSON.stringify(logoJson),
         parsedTempTol,
         parsedQtdeMin,
         parsedQtdeMax,
@@ -247,7 +375,6 @@ exports.cadastrarConfiguracaoFila = async (req, res) => {
 
     const id_conf_fila = result && (result.insertId ?? null);
 
-    // ✅ Reflete na fila do dia lendo a config do banco (evita confiar no body)
     const { effective_active, within_range } = await reflectConfigIntoTodayQueue(conn, id_conf_fila);
 
     await conn.commit();
@@ -298,12 +425,13 @@ exports.buscarConfiguracaoFilaPorId = async (req, res) => {
 
     let campos = {};
     try { campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : {}; } catch {}
-    const img_banner = parseJsonUrl(r.IMG_BANNER);
-    const img_logo   = parseJsonUrl(r.IMG_LOGO);
+
+    const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
+    const logo   = parseJsonKeyOrUrl(r.IMG_LOGO);
 
     // URLs públicas
-    img_banner.url = toPublicUrl(img_banner.url, req);
-    img_logo.url   = toPublicUrl(img_logo.url, req);
+    const bannerUrl = banner.key ? makePublicImageUrl(banner.key) : (banner.url || '');
+    const logoUrl   = logo.key   ? makePublicImageUrl(logo.key)   : (logo.url || '');
 
     const toDateStr = (n) => {
       if (!n) return '';
@@ -311,7 +439,6 @@ exports.buscarConfiguracaoFilaPorId = async (req, res) => {
       return `${s.substring(0,4)}-${s.substring(4,6)}-${s.substring(6,8)}`;
     };
 
-    // status efetivo (vigência x situação)
     const within_range = isWithinRange(r.INI_VIG, r.FIM_VIG);
     const effective_active = (r.SITUACAO === 1) && within_range;
     const situacao_exibicao = effective_active ? 1 : 0;
@@ -325,8 +452,8 @@ exports.buscarConfiguracaoFilaPorId = async (req, res) => {
       fim_vig:      toDateStr(r.FIM_VIG),
       campos,
       mensagem:     r.MENSAGEM,
-      img_banner,
-      img_logo,
+      img_banner:   banner.key ? { key: banner.key, url: bannerUrl } : (banner.url ? { url: bannerUrl } : null),
+      img_logo:     logo.key   ? { key: logo.key,   url: logoUrl }   : (logo.url ? { url: logoUrl } : null),
       temp_tol:     r.TEMP_TOL,
       qtde_min:     r.QDTE_MIN,
       qtde_max:     r.QTDE_MAX,
@@ -344,7 +471,7 @@ exports.buscarConfiguracaoFilaPorId = async (req, res) => {
 };
 
 /* ============================================================
- *  Atualizar configuração  (reflete na fila do dia)
+ *  Atualizar configuração (reflete na fila do dia)
  * ============================================================ */
 exports.atualizarConfiguracaoFila = async (req, res) => {
   const { id } = req.params; // ID_CONF_FILA
@@ -382,8 +509,9 @@ exports.atualizarConfiguracaoFila = async (req, res) => {
     return res.status(400).json({ erro: 'Formato inválido para SITUACAO. Esperado 0 ou 1.' });
   }
 
-  const bannerObj = await ensureImageUrl(img_banner, req, 'banners');
-  const logoObj   = await ensureImageUrl(img_logo,   req, 'logos');
+  // 👇 converte para JSON { key } (faz upload no S3 se vier base64)
+  const bannerJson = await ensureImgJsonForConfig(img_banner, { idEmpresa: id_empresa, tipo: 'banner' });
+  const logoJson   = await ensureImgJsonForConfig(img_logo,   { idEmpresa: id_empresa, tipo: 'logo' });
 
   const conn = await db.getConnection();
   try {
@@ -405,8 +533,8 @@ exports.atualizarConfiguracaoFila = async (req, res) => {
         fimVigInt,
         JSON.stringify(campos || {}),
         mensagem || '',
-        JSON.stringify(bannerObj),
-        JSON.stringify(logoObj),
+        JSON.stringify(bannerJson),
+        JSON.stringify(logoJson),
         parsedTempTol,
         parsedQtdeMin,
         parsedQtdeMax,
@@ -426,7 +554,7 @@ exports.atualizarConfiguracaoFila = async (req, res) => {
       return res.status(404).json({ mensagem: 'Configuração de fila não encontrada para atualização.' });
     }
 
-    // ✅ 2) Recarrega a configuração do BANCO e reflete na fila do dia
+    // 2) Reflete na fila do dia
     const { effective_active, within_range } = await reflectConfigIntoTodayQueue(conn, id);
 
     await conn.commit();
@@ -493,8 +621,11 @@ exports.listarConfiguracoesDaEmpresa = async (req, res) => {
       let campos = {};
       try { campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : {}; } catch {}
 
-      const img_banner = parseJsonUrl(r.IMG_BANNER);
-      const img_logo   = parseJsonUrl(r.IMG_LOGO);
+      const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
+      const logo   = parseJsonKeyOrUrl(r.IMG_LOGO);
+
+      const bannerUrl = banner.key ? makePublicImageUrl(banner.key) : (banner.url || '');
+      const logoUrl   = logo.key   ? makePublicImageUrl(logo.key)   : (logo.url || '');
 
       const within_range = isWithinRange(r.INI_VIG, r.FIM_VIG);
       const effective_active = (r.SITUACAO === 1) && within_range;
@@ -509,8 +640,8 @@ exports.listarConfiguracoesDaEmpresa = async (req, res) => {
         fim_vig: toDateStr(r.FIM_VIG),
         campos,
         mensagem: r.MENSAGEM,
-        img_banner: { url: toPublicUrl(img_banner.url, req) },
-        img_logo:   { url: toPublicUrl(img_logo.url, req) },
+        img_banner: banner.key ? { key: banner.key, url: bannerUrl } : (banner.url ? { url: bannerUrl } : null),
+        img_logo:   logo.key   ? { key: logo.key,   url: logoUrl }   : (logo.url ? { url: logoUrl } : null),
         temp_tol: r.TEMP_TOL,
         qtde_min: r.QDTE_MIN,
         qtde_max: r.QTDE_MAX,
@@ -559,10 +690,11 @@ exports.getPublicInfoByToken = async (req, res) => {
     let campos = [];
     try { campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : []; } catch {}
 
-    const img_banner = parseJsonUrl(r.IMG_BANNER);
-    const img_logo   = parseJsonUrl(r.IMG_LOGO);
-    img_banner.url = toPublicUrl(img_banner.url, req);
-    img_logo.url   = toPublicUrl(img_logo.url, req);
+    const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
+    const logo   = parseJsonKeyOrUrl(r.IMG_LOGO);
+
+    const bannerUrl = banner.key ? makePublicImageUrl(banner.key) : (banner.url || '');
+    const logoUrl   = logo.key   ? makePublicImageUrl(logo.key)   : (logo.url || '');
 
     const within_range = isWithinRange(r.INI_VIG, r.FIM_VIG);
     const effective_active = (r.SITUACAO === 1) && within_range;
@@ -577,8 +709,8 @@ exports.getPublicInfoByToken = async (req, res) => {
       fim_vig:      r.FIM_VIG || null,
       campos,
       mensagem:     r.MENSAGEM || '',
-      img_banner,                          // { url: '...' }
-      img_logo,                            // { url: '...' }
+      img_banner:   banner.key ? { key: banner.key, url: bannerUrl } : (banner.url ? { url: bannerUrl } : null),
+      img_logo:     logo.key   ? { key: logo.key,   url: logoUrl }   : (logo.url ? { url: logoUrl } : null),
       temp_tol:     r.TEMP_TOL,
       qtde_min:     r.QDTE_MIN,
       qtde_max:     r.QTDE_MAX,
@@ -588,7 +720,7 @@ exports.getPublicInfoByToken = async (req, res) => {
       empresa: {
         id:       r.ID_EMPRESA,
         nome:     r.NOME_EMPRESA,
-        logo_url: img_logo.url || ''
+        logo_url: logoUrl || ''
       },
       within_range,
       effective_active,
@@ -639,7 +771,6 @@ exports.publicJoinByToken = async (req, res) => {
     }
     const cfg = cfgRows[0];
 
-    // ativo + dentro da vigência
     const within_range = isWithinRange(cfg.INI_VIG, cfg.FIM_VIG);
     if (!(cfg.SITUACAO === 1 && within_range)) {
       await conn.rollback();
@@ -661,7 +792,7 @@ exports.publicJoinByToken = async (req, res) => {
     let idFila;
     if (filaRows.length) {
       const f = filaRows[0];
-      if (f.BLOCK)        { await conn.rollback(); return res.status(409).json({ erro: 'fila_blocked'  }); }
+      if (f.BLOCK)         { await conn.rollback(); return res.status(409).json({ erro: 'fila_blocked'  }); }
       if (f.SITUACAO !== 1){ await conn.rollback(); return res.status(409).json({ erro: 'fila_inactive' }); }
       idFila = f.ID_FILA;
     } else {
@@ -747,25 +878,27 @@ exports.publicJoinByToken = async (req, res) => {
   }
 };
 
-// Função para contar quantas filas uma empresa tem configuradas
+/* ============================================================
+ *  Métricas auxiliares
+ * ============================================================ */
 exports.contarFilasPorEmpresa = async (req, res) => {
-    const { id_empresa } = req.params; // Ou extraia da sessão/token
+  const { id_empresa } = req.params;
 
-    if (!id_empresa) {
-        return res.status(400).json({ erro: 'ID da empresa é obrigatório.' });
-    }
+  if (!id_empresa) {
+    return res.status(400).json({ erro: 'ID da empresa é obrigatório.' });
+  }
 
-    const sql = `SELECT COUNT(*) AS totalFilas FROM ConfiguracaoFila WHERE ID_EMPRESA = ?`;
+  const sql = `SELECT COUNT(*) AS totalFilas FROM ConfiguracaoFila WHERE ID_EMPRESA = ?`;
 
-    try {
-        const [results] = await db.execute(sql, [id_empresa]);
-        const totalFilas = results[0].totalFilas || 0;
+  try {
+    const [results] = await db.execute(sql, [id_empresa]);
+    const totalFilas = results[0].totalFilas || 0;
 
-        res.status(200).json({ id_empresa, totalFilas });
-    } catch (err) {
-        console.error('Erro ao contar filas por empresa:', err);
-        res.status(500).json({ erro: 'Erro interno ao contar filas.', detalhes: err.message });
-    }
+    res.status(200).json({ id_empresa, totalFilas });
+  } catch (err) {
+    console.error('Erro ao contar filas por empresa:', err);
+    res.status(500).json({ erro: 'Erro interno ao contar filas.', detalhes: err.message });
+  }
 };
 
 exports.listarFilasPorEmpresa = async (req, res) => {
@@ -804,4 +937,3 @@ exports.listarFilasPorEmpresa = async (req, res) => {
     res.status(500).json({ erro: 'Erro interno ao listar filas.', detalhes: err.message });
   }
 };
-

@@ -4,8 +4,16 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+
+// S3 helpers
+const { makePublicImageUrl } = require('../utils/image');
+const { putToS3, keyUsuarioPerfil } = require('../middlewares/s3Upload');
+
 require('dotenv').config();
 
+/* ============================================================
+ *  LOGIN
+ * ============================================================ */
 exports.loginUsuario = async (req, res) => {
   const { email, senha } = req.body;
 
@@ -14,7 +22,8 @@ exports.loginUsuario = async (req, res) => {
   }
 
   try {
-    const [results] = await db.query('SELECT * FROM Usuario WHERE EMAIL = ?', [email]);
+    // Padronizado para a mesma tabela 'usuario'
+    const [results] = await db.query('SELECT * FROM usuario WHERE EMAIL = ?', [email]);
     if (results.length === 0) {
       return res.status(401).send('Usuário ou senha inválidos.');
     }
@@ -34,7 +43,8 @@ exports.loginUsuario = async (req, res) => {
     return res.json({
       token,
       idUsuario: usuario.ID,
-      nome: usuario.NOME
+      nome: usuario.NOME,
+      img_perfil: makePublicImageUrl(usuario.img_perfil || null) // pode ser null na primeira vez
     });
   } catch (err) {
     console.error('[ERRO] loginUsuario:', err);
@@ -42,8 +52,9 @@ exports.loginUsuario = async (req, res) => {
   }
 };
 
-
-// ====== CADASTRO ======
+/* ============================================================
+ *  CADASTRO
+ * ============================================================ */
 exports.cadastrarUsuario = async (req, res) => {
   const {
     nome, email, cpfCnpj, senha,
@@ -51,14 +62,11 @@ exports.cadastrarUsuario = async (req, res) => {
     ddi, ddd, telefone
   } = req.body;
 
-  console.log('[CADASTRO] body=', req.body);
-
   if (!nome || !email || !cpfCnpj || !senha || !cep || !endereco || !numero || !ddi || !ddd || !telefone) {
     return res.status(400).send('Preencha todos os campos obrigatórios.');
   }
 
   try {
-    // Padronize para a mesma tabela 'usuario'
     const [usuariosExistentes] = await db.query(
       'SELECT ID, EMAIL, CPFCNPJ FROM usuario WHERE EMAIL = ? OR CPFCNPJ = ? LIMIT 1',
       [email, cpfCnpj]
@@ -74,8 +82,8 @@ exports.cadastrarUsuario = async (req, res) => {
 
     await db.query(
       `INSERT INTO usuario
-        (NOME, EMAIL, CPFCNPJ, SENHA, CEP, ENDERECO, NUMERO, COMPLEMENTO, DDI, DDD, TELEFONE)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (NOME, EMAIL, CPFCNPJ, SENHA, CEP, ENDERECO, NUMERO, COMPLEMENTO, DDI, DDD, TELEFONE, img_perfil)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
       [nome, email, cpfCnpj, senhaCriptografada, cep, endereco, numero, complemento, ddi, ddd, telefone]
     );
 
@@ -86,16 +94,16 @@ exports.cadastrarUsuario = async (req, res) => {
   }
 };
 
-// ====== ESQUECI SENHA ======
+/* ============================================================
+ *  ESQUECI SENHA
+ * ============================================================ */
 exports.solicitarRedefinicaoSenha = async (req, res) => {
-  console.log('[FORGOT] body=', req.body);
   const { email } = req.body;
   if (!email) return res.status(400).send('Por favor, informe seu e-mail.');
 
   try {
     const [results] = await db.query('SELECT ID, EMAIL FROM usuario WHERE EMAIL = ?', [email]);
     if (results.length === 0) {
-      console.warn('[FORGOT] email not found');
       return res.status(404).send('E-mail não encontrado.');
     }
 
@@ -138,7 +146,9 @@ exports.solicitarRedefinicaoSenha = async (req, res) => {
   }
 };
 
-// ====== REDEFINIR SENHA ======
+/* ============================================================
+ *  REDEFINIR SENHA
+ * ============================================================ */
 exports.redefinirSenha = async (req, res) => {
   const { token, novaSenha } = req.body;
   if (!token || !novaSenha) {
@@ -168,5 +178,70 @@ exports.redefinirSenha = async (req, res) => {
   } catch (error) {
     console.error('[RESET] 500 error:', error);
     res.status(500).send('Erro interno ao redefinir a senha.');
+  }
+};
+
+/* ============================================================
+ *  FOTO DE PERFIL (S3) — multipart/form-data (campo: img_perfil)
+ *  Requer o middleware: usuarioPerfilSingle (multer) na rota.
+ * ============================================================ */
+exports.uploadFotoPerfil = async (req, res) => {
+  const idUsuario = parseInt(req.params.id, 10);
+  if (!Number.isFinite(idUsuario)) {
+    return res.status(400).json({ error: 'ID de usuário inválido.' });
+  }
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Envie o arquivo em "img_perfil".' });
+    }
+
+    const f = req.file;
+    const key = keyUsuarioPerfil(idUsuario, f.mimetype); // /uploads/usuarios/:id/perfil/...
+    const savedKey = await putToS3(f.buffer, key, f.mimetype);
+
+    await db.query(
+      `UPDATE usuario SET img_perfil = ? WHERE ID = ?`,
+      [savedKey, idUsuario]
+    );
+
+    return res.json({
+      message: 'Foto de perfil atualizada com sucesso.',
+      usuarioId: idUsuario,
+      img_perfil: makePublicImageUrl(savedKey), // URL pública
+      key: savedKey                              // key relativa salva no banco
+    });
+  } catch (err) {
+    console.error('[uploadFotoPerfil] Erro:', err);
+    return res.status(500).json({ error: 'Falha ao subir foto de perfil.' });
+  }
+};
+
+/* ============================================================
+ *  GET USUÁRIO POR ID (retorna URL pública da foto)
+ * ============================================================ */
+exports.getUsuarioPorId = async (req, res) => {
+  const idUsuario = parseInt(req.params.id, 10);
+  if (!Number.isFinite(idUsuario)) {
+    return res.status(400).json({ error: 'ID de usuário inválido.' });
+  }
+  try {
+    const [rows] = await db.query(
+      `SELECT ID, NOME, EMAIL, CPFCNPJ, img_perfil FROM usuario WHERE ID = ? LIMIT 1`,
+      [idUsuario]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Usuário não encontrado.' });
+
+    const u = rows[0];
+    return res.json({
+      id: u.ID,
+      nome: u.NOME,
+      email: u.EMAIL,
+      cpfCnpj: u.CPFCNPJ,
+      img_perfil: makePublicImageUrl(u.img_perfil || null),
+      _key: u.img_perfil || null
+    });
+  } catch (err) {
+    console.error('[getUsuarioPorId] Erro:', err);
+    return res.status(500).json({ error: 'Erro interno ao buscar usuário.' });
   }
 };
