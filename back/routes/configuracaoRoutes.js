@@ -11,5 +11,6 @@ router.get('/filas', ctrl.listarConfiguracoesDaEmpresa);
 router.get('/qr/:token', ctrl.qrPngByToken);
 router.get('/filas/contar/:id_empresa', ctrl.contarFilasPorEmpresa);
 router.get('/filas/:id_empresa', ctrl.listarFilasPorEmpresa);
+router.delete('/:id', ctrl.excluirConfiguracaoFila);
 
 module.exports = router;

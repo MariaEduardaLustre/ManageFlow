@@ -338,7 +338,7 @@ exports.cadastrarConfiguracaoFila = async (req, res) => {
 
   const token_fila = uuidv4();
 
-  // 👇 agora salva em S3/JSON { key }
+  // 👇 salva em S3/JSON { key }
   const bannerJson = await ensureImgJsonForConfig(img_banner, { idEmpresa: id_empresa, tipo: 'banner' });
   const logoJson   = await ensureImgJsonForConfig(img_logo,   { idEmpresa: id_empresa, tipo: 'logo' });
 
@@ -567,6 +567,111 @@ exports.atualizarConfiguracaoFila = async (req, res) => {
     await conn.rollback();
     console.error('Erro ao atualizar ConfiguracaoFila (com refletir fila):', err);
     return res.status(500).json({ erro: 'Erro interno ao atualizar configuração.', detalhes: err.message });
+  } finally {
+    conn.release();
+  }
+};
+
+/* ============================================================
+ *  EXCLUIR configuração (apaga clientes → filas → configuração)
+ *  DELETE /configuracao/:id?idEmpresa=123
+ * ============================================================ */
+exports.excluirConfiguracaoFila = async (req, res) => {
+  const idConf = parseInt(req.params.id, 10);
+  const idEmpresa = Number(req.query.idEmpresa || req.headers['x-empresa-id'] || req.body?.id_empresa);
+
+  if (!Number.isFinite(idConf)) {
+    return res.status(400).json({ erro: 'ID da configuração inválido.' });
+  }
+  if (!idEmpresa) {
+    return res.status(400).json({ erro: 'idEmpresa é obrigatório.' });
+  }
+
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // 1) Verifica se a configuração existe e pertence à empresa
+    const [cfgRows] = await conn.execute(
+      `SELECT ID_CONF_FILA, ID_EMPRESA, IMG_LOGO, IMG_BANNER
+         FROM ConfiguracaoFila
+        WHERE ID_CONF_FILA = ?
+        LIMIT 1`,
+      [idConf]
+    );
+    if (!cfgRows.length) {
+      await conn.rollback();
+      return res.status(404).json({ erro: 'config_not_found' });
+    }
+    if (cfgRows[0].ID_EMPRESA !== idEmpresa) {
+      await conn.rollback();
+      return res.status(403).json({ erro: 'forbidden' });
+    }
+
+    // 2) Busca todas as filas dessa configuração (qualquer data)
+    const [rowsFilas] = await conn.execute(
+      `SELECT ID_FILA
+         FROM fila
+        WHERE ID_EMPRESA = ? AND ID_CONF_FILA = ?`,
+      [idEmpresa, idConf]
+    );
+    const filaIds = rowsFilas.map(r => r.ID_FILA);
+
+    let delClientes = 0;
+    let delFilas = 0;
+    let delCfg = 0;
+
+    // 3) Remove clientes dessas filas (se houver)
+    if (filaIds.length > 0) {
+      const placeholders = filaIds.map(() => '?').join(',');
+      const params = [idEmpresa, ...filaIds];
+
+      const [resDelCli] = await conn.execute(
+        `DELETE FROM clientesfila
+          WHERE ID_EMPRESA = ?
+            AND ID_FILA IN (${placeholders})`,
+        params
+      );
+      delClientes = resDelCli?.affectedRows ?? 0;
+
+      // 4) Remove as filas
+      const [resDelFila] = await conn.execute(
+        `DELETE FROM fila
+          WHERE ID_EMPRESA = ?
+            AND ID_FILA IN (${placeholders})`,
+        params
+      );
+      delFilas = resDelFila?.affectedRows ?? 0;
+    }
+
+    // 5) Remove a configuração
+    const [resDelCfg] = await conn.execute(
+      `DELETE FROM ConfiguracaoFila
+        WHERE ID_CONF_FILA = ? AND ID_EMPRESA = ?`,
+      [idConf, idEmpresa]
+    );
+    delCfg = resDelCfg?.affectedRows ?? 0;
+
+    if (!delCfg) {
+      await conn.rollback();
+      return res.status(404).json({ erro: 'config_not_found' });
+    }
+
+    await conn.commit();
+    return res.status(200).json({
+      mensagem: 'Configuração excluída com sucesso.',
+      removidos: { clientes: delClientes, filas: delFilas, configuracao: delCfg }
+    });
+  } catch (err) {
+    await conn.rollback();
+
+    // FK em outra tabela?
+    if (err && (err.code === 'ER_ROW_IS_REFERENCED_2' || err.errno === 1451)) {
+      return res.status(409).json({ erro: 'constraint_violation', detalhe: 'Configuração referenciada por outros registros.' });
+    }
+
+    console.error('[excluirConfiguracaoFila] Erro:', err);
+    return res.status(500).json({ erro: 'Erro interno ao excluir configuração.', detalhes: err.message });
   } finally {
     conn.release();
   }

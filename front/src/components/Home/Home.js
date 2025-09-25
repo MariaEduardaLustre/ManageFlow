@@ -1,3 +1,4 @@
+// src/pages/Home/Home.js
 import React, { useEffect, useState, useMemo } from 'react';
 import Menu from '../Menu/Menu';
 import { FaUsers, FaUserPlus, FaTrash } from 'react-icons/fa';
@@ -55,6 +56,15 @@ const Home = () => {
   const canInvite = hasPerm('usersRoles', 'create');
   const canEdit   = hasPerm('usersRoles', 'edit');
   const canDelete = hasPerm('usersRoles', 'delete');
+
+  // ---- PERFIL ADMIN (IDs) ----
+  // Descobre automaticamente quais perfis são de nível de Administrador (NIVEL === 1)
+  const adminPerfilIds = useMemo(() => {
+    if (!Array.isArray(perfis)) return [];
+    return perfis.filter(p => Number(p.NIVEL) === 1).map(p => Number(p.ID_PERFIL));
+  }, [perfis]);
+
+  const isUserAdmin = (user) => adminPerfilIds.includes(Number(user?.ID_PERFIL));
 
   useEffect(() => {
     if (!idEmpresa) {
@@ -130,6 +140,7 @@ const Home = () => {
     if (!usuarioParaExcluir) return;
     if (!canDelete) return handleShowErrorModal('Você não tem permissão para remover membros.');
     if (usuarioParaExcluir.ID === myUserId) return handleShowErrorModal('Você não pode se remover da empresa por aqui.');
+    if (isUserAdmin(usuarioParaExcluir)) return handleShowErrorModal('Não é permitido remover usuários Administradores por aqui.');
 
     try {
       await api.delete(`/empresa/${idEmpresa}/remover-usuario/${usuarioParaExcluir.ID}`);
@@ -150,6 +161,13 @@ const Home = () => {
 
   const handleMudarPermissao = async (idUsuario, novoIdPerfil) => {
     if (!canEdit) return handleShowErrorModal('Você não tem permissão para alterar perfis.');
+
+    // BLOQUEIO: Não permitir alteração de permissão de usuários que são Administradores
+    const alvo = usuarios.find(u => u.ID === idUsuario);
+    if (alvo && isUserAdmin(alvo)) {
+      return handleShowErrorModal('Não é permitido alterar a permissão de um Administrador.');
+    }
+
     try {
       await api.put(`/permissoes/${idEmpresa}/${idUsuario}`, { idPerfil: novoIdPerfil });
       setUsuarios((prev) =>
@@ -231,49 +249,53 @@ const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                {usuarios.map((user) => (
-                  <tr key={user.ID}>
-                    <td data-label="Nome">{user.NOME}</td>
-                    <td data-label="Email">{user.email || user.EMAIL}</td>
-                    <td data-label="Permissão">
-                      {canEdit ? (
-                        <select
-                          value={user.ID_PERFIL}
-                          onChange={(e) => handleMudarPermissao(user.ID, e.target.value)}
-                          className="home-permissao-select"
-                        >
-                          {perfis.map((p) => (
-                            <option key={p.ID_PERFIL} value={p.ID_PERFIL}>
-                              {p.NOME_PERFIL}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        user.NOME_PERFIL
-                      )}
-                    </td>
-                    {(canEdit || canDelete) && (
-                      <td data-label="Ações">
-                        {canDelete && user.ID !== myUserId && (
-                          <button
-                            onClick={() => handleShowConfirmDelete(user)}
-                            className="home-btn-remover"
-                            title="Remover Usuário"
+                {usuarios.map((user) => {
+                  const adminDaLinha = isUserAdmin(user);
+                  return (
+                    <tr key={user.ID}>
+                      <td data-label="Nome">{user.NOME}</td>
+                      <td data-label="Email">{user.email || user.EMAIL}</td>
+                      <td data-label="Permissão">
+                        {canEdit && !adminDaLinha ? (
+                          <select
+                            value={user.ID_PERFIL}
+                            onChange={(e) => handleMudarPermissao(user.ID, e.target.value)}
+                            className="home-permissao-select"
                           >
-                            <FaTrash />
-                          </button>
+                            {perfis.map((p) => (
+                              <option key={p.ID_PERFIL} value={p.ID_PERFIL}>
+                                {p.NOME_PERFIL}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          // Administrador: nunca permite editar (apenas exibe)
+                          user.NOME_PERFIL
                         )}
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      {(canEdit || canDelete) && (
+                        <td data-label="Ações">
+                          {canDelete && user.ID !== myUserId && !adminDaLinha && (
+                            <button
+                              onClick={() => handleShowConfirmDelete(user)}
+                              className="home-btn-remover"
+                              title="Remover Usuário"
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </section>
       </main>
 
-      {/* Modais iguais... */}
+      {/* Modais */}
       <Modal show={showAddUserModal} onHide={handleCloseAddUserModal} centered>
         <Form onSubmit={adicionarUsuario}>
           <Modal.Header closeButton>

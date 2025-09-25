@@ -14,10 +14,15 @@ const server = http.createServer(app);
 /* ====== CORS ====== */
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.0.52:3000',
+  'http://192.168.0.54:3000',
   process.env.PUBLIC_FRONT_BASE_URL,
   process.env.FRONT_ORIGIN,
 ].filter(Boolean);
+
+/* ====== Socket.IO ====== */
+const io = new Server(server, {
+  cors: { origin: allowedOrigins, methods: ['GET','POST','PUT','PATCH','DELETE'], credentials: true },
+});
 
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
@@ -32,10 +37,6 @@ app.use((req, _res, next) => {
   next();
 });
 
-/* ====== Socket.IO ====== */
-const io = new Server(server, {
-  cors: { origin: allowedOrigins, methods: ['GET','POST','PUT','PATCH','DELETE'], credentials: true },
-});
 
 /* ====== Arquivos estáticos (imagens já salvas localmente) ====== */
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -50,6 +51,9 @@ app.use('/api/configuracao', configuracaoPublicRoutes);
 const dashboardRoutes = require('./routes/dashboardRoutes')(io);
 app.use('/api/dashboard', dashboardRoutes);
 
+const usuarioRoutes = require('./routes/usuarioRoutes');
+app.use('/api', usuarioRoutes);
+
 // API de upload (S3) – pública ou privada? geralmente privada:
 const uploadRoutes = require('./routes/uploadRoutes');
 app.use('/api/uploads', uploadRoutes); // <-- endpoints de API; NÃO confundir com estático acima
@@ -57,9 +61,6 @@ app.use('/api/uploads', uploadRoutes); // <-- endpoints de API; NÃO confundir c
 // --- Privadas (com JWT) ---
 const meRoutes = require('./routes/me');
 app.use('/api', authMiddleware, meRoutes);
-
-const usuarioRoutes = require('./routes/usuarioRoutes');
-app.use('/api', usuarioRoutes); // se algumas rotas aqui forem privadas, mova-as para baixo com authMiddleware
 
 let empresaRoutesModule = require('./routes/empresaRoutes');
 const empresaRoutesResolved = typeof empresaRoutesModule === 'function' ? empresaRoutesModule(io) : empresaRoutesModule;

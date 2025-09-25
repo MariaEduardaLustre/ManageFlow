@@ -1,4 +1,3 @@
-// src/components/FilasCadastradas/FilasCadastradas.js
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,6 +9,7 @@ import {
   FaQrcode,
   FaEdit,
   FaLink,
+  FaTrash
 } from "react-icons/fa";
 import Menu from "../Menu/Menu";
 import api from "../../services/api";
@@ -19,6 +19,11 @@ const FilasCadastradas = () => {
   const [filas, setFilas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // controle de exclusão
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
   // Modal de QR
   const [qrOpen, setQrOpen] = useState(false);
@@ -154,6 +159,38 @@ const FilasCadastradas = () => {
     a.remove();
   };
 
+  /* ===== Exclusão com modal ===== */
+  const askDeleteFila = (f) => {
+    setConfirmTarget(f);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmTarget) return;
+    const id = confirmTarget.id_conf_fila;
+    try {
+      setDeletingId(id);
+      await api.delete(`/configuracao/${id}`, { params: { idEmpresa } });
+      setFilas((prev) => prev.filter((x) => x.id_conf_fila !== id));
+      setConfirmOpen(false);
+      setConfirmTarget(null);
+    } catch (err) {
+      const msg =
+        err.response?.data?.erro ||
+        err.response?.data?.message ||
+        err.message;
+      alert(`Não foi possível excluir: ${msg}`);
+      console.error("Excluir configuração erro:", err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmOpen(false);
+    setConfirmTarget(null);
+  };
+
   const filteredFilas = useMemo(() => {
     const txt = (search || "").trim().toLowerCase();
     if (!txt) return filas;
@@ -216,6 +253,12 @@ const FilasCadastradas = () => {
               </div>
             </div>
 
+            {error && (
+              <div className="qr-error" style={{ marginBottom: 12 }}>
+                {error}
+              </div>
+            )}
+
             <div className="table-wrap">
               <table className="tbl-queues">
                 <thead>
@@ -225,10 +268,18 @@ const FilasCadastradas = () => {
                     <th>Link de entrada</th>
                     <th>QR Code</th>
                     <th>Status</th>
-                    <th style={{ textAlign: "right" }}>Ações</th>
+                    <th className="th-actions">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
+                  {!loading && filteredFilas.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: "center", color: "#6a7184" }}>
+                        Nenhum item encontrado.
+                      </td>
+                    </tr>
+                  )}
+
                   {filteredFilas.map((f) => {
                     const joinUrl = f.join_url || "";
                     const canQr = Boolean(f.token_fila || f.join_url);
@@ -294,16 +345,24 @@ const FilasCadastradas = () => {
                           </span>
                         </td>
 
-                        <td
-                          data-label="Ações"
-                          className="cell-actions"
-                          style={{ textAlign: "right" }}
-                        >
+                        <td data-label="Ações" className="cell-actions">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn btn-primary btn-sm btn-icon"
                             onClick={() => handleEditFila(f.id_conf_fila)}
+                            title="Editar configuração"
+                            aria-label={`Editar ${f.nome_fila}`}
                           >
-                            <FaEdit /> <span>Editar</span>
+                            <FaEdit />
+                          </button>
+
+                          <button
+                            className={`btn btn-danger btn-sm btn-icon ${deletingId === f.id_conf_fila ? "is-loading" : ""}`}
+                            title="Excluir configuração"
+                            aria-label={`Excluir ${f.nome_fila}`}
+                            onClick={() => askDeleteFila(f)}
+                            disabled={deletingId === f.id_conf_fila}
+                          >
+                            <FaTrash />
                           </button>
                         </td>
                       </tr>
@@ -314,7 +373,9 @@ const FilasCadastradas = () => {
             </div>
 
             <div className="pagination">
-              <span>Mostrando {filteredFilas.length} itens</span>
+              <span>
+                {loading ? "Carregando..." : `Mostrando ${filteredFilas.length} itens`}
+              </span>
             </div>
           </div>
         </div>
@@ -354,13 +415,64 @@ const FilasCadastradas = () => {
 
             <div className="modal-footer">
               <div className="spacer" />
-
               <button
                 className="btn btn-primary"
                 onClick={handleDownloadQrFromModal}
                 disabled={!qrUrl}
               >
                 <FaDownload /> <span>Baixar PNG</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmação de exclusão */}
+      {confirmOpen && confirmTarget && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-title"
+        >
+          <div className="modal modal-confirm">
+            <div className="modal-header">
+              <h3 id="confirm-title">Excluir configuração</h3>
+              <button
+                className="icon-btn"
+                onClick={handleCancelDelete}
+                aria-label="Fechar"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="confirm-text">
+                Tem certeza que deseja excluir a configuração{" "}
+                <strong>“{confirmTarget.nome_fila}”</strong> (ID{" "}
+                {confirmTarget.id_conf_fila})?
+                <div className="confirm-sub">
+                  Essa ação removerá também as filas e clientes associados.
+                  Não poderá ser desfeita.
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-outline"
+                onClick={handleCancelDelete}
+                disabled={deletingId === confirmTarget.id_conf_fila}
+              >
+                Cancelar
+              </button>
+              <button
+                className={`btn btn-danger ${deletingId === confirmTarget.id_conf_fila ? "is-loading" : ""}`}
+                onClick={handleConfirmDelete}
+                disabled={deletingId === confirmTarget.id_conf_fila}
+              >
+                Excluir definitivamente
               </button>
             </div>
           </div>
