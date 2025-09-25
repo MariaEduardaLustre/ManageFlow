@@ -1,102 +1,216 @@
-import { useEffect, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import * as XLSX from 'xlsx';
-import Menu from '../Menu/Menu';
-import './Relatorio.css';
+import React, { useState, useEffect } from "react";
+import Menu from "../Menu/Menu";
+import Select from "react-select";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
+import * as XLSX from "xlsx";
+import axios from "axios";
+import "./Relatorio.css";
 
 const Relatorio = () => {
-  const [dados, setDados] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [filas, setFilas] = useState([]);
+  const [filaSelecionada, setFilaSelecionada] = useState(null);
+  const [tempoEspera, setTempoEspera] = useState([]);
+  const [desistencias, setDesistencias] = useState([]);
+  const [avaliacoes, setAvaliacoes] = useState([]);
 
-  const id_empresa = 23; // Ajuste para vir da sessão/login
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
 
+  // Empresa logada
+  const empresaSelecionada = JSON.parse(
+    localStorage.getItem("empresaSelecionada")
+  );
+
+  const headers = {
+    "empresa-selecionada": JSON.stringify({
+      ID_EMPRESA: empresaSelecionada?.ID_EMPRESA,
+    }),
+  };
+
+  // Buscar filas
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`http://localhost:3001/api/configuracao-fila/filas/${id_empresa}`);
-        const data = await response.json();
+    if (!empresaSelecionada) return;
 
-        const formatados = data.map(item => ({
-  nome_fila: item.NOME_FILA,
-  contagem: item.contagem,
-  data_configuracao: item.data_configuracao
-    ? new Date(item.data_configuracao).toLocaleDateString('pt-BR')
-    : '-',
-  data_atualizacao: item.data_atualizacao
-    ? new Date(item.data_atualizacao).toLocaleDateString('pt-BR')
-    : '-',
-}));
+    axios
+      .get("http://localhost:3001/api/relatorios/filas", { headers })
+      .then((res) => setFilas(res.data || []))
+      .catch((err) => console.error("Erro ao carregar filas:", err));
+  }, [empresaSelecionada]);
 
+  // Buscar relatórios ao selecionar fila
+  useEffect(() => {
+    if (!filaSelecionada) return;
 
-        setDados(formatados);
-      } catch (error) {
-        console.error('Erro ao carregar relatório:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const filaId = filaSelecionada.value;
 
-    fetchData();
-  }, [id_empresa]);
+    // Tempo de espera
+    axios
+      .get(`http://localhost:3001/api/relatorios/tempo-espera/${filaId}`, {
+        headers,
+      })
+      .then((res) => setTempoEspera(res.data || []))
+      .catch((err) => console.error("Erro ao buscar tempo de espera:", err));
 
-  const exportarExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(dados);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Relatorio Filas');
-    XLSX.writeFile(workbook, 'relatorio_filas.xlsx');
+    // Desistências
+    axios
+      .get(`http://localhost:3001/api/relatorios/desistencias/${filaId}`, {
+        headers,
+      })
+      .then((res) => setDesistencias(res.data || []))
+      .catch((err) => console.error("Erro ao buscar desistências:", err));
+
+    // Avaliações
+    axios
+      .get(`http://localhost:3001/api/relatorios/avaliacoes/${filaId}`, {
+        headers,
+      })
+      .then((res) => setAvaliacoes(res.data || []))
+      .catch((err) => console.error("Erro ao buscar avaliações:", err));
+  }, [filaSelecionada]);
+
+  // Filtrar dados por data
+  const filtrarPorData = (dados) => {
+    return dados.filter((item) => {
+      const dataItem = new Date(item.data);
+      if (dataInicio && dataItem < new Date(dataInicio)) return false;
+      if (dataFim && dataItem > new Date(dataFim)) return false;
+      return true;
+    });
+  };
+
+  const tempoEsperaFiltrado = filtrarPorData(tempoEspera);
+  const desistenciasFiltrado = filtrarPorData(desistencias);
+  const avaliacoesFiltrado = filtrarPorData(avaliacoes);
+
+  // Exportar Excel
+  const exportToExcel = (dados, nomeArquivo) => {
+    if (!dados || dados.length === 0) {
+      alert("Não há dados para exportar!");
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+    XLSX.writeFile(wb, `${nomeArquivo}.xlsx`);
   };
 
   return (
     <div className="relatorio-container">
       <Menu />
-
       <div className="relatorio-content">
-        <h2 className="relatorio-titulo">📊 Relatório de Filas Configuradas</h2>
+        <h2>Relatórios por Fila</h2>
 
-        {loading ? (
-          <p>Carregando dados...</p>
-        ) : (
-          <>
-            <div className="grafico-container">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={dados} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="nome_fila" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="contagem" fill="#4e73df" name="Pessoas na Fila" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+        <Select
+          options={filas}
+          value={filaSelecionada}
+          onChange={setFilaSelecionada}
+          placeholder="Selecione uma fila..."
+          isSearchable
+        />
+
+        {filaSelecionada && (
+          <div className="relatorio-cards">
+            {/* Filtro de data */}
+            <div className="filtro-data">
+              <label>
+                De:{" "}
+                <input
+                  type="date"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                />
+              </label>
+              <label>
+                Até:{" "}
+                <input
+                  type="date"
+                  value={dataFim}
+                  onChange={(e) => setDataFim(e.target.value)}
+                />
+              </label>
             </div>
 
-            <div className="tabela-container">
-              <table className="relatorio-tabela">
-                <thead>
-                  <tr>
-                    <th>Nome da Fila</th>
-                    <th>Data de Configuração</th>
-                    <th>Última Atualização</th>
-                    <th>Pessoas na Fila</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dados.map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.nome_fila}</td>
-                      <td>{item.data_configuracao}</td>
-                      <td>{item.data_atualizacao}</td>
-                      <td>{item.contagem}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Tempo de Espera */}
+            <div className="relatorio-card">
+              <h4>Tempo Médio de Espera (minutos)</h4>
+              {tempoEsperaFiltrado.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={tempoEsperaFiltrado}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="data" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="media" stroke="#8884d8" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p>Nenhum dado disponível</p>
+              )}
+              <button
+                onClick={() => exportToExcel(tempoEsperaFiltrado, "tempo_espera")}
+              >
+                Exportar Excel
+              </button>
             </div>
 
-            <button className="btn-exportar" onClick={exportarExcel}>
-              📥 Exportar para Excel
-            </button>
-          </>
+            {/* Desistências */}
+            <div className="relatorio-card">
+              <h4>Desistências</h4>
+              {desistenciasFiltrado.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={desistenciasFiltrado}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="data" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="desistencias"
+                      stroke="#82ca9d"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p>Nenhum dado disponível</p>
+              )}
+              <button
+                onClick={() => exportToExcel(desistenciasFiltrado, "desistencias")}
+              >
+                Exportar Excel
+              </button>
+            </div>
+
+            {/* Avaliações */}
+            <div className="relatorio-card">
+              <h4>Avaliações</h4>
+              {avaliacoesFiltrado.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={avaliacoesFiltrado}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="data" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="media" stroke="#ffc658" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p>Nenhum dado disponível</p>
+              )}
+              <button
+                onClick={() => exportToExcel(avaliacoesFiltrado, "avaliacoes")}
+              >
+                Exportar Excel
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
