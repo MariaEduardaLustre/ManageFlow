@@ -10,7 +10,7 @@ const usuarioRoutes = require('./routes/usuarioRoutes');
 const empresaRoutes = require('./routes/empresaRoutes');
 const configuracaoRoutes = require('./routes/configuracaoRoutes');
 const filaRoutes = require('./routes/filaRoutes');
-const relatorioRoutes = require('./controllers/relatorioController'); 
+const relatorioRoutes = require('./routes/relatorioRoutes');
 
 const app = express();
 const server = http.createServer(app); 
@@ -37,7 +37,7 @@ app.use('/api', usuarioRoutes);
 app.use('/api/empresas', empresaRoutes);
 app.use('/api/configuracao-fila', configuracaoRoutes);
 app.use('/api/filas', filaRoutes);
-app.use('/api/relatorios', relatorioRoutes); // ✅ novo
+app.use('/api/relatorios', relatorioRoutes);
 
 // Inicie o servidor
 server.listen(PORT, () => {
