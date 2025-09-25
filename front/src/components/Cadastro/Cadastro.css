@@ -1,280 +1,216 @@
-@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap");
 
-:root {
-  --cor-primaria: #3A5AFE;
-  --cor-texto-principal: #333A47;
-  --cor-texto-secundario: #717885;
-  --cor-borda-input: #E2E8F0;
-  --cor-fundo-input: #F7F8FC;
-  --cor-fundo-pagina: #FFFFFF;
-}
+/* Escopo TOTAL do cadastro */
+.mf-cad {
+  --cad-primary: #3a5afe;
+  --cad-text: #333a47;
+  --cad-muted: #717885;
+  --cad-border: #e2e8f0;
+  --cad-input: #f7f8fc;
+  --cad-bg: #ffffff;
 
-body, html {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  height: 100%;
-  font-family: 'Mulish', sans-serif;
-  background-color: var(--cor-fundo-pagina); 
-}
-
-.cadastro-page-container {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  background: var(--cad-bg);
+  color: var(--cad-text);
+  font-family: "Mulish", sans-serif;
 }
 
-.cadastro-image-panel {
-  flex: 0 0 40%; 
+/* Painel da imagem */
+.mf-cad__image {
+  flex: 0 0 40%;
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
 }
 
-.cadastro-form-section {
+/* Form section */
+.mf-cad__form-section {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;    
+  align-items: center;
   padding: 40px;
   box-sizing: border-box;
 }
 
-.form-content-area {
+.mf-cad__form-wrapper {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
 }
 
-.form-title {
+.mf-cad__title {
   text-align: left;
-  font-size: 2.1rem; 
-  color: var(--cor-primaria);
+  font-size: 2.1rem;
+  color: var(--cad-primary);
   margin-bottom: 30px;
   font-weight: 800;
 }
-.password-group {
-  margin-bottom: 18px;
+
+/* Grupos e inputs */
+.mf-cad__group {
   position: relative;
+  margin-bottom: 18px;
 }
 
-.wrapper-password {
+.mf-cad__wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.wrapper-password input {
+.mf-cad__group input,
+.mf-cad__group select {
   width: 100%;
-  padding-right: 45px;
-  padding-left: 40px;
-}
-
-.input-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #717885;
-  font-size: 1rem;
-  pointer-events: none;
-}
-
-.password-toggle-icon {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: var(--cor-texto-secundario);
-  font-size: 1.1rem;
-  z-index: 2;
-}
-
-.mensagem-alerta {
-  margin-top: 6px;
-  font-size: 0.85rem;
-  color: red;
-}
-
-.cadastro-form-actual {
-  width: 100%; 
-}
-
-.form-group {
-  position: relative;
-  margin-bottom: 18px;
-}
-
-/* Aplica o estilo base a todos os inputs E selects */
-.form-group input,
-.form-group select { /* Adicionado select aqui */
-  width: 100%;
-  padding: 13px 18px 13px 50px; /* Padding padrão com espaço para ícone */
-  border: 1px solid #E2E8F0;
-  border-radius: 30px !important;
-  background-color: #F7F8FC;
-  font-size: 0.9rem;
+  padding: 13px 18px 13px 50px;
+  border: 1px solid var(--cad-border);
+  border-radius: 30px;
+  background-color: var(--cad-input);
+  font-size: 0.95rem;
+  color: var(--cad-text);
   box-sizing: border-box;
-  color: #333A47;
-  /* Removido o padding-left: 40px !important; duplicado para inputs */
 }
 
-.input-icon {
+.mf-cad__icon {
   position: absolute;
-  top: 50%;
   left: 15px;
+  top: 50%;
   transform: translateY(-50%);
-  color: #717885;
+  color: var(--cad-muted);
   font-size: 1rem;
   pointer-events: none;
   z-index: 2;
 }
 
-.form-group.input-filled .input-icon {
-  opacity: 0;
+.mf-cad__group--password input {
+  padding-right: 46px;
 }
 
-.password-group input {
-  padding-right: 45px;
-}
-.password-toggle-icon {
+.mf-cad__pass-toggle {
   position: absolute;
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: var(--cor-texto-secundario);
+  color: var(--cad-muted);
   font-size: 1.1rem;
   z-index: 2;
 }
 
-.form-row {
+/* Linha com 3 colunas (DDI/DDD/Fone) */
+.mf-cad__row {
   display: flex;
   gap: 12px;
   margin-bottom: 18px;
 }
-.form-row .form-group {
-  flex: 1; /* Permite que os itens cresçam e encolham igualmente */
+.mf-cad__row .mf-cad__group {
   margin-bottom: 0;
 }
-
-/* Ajustes específicos para os campos de telefone */
-.form-ddi {
-  flex: 0 0 40%; /* Ajuste a proporção, por exemplo, 40% */
-  max-width: 40%; /* Garante que não exceda essa largura */
+.mf-cad__group--ddi {
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+.mf-cad__group--ddd {
+  flex: 0 0 25%;
+  max-width: 25%;
+}
+.mf-cad__group--fone {
+  flex: 1;
 }
 
-/* Removido padding-left !important do select para usar o padrão */
-/* .form-ddi select {
-  padding-left: 30px !important;
-} */
-
-.form-ddd {
-  flex: 0 0 25%; /* Ajuste a proporção, por exemplo, 25% */
-  max-width: 25%; /* Garante que não exceda essa largura */
+/* Alertas de validação */
+.mf-cad__alert {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #dc3545;
 }
 
-.form-telefone {
-  flex: 1; /* Permite que o telefone ocupe o restante do espaço */
-}
-
-
-.btn-submit-cadastro {
+/* Botão principal */
+.mf-cad__submit {
   width: 100%;
   padding: 13px;
   font-size: 0.95rem;
   font-weight: 700;
-  background-color: var(--cor-primaria);
-  color: white;
+  background-color: var(--cad-primary);
+  color: #fff;
   border: none;
   border-radius: 30px;
   cursor: pointer;
   margin-top: 25px;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-.btn-submit-cadastro:hover {
+.mf-cad__submit:hover {
   background-color: #2a48d8;
   box-shadow: 0 4px 12px rgba(58, 90, 254, 0.25);
 }
 
-.login-link {
+/* Link “já tem login?” */
+.mf-cad__login-link {
   text-align: left;
   margin-top: 25px;
   font-size: 0.875rem;
-  color: var(--cor-texto-secundario);
+  color: var(--cad-muted);
 }
-
-.login-link a {
-  color: var(--cor-primaria);
+.mf-cad__login-link a {
+  color: var(--cad-primary);
   text-decoration: none;
   font-weight: 700;
 }
-
-.login-link a:hover {
+.mf-cad__login-link a:hover {
   text-decoration: underline;
 }
 
 /* Responsividade */
 @media (max-width: 992px) {
-  .cadastro-image-panel {
+  .mf-cad__image {
     display: none;
   }
-  .cadastro-form-section {
+  .mf-cad__form-section {
     padding: 30px 20px;
   }
-  .form-content-area {
+  .mf-cad__form-wrapper {
     max-width: 420px;
+  }
+  .mf-cad__title {
+    text-align: center;
+  }
+  .mf-cad__login-link {
+    text-align: center;
   }
 }
 
 @media (max-width: 576px) {
-  .cadastro-form-section {
+  .mf-cad__form-section {
     padding: 20px;
     align-items: stretch;
     justify-content: flex-start;
     overflow-y: auto;
   }
-  .form-content-area {
-    padding-top: 20px;
-    padding-bottom: 20px;
+  .mf-cad__group input,
+  .mf-cad__group select {
+    padding-left: 40px;
   }
-  .form-title {
-    font-size: 1.8rem;
-    text-align: center;
-  }
-  .form-row {
-    flex-direction: column;
-    gap: 0;
-  }
-  .form-row .form-group {
-    margin-bottom: 18px;
-  }
-  .login-link {
-    text-align: center;
-  }
-  /* Ajuste para input e select */
-  .form-group input,
-  .form-group select {
-    padding-left: 40px; 
-  }
-  .input-icon {
+  .mf-cad__icon {
     left: 12px;
     font-size: 0.9rem;
   }
-  .password-group input {
+  .mf-cad__group--password input {
     padding-right: 40px;
   }
-  .password-toggle-icon {
+  .mf-cad__pass-toggle {
     right: 12px;
     font-size: 1rem;
   }
 
-  /* Resetar flex para mobile para que cada um ocupe a linha inteira */
-  .form-ddi,
-  .form-ddd,
-  .form-telefone {
-    flex: 1 1 100%; /* Cada um ocupa 100% da largura em telas pequenas */
+  .mf-cad__row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .mf-cad__group--ddi,
+  .mf-cad__group--ddd,
+  .mf-cad__group--fone {
+    flex: 1 1 100%;
     max-width: 100%;
   }
 }

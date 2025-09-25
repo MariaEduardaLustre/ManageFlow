@@ -1,45 +1,79 @@
-// Arquivo: server.js
+// back/server.js
 require('dotenv').config();
 const express = require('express');
-const http = require('http'); 
+const http = require('http');
 const cors = require('cors');
-const { Server } = require("socket.io");
+const { Server } = require('socket.io');
+const path = require('path');
+
+const authMiddleware = require('./auth/jwt');
 
 const app = express();
-const server = http.createServer(app); 
+const server = http.createServer(app);
+
+/* ====== CORS ====== */
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://192.168.0.54:3000',
+  process.env.PUBLIC_FRONT_BASE_URL,
+  process.env.FRONT_ORIGIN,
+].filter(Boolean);
+
+/* ====== Socket.IO ====== */
 const io = new Server(server, {
-    cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST", "PUT"]
-    }
+  cors: { origin: allowedOrigins, methods: ['GET','POST','PUT','PATCH','DELETE'], credentials: true },
 });
 
-// AQUI ESTÁ A CORREÇÃO: Exporte o objeto 'io' antes de importar o cronJobs e as rotas que precisam dele
-module.exports = { app, server, io };
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 
-// Agora, importe o cronJobs e as rotas que dependem do 'io' DEPOIS da exportação
-require('./cronJobs');
-const empresaRoutes = require('./routes/empresaRoutes');
+/* ====== Body Parsers ====== */
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-// Importe as outras rotas que não dependem do 'io'
+/* ====== Logs de tamanho (opcional) ====== */
+app.use((req, _res, next) => {
+  const len = req.headers['content-length'];
+  if (len) console.log('[body-size]', req.method, req.url, `${len} bytes`);
+  next();
+});
+
+
+/* ====== Arquivos estáticos (imagens já salvas localmente) ====== */
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+/* ====== Rotas ====== */
+
+// --- Públicas (sem JWT) ---
+const configuracaoPublicRoutes = require('./routes/configuracaoPublicRoutes'); // use o nome que você tem no disco
+app.use('/api/configuracao', configuracaoPublicRoutes);
+
+// Dashboard público/realtime (se for público)
+const dashboardRoutes = require('./routes/dashboardRoutes')(io);
+app.use('/api/dashboard', dashboardRoutes);
+
 const usuarioRoutes = require('./routes/usuarioRoutes');
-const configuracaoRoutes = require('./routes/configuracaoRoutes');
-const filaRoutes = require('./routes/filaRoutes');
-
-
-const PORT = process.env.PORT || 3001;
-
-app.use(cors());
-app.use(express.json());
-
-// As rotas que precisam do 'io' agora são inicializadas com ele
-app.use('/api/empresas', empresaRoutes(io));
-
-// As outras rotas podem ser usadas como antes
 app.use('/api', usuarioRoutes);
-app.use('/api/configuracao-fila', configuracaoRoutes);
-app.use('/api/filas', filaRoutes);
 
-server.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+// API de upload (S3) – pública ou privada? geralmente privada:
+const uploadRoutes = require('./routes/uploadRoutes');
+app.use('/api/uploads', uploadRoutes); // <-- endpoints de API; NÃO confundir com estático acima
+
+// --- Privadas (com JWT) ---
+const meRoutes = require('./routes/me');
+app.use('/api', authMiddleware, meRoutes);
+
+let empresaRoutesModule = require('./routes/empresaRoutes');
+const empresaRoutesResolved = typeof empresaRoutesModule === 'function' ? empresaRoutesModule(io) : empresaRoutesModule;
+app.use('/api/empresas', authMiddleware, empresaRoutesResolved);
+
+const configuracaoRoutes = require('./routes/configuracaoRoutes');
+app.use('/api/configuracao', authMiddleware, configuracaoRoutes);
+
+const filaRoutes = require('./routes/filaRoutes');
+app.use('/api/filas', authMiddleware, filaRoutes); // monte UMA vez só
+
+/* ====== Start ====== */
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, '0.0.0.0', () =>
+  console.log(`API ouvindo em http://0.0.0.0:${PORT}`)
+);

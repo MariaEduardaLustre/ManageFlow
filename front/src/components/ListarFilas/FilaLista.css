@@ -213,7 +213,6 @@
 
 /* Conteúdo do Modal: Onde os detalhes da empresa são exibidos */
 .modal-content {
-    background-color: #ffffff;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);

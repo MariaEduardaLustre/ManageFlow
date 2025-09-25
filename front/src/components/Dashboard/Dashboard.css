@@ -1,11 +1,267 @@
-.dashboard-container {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f9f9f9;
+/* Escopo do Dashboard: todas as variáveis e seletores namespaced com mf- */
+.mf-dash{
+  --mf-bg:#f7fafc;
+  --mf-card:#ffffff;
+  --mf-muted:#6b7280;
+  --mf-brand:#3A5AFE;             /* azul da marca */
+  --mf-ok:#22c55e;
+  --mf-warn:#f59e0b;
+  --mf-text:#111827;
+  --mf-border:#e5e7eb;
+  --mf-shadow:0 8px 24px rgba(16,24,40,.08);
 }
 
-.dashboard-content {
-  flex: 1;
-  padding: 40px;
-  box-sizing: border-box;
+/* ===== Layout geral ===== */
+.mf-dash{
+  display:flex;
+  min-height:100vh;
+  background:var(--mf-bg);
+  color:var(--mf-text);
+}
+
+.mf-dash-content{
+  flex:1;
+  padding:24px 28px;
+}
+
+/* header */
+.mf-dash-header{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+.mf-dash-header h1{
+  margin:0;
+  font-size:28px;
+  line-height:1.1;
+}
+.mf-subtitle{
+  color:var(--mf-muted);
+  margin-top:6px;
+}
+.mf-last-refresh{
+  color:var(--mf-muted);
+  font-size:14px;
+  white-space:nowrap;
+}
+
+.mf-loading{ padding:48px; color:var(--mf-muted); }
+
+/* ===== KPIs ===== */
+.mf-stats{
+  display:grid;
+  grid-template-columns: repeat(5, minmax(0,1fr));
+  gap:14px;
+}
+@media (max-width:1280px){ .mf-stats{ grid-template-columns: repeat(3,1fr); } }
+@media (max-width:900px){ .mf-stats{ grid-template-columns: repeat(2,1fr); } }
+@media (max-width:600px){ .mf-stats{ grid-template-columns: 1fr; } }
+
+.mf-stat{
+  background:var(--mf-card);
+  border:1px solid var(--mf-border);
+  padding:16px;
+  border-radius:14px;
+  box-shadow:var(--mf-shadow), inset 0 1px 0 rgba(255,255,255,.6);
+}
+.mf-stat-title{
+  color:var(--mf-muted);
+  font-size:13px;
+  letter-spacing:.2px;
+}
+.mf-stat-value{
+  font-size:28px;
+  font-weight:700;
+  margin-top:6px;
+  letter-spacing:.5px;
+}
+.mf-stat-suffix{
+  margin-left:6px;
+  font-size:16px;
+  color:var(--mf-muted);
+}
+.mf-stat-sub{
+  color:var(--mf-muted);
+  font-size:12px;
+  margin-top:6px;
+}
+
+/* ===== Gráficos ===== */
+.mf-charts{
+  display:grid;
+  grid-template-columns: 2fr 1fr;
+  gap:14px;
+  margin-top:16px;
+}
+@media (max-width:1100px){ .mf-charts{ grid-template-columns: 1fr; } }
+
+.mf-card, .mf-table-card{
+  background:var(--mf-card);
+  border:1px solid var(--mf-border);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:var(--mf-shadow);
+}
+
+.mf-card-title,.mf-table-title{
+  padding:14px 16px;
+  border-bottom:1px solid var(--mf-border);
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.mf-card-body{ padding:8px 12px 12px; }
+.mf-chart-empty{ color:var(--mf-muted); padding:24px; text-align:center; }
+
+/* legenda do pie */
+.mf-legend{
+  display:flex;
+  gap:14px;
+  color:var(--mf-muted);
+  font-size:13px;
+  padding:6px 12px 14px;
+}
+.mf-legend > div{ display:flex; align-items:center; gap:8px; }
+.mf-legend-dot{
+  width:10px; height:10px; border-radius:999px; display:inline-block;
+  background:#9ca3af;
+}
+.mf-legend-dot.mf--green{ background:var(--mf-ok); }
+.mf-legend-dot.mf--orange{ background:var(--mf-warn); }
+.mf-legend-dot.mf--gray{ background:#9ca3af; }
+
+/* ===== Tabela ===== */
+.mf-table-card{ margin-top:16px; }
+
+.mf-table-title .mf-table-filters{
+  display:flex; gap:8px; flex-wrap:wrap;
+}
+
+/* pills dos filtros */
+.mf-pill{
+  border:1px solid #cfd8ff;
+  background:#fff;
+  color:var(--mf-brand);
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.mf-pill:hover{
+  background:#f4f6ff;
+}
+.mf-pill.active{
+  background:var(--mf-brand);
+  border-color:var(--mf-brand);
+  color:#fff;
+}
+
+.mf-table-wrap{ overflow:auto; }
+.mf-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:520px;
+}
+.mf-table thead th{
+  position:sticky;
+  top:0;
+  background:#f9fafb;
+  color:var(--mf-muted);
+  font-weight:600;
+  border-bottom:1px solid var(--mf-border);
+  padding:12px 14px;
+  z-index:1;
+}
+.mf-table tbody td{
+  padding:12px 14px;
+  border-bottom:1px solid var(--mf-border);
+}
+.mf-table tbody tr:hover{
+  background:rgba(17,24,39,.03);
+}
+.mf-cell-right{ text-align:right; }
+
+/* status dot */
+.mf-dot{
+  display:inline-block;
+  width:10px; height:10px;
+  border-radius:999px;
+  margin-right:8px;
+  background:#9ca3af;
+  position:relative; top:1px;
+}
+.mf-dot.mf--green{ background:var(--mf-ok); }
+.mf-dot.mf--orange{ background:var(--mf-warn); }
+.mf-dot.mf--gray{ background:#9ca3af; }
+
+/* componentes extras (pico/espera) */
+.mf-section-title{
+  font-size:18px;
+  font-weight:700;
+  margin:0;
+}
+.mf-subsection-title{
+  font-size:14px;
+  font-weight:600;
+  margin:16px 0 8px;
+  color:var(--mf-muted);
+}
+
+.mf-pico-container{
+  background:var(--mf-card);
+  border:1px solid var(--mf-border);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:var(--mf-shadow);
+  margin-top:16px;
+}
+.mf-pico-highlight{
+  margin-top:8px;
+  padding:12px;
+  background:#f9fafb;
+  border:1px dashed var(--mf-border);
+  border-radius:12px;
+  color:var(--mf-text);
+}
+.mf-chart-container{ margin-top:6px; }
+.mf-export-actions{ margin-top:12px; display:flex; gap:10px; }
+
+.mf-tooltip-label{ margin:0 0 6px; font-weight:600; }
+.mf-tooltip-intro{ margin:0; }
+
+/* utilidades */
+.mf-center-muted{
+  text-align:center;
+  color:var(--mf-muted);
+  padding:16px 0;
+}
+.mf-note{ margin-top:16px; color:var(--mf-muted); }
+.mf-mt{ margin-top:16px; }
+
+/* ajusta o grupo do select pra não conflitar com outros */
+.mf-select-group .form-label{
+  font-weight:600;
+  color:var(--mf-muted);
+  margin-top: 20px;
+}
+
+/* melhorias de acessibilidade/scroll */
+.mf-table-wrap::-webkit-scrollbar{ height:10px; }
+.mf-table-wrap::-webkit-scrollbar-thumb{
+  background:#d1d5db;
+  border-radius:999px;
+}
+.mf-table-wrap::-webkit-scrollbar-track{ background:transparent; }
+
+/* spacing extra em telas pequenas */
+@media (max-width:600px){
+  .mf-dash-content{ padding:18px 16px; }
+  .mf-card-title,.mf-table-title{ padding:12px 14px; }
 }

@@ -1,37 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap");
 
-:root {
-  --cor-primaria: #3A5AFE;
-  --cor-texto-principal: #333A47;
-  --cor-texto-secundario: #717885;
-  --cor-borda-input: #E2E8F0;
-  --cor-fundo-input: #F7F8FC;
-  --cor-fundo-pagina: #FFFFFF;
-}
+/* Tudo do Login fica dentro de .mf-login – nada global */
+.mf-login {
+  --login-primary: #3a5afe;
+  --login-text: #333a47;
+  --login-muted: #717885;
+  --login-border: #e2e8f0;
+  --login-input: #f7f8fc;
+  --login-bg: #ffffff;
 
-body, html {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  height: 100%;
-  font-family: 'Mulish', sans-serif;
-  background-color: var(--cor-fundo-pagina);
-}
-
-.login-page-container {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  background-color: var(--login-bg);
+  color: var(--login-text);
+  font-family: "Mulish", sans-serif;
 }
 
-.login-image-panel {
+/* Painel da imagem */
+.mf-login__image {
   flex: 0 0 40%;
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
 }
+.mf-login__hero {
+  max-width: 90%;
+  height: auto;
+  object-fit: contain;
+}
 
-.login-form-section {
+/* Seção do formulário */
+.mf-login__form-section {
   flex: 1;
   display: flex;
   justify-content: center;
@@ -40,189 +40,161 @@ body, html {
   box-sizing: border-box;
 }
 
-.cadastro-form-wrapper {
+.mf-login__wrapper {
   width: 100%;
   max-width: 400px;
 }
 
-.form-title {
+.mf-login__title {
   text-align: left;
   font-size: 2.1rem;
-  color: var(--cor-primaria);
+  color: var(--login-primary);
   margin-bottom: 30px;
   font-weight: 800;
 }
 
-.form-group {
+/* Campos */
+.mf-login__group {
   position: relative;
   margin-bottom: 18px;
 }
 
-.form-group input {
+.mf-login__group input {
   width: 100%;
   padding: 13px 18px 13px 50px;
-  border: 1px solid var(--cor-borda-input);
+  border: 1px solid var(--login-border);
   border-radius: 30px;
-  background-color: var(--cor-fundo-input);
-  font-size: 0.9rem;
-  color: var(--cor-texto-principal);
+  background-color: var(--login-input);
+  font-size: 0.95rem;
+  color: var(--login-text);
   box-sizing: border-box;
 }
 
-.input-icon {
+.mf-login__icon {
   position: absolute;
   top: 50%;
   left: 15px;
   transform: translateY(-50%);
-  color: var(--cor-texto-secundario);
+  color: var(--login-muted);
   font-size: 1rem;
   pointer-events: none;
   z-index: 2;
 }
 
-.btn-google, .btn-apple {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px; 
-  padding: 13px;
-  font-size: 0.95rem;
-  border: 1px solid #ccc;
-  border-radius: 30px;
-  cursor: pointer;
-  background-color: white;
-  transition: background-color 0.2s ease;
+.mf-login__group--password input {
+  padding-right: 46px;
 }
 
-.btn-google:hover, .btn-apple:hover {
-  background-color: #f3f3f3;
-}
-
-.social-icon {
-  font-size: 1.1rem;
-  color: #333;
-}
-
-.password-group input {
-  padding-right: 45px;
-}
-
-.password-toggle-icon {
+.mf-login__pass-toggle {
   position: absolute;
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: var(--cor-texto-secundario);
+  color: var(--login-muted);
   font-size: 1.1rem;
   z-index: 2;
 }
 
-.btn-submit-cadastro {
+/* Botão principal */
+.mf-login__submit {
   width: 100%;
   padding: 13px;
   font-size: 0.95rem;
   font-weight: 700;
-  background-color: var(--cor-primaria);
-  color: white;
+  background-color: var(--login-primary);
+  color: #fff;
   border: none;
   border-radius: 30px;
   cursor: pointer;
   margin-top: 25px;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-.btn-submit-cadastro:hover {
+.mf-login__submit:hover {
   background-color: #2a48d8;
   box-shadow: 0 4px 12px rgba(58, 90, 254, 0.25);
 }
 
-.social-login {
+/* Login social */
+.mf-login__social {
   display: grid;
   gap: 10px;
   margin-top: 20px;
 }
 
-.btn-google, .btn-apple {
+.mf-login__btn-google,
+.mf-login__btn-apple {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   padding: 13px;
   font-size: 0.95rem;
   border: 1px solid #ccc;
   border-radius: 30px;
   cursor: pointer;
-  background-color: white;
+  background-color: #fff;
+  transition: background-color 0.2s ease;
 }
-
-.btn-google:hover, .btn-apple:hover {
+.mf-login__btn-google:hover,
+.mf-login__btn-apple:hover {
   background-color: #f3f3f3;
 }
+.mf-login__social-icon {
+  font-size: 1.1rem;
+  color: #333;
+}
 
-.login-link {
+/* Links auxiliares */
+.mf-login__link {
   text-align: left;
   margin-top: 25px;
   font-size: 0.875rem;
-  color: var(--cor-texto-secundario);
+  color: var(--login-muted);
 }
-
-.login-link a {
-  color: var(--cor-primaria);
+.mf-login__link a {
+  color: var(--login-primary);
   text-decoration: none;
   font-weight: 700;
 }
-
-.login-link a:hover {
+.mf-login__link a:hover {
   text-decoration: underline;
 }
 
-
-.mensagem-erro {
-  color: #dc3545;
-  margin-bottom: 15px;
-  font-weight: bold;
-}
-
-.mensagem-sucesso {
-  color: #28a745;
-  margin-bottom: 15px;
-  font-weight: bold;
-}
-
-
+/* Responsividade */
 @media (max-width: 992px) {
-  .login-image-panel {
+  .mf-login__image {
     display: none;
   }
-  .login-form-section {
+  .mf-login__form-section {
     padding: 30px 20px;
   }
-  .cadastro-form-wrapper {
-    max-width: 420px;
-  }
-  .form-title {
+  .mf-login__title {
     text-align: center;
   }
-  .login-link {
+  .mf-login__link {
     text-align: center;
   }
 }
 
 @media (max-width: 576px) {
-  .login-form-section {
+  .mf-login__form-section {
     padding: 20px;
     align-items: stretch;
     justify-content: flex-start;
     overflow-y: auto;
   }
-  .form-group input {
+  .mf-login__group input {
     padding-left: 40px;
   }
-  .input-icon {
+  .mf-login__icon {
     left: 12px;
     font-size: 0.9rem;
   }
-  .password-group input {
+  .mf-login__group--password input {
     padding-right: 40px;
   }
-  .password-toggle-icon {
+  .mf-login__pass-toggle {
     right: 12px;
     font-size: 1rem;
   }
