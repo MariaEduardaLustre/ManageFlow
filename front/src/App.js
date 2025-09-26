@@ -21,6 +21,8 @@ import Relatorio from './components/Relatorio/Relatorio';
 import Forbidden from './pages/Forbidden';
 import EntrarFilaPage from './pages/EntrarFilaPage';
 import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao';
+import FilaStatus from './pages/FilaStatus';
+import FilaChamado from './pages/FilaChamado';
 
 function App() {
   return (
@@ -40,6 +42,9 @@ function App() {
         <Route path="/escolher-empresa" element={<Empresa />} />
         {/* Painel público para TV/monitor (mantém comportamento do outro branch) */}
         <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
+                {/* Entrada pública na fila */}
+        <Route path="/entrar-fila/:token/status" element={<FilaStatus />} />
+        <Route path="/fila/:token/chamado" element={<FilaChamado />} />
 
         {/* Protegidas por login + empresa + PERMISSÃO */}
         <Route

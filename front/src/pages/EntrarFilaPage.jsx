@@ -1,5 +1,6 @@
+// src/pages/EntrarFilaPage.jsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 
 // Descobre a base da API (CRA ou Vite)
 const API_BASE =
@@ -9,8 +10,11 @@ const API_BASE =
     ? `http://${window.location.hostname}:3001/api`
     : 'http://localhost:3001/api');
 
+const LS_TICKET = 'mf.queueEntry';
+
 export default function EntrarFilaPage() {
   const { token } = useParams();
+  const navigate = useNavigate();
 
   // estado de carregamento/erro + cfg pública
   const [loading, setLoading] = useState(true);
@@ -34,7 +38,7 @@ export default function EntrarFilaPage() {
   const [okMsg, setOkMsg] = useState('');
   const [posicao, setPosicao] = useState(null);
 
-  // carrega config pública pelo token (ROTA CORRETA: /public/info/:token)
+  // carrega config pública pelo token (ROTA: /configuracao/public/info/:token)
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -44,12 +48,10 @@ export default function EntrarFilaPage() {
 
         const base = API_BASE.replace(/\/$/, '');
         const url = `${base}/configuracao/public/info/${token}`;
-        console.log('[EntrarFila] GET info URL =', url, 'API_BASE =', API_BASE);
 
         const resp = await fetch(url);
         if (!resp.ok) {
           const txt = await resp.text();
-          console.warn('[EntrarFila] GET info falhou:', resp.status, txt);
           if (resp.status === 404) throw new Error('Configuração não encontrada.');
           throw new Error(txt || `Falha (HTTP ${resp.status}).`);
         }
@@ -57,21 +59,13 @@ export default function EntrarFilaPage() {
         const data = await resp.json();
         if (!alive) return;
 
-        // normaliza campos (array [{campo, tipo}])
         const campos = Array.isArray(data.campos) ? data.campos : [];
         const qtdeMin = Number.isFinite(Number(data.qtde_min)) ? Number(data.qtde_min) : 1;
         const qtdeMax = Number.isFinite(Number(data.qtde_max)) ? Number(data.qtde_max) : 10;
 
-        setCfg({
-          ...data,
-          campos,
-          qtde_min: qtdeMin,
-          qtde_max: qtdeMax
-        });
-
+        setCfg({ ...data, campos, qtde_min: qtdeMin, qtde_max: qtdeMax });
         setForm((prev) => ({ ...prev, nr_qtdpes: Math.min(Math.max(qtdeMin, 1), qtdeMax) }));
       } catch (e) {
-        console.error('Erro ao carregar config pública:', e);
         setErro(e.message || 'Configuração não encontrada ou indisponível.');
       } finally {
         setLoading(false);
@@ -94,8 +88,7 @@ export default function EntrarFilaPage() {
       if (nome.includes('endereço') || nome.includes('endereco')) map.endereco = true;
       if (nome.includes('qtde') || nome.includes('pessoas')) map.nr_qtdpes = true;
     }
-    // CPF é obrigatório no fluxo; Nome também
-    map.cpf = true;
+    map.cpf = true; // obrigatório
     return map;
   }, [cfg]);
 
@@ -136,10 +129,9 @@ export default function EntrarFilaPage() {
     try {
       setSending(true);
 
-      // ROTA CORRETA: /public/join/:token
+      // POST /configuracao/public/join/:token
       const base = API_BASE.replace(/\/$/, '');
       const url = `${base}/configuracao/public/join/${token}`;
-      console.log('[EntrarFila] POST join URL =', url, 'payload =', payload);
 
       const resp = await fetch(url, {
         method: 'POST',
@@ -148,11 +140,9 @@ export default function EntrarFilaPage() {
       });
 
       const data = await resp.json().catch(() => ({}));
-      console.log('[EntrarFila] POST join resp:', resp.status, data);
 
       if (!resp.ok) {
         if (resp.status === 404) throw new Error('Configuração não encontrada.');
-        // mensagens amigáveis — mapeia erros do controller
         if (data?.erro === 'config_inactive') throw new Error('Fila inativa no momento.');
         if (data?.erro === 'config_out_of_range') throw new Error('Fora do período de vigência.');
         if (data?.erro === 'fila_blocked') throw new Error('Fila bloqueada no momento.');
@@ -161,10 +151,23 @@ export default function EntrarFilaPage() {
         throw new Error(data?.erro || `Falha ao entrar na fila (HTTP ${resp.status}).`);
       }
 
-      setOkMsg(`Entrada realizada! Você está na posição ${data.posicao}.`);
+      const ticket = {
+        tokenFila: token,
+        idEmpresa: data.idEmpresa ?? data.ID_EMPRESA ?? null,
+        idFila: data.idFila ?? data.ID_FILA ?? null,
+        dtMovto: data.dtMovto ?? data.DT_MOVTO ?? null,
+        // o join público devolve id_cliente → usamos como identificador do cliente na fila
+        clienteFilaId: data.id_cliente ?? data.clienteFilaId ?? data.ID_CLIENTE_FILA ?? null,
+        idCliente:     data.id_cliente ?? null, // opcional, pela clareza
+      };
+       localStorage.setItem(LS_TICKET, JSON.stringify(ticket));
+
+      setOkMsg(`Entrada realizada! Você está na posição ${data.posicao ?? '—'}.`);
       setPosicao(data.posicao ?? null);
+
+      // Redireciona para a tela de status
+      navigate(`/entrar-fila/${token}/status`);
     } catch (err) {
-      console.error('Falha ao entrar na fila:', err);
       alert(err.message || 'Falha ao entrar na fila.');
     } finally {
       setSending(false);
@@ -218,7 +221,6 @@ export default function EntrarFilaPage() {
 
   // imagens
   const bannerUrl = cfg.img_banner?.url || '';
-  // <- no controller novo vem como empresa: { logo_url }
   const logoUrl = (cfg.empresa && cfg.empresa.logo_url) || '';
 
   return (
@@ -264,7 +266,6 @@ export default function EntrarFilaPage() {
 
           {/* formulário */}
           <form onSubmit={onSubmit} style={{ marginTop: 12 }}>
-            {/* Nome (sempre) */}
             <Field label="Nome completo" required>
               <input
                 name="nome"
@@ -277,7 +278,6 @@ export default function EntrarFilaPage() {
               />
             </Field>
 
-            {/* CPF (sempre) */}
             <Field label="CPF" required>
               <input
                 name="cpf"
@@ -291,7 +291,6 @@ export default function EntrarFilaPage() {
               />
             </Field>
 
-            {/* RG */}
             {camposAtivos.rg && (
               <Field label="RG">
                 <input
@@ -305,7 +304,6 @@ export default function EntrarFilaPage() {
               </Field>
             )}
 
-            {/* Telefone (DDD + número) */}
             {camposAtivos.telefone && (
               <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 12 }}>
                 <Field label="DDD">
@@ -334,7 +332,6 @@ export default function EntrarFilaPage() {
               </div>
             )}
 
-            {/* Email */}
             {camposAtivos.email && (
               <Field label="E-mail">
                 <input
@@ -348,7 +345,6 @@ export default function EntrarFilaPage() {
               </Field>
             )}
 
-            {/* Data de nascimento */}
             {camposAtivos.dt_nasc && (
               <Field label="Data de nascimento">
                 <input
@@ -361,7 +357,6 @@ export default function EntrarFilaPage() {
               </Field>
             )}
 
-            {/* Quantidade de pessoas */}
             <Field label="Quantidade de pessoas">
               <input
                 name="nr_qtdpes"
@@ -377,7 +372,6 @@ export default function EntrarFilaPage() {
               </small>
             </Field>
 
-            {/* feedback de sucesso */}
             {okMsg && (
               <div style={styles.okBox}>
                 <strong>{okMsg}</strong>
@@ -389,7 +383,6 @@ export default function EntrarFilaPage() {
             </button>
           </form>
 
-          {/* utilidades */}
           <div style={{ marginTop: 18, display: 'flex', gap: 8, justifyContent: 'center' }}>
             <button type="button" onClick={copiarLink} style={styles.ghostBtn}>Copiar link</button>
             <Link to="/" style={styles.link}>Voltar</Link>
@@ -400,7 +393,6 @@ export default function EntrarFilaPage() {
   );
 }
 
-/* ------ componentes utilitários ------ */
 function Field({ label, required, children }) {
   return (
     <div style={{ marginTop: 12 }}>
@@ -426,61 +418,26 @@ function InfoPill({ label, value }) {
   );
 }
 
-/* ------ estilos ------ */
 const styles = {
-  wrapper: {
-    display: 'flex',
-    justifyContent: 'center',
-    padding: '24px 16px'
-  },
+  wrapper: { display: 'flex', justifyContent: 'center', padding: '24px 16px' },
   card: {
-    width: '100%',
-    maxWidth: 560,
-    background: '#fff',
-    borderRadius: 16,
-    boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-    padding: 20
+    width: '100%', maxWidth: 560, background: '#fff', borderRadius: 16,
+    boxShadow: '0 8px 30px rgba(0,0,0,0.08)', padding: 20
   },
   emoji: { fontSize: 42 },
   input: {
-    width: '100%',
-    padding: '10px 12px',
-    borderRadius: 10,
-    border: '1px solid #e2e8f0',
-    outline: 'none'
+    width: '100%', padding: '10px 12px', borderRadius: 10,
+    border: '1px solid #e2e8f0', outline: 'none'
   },
   button: {
-    marginTop: 14,
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: 12,
-    border: 'none',
-    background: '#111827',
-    color: '#fff',
-    cursor: 'pointer',
-    fontWeight: 600
+    marginTop: 14, width: '100%', padding: '12px 14px', borderRadius: 12,
+    border: 'none', background: '#111827', color: '#fff', cursor: 'pointer', fontWeight: 600
   },
-  ghostBtn: {
-    padding: '8px 12px',
-    borderRadius: 10,
-    border: '1px solid #cbd5e1',
-    background: '#fff',
-    cursor: 'pointer'
-  },
+  ghostBtn: { padding: '8px 12px', borderRadius: 10, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer' },
   link: { textDecoration: 'none', color: '#2563eb', alignSelf: 'center' },
-  infoRow: {
-    display: 'flex',
-    gap: 8,
-    flexWrap: 'wrap',
-    marginTop: 8,
-    justifyContent: 'center'
-  },
+  infoRow: { display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' },
   okBox: {
-    marginTop: 10,
-    padding: '10px 12px',
-    background: '#ecfdf5',
-    color: '#065f46',
-    border: '1px solid #a7f3d0',
-    borderRadius: 10
+    marginTop: 10, padding: '10px 12px', background: '#ecfdf5',
+    color: '#065f46', border: '1px solid #a7f3d0', borderRadius: 10
   }
 };
