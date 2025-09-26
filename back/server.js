@@ -33,7 +33,7 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 /* ====== Logs de tamanho (opcional) ====== */
 app.use((req, _res, next) => {
   const len = req.headers['content-length'];
-  if (len) console.log('[body-size]', req.method, req.url, `${len} bytes`);
+  if (len) console.log('[body-size]', req.method, req.url, `${len} bytes`); 
   next();
 });
 
