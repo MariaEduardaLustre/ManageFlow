@@ -24,42 +24,49 @@ const Relatorio = () => {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
+  // Recupera token do usuário autenticado
   const token = localStorage.getItem("token");
 
+  // Headers padrão com Authorization
   const headers = {
     Authorization: `Bearer ${token}`,
   };
 
-  // Buscar filas
+  /* ================================
+     Buscar filas da empresa logada
+  ================================= */
   useEffect(() => {
+    if (!token) return;
+
     axios
       .get("http://localhost:3001/api/relatorios/filas", { headers })
       .then((res) => setFilas(res.data || []))
       .catch((err) => console.error("Erro ao carregar filas:", err));
-  }, []);
+  }, [token]);
 
-  // Buscar relatórios ao selecionar fila
+  /* ================================
+     Buscar relatórios ao selecionar fila
+  ================================= */
   useEffect(() => {
-    if (!filaSelecionada) return;
+    if (!filaSelecionada || !token) return;
     const filaId = filaSelecionada.value;
 
-    axios
-      .get(`http://localhost:3001/api/relatorios/tempo-espera/${filaId}`, { headers })
-      .then((res) => setTempoEspera(res.data || []))
-      .catch((err) => console.error("Erro tempo de espera:", err));
+    Promise.all([
+      axios.get(`http://localhost:3001/api/relatorios/tempo-espera/${filaId}`, { headers }),
+      axios.get(`http://localhost:3001/api/relatorios/desistencias/${filaId}`, { headers }),
+      axios.get(`http://localhost:3001/api/relatorios/avaliacoes/${filaId}`, { headers }),
+    ])
+      .then(([esperaRes, desistRes, avalRes]) => {
+        setTempoEspera(esperaRes.data || []);
+        setDesistencias(desistRes.data || []);
+        setAvaliacoes(avalRes.data || []);
+      })
+      .catch((err) => console.error("Erro ao buscar relatórios:", err));
+  }, [filaSelecionada, token]);
 
-    axios
-      .get(`http://localhost:3001/api/relatorios/desistencias/${filaId}`, { headers })
-      .then((res) => setDesistencias(res.data || []))
-      .catch((err) => console.error("Erro desistências:", err));
-
-    axios
-      .get(`http://localhost:3001/api/relatorios/avaliacoes/${filaId}`, { headers })
-      .then((res) => setAvaliacoes(res.data || []))
-      .catch((err) => console.error("Erro avaliações:", err));
-  }, [filaSelecionada]);
-
-  // Filtrar dados por data
+  /* ================================
+     Filtro de data
+  ================================= */
   const filtrarPorData = (dados) => {
     return dados.filter((item) => {
       const dataItem = new Date(item.data);
@@ -73,6 +80,9 @@ const Relatorio = () => {
   const desistenciasFiltrado = filtrarPorData(desistencias);
   const avaliacoesFiltrado = filtrarPorData(avaliacoes);
 
+  /* ================================
+     Exportar Excel
+  ================================= */
   const exportToExcel = (dados, nomeArquivo) => {
     if (!dados || dados.length === 0) {
       alert("Não há dados para exportar!");
@@ -84,12 +94,16 @@ const Relatorio = () => {
     XLSX.writeFile(wb, `${nomeArquivo}.xlsx`);
   };
 
+  /* ================================
+     Renderização
+  ================================= */
   return (
     <div className="relatorio-container">
       <Menu />
       <div className="relatorio-content">
         <h2>Relatórios por Fila</h2>
 
+        {/* Seletor de fila */}
         <Select
           options={filas}
           value={filaSelecionada}
@@ -98,9 +112,10 @@ const Relatorio = () => {
           isSearchable
         />
 
+        {/* Exibição dos relatórios */}
         {filaSelecionada && (
           <div className="relatorio-cards">
-            {/* Filtro de data */}
+            {/* Filtro de datas */}
             <div className="filtro-data">
               <label>
                 De:{" "}
@@ -120,7 +135,7 @@ const Relatorio = () => {
               </label>
             </div>
 
-            {/* Tempo de Espera */}
+            {/* Tempo de espera */}
             <div className="relatorio-card">
               <h4>Tempo Médio de Espera (minutos)</h4>
               {tempoEsperaFiltrado.length > 0 ? (
