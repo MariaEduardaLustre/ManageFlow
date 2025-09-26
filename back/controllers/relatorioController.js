@@ -1,3 +1,4 @@
+
 const db = require('../database/connection');
 
 // Descobrir a empresa do usuário logado
