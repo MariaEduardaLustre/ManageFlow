@@ -24,56 +24,39 @@ const Relatorio = () => {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
-  // Empresa logada
-  const empresaSelecionada = JSON.parse(
-    localStorage.getItem("empresaSelecionada")
-  );
+  const token = localStorage.getItem("token");
 
   const headers = {
-    "empresa-selecionada": JSON.stringify({
-      ID_EMPRESA: empresaSelecionada?.ID_EMPRESA,
-    }),
+    Authorization: `Bearer ${token}`,
   };
 
   // Buscar filas
   useEffect(() => {
-    if (!empresaSelecionada) return;
-
     axios
       .get("http://localhost:3001/api/relatorios/filas", { headers })
       .then((res) => setFilas(res.data || []))
       .catch((err) => console.error("Erro ao carregar filas:", err));
-  }, [empresaSelecionada]);
+  }, []);
 
   // Buscar relatórios ao selecionar fila
   useEffect(() => {
     if (!filaSelecionada) return;
-
     const filaId = filaSelecionada.value;
 
-    // Tempo de espera
     axios
-      .get(`http://localhost:3001/api/relatorios/tempo-espera/${filaId}`, {
-        headers,
-      })
+      .get(`http://localhost:3001/api/relatorios/tempo-espera/${filaId}`, { headers })
       .then((res) => setTempoEspera(res.data || []))
-      .catch((err) => console.error("Erro ao buscar tempo de espera:", err));
+      .catch((err) => console.error("Erro tempo de espera:", err));
 
-    // Desistências
     axios
-      .get(`http://localhost:3001/api/relatorios/desistencias/${filaId}`, {
-        headers,
-      })
+      .get(`http://localhost:3001/api/relatorios/desistencias/${filaId}`, { headers })
       .then((res) => setDesistencias(res.data || []))
-      .catch((err) => console.error("Erro ao buscar desistências:", err));
+      .catch((err) => console.error("Erro desistências:", err));
 
-    // Avaliações
     axios
-      .get(`http://localhost:3001/api/relatorios/avaliacoes/${filaId}`, {
-        headers,
-      })
+      .get(`http://localhost:3001/api/relatorios/avaliacoes/${filaId}`, { headers })
       .then((res) => setAvaliacoes(res.data || []))
-      .catch((err) => console.error("Erro ao buscar avaliações:", err));
+      .catch((err) => console.error("Erro avaliações:", err));
   }, [filaSelecionada]);
 
   // Filtrar dados por data
@@ -90,7 +73,6 @@ const Relatorio = () => {
   const desistenciasFiltrado = filtrarPorData(desistencias);
   const avaliacoesFiltrado = filtrarPorData(avaliacoes);
 
-  // Exportar Excel
   const exportToExcel = (dados, nomeArquivo) => {
     if (!dados || dados.length === 0) {
       alert("Não há dados para exportar!");
@@ -154,9 +136,7 @@ const Relatorio = () => {
               ) : (
                 <p>Nenhum dado disponível</p>
               )}
-              <button
-                onClick={() => exportToExcel(tempoEsperaFiltrado, "tempo_espera")}
-              >
+              <button onClick={() => exportToExcel(tempoEsperaFiltrado, "tempo_espera")}>
                 Exportar Excel
               </button>
             </div>
@@ -171,19 +151,13 @@ const Relatorio = () => {
                     <XAxis dataKey="data" />
                     <YAxis />
                     <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="desistencias"
-                      stroke="#82ca9d"
-                    />
+                    <Line type="monotone" dataKey="desistencias" stroke="#82ca9d" />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
                 <p>Nenhum dado disponível</p>
               )}
-              <button
-                onClick={() => exportToExcel(desistenciasFiltrado, "desistencias")}
-              >
+              <button onClick={() => exportToExcel(desistenciasFiltrado, "desistencias")}>
                 Exportar Excel
               </button>
             </div>
@@ -204,9 +178,7 @@ const Relatorio = () => {
               ) : (
                 <p>Nenhum dado disponível</p>
               )}
-              <button
-                onClick={() => exportToExcel(avaliacoesFiltrado, "avaliacoes")}
-              >
+              <button onClick={() => exportToExcel(avaliacoesFiltrado, "avaliacoes")}>
                 Exportar Excel
               </button>
             </div>

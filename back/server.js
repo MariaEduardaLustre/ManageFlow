@@ -30,33 +30,30 @@ app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-/* ====== Logs de tamanho (opcional) ====== */
+/* ====== Logs ====== */
 app.use((req, _res, next) => {
   const len = req.headers['content-length'];
   if (len) console.log('[body-size]', req.method, req.url, `${len} bytes`);
   next();
 });
 
-
-/* ====== Arquivos estáticos (imagens já salvas localmente) ====== */
+/* ====== Arquivos estáticos ====== */
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /* ====== Rotas ====== */
 
 // --- Públicas (sem JWT) ---
-const configuracaoPublicRoutes = require('./routes/configuracaoPublicRoutes'); // use o nome que você tem no disco
+const configuracaoPublicRoutes = require('./routes/configuracaoPublicRoutes');
 app.use('/api/configuracao', configuracaoPublicRoutes);
 
-// Dashboard público/realtime (se for público)
 const dashboardRoutes = require('./routes/dashboardRoutes')(io);
 app.use('/api/dashboard', dashboardRoutes);
 
 const usuarioRoutes = require('./routes/usuarioRoutes');
 app.use('/api', usuarioRoutes);
 
-// API de upload (S3) – pública ou privada? geralmente privada:
 const uploadRoutes = require('./routes/uploadRoutes');
-app.use('/api/uploads', uploadRoutes); // <-- endpoints de API; NÃO confundir com estático acima
+app.use('/api/uploads', uploadRoutes);
 
 // --- Privadas (com JWT) ---
 const meRoutes = require('./routes/me');
@@ -70,7 +67,11 @@ const configuracaoRoutes = require('./routes/configuracaoRoutes');
 app.use('/api/configuracao', authMiddleware, configuracaoRoutes);
 
 const filaRoutes = require('./routes/filaRoutes');
-app.use('/api/filas', authMiddleware, filaRoutes); // monte UMA vez só
+app.use('/api/filas', authMiddleware, filaRoutes);
+
+// Relatórios (sempre com JWT)
+const relatorioRoutes = require('./routes/relatorioRoutes');
+app.use('/api/relatorios', authMiddleware, relatorioRoutes);
 
 /* ====== Start ====== */
 const PORT = process.env.PORT || 3001;
