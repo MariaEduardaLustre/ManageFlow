@@ -1,10 +1,22 @@
+/* Estilo base para o container */
 .language-selector-container {
+  display: inline-block; /* Garante que o container não ocupe a largura toda */
+}
+
+/* Variante "FIXED": para flutuar no canto da página */
+.language-selector-container.fixed {
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 1000;
 }
 
+/* Variante "INLINE": para ficar dentro de outros elementos (como o menu) */
+.language-selector-container.inline {
+  position: static; /* Comportamento padrão, fica onde for colocado */
+}
+
+/* Estilos dos botões (permanecem os mesmos) */
 .language-button {
   background-color: #f0f0f0;
   border: 1px solid #ccc;

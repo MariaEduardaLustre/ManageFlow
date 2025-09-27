@@ -1,7 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from '../LanguageSelector/LanguageSelector'; // 1. Importando o seletor de idioma
 import './Landing.css';
 
 const LandingPage = () => {
+  const { t } = useTranslation();
+
   const fila = '/imagens/fila.png';
   const reserva = '/imagens/reserva.png';
   const avaliacao = '/imagens/avaliacao.png';
@@ -31,33 +35,40 @@ const LandingPage = () => {
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav mx-auto flow-nav-links">
               <li className="nav-item">
-                <a className="nav-link" href="#home">Home</a>
+                <a className="nav-link" href="#home">{t('landing.nav.home')}</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#servicos">Serviços</a>
+                <a className="nav-link" href="#servicos">{t('landing.nav.servicos')}</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#sobre">Sobre Nós</a>
+                <a className="nav-link" href="#sobre">{t('landing.nav.sobre')}</a>
               </li>
             </ul>
-            <div className="flow-auth-buttons ms-lg-auto">
-              <a href="/login" className="btn flow-btn-login me-2">Entrar</a>
-              <a href="/cadastro" className="btn flow-btn-signup">Cadastrar-se</a>
+            <div className="d-flex align-items-center"> {/* Wrapper para alinhar os itens */}
+              <div className="flow-auth-buttons ms-lg-auto">
+                <a href="/login" className="btn flow-btn-login me-2">{t('landing.nav.entrar')}</a>
+                <a href="/cadastro" className="btn flow-btn-signup">{t('landing.nav.cadastrar')}</a>
+              </div>
+              {/* 2. Adicionando o seletor de idioma aqui */}
+              <div className="ms-3">
+                <LanguageSelector />
+              </div>
             </div>
           </div>
         </div>
       </nav>
 
+      {/* O resto do seu componente continua igual... */}
+
       <section id="home" className="flow-hero pt-5 pb-0"> 
         <div className="container hero-container py-5">
           <div className="row align-items-center">
             <div className="col-lg-6 hero-content text-center text-lg-start">
-              <h1 className="mb-3">Gerencie filas de forma inteligente e melhore a experiência de seus clientes</h1>
+              <h1 className="mb-3">{t('landing.hero.titulo')}</h1>
               <p className="lead mb-4">
-                O ManageFlow é a solução digital completa para restaurantes que desejam automatizar o gerenciamento de filas,
-                reduzir o tempo de espera dos clientes e melhorar a organização do atendimento.
+                {t('landing.hero.descricao')}
               </p>
-              <a href="/cadastro" className="btn flow-btn-primary btn-lg">Comece Agora</a>
+              <a href="/cadastro" className="btn flow-btn-primary btn-lg">{t('landing.hero.comeceAgora')}</a>
             </div>
             <div className="col-lg-6 hero-image-container mt-4 mt-lg-0">
               <img src={landing} alt="Plataforma Flow em dispositivos" className="img-fluid hero-image" />
@@ -69,17 +80,17 @@ const LandingPage = () => {
       <section id="servicos" className="flow-services py-5">
         <div className="container">
           <div className="text-center mb-5">
-            <h2 className="fw-bold">Nossos Serviços</h2>
+            <h2 className="fw-bold">{t('landing.servicos.titulo')}</h2>
             <p className="lead text-muted services-subtitle mx-auto">
-              Nosso compromisso é simplificar a gestão do seu estabelecimento, proporcionando uma experiência fluida e organizada.
+              {t('landing.servicos.subtitulo')}
             </p>
           </div>
           <div className="row g-4">
             {[
-              {IconSrc: fila, title: "Fila de Espera", desc: "Organize sua fila de forma digital e eficiente, informando o tempo estimado de espera." },
-              {IconSrc: reserva, title: "Reserva de Mesa", desc: "Permita que seus clientes reservem mesas com antecedência, otimizando o fluxo." },
-              {IconSrc: tv, title: "Painel de TV", desc: "Exiba o status da fila em tempo real em um painel visível para todos no local." },
-              {IconSrc: avaliacao, title: "Avaliações", desc: "Colete feedbacks dos seus clientes para aprimorar continuamente seus serviços." },
+              {IconSrc: fila, title: t('landing.servicos.fila.titulo'), desc: t('landing.servicos.fila.descricao') },
+              {IconSrc: reserva, title: t('landing.servicos.reserva.titulo'), desc: t('landing.servicos.reserva.descricao') },
+              {IconSrc: tv, title: t('landing.servicos.painel.titulo'), desc: t('landing.servicos.painel.descricao') },
+              {IconSrc: avaliacao, title: t('landing.servicos.avaliacoes.titulo'), desc: t('landing.servicos.avaliacoes.descricao') },
             ].map((service, index) => (
               <div className="col-md-6 col-lg-3 d-flex align-items-stretch" key={index}>
                 <div className="card service-card-flow h-100 text-start">
@@ -97,7 +108,7 @@ const LandingPage = () => {
 
       <section id='sobre' className="flow-testimonials py-5 text-white">
         <div className="container">
-          <h2 className="text-center mb-5 fw-bold">O que nossos clientes dizem?</h2>
+          <h2 className="text-center mb-5 fw-bold">{t('landing.sobre.titulo')}</h2>
           <div className="testimonial-card-wrapper mx-auto">
             <button className="arrow-btn prev-btn d-none d-md-flex">&larr;</button>
             <div className="testimonial-card-flow">
@@ -105,10 +116,10 @@ const LandingPage = () => {
                 <img src={avatar} alt="Edward Newgate" className="testimonial-avatar mb-3 mb-md-0 me-md-4" />
                 <div className="testimonial-text">
                   <p className="testimonial-quote mb-3">
-                    "O Flow transformou a maneira como gerenciamos nossos clientes. A organização melhorou 100% e os feedbacks são incríveis!"
+                    "{t('landing.sobre.depoimento')}"
                   </p>
                   <h4 className="h5 mb-0 fw-bold">Edward Newgate</h4>
-                  <p className="small text-testimonial-title">Founder Circle</p>
+                  <p className="small text-testimonial-title">{t('landing.sobre.cargo')}</p>
                 </div>
               </div>
             </div>
@@ -126,8 +137,8 @@ const LandingPage = () => {
           <div className="row gy-4 justify-content-center"> 
             <div className="col-lg-6 col-md-12 footer-brand mb-3 mb-lg-0 text-center">
               <img src={logobranca} alt="Manage Flow Logo" className="flow-logo-footer mb-3" />
-              <p className="small mb-2">Gerenciamento de filas simplificado para otimizar a experiência do cliente.</p>
-              <p className="small text-white-50">&copy; 2025 ManageFlow. Todos os direitos reservados.</p>
+              <p className="small mb-2">{t('landing.rodape.slogan')}</p>
+              <p className="small text-white-50">{t('landing.rodape.direitos')}</p>
             </div>
           </div>
         </div>
