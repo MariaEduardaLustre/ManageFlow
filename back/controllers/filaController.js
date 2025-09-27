@@ -63,7 +63,7 @@ exports.listarFilasComConfiguracao = async (req, res) => {
       SELECT
         fc.ID_FILA,
         COUNT(*) AS QTDE_AGUARDANDO
-      FROM fila_cliente fc
+      FROM clientesfila fc
       WHERE fc.SITUACAO IN (0, 3)  -- 0=Aguardando, 3=Chamado
       GROUP BY fc.ID_FILA
     ) w

@@ -1,4 +1,5 @@
 // src/pages/GestaoFilaClientes/GestaoFilaClientes.js
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -11,7 +12,7 @@ import {
   FaPlus,
   FaLock,
   FaUnlock,
-  FaTv
+  FaTv,
 } from 'react-icons/fa';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import Menu from '../Menu/Menu';
@@ -34,7 +35,7 @@ const GestaoFilaClientes = () => {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackVariant, setFeedbackVariant] = useState('info');
 
-  // Formulário do novo cliente (inclui campos da outra branch)
+  // Formulário do novo cliente
   const [novoCliente, setNovoCliente] = useState({
     NOME: '',
     CPFCNPJ: '',
@@ -42,7 +43,7 @@ const GestaoFilaClientes = () => {
     DDDCEL: '',
     NR_CEL: '',
     MEIO_NOTIFICACAO: 'whatsapp',
-    EMAIL: ''
+    EMAIL: '',
   });
 
   // Abas
@@ -93,10 +94,6 @@ const GestaoFilaClientes = () => {
     }
   }, [idEmpresa, dtMovto, idFila]);
 
-  /**
-   * Busca o status (BLOCK) do back no mount e sempre que precisar (após toggle, etc.)
-   * Usa a rota: GET /filas?idEmpresa=123 (com ID_FILA, BLOCK, SITUACAO...)
-   */
   const fetchFilaStatus = useCallback(async () => {
     if (!idEmpresa || !idFila) return;
     setStatusLoading(true);
@@ -184,7 +181,6 @@ const GestaoFilaClientes = () => {
   const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
     const situacaoOriginal = cliente.SITUACAO;
 
-    // Otimista
     setClientesFila((prev) =>
       prev.map((c) => (c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c))
     );
@@ -197,7 +193,6 @@ const GestaoFilaClientes = () => {
       openFeedbackModal(mensagemSucesso, 'success');
     } catch (err) {
       openFeedbackModal(mensagemErro, 'danger');
-      // rollback
       setClientesFila((prev) =>
         prev.map((c) =>
           c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: situacaoOriginal } : c
@@ -248,7 +243,7 @@ const GestaoFilaClientes = () => {
       DDDCEL: '',
       NR_CEL: '',
       MEIO_NOTIFICACAO: 'whatsapp',
-      EMAIL: ''
+      EMAIL: '',
     });
     setShowAddModal(true);
   };
@@ -259,32 +254,16 @@ const GestaoFilaClientes = () => {
     navigate(`/painel-fila/${idEmpresa}/${dtMovto}/${idFila}`);
   };
 
-  /**
-   * Bloquear/desbloquear garantindo coerência:
-   * - desired = true  -> bloqueia (BLOCK=1) e inativa (SITUACAO=0)
-   * - desired = false -> desbloqueia (BLOCK=0) e ativa (SITUACAO=1)
-   *
-   * Usa:
-   *   PUT /filas/:id_fila/block   { block: boolean }
-   *   PUT /filas/:id_fila/status  { situacao: boolean }
-   */
   const toggleBlockFila = async () => {
     if (!idFila) return;
     setStatusLoading(true);
     const desired = !isBlocked;
 
     try {
-      // 1) Atualiza BLOCK
       await api.put(`/filas/${idFila}/block`, { block: desired });
-
-      // 2) Mantém coerência com SITUACAO
       const situacao = desired ? false : true;
       await api.put(`/filas/${idFila}/status`, { situacao });
-
-      // 3) Atualiza UI imediata
       setIsBlocked(desired);
-
-      // 4) Garante estado correto quando reabrir a tela
       await fetchFilaStatus();
 
       openFeedbackModal(
@@ -332,7 +311,6 @@ const GestaoFilaClientes = () => {
           <div className="section-header">
             <h2 className="section-title">Clientes na Fila</h2>
             <div className="header-buttons">
-              {/* Bloquear/Desbloquear Fila */}
               <Button
                 variant={isBlocked ? 'success' : 'warning'}
                 onClick={toggleBlockFila}
@@ -346,7 +324,8 @@ const GestaoFilaClientes = () => {
               >
                 {statusLoading ? (
                   <>
-                    <Spinner as="span" animation="border" size="sm" />&nbsp;Carregando...
+                    <Spinner as="span" animation="border" size="sm" />
+                    &nbsp;Carregando...
                   </>
                 ) : isBlocked ? (
                   <>
@@ -359,16 +338,22 @@ const GestaoFilaClientes = () => {
                 )}
               </Button>
 
-              <Button variant="primary" onClick={handleShowAddModal} className="me-2">
+              {/* AQUI ESTÁ A ALTERAÇÃO PRINCIPAL */}
+              <Button
+                variant="primary"
+                onClick={handleShowAddModal}
+                className="me-2"
+                disabled={isBlocked}
+              >
                 <FaPlus /> Adicionar Cliente
               </Button>
+              
               <Button variant="info" onClick={handleVerPainel}>
                 <FaTv /> Ver Painel
               </Button>
             </div>
           </div>
 
-          {/* Aviso quando bloqueada (bloqueio diário só impede entradas públicas) */}
           {isBlocked && (
             <Alert variant="warning" className="mb-3">
               <strong>Fila bloqueada hoje:</strong> novas entradas <em>públicas</em> estão impedidas.
@@ -401,7 +386,9 @@ const GestaoFilaClientes = () => {
 
           {loading && <p>Carregando clientes...</p>}
           {error && <p className="error-message">{error}</p>}
-          {!loading && clientesFiltrados.length === 0 && !error && <p>Nenhum cliente na fila.</p>}
+          {!loading && clientesFiltrados.length === 0 && !error && (
+            <p>Nenhum cliente na fila.</p>
+          )}
 
           {!loading && clientesFiltrados.length > 0 && (
             <div className="table-responsive">
@@ -513,7 +500,6 @@ const GestaoFilaClientes = () => {
               />
             </Form.Group>
 
-            {/* Forma de Notificação (da outra branch) */}
             <Form.Group className="mb-3">
               <Form.Label>Forma de Notificação</Form.Label>
               <Form.Select
@@ -528,7 +514,6 @@ const GestaoFilaClientes = () => {
               </Form.Select>
             </Form.Group>
 
-            {/* Campo condicional: E-mail */}
             {novoCliente.MEIO_NOTIFICACAO === 'email' && (
               <Form.Group className="mb-3">
                 <Form.Label>E-mail</Form.Label>
