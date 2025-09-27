@@ -1,3 +1,34 @@
+/* Define as variáveis de cores para o tema claro (padrão) */
+body[data-theme='light'] {
+  --background-primary: #f3f4f6; /* Fundo principal mais suave */
+  --background-secondary: #ffffff; /* Fundo de cards, sidebar */
+  --text-primary: #111827; /* Texto principal */
+  --text-secondary: #6b7280; /* Texto secundário, mais claro */
+  --border-color: #e5e7eb; /* Cor das bordas */
+  --brand-primary: #3A5AFE; /* Cor principal da marca */
+  --brand-primary-hover: #e9efff; /* Fundo de hover ativo */
+  --brand-text-active: #3A5AFE; /* Texto ativo */
+}
+
+/* Define as variáveis para o tema escuro */
+body[data-theme='dark'] {
+  --background-primary: #111827; /* Fundo principal escuro */
+  --background-secondary: #1f2937; /* Fundo de cards, sidebar escuro */
+  --text-primary: #f9fafb; /* Texto principal claro */
+  --text-secondary: #9ca3af; /* Texto secundário */
+  --border-color: #374151; /* Cor das bordas */
+  --brand-primary: #60a5fa; /* Cor principal da marca, mais brilhante */
+  --brand-primary-hover: #374151; /* Fundo de hover ativo */
+  --brand-text-active: #60a5fa; /* Texto ativo */
+}
+
+/* Aplica uma transição suave na troca de cores */
+body {
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap');
 body, html {
   font-family: 'Mulish', sans-serif;

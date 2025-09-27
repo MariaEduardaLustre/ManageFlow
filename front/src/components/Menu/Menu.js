@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from '../LanguageSelector/LanguageSelector';
+import ThemeToggleButton from '../ThemeToggleButton/ThemeToggleButton'; // IMPORTADO
 import './Menu.css';
 
 const Sidebar = () => {
@@ -126,11 +127,12 @@ const Sidebar = () => {
         </ul>
       </nav>
 
-      {/* ESTRUTURA FINAL E SIMPLIFICADA DO RODAPÉ */}
       {!collapsed && (
         <div className="sidebar-footer">
           <LanguageSelector variant="inline" />
           
+          <ThemeToggleButton />
+
           <div className="user-info">
             <FaUserCircle className="avatar-icon" aria-hidden="true" />
             <div>

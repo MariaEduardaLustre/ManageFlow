@@ -1,10 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import LanguageSelector from '../LanguageSelector/LanguageSelector'; // 1. Importando o seletor de idioma
+import { FaSun, FaMoon } from 'react-icons/fa'; // 1. IMPORTAR ÍCONES
+import { useTheme } from '../../context/ThemeContext'; // 2. IMPORTAR NOSSO HOOK DE TEMA
+import LanguageSelector from '../LanguageSelector/LanguageSelector';
 import './Landing.css';
 
 const LandingPage = () => {
   const { t } = useTranslation();
+  const { theme, toggleTheme } = useTheme(); // 3. USAR O HOOK PARA PEGAR O TEMA E A FUNÇÃO
 
   const fila = '/imagens/fila.png';
   const reserva = '/imagens/reserva.png';
@@ -17,7 +20,10 @@ const LandingPage = () => {
 
   return (
     <div className="landing-page-flow">
-      <nav className="navbar navbar-expand-lg navbar-light bg-white fixed-top flow-header shadow-sm">
+      {/* Adiciona uma classe ao body APENAS quando esta página estiver visível */}
+      <style>{`body { padding-top: 70px; background-color: var(--flow-page-bg, #fff); }`}</style>
+      
+      <nav className="navbar navbar-expand-lg navbar-light fixed-top flow-header shadow-sm">
         <div className="container">
           <a className="navbar-brand" href="#home">
               <img src={logo} alt="Manage Flow Logo" className="flow-logo" />
@@ -44,21 +50,24 @@ const LandingPage = () => {
                 <a className="nav-link" href="#sobre">{t('landing.nav.sobre')}</a>
               </li>
             </ul>
-            <div className="d-flex align-items-center"> {/* Wrapper para alinhar os itens */}
+            <div className="d-flex align-items-center">
               <div className="flow-auth-buttons ms-lg-auto">
                 <a href="/login" className="btn flow-btn-login me-2">{t('landing.nav.entrar')}</a>
                 <a href="/cadastro" className="btn flow-btn-signup">{t('landing.nav.cadastrar')}</a>
               </div>
-              {/* 2. Adicionando o seletor de idioma aqui */}
-              <div className="ms-3">
+              
+              {/* 4. ADICIONADO O BOTÃO DE TEMA AQUI */}
+              <button onClick={toggleTheme} className="btn landing-theme-toggle ms-3" title="Alterar tema">
+                {theme === 'light' ? <FaMoon /> : <FaSun />}
+              </button>
+
+              <div className="ms-2">
                 <LanguageSelector />
               </div>
             </div>
           </div>
         </div>
       </nav>
-
-      {/* O resto do seu componente continua igual... */}
 
       <section id="home" className="flow-hero pt-5 pb-0"> 
         <div className="container hero-container py-5">
@@ -106,7 +115,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id='sobre' className="flow-testimonials py-5 text-white">
+      <section id='sobre' className="flow-testimonials py-5">
         <div className="container">
           <h2 className="text-center mb-5 fw-bold">{t('landing.sobre.titulo')}</h2>
           <div className="testimonial-card-wrapper mx-auto">

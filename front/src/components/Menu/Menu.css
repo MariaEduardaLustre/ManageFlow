@@ -1,27 +1,16 @@
-:root {
-  --sidebar-width: 240px;
-  --sidebar-collapsed-width: 70px;
-  --bottomnav-height: 64px;
-  --brand-primary: #3A5AFE;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-500: #6b7280;
-  --gray-700: #374151;
-}
+/* As variáveis :root foram movidas para App.css e transformadas em [data-theme] */
 
 /* LAYOUT PADDING DO BODY */
 body.has-sidebar {
-  padding-left: var(--sidebar-width);
+  padding-left: var(--sidebar-width, 240px); /* Valor padrão adicionado */
   transition: padding 0.3s ease;
 }
 body.has-sidebar.sidebar-collapsed {
-  padding-left: var(--sidebar-collapsed-width);
+  padding-left: var(--sidebar-collapsed-width, 70px); /* Valor padrão adicionado */
 }
 body.has-bottomnav {
   padding-left: 0 !important;
-  padding-bottom: calc(var(--bottomnav-height) + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--bottomnav-height, 64px) + env(safe-area-inset-bottom)); /* Valor padrão adicionado */
   transition: padding 0.2s ease;
 }
 
@@ -29,10 +18,10 @@ body.has-bottomnav {
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
-  width: var(--sidebar-width);
+  width: var(--sidebar-width, 240px);
   height: 100dvh;
-  background-color: #fff;
-  border-right: 1px solid var(--gray-200);
+  background-color: var(--background-secondary); /* MODIFICADO */
+  border-right: 1px solid var(--border-color); /* MODIFICADO */
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease, padding 0.3s ease;
@@ -42,7 +31,7 @@ body.has-bottomnav {
   z-index: 1000;
 }
 .sidebar.collapsed {
-  width: var(--sidebar-collapsed-width);
+  width: var(--sidebar-collapsed-width, 70px);
   padding: 12px 8px;
 }
 
@@ -67,7 +56,7 @@ body.has-bottomnav {
   border: none;
   cursor: pointer;
   font-size: 1.2rem;
-  color: #a0a4b8;
+  color: var(--text-secondary); /* MODIFICADO */
   display: grid;
   place-items: center;
 }
@@ -85,7 +74,7 @@ body.has-bottomnav {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--gray-500);
+  color: var(--text-secondary); /* MODIFICADO */
   font-size: 0.95rem;
   padding: 12px 12px;
   border-radius: 8px;
@@ -93,11 +82,11 @@ body.has-bottomnav {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 .sidebar-menu a.sidebar-link:hover {
-  background-color: #f2f4ff;
+  background-color: var(--brand-primary-hover); /* MODIFICADO */
 }
 .sidebar-menu a.sidebar-link.active {
-  background-color: #e9efff;
-  color: var(--brand-primary);
+  background-color: var(--brand-primary-hover); /* MODIFICADO */
+  color: var(--brand-text-active); /* MODIFICADO */
   font-weight: 600;
 }
 .sidebar.collapsed .sidebar-menu .sidebar-link span {
@@ -109,12 +98,12 @@ body.has-bottomnav {
 /* ======================================================= */
 .sidebar-footer {
   padding-top: 12px;
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--border-color); /* MODIFICADO */
   margin-top: auto;
   display: flex;
-  flex-direction: column; /* Empilha os itens verticalmente */
-  align-items: flex-start; /* Alinha tudo à esquerda */
-  gap: 16px; /* Adiciona um espaço vertical entre os itens */
+  flex-direction: column; 
+  align-items: flex-start;
+  gap: 16px; 
 }
 
 .user-info {
@@ -129,7 +118,7 @@ body.has-bottomnav {
   gap: 8px;
   background: none;
   border: none;
-  color: #e11d48;
+  color: #e11d48; /* Cor de perigo, mantida para destaque */
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -142,12 +131,12 @@ body.has-bottomnav {
 
 .user-name {
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary); /* MODIFICADO */
 }
 
 .user-role {
   font-size: 0.8rem;
-  color: var(--gray-500);
+  color: var(--text-secondary); /* MODIFICADO */
 }
 
 
@@ -157,9 +146,9 @@ body.has-bottomnav {
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(var(--bottomnav-height) + env(safe-area-inset-bottom));
-  background: #fff;
-  border-top: 1px solid var(--gray-200);
+  height: calc(var(--bottomnav-height, 64px) + env(safe-area-inset-bottom));
+  background: var(--background-secondary); /* MODIFICADO */
+  border-top: 1px solid var(--border-color); /* MODIFICADO */
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   align-items: stretch;
@@ -174,19 +163,19 @@ body.has-bottomnav {
   text-decoration: none;
   gap: 4px;
   font-size: 11px;
-  color: var(--gray-500);
+  color: var(--text-secondary); /* MODIFICADO */
   padding: 6px 4px;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 .bottom-nav-item:hover {
-  background-color: var(--gray-50);
+  background-color: var(--brand-primary-hover); /* MODIFICADO */
 }
 .bottom-nav-item.active {
-  color: var(--brand-primary);
+  color: var(--brand-text-active); /* MODIFICADO */
   font-weight: 600;
 }
 .bottom-nav-item.logout {
-  color: #e11d48;
+  color: #e11d48; /* Cor de perigo, mantida para destaque */
 }
 .bottom-nav-icon {
   font-size: 20px;

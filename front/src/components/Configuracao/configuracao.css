@@ -2,12 +2,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 /* ====== NAMESPACE da página ====== */
-/* Use o wrapper para limitar variáveis e estilos a este módulo */
 .mf-config {
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-/* Variáveis só valem dentro do namespace */
+/* Variáveis para o TEMA CLARO (Padrão) */
 .mf-config {
   --primary-purple: #7B3EBC;
   --light-purple: #F3ECF9;
@@ -18,21 +17,36 @@
   --white: #FFFFFF;
   --red-error: #FF0000;
 }
+
+/* ======================================================= */
+/* ✨ ADIÇÃO PARA O TEMA ESCURO ✨ */
+/* Redefinimos as variáveis locais usando as globais do tema escuro */
+/* ======================================================= */
+body[data-theme='dark'] .mf-config {
+  --primary-purple: var(--brand-primary);
+  --light-purple: var(--brand-primary-hover);
+  --text-color: var(--text-primary);
+  --gray-text: var(--text-secondary);
+  --border-color: var(--border-color);
+  --background-gray: var(--background-primary);
+  --white: var(--background-secondary);
+}
+/* ======================================================= */
+
 .mf-config::before {
   content: "";
-  position: fixed;   /* cobre a tela inteira */
+  position: fixed;
   inset: 0;
   background: var(--background-gray);
-  z-index: -1;       /* fica atrás de todo o conteúdo da página */
+  z-index: -1;
   pointer-events: none;
 }
 
-/* container da página (layout básico e limite de largura) */
 .mf-config.configuracao-fila {
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
-  background-color: var(--background-gray);
+  background-color: var(--background-gray); /* Agora é dinâmico */
 }
 
 /* ====== HEADER ====== */
@@ -48,7 +62,7 @@
   background: transparent;
   border: none;
   font-size: 16px;
-  color: #57534E;
+  color: var(--gray-text); /* MODIFICADO */
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -67,7 +81,7 @@
 .mf-config .header h2 {
   font-size: 24px;
   font-weight: 600;
-  color: #292524;
+  color: var(--text-color); /* MODIFICADO */
   margin: 0;
 }
 
@@ -120,7 +134,7 @@
   color: var(--text-color);
   box-sizing: border-box;
   transition: border-color 0.2s ease-in-out;
-  background: #fff;
+  background: var(--white); /* MODIFICADO */
 }
 
 .mf-config .input-field input[type="text"]:focus,
@@ -142,7 +156,6 @@
   resize: vertical;
 }
 
-/* grupos (min/max/tolerância e datas) */
 .mf-config .group-inputs {
   display: flex;
   gap: 20px;
@@ -153,7 +166,6 @@
   margin-bottom: 0;
 }
 
-/* “minutos” ao lado do campo */
 .mf-config .input-field input[name="temp_tol"] + span {
   position: absolute;
   right: 15px;
@@ -188,7 +200,9 @@
   margin-bottom: 0;
 }
 
-.mf-config .toggle-text { flex: 1; }
+.mf-config .toggle-text {
+  flex: 1;
+}
 .mf-config .toggle-text p {
   font-size: 16px;
   font-weight: 500;
@@ -201,7 +215,6 @@
   line-height: 1.4;
 }
 
-/* switch custom — escopado */
 .mf-config .switch {
   position: relative;
   display: inline-block;
@@ -217,8 +230,8 @@
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: #ccc;
-  transition: .4s;
+  background-color: var(--border-color); /* MODIFICADO */
+  transition: 0.4s;
 }
 .mf-config .slider:before {
   position: absolute;
@@ -227,8 +240,8 @@
   width: 17px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
-  transition: .4s;
+  background-color: var(--white); /* MODIFICADO */
+  transition: 0.4s;
 }
 .mf-config input:checked + .slider {
   background-color: var(--primary-purple);
@@ -239,11 +252,17 @@
 .mf-config input:checked + .slider:before {
   transform: translateX(20px);
 }
-.mf-config .slider.round { border-radius: 25px; }
-.mf-config .slider.round:before { border-radius: 50%; }
+.mf-config .slider.round {
+  border-radius: 25px;
+}
+.mf-config .slider.round:before {
+  border-radius: 50%;
+}
 
 /* ====== UPLOAD ====== */
-.mf-config .upload-box { margin-bottom: 20px; }
+.mf-config .upload-box {
+  margin-bottom: 20px;
+}
 .mf-config .upload-box label {
   display: block;
   font-size: 14px;
@@ -267,7 +286,9 @@
   min-height: 120px;
   box-sizing: border-box;
 }
-.mf-config .upload-area:hover { border-color: var(--primary-purple); }
+.mf-config .upload-area:hover {
+  border-color: var(--primary-purple);
+}
 
 .mf-config .upload-area .upload-icon {
   width: 40px;
@@ -353,7 +374,6 @@
   text-align: center;
 }
 
-/* check visual */
 .mf-config .campo-box.ativo::after {
   content: '✓';
   position: absolute;
@@ -377,7 +397,7 @@
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color .2s, border-color .2s, color .2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 .mf-config .cancel-btn {
   background-color: var(--white);
@@ -393,34 +413,46 @@
   border: 1px solid var(--primary-purple);
   color: var(--white);
 }
-.mf-config .save-btn:hover {
+body[data-theme='light'] .mf-config .save-btn:hover {
   background-color: #6a34a0;
   border-color: #6a34a0;
 }
+body[data-theme='dark'] .mf-config .save-btn:hover {
+  background-color: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+  color: var(--brand-primary);
+}
 
-/* ====== MODAIS SIMPLES (custom desta página) ====== */
+
+/* ====== MODAIS SIMPLES ====== */
 .mf-config .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(17, 24, 39, .45);
+  background: rgba(17, 24, 39, 0.45); /* Funciona bem em ambos os temas */
   display: grid;
   place-items: center;
   z-index: 1050;
 }
 .mf-config .modal {
-  background: #fff;
+  background: var(--white); /* MODIFICADO */
   border-radius: 12px;
   padding: 20px;
   max-width: 560px;
   width: calc(100% - 32px);
-  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
 }
-.mf-config .modal.sucesso .mensagem-sucesso { color: #15803d; font-weight: 600; }
-.mf-config .modal.erro .mensagem-erro { color: #b91c1c; font-weight: 600; }
+.mf-config .modal.sucesso .mensagem-sucesso {
+  color: #15803d;
+  font-weight: 600;
+}
+.mf-config .modal.erro .mensagem-erro {
+  color: #b91c1c;
+  font-weight: 600;
+}
 .mf-config .btn-fechar-modal {
   margin-top: 14px;
   background: var(--primary-purple);
-  color: #fff;
+  color: var(--white);
   border: none;
   padding: 10px 16px;
   border-radius: 8px;
@@ -429,13 +461,17 @@
 
 /* ====== RESPONSIVO ====== */
 @media (max-width: 768px) {
-  .mf-config.configuracao-fila { padding: 20px; }
+  .mf-config.configuracao-fila {
+    padding: 20px;
+  }
 
   .mf-config .group-inputs {
     flex-direction: column;
     gap: 0;
   }
-  .mf-config .group-inputs .input-field { width: 100%; }
+  .mf-config .group-inputs .input-field {
+    width: 100%;
+  }
 
   .mf-config .campos-grid {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -445,16 +481,24 @@
     flex-direction: column;
     gap: 10px;
   }
-  .mf-config .botoes button { width: 100%; }
+  .mf-config .botoes button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
-  .mf-config .header h2 { font-size: 20px; }
+  .mf-config .header h2 {
+    font-size: 20px;
+  }
   .mf-config .subtitle,
   .mf-config .toggle-text span,
   .mf-config .upload-area span,
-  .mf-config .campo-box span { font-size: 13px; }
+  .mf-config .campo-box span {
+    font-size: 13px;
+  }
 
   .mf-config .input-field label,
-  .mf-config .section-card .section-title { font-size: 13px; }
+  .mf-config .section-card .section-title {
+    font-size: 13px;
+  }
 }

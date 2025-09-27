@@ -1,0 +1,29 @@
+.theme-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-secondary); /* Usa variável de cor */
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  width: 100%;
+  font-size: 0.9rem;
+  font-family: 'Mulish', sans-serif;
+  transition: color 0.2s ease;
+}
+
+.theme-toggle-button:hover {
+  color: var(--text-primary); /* Usa variável de cor */
+}
+
+.sidebar.collapsed .theme-toggle-button .toggle-label {
+  display: none;
+}
+
+/* Quando o menu está colapsado, centralizamos o ícone */
+.sidebar.collapsed .theme-toggle-button {
+  justify-content: center;
+  padding: 8px;
+}
