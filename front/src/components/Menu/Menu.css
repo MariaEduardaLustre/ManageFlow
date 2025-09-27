@@ -192,3 +192,10 @@ body.has-bottomnav {
 @media (min-width: 769px) {
   .bottom-nav { display: none; }
 }
+
+.sidebar-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px; /* Adiciona um espaço abaixo dos botões */
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaSun, FaMoon } from 'react-icons/fa';
-import { useTheme } from '../../context/ThemeContext'; // Importa nosso hook
+import { useTheme } from '../../context/ThemeContext';
 import './ThemeToggleButton.css';
 
 const ThemeToggleButton = () => {
@@ -13,9 +13,6 @@ const ThemeToggleButton = () => {
       title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
     >
       {theme === 'light' ? <FaMoon /> : <FaSun />}
-      <span className="toggle-label">
-        {theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}
-      </span>
     </button>
   );
 };

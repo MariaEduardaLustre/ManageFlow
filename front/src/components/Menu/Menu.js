@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from '../LanguageSelector/LanguageSelector';
-import ThemeToggleButton from '../ThemeToggleButton/ThemeToggleButton'; // IMPORTADO
+import ThemeToggleButton from '../ThemeToggleButton/ThemeToggleButton';
 import './Menu.css';
 
 const Sidebar = () => {
@@ -129,10 +129,12 @@ const Sidebar = () => {
 
       {!collapsed && (
         <div className="sidebar-footer">
-          <LanguageSelector variant="inline" />
+          {/* ✨ ORDEM DOS BOTÕES INVERTIDA AQUI ✨ */}
+          <div className="sidebar-controls">
+            <ThemeToggleButton />
+            <LanguageSelector variant="inline" />
+          </div>
           
-          <ThemeToggleButton />
-
           <div className="user-info">
             <FaUserCircle className="avatar-icon" aria-hidden="true" />
             <div>
