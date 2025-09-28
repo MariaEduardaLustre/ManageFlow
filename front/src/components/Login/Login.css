@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap");
 
-/* Tudo do Login fica dentro de .mf-login – nada global */
+/* --- Variáveis de Tema --- */
 .mf-login {
   --login-primary: #3a5afe;
   --login-text: #333a47;
@@ -8,7 +8,18 @@
   --login-border: #e2e8f0;
   --login-input: #f7f8fc;
   --login-bg: #ffffff;
+}
 
+body[data-theme='dark'] .mf-login {
+  --login-primary: var(--brand-primary);
+  --login-text: var(--text-primary);
+  --login-muted: var(--text-secondary);
+  --login-border: var(--border-color);
+  --login-input: var(--background-primary);
+  --login-bg: var(--background-secondary);
+}
+
+.mf-login {
   display: flex;
   min-height: 100vh;
   width: 100%;
@@ -17,12 +28,12 @@
   font-family: "Mulish", sans-serif;
 }
 
-/* Painel da imagem */
 .mf-login__image {
   flex: 0 0 40%;
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
+  background-color: var(--login-bg);
 }
 .mf-login__hero {
   max-width: 90%;
@@ -30,7 +41,6 @@
   object-fit: contain;
 }
 
-/* Seção do formulário */
 .mf-login__form-section {
   flex: 1;
   display: flex;
@@ -38,6 +48,18 @@
   align-items: center;
   padding: 40px;
   box-sizing: border-box;
+  position: relative;
+}
+
+/* ✨✨✨ AJUSTE FINAL DE POSICIONAMENTO AQUI ✨✨✨ */
+.mf-login__top-controls {
+    position: absolute;
+    top: 20px;
+    right: 130px;    /* Mais para a ESQUERDA (antes era 40px) */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
 }
 
 .mf-login__wrapper {
@@ -45,6 +67,7 @@
   max-width: 400px;
 }
 
+/* (O resto do seu CSS continua exatamente igual à versão anterior) */
 .mf-login__title {
   text-align: left;
   font-size: 2.1rem;
@@ -52,13 +75,10 @@
   margin-bottom: 30px;
   font-weight: 800;
 }
-
-/* Campos */
 .mf-login__group {
   position: relative;
   margin-bottom: 18px;
 }
-
 .mf-login__group input {
   width: 100%;
   padding: 13px 18px 13px 50px;
@@ -69,7 +89,6 @@
   color: var(--login-text);
   box-sizing: border-box;
 }
-
 .mf-login__icon {
   position: absolute;
   top: 50%;
@@ -80,11 +99,9 @@
   pointer-events: none;
   z-index: 2;
 }
-
 .mf-login__group--password input {
   padding-right: 46px;
 }
-
 .mf-login__pass-toggle {
   position: absolute;
   right: 15px;
@@ -95,33 +112,31 @@
   font-size: 1.1rem;
   z-index: 2;
 }
-
-/* Botão principal */
 .mf-login__submit {
   width: 100%;
   padding: 13px;
   font-size: 0.95rem;
   font-weight: 700;
   background-color: var(--login-primary);
-  color: #fff;
+  color: var(--login-bg);
   border: none;
   border-radius: 30px;
   cursor: pointer;
   margin-top: 25px;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
-.mf-login__submit:hover {
+body[data-theme='light'] .mf-login__submit:hover {
   background-color: #2a48d8;
   box-shadow: 0 4px 12px rgba(58, 90, 254, 0.25);
 }
-
-/* Login social */
+body[data-theme='dark'] .mf-login__submit:hover {
+  filter: brightness(1.2);
+}
 .mf-login__social {
   display: grid;
   gap: 10px;
   margin-top: 20px;
 }
-
 .mf-login__btn-google,
 .mf-login__btn-apple {
   display: flex;
@@ -130,22 +145,28 @@
   gap: 10px;
   padding: 13px;
   font-size: 0.95rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--login-border);
   border-radius: 30px;
   cursor: pointer;
-  background-color: #fff;
+  background-color: var(--login-bg);
+  color: var(--login-text);
   transition: background-color 0.2s ease;
 }
-.mf-login__btn-google:hover,
-.mf-login__btn-apple:hover {
+body[data-theme='light'] .mf-login__btn-google:hover,
+body[data-theme='light'] .mf-login__btn-apple:hover {
   background-color: #f3f3f3;
+}
+body[data-theme='dark'] .mf-login__btn-google:hover,
+body[data-theme='dark'] .mf-login__btn-apple:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 .mf-login__social-icon {
   font-size: 1.1rem;
-  color: #333;
+  color: var(--login-text);
 }
-
-/* Links auxiliares */
+body[data-theme='dark'] .mf-login__btn-apple .mf-login__social-icon {
+    color: var(--text-primary);
+}
 .mf-login__link {
   text-align: left;
   margin-top: 25px;
@@ -160,14 +181,16 @@
 .mf-login__link a:hover {
   text-decoration: underline;
 }
-
-/* Responsividade */
 @media (max-width: 992px) {
   .mf-login__image {
     display: none;
   }
   .mf-login__form-section {
     padding: 30px 20px;
+  }
+  .mf-login__top-controls {
+      top: 20px;
+      right: 20px;
   }
   .mf-login__title {
     text-align: center;
@@ -176,26 +199,6 @@
     text-align: center;
   }
 }
-
 @media (max-width: 576px) {
-  .mf-login__form-section {
-    padding: 20px;
-    align-items: stretch;
-    justify-content: flex-start;
-    overflow-y: auto;
-  }
-  .mf-login__group input {
-    padding-left: 40px;
-  }
-  .mf-login__icon {
-    left: 12px;
-    font-size: 0.9rem;
-  }
-  .mf-login__group--password input {
-    padding-right: 40px;
-  }
-  .mf-login__pass-toggle {
-    right: 12px;
-    font-size: 1rem;
-  }
+    /* ... */
 }

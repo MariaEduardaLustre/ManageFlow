@@ -7,6 +7,10 @@ import { FaEnvelope, FaLock, FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { BsEyeFill, BsEyeSlashFill } from "react-icons/bs";
 
+// Componentes de Tema e Idioma
+import ThemeToggleButton from "../ThemeToggleButton/ThemeToggleButton";
+import LanguageSelector from "../LanguageSelector/LanguageSelector";
+
 // Estilos (isolado)
 import "./Login.css";
 
@@ -41,16 +45,14 @@ const Login = () => {
       localStorage.setItem("idUsuario", idUsuario);
       localStorage.setItem("nomeUsuario", nome);
 
-      // Busca empresas do usuário
       const empresasResponse = await api.get(`/empresas/empresas-do-usuario/${idUsuario}`);
       const empresas = Array.isArray(empresasResponse.data) ? empresasResponse.data : [];
 
-      // Limpa seleção de empresa para SEMPRE passar pela tela de escolha
       localStorage.removeItem("empresaSelecionada");
       sessionStorage.setItem("empresasDoUsuario", JSON.stringify(empresas));
 
       setFormData({ email: "", senha: "" });
-      setMensagemSucessoModal("Login realizado! Escolha sua empresa.");
+      setMensagemSucessoModal("Login realizado! Escolha a sua empresa.");
       setMostrarModalSucesso(true);
     } catch (err) {
       const msg = err.response?.data || "E-mail ou senha inválidos.";
@@ -79,6 +81,12 @@ const Login = () => {
       </div>
 
       <div className="mf-login__form-section">
+        {/* ✨ CONTÊINER ATUALIZADO PARA OS BOTÕES NO CANTO SUPERIOR DIREITO ✨ */}
+        <div className="mf-login__top-controls">
+          <ThemeToggleButton />
+          <LanguageSelector />
+        </div>
+
         <div className="mf-login__wrapper">
           <h2 className="mf-login__title">Login</h2>
 
@@ -115,7 +123,7 @@ const Login = () => {
             </div>
 
             <p className="mf-login__link">
-              Esqueceu sua senha? <a href="/esqueci-senha">Clique aqui!</a>
+              Esqueceu a sua senha? <a href="/esqueci-senha">Clique aqui!</a>
             </p>
 
             <button
@@ -123,7 +131,7 @@ const Login = () => {
               className="mf-login__submit"
               disabled={loading}
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "A entrar..." : "Entrar"}
             </button>
           </form>
 
@@ -139,7 +147,7 @@ const Login = () => {
           </div>
 
           <p className="mf-login__link">
-            Ainda não possui uma conta? <a href="/cadastro">Cadastre-se</a>
+            Ainda não possui uma conta? <a href="/cadastro">Registe-se</a>
           </p>
         </div>
       </div>
