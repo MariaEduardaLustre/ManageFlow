@@ -1,0 +1,25 @@
+.theme-toggle-button {
+    background-color: var(--background-secondary); /* Fundo branco/escuro */
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary); /* Cor do ícone */
+    
+    /* Tamanho e forma */
+    width: 40px;
+    height: 40px;
+    border-radius: 8px; /* Bordas arredondadas */
+    padding: 0; /* Removemos o preenchimento para centralizar o ícone */
+
+    /* Alinhamento do ícone */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    font-size: 1.1rem; /* Tamanho do ícone */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.theme-toggle-button:hover {
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+}

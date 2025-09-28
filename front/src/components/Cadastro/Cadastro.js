@@ -11,6 +11,7 @@ import {
 import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs';
 import { MdConfirmationNumber } from "react-icons/md";
 import { Modal, Button } from 'react-bootstrap';
+import ThemeToggleButton from '../ThemeToggleButton/ThemeToggleButton'; // ✨ 1. IMPORTAR O BOTÃO DE TEMA
 
 const Cadastro = () => {
   const { t } = useTranslation();
@@ -191,11 +192,13 @@ const Cadastro = () => {
       </div>
 
       <div className="mf-cad__form-section">
+        {/* ✨ 2. ADICIONAR O COMPONENTE DO BOTÃO AQUI ✨ */}
+        <ThemeToggleButton />
+
         <div className="mf-cad__form-wrapper">
           <h2 className="mf-cad__title">{t('cadastro.titulo')}</h2>
 
           <form className="mf-cad__form" onSubmit={handleSubmit} noValidate>
-            {/* Nome */}
             <div className="mf-cad__group">
               <div className="mf-cad__wrap">
                 <FaUser className="mf-cad__icon" />
@@ -214,7 +217,6 @@ const Cadastro = () => {
               )}
             </div>
 
-            {/* Email */}
             <div className="mf-cad__group">
               <div className="mf-cad__wrap">
                 <FaEnvelope className="mf-cad__icon" />
@@ -234,7 +236,6 @@ const Cadastro = () => {
               )}
             </div>
 
-            {/* CPF */}
             <div className="mf-cad__group">
               <div className="mf-cad__wrap">
                 <FaIdCard className="mf-cad__icon" />
@@ -259,7 +260,6 @@ const Cadastro = () => {
               )}
             </div>
 
-            {/* Senha */}
             <div className="mf-cad__group mf-cad__group--password">
               <div className="mf-cad__wrap">
                 <FaLock className="mf-cad__icon" />
@@ -285,7 +285,6 @@ const Cadastro = () => {
               )}
             </div>
 
-            {/* Confirmar Senha */}
             <div className="mf-cad__group mf-cad__group--password">
               <div className="mf-cad__wrap">
                 <FaLock className="mf-cad__icon" />
@@ -311,7 +310,6 @@ const Cadastro = () => {
               )}
             </div>
 
-            {/* DDI / DDD / Telefone */}
             <div className="mf-cad__row">
               <div className="mf-cad__group mf-cad__group--ddi">
                 <FaGlobe className="mf-cad__icon" />
@@ -356,7 +354,6 @@ const Cadastro = () => {
               </div>
             </div>
 
-            {/* CEP / Número */}
             <div className="mf-cad__row">
               <div className="mf-cad__group">
                 <FaMapMarkerAlt className="mf-cad__icon" />
@@ -385,7 +382,6 @@ const Cadastro = () => {
               </div>
             </div>
 
-            {/* Endereço */}
             <div className="mf-cad__group">
               <FaHome className="mf-cad__icon" />
               <input
@@ -399,7 +395,6 @@ const Cadastro = () => {
               />
             </div>
 
-            {/* Complemento */}
             <div className="mf-cad__group">
               <FaBuilding className="mf-cad__icon" />
               <input
@@ -423,7 +418,6 @@ const Cadastro = () => {
         </div>
       </div>
 
-      {/* Modais */}
       <Modal show={mostrarConfirmacao} onHide={cancelarCadastro} centered backdrop="static" keyboard={false}>
         <Modal.Header closeButton>
           <Modal.Title>{t('cadastro.mensagens.modal.confirmacaoTitulo')}</Modal.Title>

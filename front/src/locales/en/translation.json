@@ -124,5 +124,305 @@
       "slogan": "Simplified queue management to optimize customer experience.",
       "direitos": "2025 ManageFlow. All rights reserved."
     }
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "configuracao": "Settings",
+    "gestao": "Queue Management",
+    "relatorios": "Reports",
+    "usuarios": "Users",
+    "sair": "Logout",
+    "expandir": "Expand menu",
+    "recolher": "Collapse menu",
+    "menuLateral": "Side menu",
+    "navegacaoInferior": "Bottom navigation",
+    "usuarioPadrao": "User",
+    "semPerfil": "No Profile"
+  },
+  "home": {
+    "saudacao": "Hello {{nome}}",
+    "empresa": "Company",
+    "totalMembros": "Total Members",
+    "adicionarMembro": "Add member",
+    "usuariosDaEmpresa": "Company Users",
+    "usuarioPadrao": "User",
+    "tabela": {
+      "nome": "Name",
+      "email": "Email",
+      "permissao": "Permission",
+      "acoes": "Actions",
+      "removerUsuario": "Remove User"
+    },
+    "botoes": {
+      "cancelar": "Cancel",
+      "adicionar": "Add",
+      "simExcluir": "Yes, Delete",
+      "fechar": "Close",
+      "ok": "OK"
+    },
+    "modalAdicionar": {
+      "titulo": "Add New Member",
+      "labelCpfEmail": "User's SSN or Email",
+      "placeholderCpfEmail": "Enter SSN or Email",
+      "labelPerfil": "Permission Profile"
+    },
+    "modalExcluir": {
+      "titulo": "Confirm Deletion",
+      "confirmacao": "Are you sure you want to remove the user <strong>{{nome}}</strong> from the company?"
+    },
+    "modalErro": {
+      "titulo": "An Error Occurred"
+    },
+    "modalSucesso": {
+      "titulo": "Success!"
+    },
+    "modalDetalhes": {
+      "titulo": "Company Details",
+      "nome": "Name",
+      "cnpj": "EIN"
+    },
+    "erros": {
+      "carregarDados": "Could not load page data. Please try again.",
+      "semPermissaoAdicionar": "You do not have permission to add members.",
+      "preenchaCampos": "Please fill in the SSN/Email and select a profile.",
+      "adicionarUsuario": "Error adding user.",
+      "semPermissaoRemover": "You do not have permission to remove members.",
+      "autoRemocao": "You cannot remove yourself from the company here.",
+      "removerAdmin": "It is not allowed to remove Administrator users from here.",
+      "removerUsuario": "Error removing user. (Hint: you cannot remove the last Administrator.)",
+      "semPermissaoAlterar": "You do not have permission to change profiles.",
+      "alterarAdmin": "It is not allowed to change an Administrator's permission.",
+      "atualizarPermissao": "Could not update permission. (Hint: you cannot demote the last Administrator.)",
+      "carregarDetalhesEmpresa": "Error loading company details."
+    },
+    "sucesso": {
+      "usuarioAdicionado": "User added successfully!",
+      "usuarioRemovido": "User removed successfully!",
+      "permissaoAtualizada": "Permission updated successfully!"
+    }
+  },
+  "geral": {
+    "sim": "Yes",
+    "nao": "No",
+    "ok": "OK",
+    "sucesso": "Success!",
+    "aviso": "Warning",
+    "cancelar": "Cancel",
+    "fechar": "Close",
+    "carregando": "Loading...",
+    "carregandoClientes": "Loading clients..."
+  },
+  "filaLista": {
+    "titulo": "Queues",
+    "mensagens": {
+      "carregando": "Loading queues...",
+      "erroCarregar": "Could not load queues. Please try again later.",
+      "nenhumaFila": "No queues available for this company."
+    },
+    "tabela": {
+      "nomeFila": "QUEUE NAME",
+      "dataInicio": "START DATE",
+      "dataFim": "END DATE",
+      "aguardando": "WAITING",
+      "bloqueada": "BLOCKED"
+    }
+  },
+  "gestaoFila": {
+    "titulo": "Clients in Queue",
+    "nenhumCliente": "No clients in the queue.",
+    "botoes": {
+      "bloquear": "Block queue",
+      "bloquearTitle": "Block queue (prevent new public entries)",
+      "desbloquear": "Unblock queue",
+      "desbloquearTitle": "Unblock queue (allow new public entries)",
+      "adicionar": "Add Client",
+      "verPainel": "View Panel"
+    },
+    "alertaBloqueio": {
+      "titulo": "Queue blocked today:",
+      "texto": "new <em>public</em> entries are prevented. Management of clients already in the queue continues as normal."
+    },
+    "abas": {
+      "aguardando": "Waiting & Called",
+      "confirmados": "Confirmed",
+      "naoCompareceu": "No-shows"
+    },
+    "tabela": {
+      "cliente": "CLIENT NAME",
+      "cpfCnpj": "SSN/EIN",
+      "entrada": "ENTRY",
+      "statusAcoes": "STATUS & ACTIONS"
+    },
+    "status": {
+      "aguardando": "Waiting",
+      "confirmado": "Presence Confirmed",
+      "naoCompareceu": "No-show",
+      "chamado": "Called",
+      "atendido": "Served",
+      "desconhecido": "Unknown"
+    },
+    "acoes": {
+      "notificar": "Send Notification",
+      "confirmar": "Confirm Presence",
+      "naoCompareceu": "No-show"
+    },
+    "modalAdicionar": {
+      "titulo": "Add New Client",
+      "nome": "Full Name",
+      "cpfCnpj": "SSN/EIN",
+      "nascimento": "Date of Birth",
+      "notificacao": "Notification Method",
+      "celular": "Mobile",
+      "adicionar": "Add to Queue"
+    },
+    "feedback": {
+      "presencaConfirmada": "{{nome}}'s presence confirmed!",
+      "naoCompareceu": "{{nome}} marked as a no-show.",
+      "notificado": "Client notified.",
+      "clienteAdicionado": "Client added successfully!",
+      "filaBloqueada": "Queue blocked for new public entries today.",
+      "filaDesbloqueada": "Queue unblocked for new public entries."
+    },
+    "erros": {
+      "carregarClientes": "Could not load clients from the queue.",
+      "nenhumCliente": "No clients found for this queue.",
+      "confirmarPresenca": "Error confirming presence.",
+      "marcarAusencia": "Error marking absence.",
+      "agendarTimeout": "Error scheduling timeout. Please try again.",
+      "adicionarCliente": "Error adding client.",
+      "alterarBloqueio": "Could not change the queue block status."
+    }
+  },
+  "filasCadastradas": {
+    "titulo": "Queue Settings",
+    "buscaPlaceholder": "Search by name, link, or ID",
+    "ordenarPor": "Sort by:",
+    "recente": "Newest",
+    "mostrandoItens_one": "Showing {{count}} item",
+    "mostrandoItens_other": "Showing {{count}} items",
+    "cards": {
+      "total": "Total queues",
+      "adicionar": "Add queue"
+    },
+    "tabela": {
+      "nome": "Queue name",
+      "id": "Conf. ID",
+      "link": "Entry link",
+      "qrCode": "QR Code",
+      "status": "Status",
+      "acoes": "Actions",
+      "nenhumItem": "No items found."
+    },
+    "status": {
+      "ativa": "Active",
+      "inativa": "Inactive"
+    },
+    "botoes": {
+      "copiar": "Copy",
+      "qrCode": "QR Code",
+      "baixar": "Download PNG",
+      "excluirDefinitivamente": "Delete permanently"
+    },
+    "acoes": {
+      "editar": "Edit settings",
+      "editarLabel": "Edit {{nome}}",
+      "excluir": "Delete settings",
+      "excluirLabel": "Delete {{nome}}",
+      "abrirQr": "Open QR modal (auto-generates)"
+    },
+    "modalQr": {
+      "titulo": "Queue QR Code ({{token}})",
+      "gerando": "Generating QR…",
+      "alt": "QR Code"
+    },
+    "modalExcluir": {
+      "titulo": "Delete settings",
+      "confirmacao": "Are you sure you want to delete the settings for <strong>“{{nome}}”</strong> (ID {{id}})?",
+      "subtexto": "This action will also remove associated queues and clients. It cannot be undone."
+    },
+    "erros": {
+      "nenhumaEmpresa": "No company selected.",
+      "carregar": "Error loading: {{message}}",
+      "tokenNaoEncontrado": "Queue token not found.",
+      "gerarQr": "Could not generate the QR Code.",
+      "excluir": "Could not delete: {{message}}"
+    },
+    "feedback": {
+      "linkCopiado": "Link copied!",
+      "copieOlink": "Copy the link:"
+    }
+  },
+  "dashboard": {
+    "titulo": "Dashboard",
+    "subtitulo": "Real-time overview of your queues",
+    "selecionarFila": "Select Queue",
+    "analiseFila": "Data analysis for queue <strong>{{nomeFila}}</strong>",
+    "status": {
+      "ativa": "Active",
+      "inativa": "Inactive",
+      "bloqueada": "Blocked"
+    },
+    "cards": {
+      "total": "Total Queues",
+      "totalSub": "All registered queues",
+      "ativas": "Active Queues",
+      "ativasSub": "Available to clients",
+      "inativasBloqueadas": "Inactive/Blocked Queues",
+      "inativasBloqueadasSub": "Unavailable right now",
+      "pessoasHoje": "People Today",
+      "pessoasHojeSub": "Entries in queues (today)",
+      "esperaMedia": "Average Wait",
+      "esperaMediaSub": "Clients waiting"
+    },
+    "graficos": {
+      "entradasHoje": "Entries by hour (today)",
+      "statusFilas": "Queue status",
+      "semDadosHoje": "No data today.",
+      "hora": "Time",
+      "tempoEspera": "Wait Time",
+      "horaDoDia": "Time of Day",
+      "numClientes": "No. of Clients",
+      "clientes": "Clients",
+      "minutos": "Minutes",
+      "tempoDeEspera": "Wait Time"
+    },
+    "tabela": {
+      "titulo": "Queues (today)",
+      "fila": "Queue",
+      "aguardando": "Waiting",
+      "status": "Status",
+      "atualizado": "Updated",
+      "nenhumaFilaFiltro": "No queue in the selected filter."
+    },
+    "filtros": {
+      "todas": "All",
+      "ativas": "Active",
+      "bloqueadas": "Blocked",
+      "inativas": "Inactive"
+    },
+    "horariosPico": {
+      "titulo": "Peak Hours Analysis",
+      "subtitulo": "Movement by Time of Day",
+      "carregando": "Loading peak data...",
+      "nenhumDado": "No peak data available for analysis.",
+      "hora": "Hour",
+      "totalClientes": "Total Clients"
+    },
+    "tempoEspera": {
+      "titulo": "Average Wait Time by Hour",
+      "carregando": "Loading wait time data...",
+      "nenhumDado": "No wait time data available for analysis."
+    },
+    "botoes": {
+      "exportarCsv": "Export to CSV",
+      "exportarJson": "Export to JSON"
+    },
+    "erros": {
+      "dadosInsuficientes": "There is not enough queue data for this company.",
+      "carregarDados": "Could not load data. Please try again later.",
+      "nenhumDadoEspera": "No wait time data found for this company.",
+      "nenhumaFilaAnalise": "No queue available for detailed analysis.",
+      "selecioneEmpresa": "Select a company or wait for the queues to load."
+    }
   }
 }
