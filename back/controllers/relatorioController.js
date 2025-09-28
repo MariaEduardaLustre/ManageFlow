@@ -1,4 +1,3 @@
-
 const db = require('../database/connection');
 
 // Descobrir a empresa do usuário logado
@@ -41,15 +40,17 @@ exports.tempoEsperaPorFila = async (req, res) => {
     const { id_fila } = req.params;
 
     const [rows] = await db.query(
-      `SELECT DATE(f.DT_MOVTO) AS data,
-              CAST(AVG(TIMESTAMPDIFF(MINUTE, c.DT_ENTRA, c.DT_CHAMA)) AS DECIMAL(10,2)) AS media
+      `SELECT DATE(c.DT_ENTRA) AS data,
+              CAST(AVG(TIMESTAMPDIFF(MINUTE, c.DT_ENTRA, c.DT_CHAMA)) AS DECIMAL(10,2)) AS media,
+              COUNT(*) AS totalAtendidos,
+              SUM(CASE WHEN c.SITUACAO = 2 OR c.DT_CHAMA IS NULL THEN 1 ELSE 0 END) AS desistencias
        FROM clientesfila c
        JOIN fila f ON f.ID_FILA = c.ID_FILA
-       WHERE f.ID_CONF_FILA = ?
-         AND c.DT_ENTRA IS NOT NULL
-         AND c.DT_CHAMA IS NOT NULL
-       GROUP BY DATE(f.DT_MOVTO)
-       ORDER BY data ASC`,
+      WHERE f.ID_CONF_FILA = ?
+        AND c.DT_ENTRA IS NOT NULL
+        AND c.DT_CHAMA IS NOT NULL
+      GROUP BY DATE(c.DT_ENTRA)
+      ORDER BY data ASC`,
       [id_fila]
     );
 
@@ -66,15 +67,19 @@ exports.desistenciasPorFila = async (req, res) => {
     const { id_fila } = req.params;
 
     const [rows] = await db.query(
-      `SELECT DATE(f.DT_MOVTO) AS data,
-              COUNT(*) AS desistencias
+      `SELECT DATE(c.DT_ENTRA) AS data,
+              SUM(CASE WHEN c.SITUACAO = 2 OR c.DT_CHAMA IS NULL THEN 1 ELSE 0 END) AS desistencias,
+              COUNT(*) AS totalClientes,
+              ROUND(
+                (SUM(CASE WHEN c.SITUACAO = 2 OR c.DT_CHAMA IS NULL THEN 1 ELSE 0 END) / COUNT(*)) * 100,
+                2
+              ) AS percentualDesistencia
        FROM clientesfila c
        JOIN fila f ON f.ID_FILA = c.ID_FILA
-       WHERE f.ID_CONF_FILA = ?
-         AND c.DT_ENTRA IS NOT NULL
-         AND (c.DT_CHAMA IS NULL OR c.SITUACAO = 2)
-       GROUP BY DATE(f.DT_MOVTO)
-       ORDER BY data ASC`,
+      WHERE f.ID_CONF_FILA = ?
+        AND c.DT_ENTRA IS NOT NULL
+      GROUP BY DATE(c.DT_ENTRA)
+      ORDER BY data ASC`,
       [id_fila]
     );
 
@@ -92,12 +97,13 @@ exports.avaliacoesPorFila = async (req, res) => {
 
     const [rows] = await db.query(
       `SELECT DATE(a.DATA) AS data,
-              CAST(AVG(a.NOTA) AS DECIMAL(3,1)) AS media
+              CAST(AVG(a.NOTA) AS DECIMAL(3,1)) AS media,
+              COUNT(*) AS totalFeedbacks
        FROM avaliacoesfila a
        JOIN fila f ON f.ID_FILA = a.ID_FILA
-       WHERE f.ID_CONF_FILA = ?
-       GROUP BY DATE(a.DATA)
-       ORDER BY data ASC`,
+      WHERE f.ID_CONF_FILA = ?
+      GROUP BY DATE(a.DATA)
+      ORDER BY data ASC`,
       [id_fila]
     );
 
