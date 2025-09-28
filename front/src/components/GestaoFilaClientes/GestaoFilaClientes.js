@@ -40,6 +40,7 @@ const GestaoFilaClientes = () => {
     NR_CEL: '',
     MEIO_NOTIFICACAO: 'whatsapp',
     EMAIL: '',
+    OBSERVACAO: '', // ALTERAÇÃO: Adicionamos o campo 'OBSERVACAO' ao estado inicial do novo cliente.
   });
   const [abaAtiva, setAbaAtiva] = useState('aguardando');
 
@@ -214,8 +215,10 @@ const GestaoFilaClientes = () => {
   };
   
   const handleCloseAddModal = () => setShowAddModal(false);
+
+  // ALTERAÇÃO: Resetamos também o campo 'OBSERVACAO' ao abrir o modal.
   const handleShowAddModal = () => {
-    setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '', MEIO_NOTIFICACAO: 'whatsapp', EMAIL: '' });
+    setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '', MEIO_NOTIFICACAO: 'whatsapp', EMAIL: '', OBSERVACAO: '' });
     setShowAddModal(true);
   };
   const handleNovoClienteChange = (e) => setNovoCliente((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -331,6 +334,8 @@ const GestaoFilaClientes = () => {
                   <tr>
                     <th>{t('gestaoFila.tabela.cliente')}</th>
                     <th>{t('gestaoFila.tabela.cpfCnpj')}</th>
+                    {/* ALTERAÇÃO: Adicionamos o cabeçalho para a nova coluna 'Observação'. */}
+                    <th>Observação</th>
                     <th>{t('gestaoFila.tabela.entrada')}</th>
                     <th>{t('gestaoFila.tabela.statusAcoes')}</th>
                   </tr>
@@ -340,6 +345,8 @@ const GestaoFilaClientes = () => {
                     <tr key={String(cliente.ID_EMPRESA) + '-' + String(cliente.DT_MOVTO) + '-' + String(cliente.ID_FILA) + '-' + String(cliente.ID_CLIENTE)} className="linha-cliente">
                       <td>{cliente.NOME || 'N/A'}</td>
                       <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
+                       {/* ALTERAÇÃO: Adicionamos a célula que exibirá o valor da observação. */}
+                      <td>{cliente.OBSERVACAO || '-'}</td>
                       <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
                       <td className="coluna-status-acoes">
                         <div className="conteudo-status-acoes">
@@ -378,6 +385,19 @@ const GestaoFilaClientes = () => {
               <Form.Label>{t('gestaoFila.modalAdicionar.nascimento')}</Form.Label>
               <Form.Control type="date" name="DT_NASC" value={novoCliente.DT_NASC} onChange={handleNovoClienteChange} />
             </Form.Group>
+            {/* ALTERAÇÃO: INÍCIO DO NOVO CAMPO DE OBSERVAÇÃO */}
+            <Form.Group className="mb-3">
+              <Form.Label>Observação</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="OBSERVACAO"
+                value={novoCliente.OBSERVACAO}
+                onChange={handleNovoClienteChange}
+                placeholder="Ex: Cliente com mobilidade reduzida, atendimento preferencial..."
+              />
+            </Form.Group>
+            {/* ALTERAÇÃO: FIM DO NOVO CAMPO DE OBSERVAÇÃO */}
             <Form.Group className="mb-3">
               <Form.Label>{t('gestaoFila.modalAdicionar.notificacao')}</Form.Label>
               <Form.Select name="MEIO_NOTIFICACAO" value={novoCliente.MEIO_NOTIFICACAO} onChange={handleNovoClienteChange} required>

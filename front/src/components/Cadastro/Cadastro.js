@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   FaUser, FaEnvelope, FaIdCard, FaLock, FaMapMarkerAlt,
-  FaHome, FaBuilding, FaPhone, FaGlobe, FaMapPin
+  FaHome, FaBuilding, FaPhone, FaGlobe, FaMapPin,  FaBriefcase // ALTERAÇÃO: Importamos um novo ícone para o campo 'Cargo'.
 } from 'react-icons/fa';
 import { BsEyeSlashFill, BsEyeFill } from 'react-icons/bs';
 import { MdConfirmationNumber } from "react-icons/md";
@@ -29,6 +29,7 @@ const Cadastro = () => {
     ddi: '',
     ddd: '',
     telefone: '',
+    cargo: '', // ALTERAÇÃO: Adicionamos o campo 'cargo' ao estado inicial do formulário.
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -114,7 +115,7 @@ const Cadastro = () => {
     setFormData({
       nome: '', email: '', cpfCnpj: '', senha: '', confirmarSenha: '',
       cep: '', endereco: '', numero: '', complemento: '',
-      ddi: '', ddd: '', telefone: '',
+      ddi: '', ddd: '', telefone: '', cargo: '', // ALTERAÇÃO: Também limpamos o campo 'cargo' quando necessário.
     });
   };
 
@@ -259,6 +260,22 @@ const Cadastro = () => {
                 <p className="mf-cad__alert">{t('cadastro.mensagens.alerta.cpfCnpjInvalido')}</p>
               )}
             </div>
+
+            {/* ALTERAÇÃO: INÍCIO DO NOVO CAMPO 'CARGO' */}
+          <div className="mf-cad__group">
+            <div className="mf-cad__wrap">
+              <FaBriefcase className="mf-cad__icon" />
+              <input
+                name="cargo"
+                placeholder="Cargo (Ex: Desenvolvedor)" // Você pode adicionar isso aos seus arquivos de tradução
+                value={formData.cargo}
+                onChange={handleChange}
+                id="cargo"
+                maxLength={100}
+              />
+            </div>
+          </div>
+          {/* ALTERAÇÃO: FIM DO NOVO CAMPO 'CARGO' */}
 
             <div className="mf-cad__group mf-cad__group--password">
               <div className="mf-cad__wrap">

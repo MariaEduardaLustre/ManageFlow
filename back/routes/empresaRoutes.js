@@ -162,10 +162,11 @@ module.exports = (io = null) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
     try {
       const dtMovtoFormatted = dtMovto.includes('T') ? dtMovto.split('T')[0] : dtMovto;
+      // ALTERAÇÃO: Adicionamos o campo 'OBSERVACAO' na lista de colunas a serem selecionadas.
       const [clientes] = await db.query(
         `SELECT
            ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, CPFCNPJ, RG, NOME, DT_NASC, EMAIL,
-           NR_QTDPES, DDDCEL, NR_CEL, MEIO_NOTIFICACAO, CAMPOS, DT_ENTRA, DT_CHAMA, DT_LIMAPRE, DT_APRE, DT_SAIDA, SITUACAO
+           NR_QTDPES, DDDCEL, NR_CEL, MEIO_NOTIFICACAO, CAMPOS, DT_ENTRA, DT_CHAMA, DT_LIMAPRE, DT_APRE, DT_SAIDA, SITUACAO, OBSERVACAO
          FROM clientesfila
          WHERE ID_EMPRESA = ? AND DATE(DT_MOVTO) = ? AND ID_FILA = ?
          ORDER BY DT_ENTRA ASC`,
@@ -312,7 +313,8 @@ module.exports = (io = null) => {
   // Rota para adicionar cliente na fila
   router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, res) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
-    const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES, MEIO_NOTIFICACAO } = req.body;
+    // ALTERAÇÃO: Adicionamos 'OBSERVACAO' para ser extraído do corpo da requisição.
+    const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES, MEIO_NOTIFICACAO, OBSERVACAO } = req.body;
     
     if (!NOME || !CPFCNPJ) {
         return res.status(400).json({ error: 'Nome e CPF/CNPJ são obrigatórios.' });
@@ -337,12 +339,11 @@ module.exports = (io = null) => {
             await connection.rollback();
             return res.status(409).json({ error: 'Este cliente já se encontra na fila hoje.' });
         }
-        
+         // ALTERAÇÃO: Modificamos a query de inserção para incluir a nova coluna 'OBSERVACAO'.
         await connection.query(
-            `INSERT INTO clientesfila (ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, DT_ENTRA, SITUACAO, MEIO_NOTIFICACAO)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, ?)`,
-            [idEmpresa, dtMovto, idFila, idCliente, CPFCNPJ, RG, NOME, DT_NASC, EMAIL || null, NR_QTDPES || 1, DDDCEL, NR_CEL, MEIO_NOTIFICACAO]
-        );
+            `INSERT INTO clientesfila (ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, DT_ENTRA, SITUACAO, MEIO_NOTIFICACAO, OBSERVACAO)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, ?, ?)`,  // ALTERAÇÃO: Adicionamos um '?' a mais para o campo OBSERVACAO.
+            [idEmpresa, dtMovto, idFila, idCliente, CPFCNPJ, RG, NOME, DT_NASC, EMAIL || null, NR_QTDPES || 1, DDDCEL, NR_CEL, MEIO_NOTIFICACAO, OBSERVACAO || null] ); // ALTERAÇÃO: Passamos a variável 'OBSERVACAO' para a query.
 
         const [[{ posicaoAtual }]] = await connection.query(
             `SELECT COUNT(*) AS posicaoAtual FROM clientesfila

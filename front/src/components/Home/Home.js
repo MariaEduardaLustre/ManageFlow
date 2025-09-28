@@ -238,6 +238,8 @@ const Home = () => {
                 <tr>
                   <th>{t('home.tabela.nome')}</th>
                   <th>{t('home.tabela.email')}</th>
+                  {/* ALTERAÇÃO: Adicionamos o cabeçalho para a nova coluna 'Cargo'. */}
+                  <th>Cargo</th> 
                   <th>{t('home.tabela.permissao')}</th>
                   {(canEdit || canDelete) && <th>{t('home.tabela.acoes')}</th>}
                 </tr>
@@ -249,6 +251,8 @@ const Home = () => {
                     <tr key={user.ID}>
                       <td data-label={t('home.tabela.nome')}>{user.NOME}</td>
                       <td data-label={t('home.tabela.email')}>{user.email || user.EMAIL}</td>
+                      {/* ALTERAÇÃO: Adicionamos a célula que exibirá o valor do cargo do usuário. */}
+                      <td data-label="Cargo">{user.CARGO || '-'}</td>
                       <td data-label={t('home.tabela.permissao')}>
                         {canEdit && !adminDaLinha ? (
                           <select

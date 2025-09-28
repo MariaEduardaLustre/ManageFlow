@@ -63,10 +63,10 @@ router.get(
   async (req, res) => {
     const { idEmpresa } = req.params;
     try {
-      const [usuarios] = await db.query(
+      const [usuarios] = await db.query( // ALTERAÇÃO: Adicionamos u.CARGO na lista de colunas a serem selecionadas.
         `
         SELECT 
-          u.ID, u.NOME, u.EMAIL, u.CPFCNPJ, u.CEP, u.DDI, u.DDD, u.TELEFONE,
+          u.ID, u.NOME, u.EMAIL, u.CPFCNPJ, u.CEP, u.DDI, u.DDD, u.TELEFONE, u.CARGO, 
           perf.ID_PERFIL, perf.NOME_PERFIL, perf.NIVEL
         FROM usuario u
         INNER JOIN permissoes pm
