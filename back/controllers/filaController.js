@@ -41,7 +41,7 @@ exports.listarFilasComConfiguracao = async (req, res) => {
   }
 
   // IMPORTANTE:
-  // - Tabela de itens da fila: aqui usei "fila_cliente" e coluna "SITUACAO" (0,1,2,3,4).
+  // - Tabela de itens da fila: aqui usei "clientesfila" e coluna "SITUACAO" (0,1,2,3,4).
   //   Ajuste o nome se no seu schema for diferente.
   // - A contagem é por ID_FILA (do dia), então não é necessário filtrar data no subselect.
   const sql = `
@@ -63,7 +63,7 @@ exports.listarFilasComConfiguracao = async (req, res) => {
       SELECT
         fc.ID_FILA,
         COUNT(*) AS QTDE_AGUARDANDO
-      FROM fila_cliente fc
+      FROM clientesfila fc
       WHERE fc.SITUACAO IN (0, 3)  -- 0=Aguardando, 3=Chamado
       GROUP BY fc.ID_FILA
     ) w
