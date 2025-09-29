@@ -1,8 +1,8 @@
-// src/pages/GestaoFilaClientes/GestaoFilaClientes.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { io } from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
 
 import {
   FaCheckCircle,
@@ -11,7 +11,7 @@ import {
   FaPlus,
   FaLock,
   FaUnlock,
-  FaTv
+  FaTv,
 } from 'react-icons/fa';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import Menu from '../Menu/Menu';
@@ -20,21 +20,17 @@ import './GestaoFilaClientes.css';
 const GestaoFilaClientes = () => {
   const { idEmpresa, dtMovto, idFila } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
-  // Estado base
   const [clientesFila, setClientesFila] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusLoading, setStatusLoading] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false); // estado real do bloqueio vindo do back
+  const [isBlocked, setIsBlocked] = useState(false);
   const [error, setError] = useState(null);
-
-  // Modais e feedback
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackVariant, setFeedbackVariant] = useState('info');
-
-  // Formulário do novo cliente (inclui campos da outra branch)
   const [novoCliente, setNovoCliente] = useState({
     NOME: '',
     CPFCNPJ: '',
@@ -42,11 +38,56 @@ const GestaoFilaClientes = () => {
     DDDCEL: '',
     NR_CEL: '',
     MEIO_NOTIFICACAO: 'whatsapp',
-    EMAIL: ''
+    EMAIL: '',
   });
-
-  // Abas
   const [abaAtiva, setAbaAtiva] = useState('aguardando');
+
+  // Funções de Validação de CPF e CNPJ
+  const isValidCPF = (cpf) => {
+    if (typeof cpf !== 'string') return false;
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    let soma = 0;
+    let resto;
+    for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.substring(9, 10))) return false;
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.substring(10, 11))) return false;
+    return true;
+  };
+
+  const isValidCNPJ = (cnpj) => {
+    if (typeof cnpj !== 'string') return false;
+    cnpj = cnpj.replace(/[^\d]+/g, '');
+    if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+    let tamanho = cnpj.length - 2;
+    let numeros = cnpj.substring(0, tamanho);
+    let digitos = cnpj.substring(tamanho);
+    let soma = 0;
+    let pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += numeros.charAt(tamanho - i) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (resultado != digitos.charAt(0)) return false;
+    tamanho = tamanho + 1;
+    numeros = cnpj.substring(0, tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += numeros.charAt(tamanho - i) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (resultado != digitos.charAt(1)) return false;
+    return true;
+  };
 
   const openFeedbackModal = (message, variant = 'info') => {
     setFeedbackMessage(message);
@@ -86,17 +127,13 @@ const GestaoFilaClientes = () => {
       setClientesFila(response.data || []);
     } catch (err) {
       setClientesFila([]);
-      if (err.response?.status !== 404) setError('Não foi possível carregar os clientes da fila.');
-      else setError('Nenhum cliente encontrado para esta fila.');
+      if (err.response?.status !== 404) setError(t('gestaoFila.erros.carregarClientes'));
+      else setError(t('gestaoFila.erros.nenhumCliente'));
     } finally {
       setLoading(false);
     }
-  }, [idEmpresa, dtMovto, idFila]);
+  }, [idEmpresa, dtMovto, idFila, t]);
 
-  /**
-   * Busca o status (BLOCK) do back no mount e sempre que precisar (após toggle, etc.)
-   * Usa a rota: GET /filas?idEmpresa=123 (com ID_FILA, BLOCK, SITUACAO...)
-   */
   const fetchFilaStatus = useCallback(async () => {
     if (!idEmpresa || !idFila) return;
     setStatusLoading(true);
@@ -138,7 +175,6 @@ const GestaoFilaClientes = () => {
       });
     });
 
-    // Carrega clientes e status
     fetchClientesFilaCompleta();
     fetchFilaStatus();
 
@@ -149,46 +185,31 @@ const GestaoFilaClientes = () => {
 
   const getSituacaoText = (situacao) => {
     switch (Number(situacao)) {
-      case 0:
-        return 'Aguardando';
-      case 1:
-        return 'Presença Confirmada';
-      case 2:
-        return 'Não Compareceu';
-      case 3:
-        return 'Chamado';
-      case 4:
-        return 'Atendido';
-      default:
-        return 'Desconhecido';
+      case 0: return t('gestaoFila.status.aguardando');
+      case 1: return t('gestaoFila.status.confirmado');
+      case 2: return t('gestaoFila.status.naoCompareceu');
+      case 3: return t('gestaoFila.status.chamado');
+      case 4: return t('gestaoFila.status.atendido');
+      default: return t('gestaoFila.status.desconhecido');
     }
   };
 
   const getSituacaoClass = (situacao) => {
     switch (Number(situacao)) {
-      case 0:
-        return 'aguardando';
-      case 1:
-        return 'presenca-confirmada';
-      case 2:
-        return 'nao-compareceu';
-      case 3:
-        return 'chamado';
-      case 4:
-        return 'atendido';
-      default:
-        return 'desconhecido';
+      case 0: return 'aguardando';
+      case 1: return 'presenca-confirmada';
+      case 2: return 'nao-compareceu';
+      case 3: return 'chamado';
+      case 4: return 'atendido';
+      default: return 'desconhecido';
     }
   };
 
   const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
     const situacaoOriginal = cliente.SITUACAO;
-
-    // Otimista
     setClientesFila((prev) =>
       prev.map((c) => (c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: novaSituacao } : c))
     );
-
     try {
       await api.put(
         `/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/atualizar-situacao`,
@@ -197,7 +218,6 @@ const GestaoFilaClientes = () => {
       openFeedbackModal(mensagemSucesso, 'success');
     } catch (err) {
       openFeedbackModal(mensagemErro, 'danger');
-      // rollback
       setClientesFila((prev) =>
         prev.map((c) =>
           c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: situacaoOriginal } : c
@@ -207,10 +227,10 @@ const GestaoFilaClientes = () => {
   };
 
   const handleConfirmarPresenca = (cliente) =>
-    handleUpdateSituacao(cliente, 1, `Presença de ${cliente.NOME} confirmada!`, 'Erro ao confirmar presença.');
+    handleUpdateSituacao(cliente, 1, t('gestaoFila.feedback.presencaConfirmada', { nome: cliente.NOME }), t('gestaoFila.erros.confirmarPresenca'));
 
   const handleNaoCompareceu = (cliente) =>
-    handleUpdateSituacao(cliente, 2, `${cliente.NOME} marcado como não compareceu.`, 'Erro ao marcar ausência.');
+    handleUpdateSituacao(cliente, 2, t('gestaoFila.feedback.naoCompareceu', { nome: cliente.NOME }), t('gestaoFila.erros.marcarAusencia'));
 
   const handleEnviarNotificacao = async (cliente) => {
     const url = `/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/enviar-notificacao`;
@@ -219,86 +239,78 @@ const GestaoFilaClientes = () => {
       setClientesFila((prev) =>
         prev.map((c) => (c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: 3 } : c))
       );
-      openFeedbackModal(response?.data?.message || 'Cliente notificado.', 'success');
+      openFeedbackModal(response?.data?.message || t('gestaoFila.feedback.notificado'), 'success');
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Erro ao agendar o timeout. Tente novamente.';
+      const errorMessage = err.response?.data?.error || t('gestaoFila.erros.agendarTimeout');
       openFeedbackModal(errorMessage, 'danger');
     }
   };
 
   const handleAdicionarCliente = async (e) => {
     e.preventDefault();
+    
+    // 1. VALIDAÇÃO DE NOME
+    if (novoCliente.NOME.trim().length < 3) {
+      openFeedbackModal('O nome deve ter no mínimo 3 letras.', 'danger');
+      return; 
+    }
+
+    // 2. VALIDAÇÃO DE CPF/CNPJ
+    const doc = novoCliente.CPFCNPJ.replace(/[^\d]+/g, '');
+    if (doc.length === 11) {
+      if (!isValidCPF(doc)) {
+        openFeedbackModal('O CPF informado é inválido. Por favor, verifique.', 'danger');
+        return;
+      }
+    } else if (doc.length === 14) {
+      if (!isValidCNPJ(doc)) {
+        openFeedbackModal('O CNPJ informado é inválido. Por favor, verifique.', 'danger');
+        return;
+      }
+    } else {
+        openFeedbackModal('O campo CPF/CNPJ deve conter 11 ou 14 dígitos.', 'danger');
+        return;
+    }
+
+    // 3. ENVIO PARA API (se tudo estiver válido)
     try {
       await api.post(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/adicionar-cliente`, novoCliente);
       handleCloseAddModal();
-      openFeedbackModal('Cliente adicionado com sucesso!', 'success');
+      openFeedbackModal(t('gestaoFila.feedback.clienteAdicionado'), 'success');
       fetchClientesFilaCompleta();
     } catch (err) {
-      const msg = err.response?.data?.error || 'Erro ao adicionar cliente.';
+      const msg = err.response?.data?.error || t('gestaoFila.erros.adicionarCliente');
       openFeedbackModal(msg, 'danger');
     }
   };
-
+  
   const handleCloseAddModal = () => setShowAddModal(false);
   const handleShowAddModal = () => {
-    setNovoCliente({
-      NOME: '',
-      CPFCNPJ: '',
-      DT_NASC: '',
-      DDDCEL: '',
-      NR_CEL: '',
-      MEIO_NOTIFICACAO: 'whatsapp',
-      EMAIL: ''
-    });
+    setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '', MEIO_NOTIFICACAO: 'whatsapp', EMAIL: '' });
     setShowAddModal(true);
   };
-  const handleNovoClienteChange = (e) =>
-    setNovoCliente((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleNovoClienteChange = (e) => setNovoCliente((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleVerPainel = () => {
     navigate(`/painel-fila/${idEmpresa}/${dtMovto}/${idFila}`);
   };
 
-  /**
-   * Bloquear/desbloquear garantindo coerência:
-   * - desired = true  -> bloqueia (BLOCK=1) e inativa (SITUACAO=0)
-   * - desired = false -> desbloqueia (BLOCK=0) e ativa (SITUACAO=1)
-   *
-   * Usa:
-   *   PUT /filas/:id_fila/block   { block: boolean }
-   *   PUT /filas/:id_fila/status  { situacao: boolean }
-   */
   const toggleBlockFila = async () => {
     if (!idFila) return;
     setStatusLoading(true);
     const desired = !isBlocked;
-
     try {
-      // 1) Atualiza BLOCK
       await api.put(`/filas/${idFila}/block`, { block: desired });
-
-      // 2) Mantém coerência com SITUACAO
       const situacao = desired ? false : true;
       await api.put(`/filas/${idFila}/status`, { situacao });
-
-      // 3) Atualiza UI imediata
       setIsBlocked(desired);
-
-      // 4) Garante estado correto quando reabrir a tela
       await fetchFilaStatus();
-
       openFeedbackModal(
-        desired
-          ? 'Fila bloqueada para novas entradas públicas hoje.'
-          : 'Fila desbloqueada para novas entradas públicas.',
+        desired ? t('gestaoFila.feedback.filaBloqueada') : t('gestaoFila.feedback.filaDesbloqueada'),
         'success'
       );
     } catch (err) {
-      const msg =
-        err.response?.data?.erro ||
-        err.response?.data?.mensagem ||
-        err.response?.data?.error ||
-        'Não foi possível alterar o bloqueio da fila.';
+      const msg = err.response?.data?.erro || err.response?.data?.mensagem || err.response?.data?.error || t('gestaoFila.erros.alterarBloqueio');
       openFeedbackModal(msg, 'danger');
     } finally {
       setStatusLoading(false);
@@ -307,18 +319,10 @@ const GestaoFilaClientes = () => {
 
   const filtrarClientes = () => {
     switch (abaAtiva) {
-      case 'aguardando':
-        return clientesFila.filter(
-          (cliente) => Number(cliente.SITUACAO) === 0 || Number(cliente.SITUACAO) === 3
-        );
-      case 'confirmados':
-        return clientesFila.filter(
-          (cliente) => Number(cliente.SITUACAO) === 1 || Number(cliente.SITUACAO) === 4
-        );
-      case 'nao-compareceu':
-        return clientesFila.filter((cliente) => Number(cliente.SITUACAO) === 2);
-      default:
-        return [];
+      case 'aguardando': return clientesFila.filter((c) => Number(c.SITUACAO) === 0 || Number(c.SITUACAO) === 3);
+      case 'confirmados': return clientesFila.filter((c) => Number(c.SITUACAO) === 1 || Number(c.SITUACAO) === 4);
+      case 'nao-compareceu': return clientesFila.filter((c) => Number(c.SITUACAO) === 2);
+      default: return [];
     }
   };
 
@@ -330,138 +334,82 @@ const GestaoFilaClientes = () => {
       <main className="main-content">
         <section className="clientes-fila-section">
           <div className="section-header">
-            <h2 className="section-title">Clientes na Fila</h2>
+            <h2 className="section-title">{t('gestaoFila.titulo')}</h2>
             <div className="header-buttons">
-              {/* Bloquear/Desbloquear Fila */}
               <Button
                 variant={isBlocked ? 'success' : 'warning'}
                 onClick={toggleBlockFila}
                 className="me-2"
                 disabled={statusLoading}
-                title={
-                  isBlocked
-                    ? 'Desbloquear fila (permitir novas entradas públicas)'
-                    : 'Bloquear fila (impedir novas entradas públicas)'
-                }
+                title={isBlocked ? t('gestaoFila.botoes.desbloquearTitle') : t('gestaoFila.botoes.bloquearTitle')}
               >
                 {statusLoading ? (
-                  <>
-                    <Spinner as="span" animation="border" size="sm" />&nbsp;Carregando...
-                  </>
+                  <><Spinner as="span" animation="border" size="sm" />&nbsp;{t('geral.carregando')}</>
                 ) : isBlocked ? (
-                  <>
-                    <FaUnlock /> Desbloquear fila
-                  </>
+                  <><FaUnlock /> {t('gestaoFila.botoes.desbloquear')}</>
                 ) : (
-                  <>
-                    <FaLock /> Bloquear fila
-                  </>
+                  <><FaLock /> {t('gestaoFila.botoes.bloquear')}</>
                 )}
               </Button>
-
-              <Button variant="primary" onClick={handleShowAddModal} className="me-2">
-                <FaPlus /> Adicionar Cliente
+              <Button variant="primary" onClick={handleShowAddModal} className="me-2" disabled={isBlocked}>
+                <FaPlus /> {t('gestaoFila.botoes.adicionar')}
               </Button>
               <Button variant="info" onClick={handleVerPainel}>
-                <FaTv /> Ver Painel
+                <FaTv /> {t('gestaoFila.botoes.verPainel')}
               </Button>
             </div>
           </div>
 
-          {/* Aviso quando bloqueada (bloqueio diário só impede entradas públicas) */}
           {isBlocked && (
             <Alert variant="warning" className="mb-3">
-              <strong>Fila bloqueada hoje:</strong> novas entradas <em>públicas</em> estão impedidas.
-              A gestão dos clientes já na fila segue normal.
+              <strong>{t('gestaoFila.alertaBloqueio.titulo')}</strong> {t('gestaoFila.alertaBloqueio.texto')}
             </Alert>
           )}
 
           <div className="tabs-container">
             <div className="tabs-list">
-              <button
-                className={`tab-button ${abaAtiva === 'aguardando' ? 'active' : ''}`}
-                onClick={() => setAbaAtiva('aguardando')}
-              >
-                Aguardando & Chamados
+              <button className={`tab-button ${abaAtiva === 'aguardando' ? 'active' : ''}`} onClick={() => setAbaAtiva('aguardando')}>
+                {t('gestaoFila.abas.aguardando')}
               </button>
-              <button
-                className={`tab-button ${abaAtiva === 'confirmados' ? 'active' : ''}`}
-                onClick={() => setAbaAtiva('confirmados')}
-              >
-                Confirmados
+              <button className={`tab-button ${abaAtiva === 'confirmados' ? 'active' : ''}`} onClick={() => setAbaAtiva('confirmados')}>
+                {t('gestaoFila.abas.confirmados')}
               </button>
-              <button
-                className={`tab-button ${abaAtiva === 'nao-compareceu' ? 'active' : ''}`}
-                onClick={() => setAbaAtiva('nao-compareceu')}
-              >
-                Não Compareceu
+              <button className={`tab-button ${abaAtiva === 'nao-compareceu' ? 'active' : ''}`} onClick={() => setAbaAtiva('nao-compareceu')}>
+                {t('gestaoFila.abas.naoCompareceu')}
               </button>
             </div>
           </div>
 
-          {loading && <p>Carregando clientes...</p>}
+          {loading && <p>{t('geral.carregandoClientes')}</p>}
           {error && <p className="error-message">{error}</p>}
-          {!loading && clientesFiltrados.length === 0 && !error && <p>Nenhum cliente na fila.</p>}
+          {!loading && clientesFiltrados.length === 0 && !error && (
+            <p>{t('gestaoFila.nenhumCliente')}</p>
+          )}
 
           {!loading && clientesFiltrados.length > 0 && (
             <div className="table-responsive">
               <table className="clientes-fila-table">
                 <thead>
                   <tr>
-                    <th>NOME CLIENTE</th>
-                    <th>CPF/CNPJ</th>
-                    <th>ENTRADA</th>
-                    <th>STATUS E AÇÕES</th>
+                    <th>{t('gestaoFila.tabela.cliente')}</th>
+                    <th>{t('gestaoFila.tabela.cpfCnpj')}</th>
+                    <th>{t('gestaoFila.tabela.entrada')}</th>
+                    <th>{t('gestaoFila.tabela.statusAcoes')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {clientesFiltrados.map((cliente) => (
-                    <tr
-                      key={
-                        String(cliente.ID_EMPRESA) +
-                        '-' +
-                        String(cliente.DT_MOVTO) +
-                        '-' +
-                        String(cliente.ID_FILA) +
-                        '-' +
-                        String(cliente.ID_CLIENTE)
-                      }
-                      className="linha-cliente"
-                    >
+                    <tr key={String(cliente.ID_EMPRESA) + '-' + String(cliente.DT_MOVTO) + '-' + String(cliente.ID_FILA) + '-' + String(cliente.ID_CLIENTE)} className="linha-cliente">
                       <td>{cliente.NOME || 'N/A'}</td>
                       <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
-                      <td>
-                        {formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}
-                      </td>
+                      <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
                       <td className="coluna-status-acoes">
                         <div className="conteudo-status-acoes">
-                          <div className="situacao-wrapper">
-                            <span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>
-                              {getSituacaoText(cliente.SITUACAO)}
-                            </span>
-                          </div>
+                          <div className="situacao-wrapper"><span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>{getSituacaoText(cliente.SITUACAO)}</span></div>
                           <div className="botoes-acoes-contexto">
-                            <button
-                              className="btn-acao btn-notificar"
-                              onClick={() => handleEnviarNotificacao(cliente)}
-                              title="Enviar Notificação"
-                            >
-                              <FaPaperPlane />
-                            </button>
-                            <button
-                              className="btn-acao btn-confirmar"
-                              onClick={() => handleConfirmarPresenca(cliente)}
-                              title="Confirmar Presença"
-                            >
-                              <FaCheckCircle />
-                            </button>
-                            <button
-                              className="btn-acao btn-nao-compareceu"
-                              onClick={() => handleNaoCompareceu(cliente)}
-                              title="Não Compareceu"
-                            >
-                              <FaTimesCircle />
-                            </button>
+                            <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title={t('gestaoFila.acoes.notificar')}><FaPaperPlane /></button>
+                            <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title={t('gestaoFila.acoes.confirmar')}><FaCheckCircle /></button>
+                            <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title={t('gestaoFila.acoes.naoCompareceu')}><FaTimesCircle /></button>
                           </div>
                         </div>
                       </td>
@@ -474,116 +422,63 @@ const GestaoFilaClientes = () => {
         </section>
       </main>
 
-      {/* Modal Adicionar Cliente */}
       <Modal show={showAddModal} onHide={handleCloseAddModal} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Adicionar Novo Cliente</Modal.Title>
+          <Modal.Title>{t('gestaoFila.modalAdicionar.titulo')}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleAdicionarCliente}>
           <Modal.Body>
             <Form.Group className="mb-3">
-              <Form.Label>Nome Completo*</Form.Label>
-              <Form.Control
-                type="text"
-                name="NOME"
-                value={novoCliente.NOME}
-                onChange={handleNovoClienteChange}
-                required
-              />
+              <Form.Label>{t('gestaoFila.modalAdicionar.nome')}*</Form.Label>
+              <Form.Control type="text" name="NOME" value={novoCliente.NOME} onChange={handleNovoClienteChange} required />
             </Form.Group>
-
             <Form.Group className="mb-3">
-              <Form.Label>CPF/CNPJ*</Form.Label>
-              <Form.Control
-                type="text"
-                name="CPFCNPJ"
-                value={novoCliente.CPFCNPJ}
-                onChange={handleNovoClienteChange}
-                required
-              />
+              <Form.Label>{t('gestaoFila.modalAdicionar.cpfCnpj')}*</Form.Label>
+              <Form.Control type="text" name="CPFCNPJ" value={novoCliente.CPFCNPJ} onChange={handleNovoClienteChange} required />
             </Form.Group>
-
             <Form.Group className="mb-3">
-              <Form.Label>Data de Nascimento</Form.Label>
-              <Form.Control
-                type="date"
-                name="DT_NASC"
-                value={novoCliente.DT_NASC}
-                onChange={handleNovoClienteChange}
-              />
+              <Form.Label>{t('gestaoFila.modalAdicionar.nascimento')}</Form.Label>
+              <Form.Control type="date" name="DT_NASC" value={novoCliente.DT_NASC} onChange={handleNovoClienteChange} />
             </Form.Group>
-
-            {/* Forma de Notificação (da outra branch) */}
             <Form.Group className="mb-3">
-              <Form.Label>Forma de Notificação</Form.Label>
-              <Form.Select
-                name="MEIO_NOTIFICACAO"
-                value={novoCliente.MEIO_NOTIFICACAO}
-                onChange={handleNovoClienteChange}
-                required
-              >
+              <Form.Label>{t('gestaoFila.modalAdicionar.notificacao')}</Form.Label>
+              <Form.Select name="MEIO_NOTIFICACAO" value={novoCliente.MEIO_NOTIFICACAO} onChange={handleNovoClienteChange} required>
                 <option value="whatsapp">WhatsApp</option>
                 <option value="sms">SMS</option>
                 <option value="email">E-mail</option>
               </Form.Select>
             </Form.Group>
-
-            {/* Campo condicional: E-mail */}
             {novoCliente.MEIO_NOTIFICACAO === 'email' && (
               <Form.Group className="mb-3">
                 <Form.Label>E-mail</Form.Label>
-                <Form.Control
-                  type="email"
-                  name="EMAIL"
-                  value={novoCliente.EMAIL}
-                  onChange={handleNovoClienteChange}
-                  required={novoCliente.MEIO_NOTIFICACAO === 'email'}
-                />
+                <Form.Control type="email" name="EMAIL" value={novoCliente.EMAIL} onChange={handleNovoClienteChange} required={novoCliente.MEIO_NOTIFICACAO === 'email'} />
               </Form.Group>
             )}
-
             <div className="d-flex gap-3">
               <Form.Group>
                 <Form.Label>DDD</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="DDDCEL"
-                  value={novoCliente.DDDCEL}
-                  onChange={handleNovoClienteChange}
-                />
+                <Form.Control type="text" name="DDDCEL" value={novoCliente.DDDCEL} onChange={handleNovoClienteChange} />
               </Form.Group>
               <Form.Group className="flex-grow-1">
-                <Form.Label>Celular</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="NR_CEL"
-                  value={novoCliente.NR_CEL}
-                  onChange={handleNovoClienteChange}
-                />
+                <Form.Label>{t('gestaoFila.modalAdicionar.celular')}</Form.Label>
+                <Form.Control type="text" name="NR_CEL" value={novoCliente.NR_CEL} onChange={handleNovoClienteChange} />
               </Form.Group>
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseAddModal}>
-              Cancelar
-            </Button>
-            <Button variant="primary" type="submit">
-              Adicionar à Fila
-            </Button>
+            <Button variant="secondary" onClick={handleCloseAddModal}>{t('geral.cancelar')}</Button>
+            <Button variant="primary" type="submit">{t('gestaoFila.modalAdicionar.adicionar')}</Button>
           </Modal.Footer>
         </Form>
       </Modal>
 
-      {/* Modal Feedback */}
       <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{feedbackVariant === 'success' ? 'Sucesso!' : 'Aviso'}</Modal.Title>
+          <Modal.Title>{feedbackVariant === 'success' ? t('geral.sucesso') : t('geral.aviso')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>{feedbackMessage}</Modal.Body>
         <Modal.Footer>
-          <Button variant={feedbackVariant} onClick={() => setShowFeedbackModal(false)}>
-            OK
-          </Button>
+          <Button variant={feedbackVariant} onClick={() => setShowFeedbackModal(false)}>{t('geral.ok')}</Button>
         </Modal.Footer>
       </Modal>
     </div>

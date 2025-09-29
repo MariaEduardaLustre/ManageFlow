@@ -3,11 +3,15 @@ const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/configuracaoController');
 
-// ⚠️ IMPORTANTES: caminhos RELATIVOS ao prefixo '/api/configuracao'
-router.get('/public/info/:token', ctrl.getPublicInfoByToken);
-router.post('/public/join/:token', ctrl.publicJoinByToken);
-router.get('/public/status/:token', ctrl.getPublicStatusByToken); // STATUS
-router.post('/public/leave/:token', ctrl.publicLeaveByToken);      // SAIR
+module.exports = (io) => {
+  // Rotas que não precisam do IO diretamente
+  router.get('/public/info/:token', ctrl.getPublicInfoByToken);
+  router.get('/public/status/:token', ctrl.getPublicStatusByToken);
 
-router.post('/public/confirm/:token',ctrl.publicConfirmByToken);
-module.exports = router;
+  // Rotas que precisam do IO para emitir eventos
+  router.post('/public/join/:token', (req, res) => ctrl.publicJoinByToken(req, res, io));
+  router.post('/public/leave/:token', (req, res) => ctrl.publicLeaveByToken(req, res, io));
+  router.post('/public/confirm/:token', (req, res) => ctrl.publicConfirmByToken(req, res, io));
+
+  return router;
+};

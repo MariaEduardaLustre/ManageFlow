@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import "./Empresa.css";
-import { BarChart } from "recharts";
+import ThemeToggleButton from "../ThemeToggleButton/ThemeToggleButton"; // ✨ IMPORTAR O BOTÃO
 
 const initialEmpresa = {
   nome: "",
@@ -179,28 +179,27 @@ const Empresa = ({ idUsuario }) => {
 
   return (
     <div className="mf-emp" >
-      {/* NAVBAR (Bootstrap) */}
       <nav className="navbar navbar-expand-lg navbar-light bg-white fixed-top mf-emp__header shadow-sm">
         <div className="container">
           <a className="navbar-brand" href="#home">
             <img src={logoSrc} alt="Manage Flow Logo" className="mf-emp__logo" />
           </a>
+          <ThemeToggleButton />
         </div>
       </nav>
 
-      {/* TÍTULO + FILTROS */}
       <section className="mf-emp__heading">
-        <h1 className="mf-emp__title">Selecione sua empresa</h1>
-        <p className="mf-emp__subtitle">Entre em uma empresa existente ou crie uma nova para começar.</p>
+        <h1 className="mf-emp__title">Selecione a sua empresa</h1>
+        <p className="mf-emp__subtitle">Entre numa empresa existente ou crie uma nova para começar.</p>
 
         <div className="mf-emp__actions">
           <div className="mf-emp__search">
             <input
               type="search"
-              placeholder="Buscar por nome ou perfil…"
+              placeholder="Procurar por nome ou perfil…"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              aria-label="Buscar empresa"
+              aria-label="Procurar empresa"
             />
           </div>
 
@@ -228,7 +227,6 @@ const Empresa = ({ idUsuario }) => {
 
       {erro && <div className="mf-emp__alert" role="alert">{erro}</div>}
 
-      {/* Lista / Loading / Vazio */}
       {loading ? (
         <div className="mf-emp__grid">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -239,7 +237,7 @@ const Empresa = ({ idUsuario }) => {
         <div className="mf-emp__empty">
           <div className="mf-emp__empty-icon" aria-hidden>🏷️</div>
           <h3>Nenhuma empresa encontrada</h3>
-          <p>Você pode ajustar a busca ou criar uma nova empresa.</p>
+          <p>Pode ajustar a pesquisa ou criar uma nova empresa.</p>
         </div>
       ) : (
         <div className="mf-emp__grid">
@@ -265,7 +263,7 @@ const Empresa = ({ idUsuario }) => {
                   disabled={fetchingPerm}
                   onClick={(e) => { e.stopPropagation(); escolherEmpresa(empresa); }}
                 >
-                  {fetchingPerm ? "Entrando..." : "Entrar"}
+                  {fetchingPerm ? "A entrar..." : "Entrar"}
                 </button>
               </div>
             </article>
@@ -273,14 +271,12 @@ const Empresa = ({ idUsuario }) => {
         </div>
       )}
 
-      {/* Formulário de criação */}
       {mostrarFormulario && (
         <section className="mf-emp__drawer">
           <div className="mf-emp__drawer-content" onKeyDown={handleEnter}>
             <header className="mf-emp__drawer-header">
               <h2>Criar nova empresa</h2>
             </header>
-
             <div className="mf-emp__form-grid">
               <div className="mf-emp__field">
                 <label>Nome da empresa *</label>
@@ -292,13 +288,12 @@ const Empresa = ({ idUsuario }) => {
                 />
                 {errosForm.nome && <span className="mf-emp__field-error">{errosForm.nome}</span>}
               </div>
-
               <div className="mf-emp__field">
                 <label>CNPJ (14 dígitos) *</label>
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="Somente números"
+                  placeholder="Apenas números"
                   maxLength={18}
                   value={novaEmpresa.cnpj}
                   onChange={(e) => {
@@ -308,18 +303,16 @@ const Empresa = ({ idUsuario }) => {
                 />
                 {errosForm.cnpj && <span className="mf-emp__field-error">{errosForm.cnpj}</span>}
               </div>
-
               <div className="mf-emp__field">
                 <label>E-mail *</label>
                 <input
                   type="email"
-                  placeholder="contato@empresa.com"
+                  placeholder="contacto@empresa.com"
                   value={novaEmpresa.email}
                   onChange={(e) => setNovaEmpresa({ ...novaEmpresa, email: e.target.value })}
                 />
                 {errosForm.email && <span className="mf-emp__field-error">{errosForm.email}</span>}
               </div>
-
               <div className="mf-emp__field">
                 <label>DDI</label>
                 <input
@@ -330,7 +323,6 @@ const Empresa = ({ idUsuario }) => {
                   onChange={(e) => setNovaEmpresa({ ...novaEmpresa, ddi: e.target.value.replace(/\D/g, "").slice(0, 3) })}
                 />
               </div>
-
               <div className="mf-emp__field">
                 <label>DDD</label>
                 <input
@@ -341,7 +333,6 @@ const Empresa = ({ idUsuario }) => {
                   onChange={(e) => setNovaEmpresa({ ...novaEmpresa, ddd: e.target.value.replace(/\D/g, "").slice(0, 3) })}
                 />
               </div>
-
               <div className="mf-emp__field">
                 <label>Telefone</label>
                 <input
@@ -352,7 +343,6 @@ const Empresa = ({ idUsuario }) => {
                   onChange={(e) => setNovaEmpresa({ ...novaEmpresa, telefone: e.target.value.replace(/\D/g, "").slice(0, 11) })}
                 />
               </div>
-
               <div className="mf-emp__field mf-emp__field--col2">
                 <label>Endereço</label>
                 <input
@@ -362,7 +352,6 @@ const Empresa = ({ idUsuario }) => {
                   onChange={(e) => setNovaEmpresa({ ...novaEmpresa, endereco: e.target.value })}
                 />
               </div>
-
               <div className="mf-emp__field">
                 <label>Número</label>
                 <input
@@ -373,7 +362,6 @@ const Empresa = ({ idUsuario }) => {
                   onChange={(e) => setNovaEmpresa({ ...novaEmpresa, numero: e.target.value.replace(/\D/g, "").slice(0, 6) })}
                 />
               </div>
-
               <div className="mf-emp__field mf-emp__field--col2">
                 <label>Logo (URL)</label>
                 <input
@@ -384,7 +372,6 @@ const Empresa = ({ idUsuario }) => {
                 />
               </div>
             </div>
-
             <footer className="mf-emp__drawer-footer">
               <button
                 className="mf-emp__btn"
@@ -398,7 +385,7 @@ const Empresa = ({ idUsuario }) => {
                 onClick={handleCriar}
                 disabled={!podeSalvar || submitting}
               >
-                {submitting ? "Salvando..." : "Salvar e entrar"}
+                {submitting ? "A guardar..." : "Guardar e entrar"}
               </button>
             </footer>
           </div>

@@ -1,18 +1,18 @@
-
 .relatorio-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f9f9f9;
+  background-color: var(--background-primary); /* MODIFICADO */
 }
 
 .relatorio-content {
   flex: 1;
   padding: 40px;
   box-sizing: border-box;
+  color: var(--text-primary); /* MODIFICADO */
 }
 
 .btn-exportar {
-  background-color: #4caf50;
+  background-color: #4caf50; /* Cor semântica mantida */
   color: white;
   padding: 10px 15px;
   border: none;
@@ -23,12 +23,16 @@
 }
 
 .btn-exportar:hover {
-  background-color: #45a049;
+  background-color: #45a049; /* Cor semântica mantida */
 }
 
 .tabela-container {
   margin-top: 30px;
   overflow-x: auto;
+  background-color: var(--background-secondary); /* MODIFICADO */
+  border: 1px solid var(--border-color); /* MODIFICADO */
+  border-radius: 8px; /* MODIFICADO */
+  padding: 10px; /* MODIFICADO */
 }
 
 .tabela-relatorio {
@@ -38,11 +42,13 @@
 
 .tabela-relatorio th,
 .tabela-relatorio td {
-  padding: 10px;
-  border: 1px solid #ccc;
+  padding: 12px 15px; /* MODIFICADO para mais espaço */
+  border: 1px solid var(--border-color); /* MODIFICADO */
   text-align: left;
 }
 
 .tabela-relatorio th {
-  background-color: #f5f5f5;
+  background-color: var(--background-primary); /* MODIFICADO */
+  color: var(--text-secondary); /* MODIFICADO */
+  font-weight: 600; /* MODIFICADO */
 }

@@ -1,4 +1,3 @@
-// src/pages/Home/Home.js
 import React, { useEffect, useState, useMemo } from 'react';
 import Menu from '../Menu/Menu';
 import { FaUsers, FaUserPlus, FaTrash } from 'react-icons/fa';
@@ -6,17 +5,19 @@ import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
 import { Modal, Button, Form } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next'; // 1. Importar
 
 const Home = () => {
+  const { t } = useTranslation(); // 2. Instanciar
+
   // --- STATES ---
+  // (Nenhuma mudança nos states)
   const [usuarios, setUsuarios] = useState([]);
   const [perfis, setPerfis] = useState([]);
   const [detalhesEmpresa, setDetalhesEmpresa] = useState(null);
   const [nomeUsuarioLogado, setNomeUsuarioLogado] = useState('');
-
   const [novoUsuario, setNovoUsuario] = useState('');
   const [perfilSelecionado, setPerfilSelecionado] = useState('');
-
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -57,8 +58,6 @@ const Home = () => {
   const canEdit   = hasPerm('usersRoles', 'edit');
   const canDelete = hasPerm('usersRoles', 'delete');
 
-  // ---- PERFIL ADMIN (IDs) ----
-  // Descobre automaticamente quais perfis são de nível de Administrador (NIVEL === 1)
   const adminPerfilIds = useMemo(() => {
     if (!Array.isArray(perfis)) return [];
     return perfis.filter(p => Number(p.NIVEL) === 1).map(p => Number(p.ID_PERFIL));
@@ -71,7 +70,7 @@ const Home = () => {
       navigate('/escolher-empresa');
       return;
     }
-    const nomeSalvo = localStorage.getItem('nomeUsuario') || 'Usuário';
+    const nomeSalvo = localStorage.getItem('nomeUsuario') || t('home.usuarioPadrao');
     setNomeUsuarioLogado(nomeSalvo);
 
     async function fetchData() {
@@ -94,13 +93,13 @@ const Home = () => {
         const status = error.response?.status;
         if (status === 401) return navigate('/login');
         if (status === 403) return navigate('/403');
-        handleShowErrorModal('Não foi possível carregar os dados da página. Tente novamente.');
+        handleShowErrorModal(t('home.erros.carregarDados'));
       }
     }
     fetchData();
-  }, [idEmpresa, navigate]);
+  }, [idEmpresa, navigate, t]);
 
-  // --- MODALS ---
+  // --- MODALS (usando chaves de tradução) ---
   const handleShowErrorModal = (message) => { setErrorMessage(message); setShowErrorModal(true); };
   const handleCloseErrorModal = () => setShowErrorModal(false);
   const handleShowSuccessModal = (message) => { setSuccessMessage(message); setShowSuccessModal(true); };
@@ -111,11 +110,11 @@ const Home = () => {
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
   const fecharModalEmpresa = () => setMostrarModalEmpresa(false);
 
-  // --- AÇÕES ---
+  // --- AÇÕES (usando chaves de tradução) ---
   const adicionarUsuario = async (event) => {
     event.preventDefault();
-    if (!canInvite) return handleShowErrorModal('Você não tem permissão para adicionar membros.');
-    if (!novoUsuario || !perfilSelecionado) return handleShowErrorModal('Por favor, preencha o CPF/Email e selecione um perfil.');
+    if (!canInvite) return handleShowErrorModal(t('home.erros.semPermissaoAdicionar'));
+    if (!novoUsuario || !perfilSelecionado) return handleShowErrorModal(t('home.erros.preenchaCampos'));
 
     try {
       await api.post(`/empresa/${idEmpresa}/adicionar-usuario`, {
@@ -123,7 +122,7 @@ const Home = () => {
         idPerfil: perfilSelecionado,
       });
       handleCloseAddUserModal();
-      handleShowSuccessModal('Usuário adicionado com sucesso!');
+      handleShowSuccessModal(t('home.sucesso.usuarioAdicionado'));
       setNovoUsuario('');
       const response = await api.get(`/empresa/${idEmpresa}`);
       setUsuarios(Array.isArray(response.data) ? response.data : []);
@@ -131,28 +130,26 @@ const Home = () => {
       const status = error.response?.status;
       if (status === 401) return navigate('/login');
       if (status === 403) return navigate('/403');
-      const msg = error.response?.data?.error || 'Erro ao adicionar usuário.';
+      const msg = error.response?.data?.error || t('home.erros.adicionarUsuario');
       handleShowErrorModal(msg);
     }
   };
 
   const removerUsuario = async () => {
     if (!usuarioParaExcluir) return;
-    if (!canDelete) return handleShowErrorModal('Você não tem permissão para remover membros.');
-    if (usuarioParaExcluir.ID === myUserId) return handleShowErrorModal('Você não pode se remover da empresa por aqui.');
-    if (isUserAdmin(usuarioParaExcluir)) return handleShowErrorModal('Não é permitido remover usuários Administradores por aqui.');
+    if (!canDelete) return handleShowErrorModal(t('home.erros.semPermissaoRemover'));
+    if (usuarioParaExcluir.ID === myUserId) return handleShowErrorModal(t('home.erros.autoRemocao'));
+    if (isUserAdmin(usuarioParaExcluir)) return handleShowErrorModal(t('home.erros.removerAdmin'));
 
     try {
       await api.delete(`/empresa/${idEmpresa}/remover-usuario/${usuarioParaExcluir.ID}`);
       setUsuarios((prev) => prev.filter((u) => u.ID !== usuarioParaExcluir.ID));
-      handleShowSuccessModal('Usuário removido com sucesso!');
+      handleShowSuccessModal(t('home.sucesso.usuarioRemovido'));
     } catch (error) {
       const status = error.response?.status;
       if (status === 401) return navigate('/login');
       if (status === 403) return navigate('/403');
-      const msg =
-        error.response?.data?.error ||
-        'Erro ao remover usuário. (Dica: não é possível remover o último Administrador.)';
+      const msg = error.response?.data?.error || t('home.erros.removerUsuario');
       handleShowErrorModal(msg);
     } finally {
       handleCloseConfirmDelete();
@@ -160,12 +157,10 @@ const Home = () => {
   };
 
   const handleMudarPermissao = async (idUsuario, novoIdPerfil) => {
-    if (!canEdit) return handleShowErrorModal('Você não tem permissão para alterar perfis.');
-
-    // BLOQUEIO: Não permitir alteração de permissão de usuários que são Administradores
+    if (!canEdit) return handleShowErrorModal(t('home.erros.semPermissaoAlterar'));
     const alvo = usuarios.find(u => u.ID === idUsuario);
     if (alvo && isUserAdmin(alvo)) {
-      return handleShowErrorModal('Não é permitido alterar a permissão de um Administrador.');
+      return handleShowErrorModal(t('home.erros.alterarAdmin'));
     }
 
     try {
@@ -183,14 +178,12 @@ const Home = () => {
             : user
         )
       );
-      handleShowSuccessModal('Permissão atualizada com sucesso!');
+      handleShowSuccessModal(t('home.sucesso.permissaoAtualizada'));
     } catch (error) {
       const status = error.response?.status;
       if (status === 401) return navigate('/login');
       if (status === 403) return navigate('/403');
-      const msg =
-        error.response?.data?.error ||
-        'Não foi possível atualizar a permissão. (Dica: não é possível rebaixar o último Administrador.)';
+      const msg = error.response?.data?.error || t('home.erros.atualizarPermissao');
       handleShowErrorModal(msg);
     }
   };
@@ -204,18 +197,19 @@ const Home = () => {
       const status = error.response?.status;
       if (status === 401) return navigate('/login');
       if (status === 403) return navigate('/403');
-      handleShowErrorModal('Erro ao carregar os detalhes da empresa.');
+      handleShowErrorModal(t('home.erros.carregarDetalhesEmpresa'));
     }
   };
 
+  // 3. Substituir textos no JSX
   return (
     <div className="mf-home home-container">
       <Menu />
       <main className="home-main-content">
         <header className="home-header">
-          <h1 className="home-header-greeting">Olá {nomeUsuarioLogado} 👋,</h1>
+          <h1 className="home-header-greeting">{t('home.saudacao', { nome: nomeUsuarioLogado })} 👋,</h1>
           <Button variant="light" onClick={exibirDetalhesEmpresa} className="home-empresa-btn">
-            Empresa: <strong>{nomeEmpresa || '...'}</strong>
+            {t('home.empresa')}: <strong>{nomeEmpresa || '...'}</strong>
           </Button>
         </header>
 
@@ -223,7 +217,7 @@ const Home = () => {
           <div className="home-card">
             <div className="home-card-icon-wrapper total-membros"><FaUsers /></div>
             <div className="home-card-info">
-              <span className="home-card-title">Total de Membros</span>
+              <span className="home-card-title">{t('home.totalMembros')}</span>
               <span className="home-card-value">{usuarios.length}</span>
             </div>
           </div>
@@ -231,21 +225,21 @@ const Home = () => {
           {canInvite && (
             <div className="home-card action-card" onClick={handleShowAddUserModal}>
               <div className="home-card-icon-wrapper adicionar-membro"><FaUserPlus /></div>
-              <div className="home-card-info"><span className="home-card-title">Adicionar membro</span></div>
+              <div className="home-card-info"><span className="home-card-title">{t('home.adicionarMembro')}</span></div>
             </div>
           )}
         </section>
 
         <section className="home-usuarios-section">
-          <h2 className="home-section-title">Usuários da Empresa</h2>
+          <h2 className="home-section-title">{t('home.usuariosDaEmpresa')}</h2>
           <div className="table-responsive">
             <table className="home-usuarios-table">
               <thead>
                 <tr>
-                  <th>Nome</th>
-                  <th>Email</th>
-                  <th>Permissão</th>
-                  {(canEdit || canDelete) && <th>Ações</th>}
+                  <th>{t('home.tabela.nome')}</th>
+                  <th>{t('home.tabela.email')}</th>
+                  <th>{t('home.tabela.permissao')}</th>
+                  {(canEdit || canDelete) && <th>{t('home.tabela.acoes')}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -253,9 +247,9 @@ const Home = () => {
                   const adminDaLinha = isUserAdmin(user);
                   return (
                     <tr key={user.ID}>
-                      <td data-label="Nome">{user.NOME}</td>
-                      <td data-label="Email">{user.email || user.EMAIL}</td>
-                      <td data-label="Permissão">
+                      <td data-label={t('home.tabela.nome')}>{user.NOME}</td>
+                      <td data-label={t('home.tabela.email')}>{user.email || user.EMAIL}</td>
+                      <td data-label={t('home.tabela.permissao')}>
                         {canEdit && !adminDaLinha ? (
                           <select
                             value={user.ID_PERFIL}
@@ -269,17 +263,16 @@ const Home = () => {
                             ))}
                           </select>
                         ) : (
-                          // Administrador: nunca permite editar (apenas exibe)
                           user.NOME_PERFIL
                         )}
                       </td>
                       {(canEdit || canDelete) && (
-                        <td data-label="Ações">
+                        <td data-label={t('home.tabela.acoes')}>
                           {canDelete && user.ID !== myUserId && !adminDaLinha && (
                             <button
                               onClick={() => handleShowConfirmDelete(user)}
                               className="home-btn-remover"
-                              title="Remover Usuário"
+                              title={t('home.tabela.removerUsuario')}
                             >
                               <FaTrash />
                             </button>
@@ -295,25 +288,25 @@ const Home = () => {
         </section>
       </main>
 
-      {/* Modais */}
+      {/* Modais com textos traduzidos */}
       <Modal show={showAddUserModal} onHide={handleCloseAddUserModal} centered>
         <Form onSubmit={adicionarUsuario}>
           <Modal.Header closeButton>
-            <Modal.Title>Adicionar Novo Membro</Modal.Title>
+            <Modal.Title>{t('home.modalAdicionar.titulo')}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form.Group className="mb-3" controlId="formNovoUsuario">
-              <Form.Label>CPF ou Email do Usuário</Form.Label>
+              <Form.Label>{t('home.modalAdicionar.labelCpfEmail')}</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Digite o CPF ou Email"
+                placeholder={t('home.modalAdicionar.placeholderCpfEmail')}
                 value={novoUsuario}
                 onChange={(e) => setNovoUsuario(e.target.value)}
                 required
               />
             </Form.Group>
             <Form.Group className="mb-3" controlId="formPerfil">
-              <Form.Label>Perfil de Permissão</Form.Label>
+              <Form.Label>{t('home.modalAdicionar.labelPerfil')}</Form.Label>
               <Form.Select
                 value={perfilSelecionado}
                 onChange={(e) => setPerfilSelecionado(e.target.value)}
@@ -329,10 +322,10 @@ const Home = () => {
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleCloseAddUserModal}>
-              Cancelar
+              {t('home.botoes.cancelar')}
             </Button>
             <Button variant="primary" type="submit">
-              Adicionar
+              {t('home.botoes.adicionar')}
             </Button>
           </Modal.Footer>
         </Form>
@@ -340,60 +333,60 @@ const Home = () => {
 
       <Modal show={showConfirmDeleteModal} onHide={handleCloseConfirmDelete} centered backdrop="static">
         <Modal.Header closeButton>
-          <Modal.Title>Confirmar Exclusão</Modal.Title>
+          <Modal.Title>{t('home.modalExcluir.titulo')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Tem certeza que deseja remover o usuário <strong>{usuarioParaExcluir?.NOME}</strong> da empresa?
+          {t('home.modalExcluir.confirmacao', { nome: usuarioParaExcluir?.NOME })}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseConfirmDelete}>
-            Cancelar
+            {t('home.botoes.cancelar')}
           </Button>
           <Button variant="danger" onClick={removerUsuario}>
-            Sim, Excluir
+            {t('home.botoes.simExcluir')}
           </Button>
         </Modal.Footer>
       </Modal>
 
       <Modal show={showErrorModal} onHide={handleCloseErrorModal} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Ocorreu um Erro</Modal.Title>
+          <Modal.Title>{t('home.modalErro.titulo')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>{errorMessage}</Modal.Body>
         <Modal.Footer>
           <Button variant="danger" onClick={handleCloseErrorModal}>
-            Fechar
+            {t('home.botoes.fechar')}
           </Button>
         </Modal.Footer>
       </Modal>
 
       <Modal show={showSuccessModal} onHide={handleCloseSuccessModal} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Sucesso!</Modal.Title>
+          <Modal.Title>{t('home.modalSucesso.titulo')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>{successMessage}</Modal.Body>
         <Modal.Footer>
           <Button variant="success" onClick={handleCloseSuccessModal}>
-            OK
+            {t('home.botoes.ok')}
           </Button>
         </Modal.Footer>
       </Modal>
 
       <Modal show={mostrarModalEmpresa} onHide={fecharModalEmpresa} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Detalhes da Empresa</Modal.Title>
+          <Modal.Title>{t('home.modalDetalhes.titulo')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {detalhesEmpresa && (
             <>
-              <p><strong>Nome:</strong> {detalhesEmpresa.NOME_EMPRESA}</p>
-              <p><strong>CNPJ:</strong> {detalhesEmpresa.CNPJ}</p>
+              <p><strong>{t('home.modalDetalhes.nome')}:</strong> {detalhesEmpresa.NOME_EMPRESA}</p>
+              <p><strong>{t('home.modalDetalhes.cnpj')}:</strong> {detalhesEmpresa.CNPJ}</p>
             </>
           )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={fecharModalEmpresa}>
-            Fechar
+            {t('home.botoes.fechar')}
           </Button>
         </Modal.Footer>
       </Modal>

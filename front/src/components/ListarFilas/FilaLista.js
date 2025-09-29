@@ -3,6 +3,7 @@ import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import Menu from '../Menu/Menu';
 import './FilaLista.css';
+import { useTranslation } from 'react-i18next'; // 1. Importar
 
 /* Datas */
 const formatarDataParaExibicao = (val) => {
@@ -36,6 +37,7 @@ const formatarDataParaURL = (val) => {
 };
 
 const FilaLista = () => {
+  const { t } = useTranslation(); // 2. Instanciar o hook
   const [filas, setFilas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,7 +63,7 @@ const FilaLista = () => {
           setFilas([]);
         } else {
           console.error('Erro ao buscar filas:', err);
-          setError('Não foi possível carregar as filas. Tente novamente mais tarde.');
+          setError(t('filaLista.mensagens.erroCarregar')); // Traduzir mensagem de erro
         }
       } finally {
         setLoading(false);
@@ -69,32 +71,33 @@ const FilaLista = () => {
     };
 
     fetchFilas();
-  }, [idEmpresa, navigate]);
+  }, [idEmpresa, navigate, t]);
 
+  // 3. Substituir textos no JSX
   return (
     <div className="home-container">
       <Menu />
 
       <main className="main-content">
         <section className="filas-section">
-          <h2 className="section-title">Filas</h2>
+          <h2 className="section-title">{t('filaLista.titulo')}</h2>
 
-          {loading && <p>Carregando filas...</p>}
+          {loading && <p>{t('filaLista.mensagens.carregando')}</p>}
           {error && <p className="fila-lista-error">{error}</p>}
 
           {!loading && filas.length === 0 && !error && (
-            <p>Nenhuma fila disponível para esta empresa.</p>
+            <p>{t('filaLista.mensagens.nenhumaFila')}</p>
           )}
 
           {!loading && filas.length > 0 && (
             <table className="filas-table">
               <thead>
                 <tr>
-                  <th>NOME DA FILA</th>
-                  <th>DATA INÍCIO FILA</th>
-                  <th>DATA FIM FILA</th>
-                  <th>AGUARDANDO</th>
-                  <th>BLOQUEADA</th>
+                  <th>{t('filaLista.tabela.nomeFila')}</th>
+                  <th>{t('filaLista.tabela.dataInicio')}</th>
+                  <th>{t('filaLista.tabela.dataFim')}</th>
+                  <th>{t('filaLista.tabela.aguardando')}</th>
+                  <th>{t('filaLista.tabela.bloqueada')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -113,7 +116,7 @@ const FilaLista = () => {
                       <td>{formatarDataParaExibicao(fila.DT_INI)}</td>
                       <td>{formatarDataParaExibicao(fila.FIM_VIG)}</td>
                       <td>{Number(fila.QTDE_AGUARDANDO) || 0}</td>
-                      <td>{fila.BLOCK ? 'Sim' : 'Não'}</td>
+                      <td>{fila.BLOCK ? t('geral.sim') : t('geral.nao')}</td>
                     </tr>
                   );
                 })}

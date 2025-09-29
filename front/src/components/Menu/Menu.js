@@ -11,17 +11,22 @@ import {
   FaAngleRight,
   FaUserCircle
 } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from '../LanguageSelector/LanguageSelector';
+import ThemeToggleButton from '../ThemeToggleButton/ThemeToggleButton';
 import './Menu.css';
 
-const NAV_ITEMS = [
-  { to: '/dashboard', icon: FaTachometerAlt, label: 'Dashboard' },
-  { to: '/filas-cadastradas', icon: FaCogs, label: 'Configuração' },
-  { to: '/filas', icon: FaClipboardList, label: 'Gestão da Fila' },
-  { to: '/relatorio', icon: FaChartBar, label: 'Relatórios' },
-  { to: '/home', icon: FaUsers, label: 'Usuários' }
-];
-
 const Sidebar = () => {
+  const { t } = useTranslation();
+
+  const NAV_ITEMS = [
+    { to: '/dashboard', icon: FaTachometerAlt, label: t('menu.dashboard') },
+    { to: '/filas-cadastradas', icon: FaCogs, label: t('menu.configuracao') },
+    { to: '/filas', icon: FaClipboardList, label: t('menu.gestao') },
+    { to: '/relatorio', icon: FaChartBar, label: t('menu.relatorios') },
+    { to: '/home', icon: FaUsers, label: t('menu.usuarios') }
+  ];
+
   const logo = '/imagens/logo.png';
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,18 +38,15 @@ const Sidebar = () => {
   const [cargoUsuario, setCargoUsuario] = useState('');
   const [nivelPermissao, setNivelPermissao] = useState(null);
 
-  // define breakpoint
   const MOBILE_BREAKPOINT = 768;
-
-  // checa rota ativa p/ bottom bar
   const activePath = useMemo(() => location.pathname, [location.pathname]);
 
   useEffect(() => {
-    const nomeSalvo = localStorage.getItem('nomeUsuario') || 'Usuário';
+    const nomeSalvo = localStorage.getItem('nomeUsuario') || t('menu.usuarioPadrao');
     setNomeUsuario(nomeSalvo);
 
     const empresaInfo = JSON.parse(localStorage.getItem('empresaSelecionada'));
-    const perfilSalvo = empresaInfo ? empresaInfo.NOME_PERFIL : 'Sem Perfil';
+    const perfilSalvo = empresaInfo ? empresaInfo.NOME_PERFIL : t('menu.semPerfil');
     const nivelSalvo  = empresaInfo ? empresaInfo.NIVEL : null;
 
     setCargoUsuario(perfilSalvo);
@@ -53,8 +55,7 @@ const Sidebar = () => {
     const handleResize = () => {
       const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
       setIsMobile(mobile);
-      setCollapsed(mobile); // celular começa colapsado
-      // ajusta padding do body conforme tipo de navegação
+      setCollapsed(mobile);
       if (mobile) {
         document.body.classList.remove('has-sidebar', 'sidebar-collapsed');
         document.body.classList.add('has-bottomnav');
@@ -69,7 +70,6 @@ const Sidebar = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // setup inicial (se abrir direto em desktop)
     if (!isMobile) {
       document.body.classList.add('has-sidebar');
     }
@@ -78,10 +78,8 @@ const Sidebar = () => {
       window.removeEventListener('resize', handleResize);
       document.body.classList.remove('has-sidebar', 'sidebar-collapsed', 'has-bottomnav');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t, collapsed, isMobile]);
 
-  // quando colapsar/expandir no desktop
   useEffect(() => {
     if (!isMobile) {
       if (collapsed) document.body.classList.add('sidebar-collapsed');
@@ -98,9 +96,8 @@ const Sidebar = () => {
     if (!isMobile) setCollapsed(prev => !prev);
   };
 
-  // RENDER SIDEBAR (desktop/tablet)
   const renderSidebar = () => (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`} aria-label="Menu lateral">
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`} aria-label={t('menu.menuLateral')}>
       <div className="sidebar-header">
         <div className="sidebar-logo" role="img" aria-label="Logo">
           <img src={logo} alt="Logo" />
@@ -108,8 +105,8 @@ const Sidebar = () => {
         <button
           className="toggle-btn"
           onClick={toggleSidebar}
-          aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-          title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          aria-label={collapsed ? t('menu.expandir') : t('menu.recolher')}
+          title={collapsed ? t('menu.expandir') : t('menu.recolher')}
         >
           {collapsed ? <FaAngleRight /> : <FaAngleLeft />}
         </button>
@@ -130,13 +127,14 @@ const Sidebar = () => {
         </ul>
       </nav>
 
-      <div className="sidebar-footer">
-        <button onClick={logout} className="logout-btn" aria-label="Sair">
-          <FaSignOutAlt />
-          {!collapsed && <span>Sair</span>}
-        </button>
-
-        {!collapsed && (
+      {!collapsed && (
+        <div className="sidebar-footer">
+          {/* ✨ ORDEM DOS BOTÕES INVERTIDA AQUI ✨ */}
+          <div className="sidebar-controls">
+            <ThemeToggleButton />
+            <LanguageSelector variant="inline" />
+          </div>
+          
           <div className="user-info">
             <FaUserCircle className="avatar-icon" aria-hidden="true" />
             <div>
@@ -146,14 +144,18 @@ const Sidebar = () => {
               </div>
             </div>
           </div>
-        )}
-      </div>
+
+          <button onClick={logout} className="logout-btn" aria-label={t('menu.sair')}>
+            <FaSignOutAlt />
+            <span>{t('menu.sair')}</span>
+          </button>
+        </div>
+      )}
     </aside>
   );
 
-  // RENDER BOTTOM NAV (mobile)
   const renderBottomNav = () => (
-    <nav className="bottom-nav" aria-label="Navegação inferior">
+    <nav className="bottom-nav" aria-label={t('menu.navegacaoInferior')}>
       {NAV_ITEMS.map(({ to, icon: Icon, label }) => {
         const isActive = activePath.startsWith(to);
         return (
@@ -175,11 +177,11 @@ const Sidebar = () => {
         type="button"
         className="bottom-nav-item logout"
         onClick={logout}
-        aria-label="Sair"
-        title="Sair"
+        aria-label={t('menu.sair')}
+        title={t('menu.sair')}
       >
         <FaSignOutAlt className="bottom-nav-icon" />
-        <span className="bottom-nav-label">Sair</span>
+        <span className="bottom-nav-label">{t('menu.sair')}</span>
       </button>
     </nav>
   );

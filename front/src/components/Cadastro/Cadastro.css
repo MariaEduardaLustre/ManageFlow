@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap");
 
-/* Escopo TOTAL do cadastro */
+/* --- Variáveis para TEMA CLARO (Padrão) --- */
 .mf-cad {
   --cad-primary: #3a5afe;
   --cad-text: #333a47;
@@ -8,7 +8,23 @@
   --cad-border: #e2e8f0;
   --cad-input: #f7f8fc;
   --cad-bg: #ffffff;
+}
 
+/* ======================================================= */
+/* ✨ ADIÇÃO PARA O TEMA ESCURO ✨ */
+/* ======================================================= */
+body[data-theme='dark'] .mf-cad {
+  --cad-primary: var(--brand-primary);
+  --cad-text: var(--text-primary);
+  --cad-muted: var(--text-secondary);
+  --cad-border: var(--border-color);
+  --cad-input: var(--background-primary);
+  --cad-bg: var(--background-secondary);
+}
+/* ======================================================= */
+
+
+.mf-cad {
   display: flex;
   min-height: 100vh;
   width: 100%;
@@ -23,6 +39,7 @@
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
+  background-color: var(--cad-bg);
 }
 
 /* Form section */
@@ -33,7 +50,17 @@
   align-items: center;
   padding: 40px;
   box-sizing: border-box;
+  position: relative;
 }
+
+/* ✨ NOVO: Posicionamento do botão de tema */
+.mf-cad .theme-toggle-button {
+    position: absolute;
+    top: 20px;
+    right: 130px;
+    z-index: 10;
+}
+
 
 .mf-cad__form-wrapper {
   width: 100%;
@@ -72,6 +99,16 @@
   box-sizing: border-box;
 }
 
+body[data-theme='dark'] .mf-cad__group select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 1.2rem center;
+    background-size: .65em auto;
+}
+
 .mf-cad__icon {
   position: absolute;
   left: 15px;
@@ -98,7 +135,6 @@
   z-index: 2;
 }
 
-/* Linha com 3 colunas (DDI/DDD/Fone) */
 .mf-cad__row {
   display: flex;
   gap: 12px;
@@ -119,33 +155,33 @@
   flex: 1;
 }
 
-/* Alertas de validação */
 .mf-cad__alert {
   margin-top: 6px;
   font-size: 0.85rem;
   color: #dc3545;
 }
 
-/* Botão principal */
 .mf-cad__submit {
   width: 100%;
   padding: 13px;
   font-size: 0.95rem;
   font-weight: 700;
   background-color: var(--cad-primary);
-  color: #fff;
+  color: var(--cad-bg);
   border: none;
   border-radius: 30px;
   cursor: pointer;
   margin-top: 25px;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
-.mf-cad__submit:hover {
+body[data-theme='light'] .mf-cad__submit:hover {
   background-color: #2a48d8;
   box-shadow: 0 4px 12px rgba(58, 90, 254, 0.25);
 }
+body[data-theme='dark'] .mf-cad__submit:hover {
+  filter: brightness(1.2);
+}
 
-/* Link “já tem login?” */
 .mf-cad__login-link {
   text-align: left;
   margin-top: 25px;
@@ -161,13 +197,16 @@
   text-decoration: underline;
 }
 
-/* Responsividade */
 @media (max-width: 992px) {
   .mf-cad__image {
     display: none;
   }
   .mf-cad__form-section {
     padding: 30px 20px;
+  }
+  .mf-cad .theme-toggle-button {
+      top: 20px;
+      right: 20px;
   }
   .mf-cad__form-wrapper {
     max-width: 420px;
@@ -202,7 +241,6 @@
     right: 12px;
     font-size: 1rem;
   }
-
   .mf-cad__row {
     flex-direction: column;
     gap: 0;
