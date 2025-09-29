@@ -55,17 +55,12 @@ app.use('/api/empresas', authMiddleware, empresaRoutesResolved);
 const configuracaoRoutes = require('./routes/configuracaoRoutes');
 app.use('/api/configuracao', authMiddleware, configuracaoRoutes);
 
-let filaRoutes;
-try {
-  filaRoutes = require('./routes/filaRoutes');
-} catch(e) {
-  console.warn("Módulo de 'filaRoutes' não encontrado, pulando...");
-  filaRoutes = null;
-}
+const filaRoutes = require('./routes/filaRoutes');
+app.use('/api/filas', authMiddleware, filaRoutes);
 
-if (filaRoutes) {
-  app.use('/api/filas', authMiddleware, filaRoutes);
-}
+// Relatórios (sempre com JWT)
+const relatorioRoutes = require('./routes/relatorioRoutes');
+app.use('/api/relatorios', authMiddleware, relatorioRoutes);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => console.log(`API ouvindo em http://0.0.0.0:${PORT}`));

@@ -1,3 +1,4 @@
+// src/components/Menu/Menu.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -16,16 +17,74 @@ import LanguageSelector from '../LanguageSelector/LanguageSelector';
 import ThemeToggleButton from '../ThemeToggleButton/ThemeToggleButton';
 import './Menu.css';
 
+function normalizeRoleFromNivel(nivel) {
+  const n = Number(nivel);
+  if (n === 1) return 'ADM';
+  if (n === 2) return 'STAFF';
+  if (n === 3) return 'ANALYST';
+  return 'CUSTOMER';
+}
+
+function getCurrentContext() {
+  try {
+    const raw = localStorage.getItem('empresaSelecionada');
+    const emp = raw ? JSON.parse(raw) : null;
+    const role =
+      (emp?.ROLE
+        ? String(emp.ROLE).toUpperCase()
+        : normalizeRoleFromNivel(emp?.NIVEL));
+    // Corrige legado "STAF"
+    const safeRole = role?.startsWith('STAF') ? 'STAFF' : role || 'CUSTOMER';
+    const permissions = Array.isArray(emp?.PERMISSIONS) ? emp.PERMISSIONS : [];
+    return { role: safeRole, permissions, nivel: emp?.NIVEL ?? null };
+  } catch {
+    return { role: null, permissions: [], nivel: null };
+  }
+}
+
+/**
+ * Regras de acesso por recurso (coerente com PrivateRoute/App)
+ * - dashboard: ADM, STAFF, ANALYST
+ * - analytics: ADM, STAFF, ANALYST
+ * - usersRoles (Home/Usuários): ADM, STAFF
+ * - queues (Filas/Configuração de Filas): ADM, STAFF
+ * - settings (Configuração base): ADM, STAFF
+ */
+const ROLE_ALLOW = {
+  dashboard: ['ADM', 'STAFF', 'ANALYST'],
+  analytics: ['ADM', 'STAFF', 'ANALYST'],
+  usersRoles: ['ADM', 'STAFF'],
+  queues: ['ADM', 'STAFF'],
+  settings: ['ADM', 'STAFF'],
+};
+
+// Recursos de gestão que podem (opcionalmente) exigir PERMISSIONS[:view] se a lista existir
+const RBAC_ENFORCED_RESOURCES = new Set(['usersRoles', 'queues', 'settings', 'queueEntries']);
+
+/**
+ * Verifica se o usuário pode ver um recurso no menu.
+ * - Primeiro checa PAPEL (ROLE_ALLOW).
+ * - Para recursos de gestão (RBAC_ENFORCED_RESOURCES), se houver PERMISSIONS no snapshot,
+ *   exige `${resource}:view` para exibir (endurece o front).
+ * - Dashboard/Analytics não dependem de PERMISSIONS (só do papel).
+ */
+function canSee(resource, role, permissions) {
+  const key = String(resource || '').toLowerCase();
+  const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF']; // default
+  if (!allowedRoles.includes(role)) return false;
+
+  if (RBAC_ENFORCED_RESOURCES.has(resource) && permissions?.length) {
+    const needsView = `${resource}:view`;
+    // normaliza case para evitar divergência
+    const hasView = permissions.some(p => String(p).toLowerCase() === needsView.toLowerCase());
+    return hasView;
+  }
+
+  return true;
+}
+
 const Sidebar = () => {
   const { t } = useTranslation();
-
-  const NAV_ITEMS = [
-    { to: '/dashboard', icon: FaTachometerAlt, label: t('menu.dashboard') },
-    { to: '/filas-cadastradas', icon: FaCogs, label: t('menu.configuracao') },
-    { to: '/filas', icon: FaClipboardList, label: t('menu.gestao') },
-    { to: '/relatorio', icon: FaChartBar, label: t('menu.relatorios') },
-    { to: '/home', icon: FaUsers, label: t('menu.usuarios') }
-  ];
 
   const logo = '/imagens/logo.png';
   const navigate = useNavigate();
@@ -38,19 +97,39 @@ const Sidebar = () => {
   const [cargoUsuario, setCargoUsuario] = useState('');
   const [nivelPermissao, setNivelPermissao] = useState(null);
 
+  const { role, permissions, nivel } = useMemo(getCurrentContext, []);
   const MOBILE_BREAKPOINT = 768;
   const activePath = useMemo(() => location.pathname, [location.pathname]);
+
+  // Mapa dos itens com metadados de "resource" para checagem
+  const ALL_ITEMS = useMemo(() => ([
+    { to: '/dashboard',        icon: FaTachometerAlt, label: t('menu.dashboard'),     resource: 'dashboard'   },
+    { to: '/filas-cadastradas',icon: FaCogs,          label: t('menu.configuracao'),  resource: 'queues'      },
+    { to: '/filas',            icon: FaClipboardList, label: t('menu.gestao'),        resource: 'queues'      },
+    { to: '/relatorio',        icon: FaChartBar,      label: t('menu.relatorios'),    resource: 'analytics'   },
+    { to: '/home',             icon: FaUsers,         label: t('menu.usuarios'),      resource: 'usersRoles'  },
+  ]), [t]);
+
+  // Filtra itens conforme papel/permissões
+  const NAV_ITEMS = useMemo(() => {
+    if (!role) return [];
+    return ALL_ITEMS.filter(item => canSee(item.resource, role, permissions));
+  }, [ALL_ITEMS, role, permissions]);
 
   useEffect(() => {
     const nomeSalvo = localStorage.getItem('nomeUsuario') || t('menu.usuarioPadrao');
     setNomeUsuario(nomeSalvo);
 
-    const empresaInfo = JSON.parse(localStorage.getItem('empresaSelecionada'));
-    const perfilSalvo = empresaInfo ? empresaInfo.NOME_PERFIL : t('menu.semPerfil');
-    const nivelSalvo  = empresaInfo ? empresaInfo.NIVEL : null;
-
-    setCargoUsuario(perfilSalvo);
-    setNivelPermissao(nivelSalvo);
+    try {
+      const empresaInfo = JSON.parse(localStorage.getItem('empresaSelecionada') || 'null');
+      const perfilSalvo = empresaInfo ? empresaInfo.NOME_PERFIL : t('menu.semPerfil');
+      const nivelSalvo  = typeof nivel === 'number' ? nivel : (empresaInfo ? empresaInfo.NIVEL : null);
+      setCargoUsuario(perfilSalvo);
+      setNivelPermissao(nivelSalvo ?? null);
+    } catch {
+      setCargoUsuario(t('menu.semPerfil'));
+      setNivelPermissao(null);
+    }
 
     const handleResize = () => {
       const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
@@ -78,7 +157,7 @@ const Sidebar = () => {
       window.removeEventListener('resize', handleResize);
       document.body.classList.remove('has-sidebar', 'sidebar-collapsed', 'has-bottomnav');
     };
-  }, [t, collapsed, isMobile]);
+  }, [t, collapsed, isMobile, nivel]);
 
   useEffect(() => {
     if (!isMobile) {
@@ -129,12 +208,11 @@ const Sidebar = () => {
 
       {!collapsed && (
         <div className="sidebar-footer">
-          {/* ✨ ORDEM DOS BOTÕES INVERTIDA AQUI ✨ */}
           <div className="sidebar-controls">
             <ThemeToggleButton />
             <LanguageSelector variant="inline" />
           </div>
-          
+
           <div className="user-info">
             <FaUserCircle className="avatar-icon" aria-hidden="true" />
             <div>

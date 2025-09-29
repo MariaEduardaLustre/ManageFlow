@@ -1,3 +1,4 @@
+// src/pages/Empresa/Empresa.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
@@ -75,12 +76,21 @@ const Empresa = ({ idUsuario }) => {
     return () => { ativo = false; };
   }, [userId, navigate]);
 
+  // Decide rota alvo conforme papel (ROLE/NIVEL)
+  const getTargetRoute = (role, nivel) => {
+    const r = (role || "").toUpperCase();
+    const n = Number(nivel);
+    if (r === "ANALYST" || n === 3) return "/dashboard";
+    return "/home";
+  };
+
   const escolherEmpresa = async (empresa) => {
     try {
       setFetchingPerm(true);
       const { data } = await api.get("/me/permissions", {
         params: { empresaId: empresa.ID_EMPRESA },
       });
+
       const payload = {
         ...empresa,
         ROLE: data.role,
@@ -89,13 +99,17 @@ const Empresa = ({ idUsuario }) => {
         NIVEL: data.nivel ?? empresa.NIVEL,
         ID_PERFIL: data.idPerfil,
       };
+
       localStorage.setItem("empresaSelecionada", JSON.stringify(payload));
+      // Redireciona conforme papel retornado pela API (ou NIVEL do payload)
+      navigate(getTargetRoute(payload.ROLE, payload.NIVEL));
     } catch (e) {
       console.error("Falha ao obter permissões", e);
+      // Fallback: salva o que temos e decide pela informação do card (empresa.NIVEL)
       localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
+      navigate(getTargetRoute(empresa.ROLE, empresa.NIVEL));
     } finally {
       setFetchingPerm(false);
-      navigate("/home");
     }
   };
 
