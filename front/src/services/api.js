@@ -35,8 +35,10 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const t = localStorage.getItem('token');
   if (t) config.headers.Authorization = `Bearer ${t}`;
+
   const empresa = JSON.parse(localStorage.getItem('empresaSelecionada') || 'null');
   if (empresa?.ID_EMPRESA) config.headers['x-empresa-id'] = empresa.ID_EMPRESA;
+
   return config;
 });
 
@@ -44,9 +46,17 @@ api.interceptors.response.use(
   (r) => r,
   (err) => {
     const status = err?.response?.status;
+
     if (status === 401) {
       console.warn('[api] 401 recebido:', err?.response?.data);
+      if (window.location.pathname !== '/login') window.location.replace('/login');
     }
+
+    if (status === 403) {
+      console.warn('[api] 403 recebido:', err?.response?.data);
+      if (window.location.pathname !== '/403') window.location.replace('/403');
+    }
+
     return Promise.reject(err);
   }
 );
