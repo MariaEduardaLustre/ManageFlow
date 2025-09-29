@@ -12,7 +12,7 @@ const { putToS3, keyUsuarioPerfil } = require('../middlewares/s3Upload');
 require('dotenv').config();
 
 /* ============================================================
- *  LOGIN
+ * LOGIN
  * ============================================================ */
 exports.loginUsuario = async (req, res) => {
   const { email, senha } = req.body;
@@ -53,7 +53,7 @@ exports.loginUsuario = async (req, res) => {
 };
 
 /* ============================================================
- *  CADASTRO
+ * CADASTRO
  * ============================================================ */
 exports.cadastrarUsuario = async (req, res) => {
   const {
@@ -95,7 +95,7 @@ exports.cadastrarUsuario = async (req, res) => {
 };
 
 /* ============================================================
- *  ESQUECI SENHA
+ * ESQUECI SENHA
  * ============================================================ */
 exports.solicitarRedefinicaoSenha = async (req, res) => {
   const { email } = req.body;
@@ -147,7 +147,7 @@ exports.solicitarRedefinicaoSenha = async (req, res) => {
 };
 
 /* ============================================================
- *  REDEFINIR SENHA
+ * REDEFINIR SENHA
  * ============================================================ */
 exports.redefinirSenha = async (req, res) => {
   const { token, novaSenha } = req.body;
@@ -174,7 +174,7 @@ exports.redefinirSenha = async (req, res) => {
       [senhaCriptografada, usuario.ID]
     );
 
-    res.send('Senha redefinida com sucesso!');
+    res.json({ message: 'Senha redefinida com sucesso!' });
   } catch (error) {
     console.error('[RESET] 500 error:', error);
     res.status(500).send('Erro interno ao redefinir a senha.');
@@ -182,8 +182,8 @@ exports.redefinirSenha = async (req, res) => {
 };
 
 /* ============================================================
- *  FOTO DE PERFIL (S3) — multipart/form-data (campo: img_perfil)
- *  Requer o middleware: usuarioPerfilSingle (multer) na rota.
+ * FOTO DE PERFIL (S3) — multipart/form-data (campo: img_perfil)
+ * Requer o middleware: usuarioPerfilSingle (multer) na rota.
  * ============================================================ */
 exports.uploadFotoPerfil = async (req, res) => {
   const idUsuario = parseInt(req.params.id, 10);
@@ -217,7 +217,7 @@ exports.uploadFotoPerfil = async (req, res) => {
 };
 
 /* ============================================================
- *  GET USUÁRIO POR ID (retorna URL pública da foto)
+ * GET USUÁRIO POR ID (retorna URL pública da foto)
  * ============================================================ */
 exports.getUsuarioPorId = async (req, res) => {
   const idUsuario = parseInt(req.params.id, 10);

@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.0.197:3000',
+  'http://172.20.10.10:3000',
   process.env.PUBLIC_FRONT_BASE_URL,
   process.env.FRONT_ORIGIN
 ].filter(Boolean);

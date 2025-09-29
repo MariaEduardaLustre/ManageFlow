@@ -240,7 +240,7 @@
     },
     "alertaBloqueio": {
       "titulo": "Fila bloqueada hoje:",
-      "texto": "novas entradas <em>públicas</em> estão impedidas. A gestão dos clientes já na fila segue normal."
+      "texto": "novas entradas estão impedidas. A gestão dos clientes já na fila segue normal."
     },
     "abas": {
       "aguardando": "Aguardando & Chamados",

@@ -6,25 +6,37 @@ const EsqueciSenha = () => {
   const [email, setEmail] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
-  const [mostrarModal, setMostrarModal] = useState(false); // Novo estado para controlar a visibilidade do modal
+  const [mostrarModal, setMostrarModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensagem('');
     setErro('');
-    setMostrarModal(false); // Esconde o modal em caso de novas tentativas
+    setMostrarModal(false);
 
     try {
       const response = await api.post('/esqueci-senha', { email });
-      setMensagem(response.data);
-      setMostrarModal(true); // Mostra o modal após o sucesso
+      
+      // ===== CORREÇÃO APLICADA AQUI =====
+      // Agora ele extrai a mensagem do objeto JSON
+      if (response.data && response.data.message) {
+        setMensagem(response.data.message);
+      } else {
+        // Fallback para o caso da resposta ser um texto simples
+        setMensagem(response.data);
+      }
+      // ===================================
+
+      setMostrarModal(true);
     } catch (error) {
       if (error.response && error.response.data) {
-        setErro(error.response.data);
+        // Se o erro também vier como objeto, extraia a mensagem
+        const errorMessage = error.response.data.message || error.response.data;
+        setErro(errorMessage);
       } else {
         setErro('Ocorreu um erro ao solicitar a redefinição de senha.');
       }
-      setMostrarModal(false); // Garante que o modal não apareça em caso de erro
+      setMostrarModal(false);
     }
   };
 
@@ -51,7 +63,6 @@ const EsqueciSenha = () => {
       </form>
       {erro && <p className="mensagem-erro">{erro}</p>}
 
-      {/* Renderização condicional do modal */}
       {mostrarModal && (
         <div className="modal-overlay">
           <div className="modal">
