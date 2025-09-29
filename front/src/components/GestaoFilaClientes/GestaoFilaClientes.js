@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { io } from 'socket.io-client';
-import { useTranslation } from 'react-i18next'; // 1. Importar
+import { useTranslation } from 'react-i18next';
 
 import {
   FaCheckCircle,
@@ -20,9 +20,8 @@ import './GestaoFilaClientes.css';
 const GestaoFilaClientes = () => {
   const { idEmpresa, dtMovto, idFila } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation(); // 2. Instanciar
+  const { t } = useTranslation();
 
-  // (O resto dos seus states permanece igual)
   const [clientesFila, setClientesFila] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusLoading, setStatusLoading] = useState(false);
@@ -42,6 +41,53 @@ const GestaoFilaClientes = () => {
     EMAIL: '',
   });
   const [abaAtiva, setAbaAtiva] = useState('aguardando');
+
+  // Funções de Validação de CPF e CNPJ
+  const isValidCPF = (cpf) => {
+    if (typeof cpf !== 'string') return false;
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    let soma = 0;
+    let resto;
+    for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.substring(9, 10))) return false;
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.substring(10, 11))) return false;
+    return true;
+  };
+
+  const isValidCNPJ = (cnpj) => {
+    if (typeof cnpj !== 'string') return false;
+    cnpj = cnpj.replace(/[^\d]+/g, '');
+    if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+    let tamanho = cnpj.length - 2;
+    let numeros = cnpj.substring(0, tamanho);
+    let digitos = cnpj.substring(tamanho);
+    let soma = 0;
+    let pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += numeros.charAt(tamanho - i) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (resultado != digitos.charAt(0)) return false;
+    tamanho = tamanho + 1;
+    numeros = cnpj.substring(0, tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += numeros.charAt(tamanho - i) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (resultado != digitos.charAt(1)) return false;
+    return true;
+  };
 
   const openFeedbackModal = (message, variant = 'info') => {
     setFeedbackMessage(message);
@@ -202,6 +248,31 @@ const GestaoFilaClientes = () => {
 
   const handleAdicionarCliente = async (e) => {
     e.preventDefault();
+    
+    // 1. VALIDAÇÃO DE NOME
+    if (novoCliente.NOME.trim().length < 3) {
+      openFeedbackModal('O nome deve ter no mínimo 3 letras.', 'danger');
+      return; 
+    }
+
+    // 2. VALIDAÇÃO DE CPF/CNPJ
+    const doc = novoCliente.CPFCNPJ.replace(/[^\d]+/g, '');
+    if (doc.length === 11) {
+      if (!isValidCPF(doc)) {
+        openFeedbackModal('O CPF informado é inválido. Por favor, verifique.', 'danger');
+        return;
+      }
+    } else if (doc.length === 14) {
+      if (!isValidCNPJ(doc)) {
+        openFeedbackModal('O CNPJ informado é inválido. Por favor, verifique.', 'danger');
+        return;
+      }
+    } else {
+        openFeedbackModal('O campo CPF/CNPJ deve conter 11 ou 14 dígitos.', 'danger');
+        return;
+    }
+
+    // 3. ENVIO PARA API (se tudo estiver válido)
     try {
       await api.post(`/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/adicionar-cliente`, novoCliente);
       handleCloseAddModal();
@@ -297,22 +368,13 @@ const GestaoFilaClientes = () => {
 
           <div className="tabs-container">
             <div className="tabs-list">
-              <button
-                className={`tab-button ${abaAtiva === 'aguardando' ? 'active' : ''}`}
-                onClick={() => setAbaAtiva('aguardando')}
-              >
+              <button className={`tab-button ${abaAtiva === 'aguardando' ? 'active' : ''}`} onClick={() => setAbaAtiva('aguardando')}>
                 {t('gestaoFila.abas.aguardando')}
               </button>
-              <button
-                className={`tab-button ${abaAtiva === 'confirmados' ? 'active' : ''}`}
-                onClick={() => setAbaAtiva('confirmados')}
-              >
+              <button className={`tab-button ${abaAtiva === 'confirmados' ? 'active' : ''}`} onClick={() => setAbaAtiva('confirmados')}>
                 {t('gestaoFila.abas.confirmados')}
               </button>
-              <button
-                className={`tab-button ${abaAtiva === 'nao-compareceu' ? 'active' : ''}`}
-                onClick={() => setAbaAtiva('nao-compareceu')}
-              >
+              <button className={`tab-button ${abaAtiva === 'nao-compareceu' ? 'active' : ''}`} onClick={() => setAbaAtiva('nao-compareceu')}>
                 {t('gestaoFila.abas.naoCompareceu')}
               </button>
             </div>
