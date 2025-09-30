@@ -30,6 +30,7 @@ const Cadastro = () => {
     ddd: '',
     telefone: '',
     cargo: '', // ALTERAÇÃO: Adicionamos o campo 'cargo' ao estado inicial do formulário.
+    apelido: '',
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -115,7 +116,7 @@ const Cadastro = () => {
     setFormData({
       nome: '', email: '', cpfCnpj: '', senha: '', confirmarSenha: '',
       cep: '', endereco: '', numero: '', complemento: '',
-      ddi: '', ddd: '', telefone: '', cargo: '', // ALTERAÇÃO: Também limpamos o campo 'cargo' quando necessário.
+      ddi: '', ddd: '', telefone: '', cargo: '', apelido: '', // ALTERAÇÃO: Também limpamos o campo 'cargo' quando necessário.
     });
   };
 
@@ -275,7 +276,22 @@ const Cadastro = () => {
               />
             </div>
           </div>
-          {/* ALTERAÇÃO: FIM DO NOVO CAMPO 'CARGO' */}
+           {/* ALTERAÇÃO: FIM DO NOVO CAMPO 'CARGO' */}
+
+           {/* ALTERAÇÃO: INÍCIO DO NOVO CAMPO 'APELIDO' */}
+          <div className="mf-cad__group">
+            <div className="mf-cad__wrap">
+              <input
+                name="apelido"
+                placeholder="Apelido: " // Você pode adicionar isso aos seus arquivos de tradução
+                value={formData.apelido}
+                onChange={handleChange}
+                id="apelido"
+                maxLength={100}
+              />
+            </div>
+          </div>
+          {/* ALTERAÇÃO: FIM DO NOVO CAMPO 'APELIDO' */}
 
             <div className="mf-cad__group mf-cad__group--password">
               <div className="mf-cad__wrap">

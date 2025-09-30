@@ -66,7 +66,7 @@ router.get(
       const [usuarios] = await db.query( // ALTERAÇÃO: Adicionamos u.CARGO na lista de colunas a serem selecionadas.
         `
         SELECT 
-          u.ID, u.NOME, u.EMAIL, u.CPFCNPJ, u.CEP, u.DDI, u.DDD, u.TELEFONE, u.CARGO, 
+          u.ID, u.NOME, u.EMAIL, u.CPFCNPJ, u.CEP, u.DDI, u.DDD, u.TELEFONE, u.CARGO, u.APELIDO,
           perf.ID_PERFIL, perf.NOME_PERFIL, perf.NIVEL
         FROM usuario u
         INNER JOIN permissoes pm

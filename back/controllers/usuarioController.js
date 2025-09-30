@@ -59,7 +59,7 @@ exports.cadastrarUsuario = async (req, res) => {
   const {
     nome, email, cpfCnpj, senha,
     cep, endereco, numero, complemento,
-    ddi, ddd, telefone, cargo // ALTERAÇÃO: Adicionamos a variável 'cargo' para ser extraída do corpo da requisição.
+    ddi, ddd, telefone, cargo, apelido // ALTERAÇÃO: Adicionamos a variável 'cargo' para ser extraída do corpo da requisição.
   } = req.body;
 
   if (!nome || !email || !cpfCnpj || !senha || !cep || !endereco || !numero || !ddi || !ddd || !telefone) {
@@ -84,8 +84,8 @@ exports.cadastrarUsuario = async (req, res) => {
     await db.query(
       `INSERT INTO usuario
         (NOME, EMAIL, CPFCNPJ, SENHA, CEP, ENDERECO, NUMERO, COMPLEMENTO, DDI, DDD, TELEFONE, CARGO, img_perfil)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`, //ALTERAÇÃO: Adicionamos um '?' a mais para o novo campo.
-      [nome, email, cpfCnpj, senhaCriptografada, cep, endereco, numero, complemento, ddi, ddd, telefone, cargo] // ALTERAÇÃO: Passamos a variável 'cargo' para a query.
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`, //ALTERAÇÃO: Adicionamos um '?' a mais para o novo campo.
+      [nome, email, cpfCnpj, senhaCriptografada, cep, endereco, numero, complemento, ddi, ddd, telefone, cargo, apelido] // ALTERAÇÃO: Passamos a variável 'cargo' para a query.
     );
 
     return res.status(201).send('Usuário cadastrado com sucesso!');
