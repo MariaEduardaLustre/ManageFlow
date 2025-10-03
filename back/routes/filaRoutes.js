@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const filaController = require('../controllers/filaController');
-
+const locationController = require('../controllers/locationController');
 // ==============================
 // Rotas específicas (fixas)
 // ==============================
@@ -22,13 +22,13 @@ router.post('/apply-config', filaController.applyConfigToToday);
 // ==============================
 // Rotas com parâmetro :id_fila
 // ==============================
+router.get('/:token_fila/validate-location', locationController.validateClientDistance);
 
 // TOGGLE por ID_FILA (atua direto na tabela `fila` de hoje)
 // - /api/filas/:id_fila/block   { block: boolean }   -> altera BLOCK
 // - /api/filas/:id_fila/status  { situacao: boolean }-> altera SITUACAO e DT_INATIV
 router.put('/:id_fila/block', filaController.toggleFilaBlock);
 router.put('/:id_fila/status', filaController.toggleFilaSituacao);
-
 // ==============================
 // LISTAR FILAS (com configuração)
 // GET /api/filas?idEmpresa=123

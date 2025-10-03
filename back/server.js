@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.0.197:3000',
+  'http://192.168.0.57:3000',
   process.env.PUBLIC_FRONT_BASE_URL,
   process.env.FRONT_ORIGIN
 ].filter(Boolean);
@@ -56,7 +56,9 @@ const configuracaoRoutes = require('./routes/configuracaoRoutes');
 app.use('/api/configuracao', authMiddleware, configuracaoRoutes);
 
 const filaRoutes = require('./routes/filaRoutes');
+app.use('/api/fila', filaRoutes);
 app.use('/api/filas', authMiddleware, filaRoutes);
+
 
 // Relatórios (sempre com JWT)
 const relatorioRoutes = require('./routes/relatorioRoutes');

@@ -1,28 +1,68 @@
-// routes/usuarioRoutes.js
+// back/src/routes/usuarioRoutes.js
 const express = require('express');
 const router = express.Router();
-const usuarioController = require('../controllers/usuarioController');
+
 const db = require('../database/connection');
 
-// Proteção (JWT) e RBAC (opcional)
-const authMiddleware = require('../auth/jwt'); // precisa existir
+// Controllers
+const usuarioController = require('../controllers/usuarioController');
+
+// Auth (JWT) – usa o middleware do seu projeto
+const ensureAuth = require('../auth/jwt');
+
+// RBAC opcional
 let authorize;
 try {
   authorize = require('../auth/authorize').authorize;
 } catch {
-  // se não houver RBAC no back ainda, segue só com JWT
   authorize = () => (req, res, next) => next();
+}
+
+// Upload da foto de perfil
+let usuarioPerfilSingle;
+try {
+  // export esperado do seu projeto: { usuarioPerfilSingle }
+  usuarioPerfilSingle = require('../middlewares/s3Upload').usuarioPerfilSingle;
+} catch {
+  // fallback pra não quebrar se não existir ainda
+  usuarioPerfilSingle = (req, res, next) => next();
 }
 
 /* ========= ROTAS PÚBLICAS ========= */
 
-// Cadastro de usuário
+// Cadastro
 router.post('/usuarios', usuarioController.cadastrarUsuario);
 
-// Login
+// Login (suporta os dois caminhos por compatibilidade)
 router.post('/login', usuarioController.loginUsuario);
+router.post('/usuarios/login', usuarioController.loginUsuario);
 
-/* ========= HELPERS ========= */
+// Esqueci/Reset senha
+router.post('/usuarios/forgot', usuarioController.solicitarRedefinicaoSenha);
+router.post('/usuarios/reset', usuarioController.redefinirSenha);
+
+/* ========= PERFIL DO USUÁRIO (JWT) ========= */
+
+router.get('/usuarios/:id', ensureAuth, usuarioController.getUsuarioPorId);
+router.put('/usuarios/:id', ensureAuth, usuarioController.atualizarUsuario);
+router.put('/usuarios/:id/password', ensureAuth, usuarioController.alterarSenhaAutenticado);
+
+router.put(
+  '/usuarios/:id/photo',
+  ensureAuth,
+  usuarioPerfilSingle,            // multer campo: img_perfil
+  usuarioController.uploadFotoPerfil
+);
+
+router.get(
+  '/usuarios/:id/sole-admin-companies',
+  ensureAuth,
+  usuarioController.getEmpresasOndeUnicoAdmin
+);
+
+router.delete('/usuarios/:id', ensureAuth, usuarioController.excluirUsuario);
+
+/* ========= HELPERS / RBAC AUXILIAR ========= */
 
 async function isLastAdmin(idEmpresa, idUsuarioParaAlterarOpcional = null) {
   const [rows] = await db.query(
@@ -46,10 +86,6 @@ async function isLastAdmin(idEmpresa, idUsuarioParaAlterarOpcional = null) {
   return { totalAdmins, isTargetAdmin };
 }
 
-/**
- * Descobre o nível do usuário logado na empresa informada.
- * Retorna { nivel, idPerfil } ou null se não tiver vínculo.
- */
 async function getNivelUsuarioNaEmpresa(idEmpresa, idUsuario) {
   const [rows] = await db.query(
     `
@@ -68,11 +104,6 @@ async function getNivelUsuarioNaEmpresa(idEmpresa, idUsuario) {
   return { nivel: Number(rows[0].NIVEL), idPerfil: Number(rows[0].ID_PERFIL) };
 }
 
-/**
- * Middleware: permite visualizar a lista de usuários se for Admin (NIVEL=1) ou Staff (NIVEL=2).
- * Mantém compatibilidade com RBAC caso exista: se o authorize já tiver liberado, ok;
- * se o authorize bloquear, ainda assim o Staff/Admin conseguem ver a lista via este middleware.
- */
 async function allowStaffOrAdminList(req, res, next) {
   try {
     const { idEmpresa } = req.params;
@@ -97,7 +128,6 @@ async function allowStaffOrAdminList(req, res, next) {
       return next(); // Admin e Staff podem listar
     }
 
-    // Analyst (NIVEL=3) não visualiza a tabela de usuários
     return res.status(403).json({ error: 'Sem permissão para visualizar usuários.' });
   } catch (err) {
     console.error('Erro no allowStaffOrAdminList:', err);
@@ -105,13 +135,9 @@ async function allowStaffOrAdminList(req, res, next) {
   }
 }
 
-/* ========= ROTAS PROTEGIDAS (JWT + RBAC opcional) ========= */
+/* ========= ROTAS PROTEGIDAS (EMPRESA / PERMISSÕES) ========= */
 
-/**
- * GET /empresa/:idEmpresa
- * GET /empresa/:idEmpresa/usuarios  (alias para compatibilidade com o front)
- * Lista usuários da empresa. Permite Admin e Staff verem em modo leitura.
- */
+// Lista usuários da empresa
 async function listarUsuariosEmpresa(req, res) {
   const { idEmpresa } = req.params;
   try {
@@ -138,33 +164,28 @@ async function listarUsuariosEmpresa(req, res) {
   }
 }
 
-// Mantém JWT; tenta RBAC; e garante fallback para Admin/Staff
+// GET /empresa/:idEmpresa (alias)
 router.get(
   '/empresa/:idEmpresa',
-  authMiddleware,
-  // primeiro tenta o RBAC; se seu authorize não existir, ele é no-op
+  ensureAuth,
   authorize('usersRoles', 'view'),
-  // fallback explícito garantindo Admin/Staff
   allowStaffOrAdminList,
   listarUsuariosEmpresa
 );
 
-// Alias compatível com o front: /empresa/:idEmpresa/usuarios
+// GET /empresa/:idEmpresa/usuarios (alias)
 router.get(
   '/empresa/:idEmpresa/usuarios',
-  authMiddleware,
+  ensureAuth,
   authorize('usersRoles', 'view'),
   allowStaffOrAdminList,
   listarUsuariosEmpresa
 );
 
-/**
- * POST /empresa/:idEmpresa/adicionar-usuario
- * Adicionar um usuário existente à empresa (mantém JWT + RBAC).
- */
+// POST /empresa/:idEmpresa/adicionar-usuario
 router.post(
   '/empresa/:idEmpresa/adicionar-usuario',
-  authMiddleware,
+  ensureAuth,
   authorize('usersRoles', 'create'),
   async (req, res) => {
     const { cpfOuEmail, idPerfil } = req.body;
@@ -179,7 +200,7 @@ router.post(
         'SELECT ID FROM usuario WHERE CPFCNPJ = ? OR EMAIL = ? LIMIT 1',
         [cpfOuEmail, cpfOuEmail]
       );
-      if (usuarioRows.length === 0) {
+      if (!usuarioRows.length) {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
       const idUsuario = usuarioRows[0].ID;
@@ -188,7 +209,7 @@ router.post(
         'SELECT NIVEL FROM perfil WHERE ID_PERFIL = ? AND ID_EMPRESA = ? LIMIT 1',
         [idPerfil, idEmpresa]
       );
-      if (perfilRows.length === 0) {
+      if (!perfilRows.length) {
         return res.status(400).json({ error: 'Perfil não pertence a esta empresa.' });
       }
 
@@ -213,13 +234,10 @@ router.post(
   }
 );
 
-/**
- * PUT /permissoes/:idEmpresa/:idUsuario
- * Editar a permissão (trocar perfil) de um usuário na empresa (mantém JWT + RBAC).
- */
+// PUT /permissoes/:idEmpresa/:idUsuario
 router.put(
   '/permissoes/:idEmpresa/:idUsuario',
-  authMiddleware,
+  ensureAuth,
   authorize('usersRoles', 'edit'),
   async (req, res) => {
     const { idEmpresa, idUsuario } = req.params;
@@ -234,15 +252,9 @@ router.put(
         'SELECT NIVEL FROM perfil WHERE ID_PERFIL = ? AND ID_EMPRESA = ? LIMIT 1',
         [idPerfil, idEmpresa]
       );
-      if (perfilRows.length === 0) {
+      if (!perfilRows.length) {
         return res.status(400).json({ error: 'Perfil não pertence a esta empresa.' });
       }
-
-      // Proteção do último ADM (opcional)
-      // const { totalAdmins, isTargetAdmin } = await isLastAdmin(idEmpresa, idUsuario);
-      // if (isTargetAdmin && totalAdmins <= 1 && perfilRows[0].NIVEL !== 1) {
-      //   return res.status(409).json({ error: 'Não é possível remover o último Administrador da empresa.' });
-      // }
 
       const [result] = await db.query(
         'UPDATE permissoes SET ID_PERFIL = ? WHERE ID_EMPRESA = ? AND ID_USUARIO = ?',
@@ -277,13 +289,10 @@ router.put(
   }
 );
 
-/**
- * DELETE /empresa/:idEmpresa/remover-usuario/:idUsuario
- * Remover usuário da empresa (mantém JWT + RBAC e proteção do último ADM).
- */
+// DELETE /empresa/:idEmpresa/remover-usuario/:idUsuario
 router.delete(
   '/empresa/:idEmpresa/remover-usuario/:idUsuario',
-  authMiddleware,
+  ensureAuth,
   authorize('usersRoles', 'delete'),
   async (req, res) => {
     const { idEmpresa, idUsuario } = req.params;

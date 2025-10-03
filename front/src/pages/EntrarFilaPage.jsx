@@ -38,6 +38,10 @@ export default function EntrarFilaPage() {
   const [okMsg, setOkMsg] = useState('');
   const [posicao, setPosicao] = useState(null);
 
+  // estado de localização (exibição opcional)
+  const [locStatus, setLocStatus] = useState(null); // 'checking' | 'allowed' | 'denied' | 'out_of_radius' | null
+  const [locInfo, setLocInfo] = useState(null); // {distanceText, maxKm} | null
+
   // carrega config pública pelo token (ROTA: /configuracao/public/info/:token)
   useEffect(() => {
     let alive = true;
@@ -45,6 +49,8 @@ export default function EntrarFilaPage() {
       try {
         setLoading(true);
         setErro('');
+        setLocStatus(null);
+        setLocInfo(null);
 
         const base = API_BASE.replace(/\/$/, '');
         const url = `${base}/configuracao/public/info/${token}`;
@@ -105,6 +111,62 @@ export default function EntrarFilaPage() {
     return Math.min(Math.max(n, min), max);
   };
 
+  // helper: promisificar geolocalização
+  const getCurrentPosition = () =>
+    new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocalização não suportada no dispositivo.'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve(pos),
+        (err) => reject(err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+
+  // valida a posição do cliente no backend quando exigido
+  const validateLocationIfNeeded = async () => {
+    if (!cfg?.permitir_localizacao) return { allowed: true, coords: null, distanceText: null, maxKm: null };
+
+    setLocStatus('checking');
+    setLocInfo(null);
+
+    try {
+      const pos = await getCurrentPosition();
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      const base = API_BASE.replace(/\/$/, '');
+      // ajuste este path se seu backend tiver outro endpoint:
+      const validateUrl = `${base}/fila/${encodeURIComponent(token)}/validate-location?lat=${lat}&lng=${lng}`;
+      const r = await fetch(validateUrl);
+      const j = await r.json().catch(() => ({}));
+
+      if (!r.ok) {
+        // se der erro no back, trate como bloqueio quando a localização é obrigatória
+        setLocStatus('denied');
+        return { allowed: false, coords: { lat, lng }, distanceText: null, maxKm: null };
+      }
+
+      if (j.allowed) {
+        const maxKm = j.maxDistanceMeters ? Math.round(j.maxDistanceMeters / 1000) : null;
+        setLocStatus('allowed');
+        setLocInfo({ distanceText: j.distanceText || null, maxKm });
+        return { allowed: true, coords: { lat, lng }, distanceText: j.distanceText || null, maxKm };
+      } else {
+        const maxKm = j.maxDistanceMeters ? Math.round(j.maxDistanceMeters / 1000) : null;
+        setLocStatus('out_of_radius');
+        setLocInfo({ distanceText: j.distanceText || null, maxKm });
+        return { allowed: false, coords: { lat, lng }, distanceText: j.distanceText || null, maxKm };
+      }
+    } catch (err) {
+      // usuário negou permissão ou falhou obter posição
+      setLocStatus('denied');
+      return { allowed: false, coords: null, distanceText: null, maxKm: null };
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setOkMsg('');
@@ -112,6 +174,18 @@ export default function EntrarFilaPage() {
 
     if (!form.nome || !form.cpf) {
       alert('Informe Nome e CPF.');
+      return;
+    }
+
+    // 1) se exigir localização, valida antes de enviar o JOIN
+    const loc = await validateLocationIfNeeded();
+    if (cfg?.permitir_localizacao && !loc.allowed) {
+      let msg = 'Não foi possível validar sua localização. ';
+      if (locStatus === 'denied') msg = 'Permissão de localização negada. Ative a localização para entrar na fila.';
+      if (locStatus === 'out_of_radius') {
+        msg = `Você está fora do raio permitido${loc?.distanceText ? ` (distância: ${loc.distanceText})` : ''}${loc?.maxKm ? ` — máximo ${loc.maxKm} km` : ''}.`;
+      }
+      alert(msg);
       return;
     }
 
@@ -123,7 +197,10 @@ export default function EntrarFilaPage() {
       nr_cel: form.nr_cel || null,
       email: form.email || null,
       dt_nasc: form.dt_nasc || null,
-      nr_qtdpes: clampQtd(form.nr_qtdpes)
+      nr_qtdpes: clampQtd(form.nr_qtdpes),
+      // se consegui pegar coordenadas, envia junto (útil p/ auditoria/relatórios)
+      lat: loc?.coords?.lat ?? null,
+      lng: loc?.coords?.lng ?? null
     };
 
     try {
@@ -158,9 +235,9 @@ export default function EntrarFilaPage() {
         dtMovto: data.dtMovto ?? data.DT_MOVTO ?? null,
         // o join público devolve id_cliente → usamos como identificador do cliente na fila
         clienteFilaId: data.id_cliente ?? data.clienteFilaId ?? data.ID_CLIENTE_FILA ?? null,
-        idCliente:     data.id_cliente ?? null, // opcional, pela clareza
+        idCliente:     data.id_cliente ?? null
       };
-       localStorage.setItem(LS_TICKET, JSON.stringify(ticket));
+      localStorage.setItem(LS_TICKET, JSON.stringify(ticket));
 
       setOkMsg(`Entrada realizada! Você está na posição ${data.posicao ?? '—'}.`);
       setPosicao(data.posicao ?? null);
@@ -262,7 +339,34 @@ export default function EntrarFilaPage() {
             <InfoPill label="Pessoas por entrada" value={`${cfg.qtde_min}–${cfg.qtde_max}`} />
             {Number.isFinite(cfg.temp_tol) && <InfoPill label="Tolerância" value={`${cfg.temp_tol} min`} />}
             <InfoPill label="Status" value={cfg.situacao === 1 ? 'Ativa' : 'Inativa'} />
+            {cfg?.permitir_localizacao ? (
+              <InfoPill label="Localização" value={`Obrigatória${cfg?.raio_metros ? ` (≤ ${Math.round(cfg.raio_metros/1000)} km)` : ''}`} />
+            ) : (
+              <InfoPill label="Localização" value="Dispensada" />
+            )}
           </div>
+
+          {/* feedback de localização (opcional) */}
+          {cfg?.permitir_localizacao && (
+            <div style={{ marginTop: 8, textAlign: 'center' }}>
+              {locStatus === 'checking' && <small style={{ color: '#2563eb' }}>Validando sua localização…</small>}
+              {locStatus === 'allowed' && (
+                <small style={{ color: '#10b981' }}>
+                  Localização ok{locInfo?.distanceText ? ` (${locInfo.distanceText})` : ''}.
+                </small>
+              )}
+              {locStatus === 'out_of_radius' && (
+                <small style={{ color: '#ef4444' }}>
+                  Fora do raio permitido{locInfo?.distanceText ? ` (${locInfo.distanceText})` : ''}{locInfo?.maxKm ? ` — máx ${locInfo.maxKm} km` : ''}.
+                </small>
+              )}
+              {locStatus === 'denied' && (
+                <small style={{ color: '#ef4444' }}>
+                  Permissão de localização negada. Ative para entrar na fila.
+                </small>
+              )}
+            </div>
+          )}
 
           {/* formulário */}
           <form onSubmit={onSubmit} style={{ marginTop: 12 }}>
@@ -378,7 +482,18 @@ export default function EntrarFilaPage() {
               </div>
             )}
 
-            <button type="submit" style={styles.button} disabled={sending || cfg.situacao !== 1}>
+            <button
+              type="submit"
+              style={styles.button}
+              disabled={sending || cfg.situacao !== 1}
+              onClick={() => {
+                // Se a empresa exige localização, dispara validação de forma proativa
+                if (cfg?.permitir_localizacao && locStatus == null) {
+                  // dispara sem bloquear a UI; a submissão vai chamar validateLocationIfNeeded de novo
+                  validateLocationIfNeeded().catch(() => {});
+                }
+              }}
+            >
               {sending ? 'Enviando…' : 'Entrar na fila'}
             </button>
           </form>

@@ -1,0 +1,219 @@
+/* Página base */
+.perfil-page {
+  background: #f5f7fb;
+  min-height: 100vh;
+  font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #111827;
+}
+
+/* Topbar fixa
+   - título à esquerda
+   - ações à direita
+*/
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(180deg, rgba(245,247,251,0.95), rgba(245,247,251,0.85));
+  backdrop-filter: saturate(1.2) blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* <-- chave para título no início e botões no fim */
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.topbar .title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0; /* evita quebra estranha em telas pequenas */
+}
+.topbar h1 {
+  font-size: 20px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.badge {
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+  background: #ffffff;
+}
+.badge.editing {
+  color: #1f2937;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+.badge.view {
+  color: #6b7280;
+}
+
+.topbar .actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto; /* garante que as ações fiquem coladas à direita */
+}
+
+/* Botões */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 10px 14px;
+  white-space: nowrap; /* evita quebrar o texto do botão */
+}
+
+.btn.primary {
+  background: #3b82f6;
+  color: #ffffff;
+}
+.btn.primary:hover { background: #2563eb; }
+
+.btn.ghost {
+  background: transparent;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+.btn.ghost:hover { background: #ffffff; }
+
+.btn.ghost.danger {
+  color: #ef4444;
+  border-color: #fecaca;
+}
+.btn.neutral {
+  background: #eef2ff;
+  color: #1e40af;
+}
+
+/* Container de conteúdo */
+.container {
+  padding: 18px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Mensagens */
+.alert {
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.alert.ok {
+  background: #e7f8ef;
+  border: 1px solid #a4e0bd;
+}
+.alert.error {
+  background: #fdeaea;
+  border: 1px solid #efb1b1;
+}
+
+/* Grid principal */
+.grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+}
+
+/* Cards */
+.card {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  padding: 16px;
+}
+
+/* Card de foto */
+.photo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.avatar {
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #f3f4f6;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.file-btn {
+  width: 100%;
+  justify-content: center;
+}
+.help {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Card de formulário */
+.form-card { padding: 0; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 16px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+}
+.field label {
+  font-size: 13px;
+  color: #374151;
+}
+.field input {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+  color: #111827;
+}
+.field input:focus { border-color: #93c5fd; }
+.field.disabled input {
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+/* Skeleton simples */
+.skeleton {
+  margin: 16px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  padding: 20px;
+}
+
+/* Dica */
+.tip {
+  margin-top: 14px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* Responsivo */
+@media (max-width: 980px) {
+  .grid { grid-template-columns: 1fr; }
+  .photo-card { order: 1; }
+  .form-grid { grid-template-columns: 1fr; }
+}

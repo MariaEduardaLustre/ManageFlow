@@ -137,7 +137,8 @@
     "menuLateral": "Menu lateral",
     "navegacaoInferior": "Navegação inferior",
     "usuarioPadrao": "Usuário",
-    "semPerfil": "Sem Perfil"
+    "semPerfil": "Sem Perfil",
+    "perfil": "Meu perfil"
   },
   "home": {
     "saudacao": "Olá {{nome}}",

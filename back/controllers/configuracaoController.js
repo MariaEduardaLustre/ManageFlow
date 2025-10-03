@@ -5,8 +5,21 @@ const QRCode = require('qrcode');
 const { getPublicFrontBaseUrl } = require('../utils/url');
 const { makePublicImageUrl } = require('../utils/image');
 const { putToS3, keyEmpresaLogoConfig, keyEmpresaBannerConfig } = require('../middlewares/s3Upload');
-
+const DEFAULT_RADIUS_METERS = (() => {
+  const n = Number(process.env.QUEUE_RADIUS_METERS_DEFAULT);
+  return Number.isFinite(n) && n > 0 ? n : 8000; // default 8 km
+})();
 /* ========================= Helpers ========================= */
+
+// Conversor robusto para flags vindas como BIT/TINYINT/STRING
+function toBool1(v) {
+  if (Buffer.isBuffer(v)) return v.length ? v[0] === 1 : false; // BIT(1)
+  if (typeof v === 'boolean') return v;
+  const n = Number(v);
+  if (Number.isFinite(n)) return n === 1;
+  const s = String(v ?? '').trim().toLowerCase();
+  return s === '1' || s === 'true';
+}
 function parseDateYyyyMmDdToInt(v) {
   if (v === undefined || v === null || v === '') return null;
   let s = String(v).trim();
@@ -352,25 +365,86 @@ exports.listarConfiguracoesDaEmpresa = async (req, res) => {
 
 exports.getPublicInfoByToken = async (req, res) => {
   const { token } = req.params;
-  const sql = `SELECT cf.ID_CONF_FILA, cf.ID_EMPRESA, cf.NOME_FILA, cf.TOKEN_FILA, cf.INI_VIG, cf.FIM_VIG, cf.CAMPOS, cf.MENSAGEM, cf.IMG_BANNER, cf.IMG_LOGO, cf.TEMP_TOL, cf.QDTE_MIN, cf.QTDE_MAX, cf.PER_SAIR, cf.PER_LOC, cf.SITUACAO, e.NOME_EMPRESA FROM ConfiguracaoFila cf JOIN empresa e ON e.ID_EMPRESA = cf.ID_EMPRESA WHERE cf.TOKEN_FILA = ? LIMIT 1`;
+
+  const sql = `
+    SELECT
+      cf.ID_CONF_FILA, cf.ID_EMPRESA, cf.NOME_FILA, cf.TOKEN_FILA,
+      cf.INI_VIG, cf.FIM_VIG, cf.CAMPOS, cf.MENSAGEM,
+      cf.IMG_BANNER, cf.IMG_LOGO, cf.TEMP_TOL, cf.QTDE_MAX,
+      cf.PER_SAIR, cf.PER_LOC, cf.SITUACAO,
+      e.NOME_EMPRESA,
+      cf.QDTE_MIN AS QTDE_MIN
+    FROM ConfiguracaoFila cf
+    JOIN empresa e ON e.ID_EMPRESA = cf.ID_EMPRESA
+    WHERE cf.TOKEN_FILA = ?
+    LIMIT 1
+  `;
+
   try {
     const [rows] = await db.execute(sql, [token]);
     if (!rows.length) return res.status(404).json({ erro: 'config_not_found' });
+
     const r = rows[0];
+
+    // Campos dinâmicos
     let campos = [];
     try { campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : []; } catch {}
+
+    // Imagens (mantém suas helpers)
     const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
     const logo   = parseJsonKeyOrUrl(r.IMG_LOGO);
     const bannerUrl = banner.key ? makePublicImageUrl(banner.key) : (banner.url || '');
     const logoUrl   = logo.key   ? makePublicImageUrl(logo.key)   : (logo.url || '');
+
+    // Vigência / situação efetiva
     const within_range = isWithinRange(r.INI_VIG, r.FIM_VIG);
-    const effective_active = (r.SITUACAO === 1) && within_range;
-    return res.json({ id_conf_fila: r.ID_CONF_FILA, id_empresa: r.ID_EMPRESA, nome_fila: r.NOME_FILA, token_fila: r.TOKEN_FILA, situacao: r.SITUACAO, ini_vig: r.INI_VIG || null, fim_vig: r.FIM_VIG || null, campos, mensagem: r.MENSAGEM || '', img_banner: banner.key ? { key: banner.key, url: bannerUrl } : (banner.url ? { url: bannerUrl } : null), img_logo: logo.key ? { key: logo.key, url: logoUrl } : (logo.url ? { url: logoUrl } : null), temp_tol: r.TEMP_TOL, qtde_min: r.QDTE_MIN, qtde_max: r.QTDE_MAX, per_sair: !!r.PER_SAIR, per_loc: !!r.PER_LOC, join_url: `${getPublicFrontBaseUrl(req)}/entrar-fila/${r.TOKEN_FILA}`, empresa: { id: r.ID_EMPRESA, nome: r.NOME_EMPRESA, logo_url: logoUrl || '' }, within_range, effective_active, situacao_exibicao: effective_active ? 1 : 0 });
+    const situacao_raw = Number(r.SITUACAO) === 1 ? 1 : 0;
+    const effective_active = situacao_raw === 1 && within_range;
+    const situacao = effective_active ? 1 : 0;
+
+    // Localização
+    const permitir_localizacao = toBool1(r.PER_LOC);
+    const radius_meters = DEFAULT_RADIUS_METERS; // <- aqui usamos a constante
+
+    return res.json({
+      id_conf_fila: r.ID_CONF_FILA,
+      id_empresa: r.ID_EMPRESA,
+      nome_fila: r.NOME_FILA,
+      token_fila: r.TOKEN_FILA,
+
+      ini_vig: r.INI_VIG || null,
+      fim_vig: r.FIM_VIG || null,
+      within_range,
+
+      situacao,               // efetiva
+      situacao_raw,
+      effective_active,
+      situacao_exibicao: situacao,
+
+      campos,
+      mensagem: r.MENSAGEM || '',
+      temp_tol: r.TEMP_TOL ?? null,
+      qtde_min: Number.isFinite(Number(r.QTDE_MIN)) ? Number(r.QTDE_MIN) : 1,
+      qtde_max: Number.isFinite(Number(r.QTDE_MAX)) ? Number(r.QTDE_MAX) : 10,
+
+      per_sair: toBool1(r.PER_SAIR),
+      per_loc: toBool1(r.PER_LOC),          // retrocompat
+      permitir_localizacao,                 // novo, padronizado
+      radius_meters,                        // vindo de env/default
+
+      img_banner: bannerUrl ? { url: bannerUrl, ...(banner.key ? { key: banner.key } : {}) } : null,
+      img_logo:   logoUrl   ? { url: logoUrl,   ...(logo.key   ? { key: logo.key }   : {}) } : null,
+
+      empresa: { id: r.ID_EMPRESA, nome: r.NOME_EMPRESA, logo_url: logoUrl || '' },
+
+      join_url: `${getPublicFrontBaseUrl(req)}/entrar-fila/${r.TOKEN_FILA}`
+    });
   } catch (e) {
     console.error('[getPublicInfoByToken] ERRO:', e);
     return res.status(500).json({ erro: 'internal_error' });
   }
 };
+
 
 exports.publicJoinByToken = async (req, res, io) => {
     const { token } = req.params;

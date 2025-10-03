@@ -1,4 +1,4 @@
-// controllers/usuarioController.js
+// back/src/controllers/usuarioController.js
 const db = require('../database/connection');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -12,6 +12,64 @@ const { putToS3, keyUsuarioPerfil } = require('../middlewares/s3Upload');
 require('dotenv').config();
 
 /* ============================================================
+ *  HELPERS — PERFIL / ROLE
+ * ============================================================ */
+
+/**
+ * Retorna se um perfil é de ADMIN.
+ * Considera NIVEL=3 OU NOME_PERFIL='Admin' (case-insensitive) para robustez.
+ */
+function isAdminRow(perfilRow) {
+  const nivel = Number(perfilRow.NIVEL ?? 0);
+  const nome = (perfilRow.NOME_PERFIL || '').trim().toLowerCase();
+  return nivel === 3 || nome === 'admin';
+}
+
+/**
+ * Lista empresas nas quais um usuário é o ÚNICO admin.
+ * Retorna [{ ID_EMPRESA, NOME_EMPRESA }]
+ */
+async function empresasOndeUsuarioEhUnicoAdmin(idUsuario) {
+  // SELECTs compatíveis com ONLY_FULL_GROUP_BY
+  const [rows] = await db.query(
+    `
+    SELECT pe.ID_EMPRESA, e.NOME AS NOME_EMPRESA
+      FROM permissoes pe
+      JOIN perfil p   ON p.ID_PERFIL = pe.ID_PERFIL
+      JOIN empresa e  ON e.ID_EMPRESA = pe.ID_EMPRESA
+     WHERE pe.ID_USUARIO = ?
+       AND (p.NIVEL = 3 OR LOWER(p.NOME_PERFIL) = 'admin')
+       AND (
+            SELECT COUNT(*)
+              FROM permissoes pe2
+              JOIN perfil p2 ON p2.ID_PERFIL = pe2.ID_PERFIL
+             WHERE pe2.ID_EMPRESA = pe.ID_EMPRESA
+               AND (p2.NIVEL = 3 OR LOWER(p2.NOME_PERFIL) = 'admin')
+           ) = 1
+    `,
+    [idUsuario]
+  );
+  return rows;
+}
+
+/**
+ * Conta quantos admins existem em uma empresa.
+ */
+async function contarAdminsDaEmpresa(idEmpresa) {
+  const [rows] = await db.query(
+    `
+    SELECT COUNT(*) AS QTDE
+      FROM permissoes pe
+      JOIN perfil p ON p.ID_PERFIL = pe.ID_PERFIL
+     WHERE pe.ID_EMPRESA = ?
+       AND (p.NIVEL = 3 OR LOWER(p.NOME_PERFIL) = 'admin')
+    `,
+    [idEmpresa]
+  );
+  return Number(rows[0]?.QTDE || 0);
+}
+
+/* ============================================================
  *  LOGIN
  * ============================================================ */
 exports.loginUsuario = async (req, res) => {
@@ -22,7 +80,6 @@ exports.loginUsuario = async (req, res) => {
   }
 
   try {
-    // Padronizado para a mesma tabela 'usuario'
     const [results] = await db.query('SELECT * FROM usuario WHERE EMAIL = ?', [email]);
     if (results.length === 0) {
       return res.status(401).send('Usuário ou senha inválidos.');
@@ -44,7 +101,7 @@ exports.loginUsuario = async (req, res) => {
       token,
       idUsuario: usuario.ID,
       nome: usuario.NOME,
-      img_perfil: makePublicImageUrl(usuario.img_perfil || null) // pode ser null na primeira vez
+      img_perfil: makePublicImageUrl(usuario.img_perfil || null)
     });
   } catch (err) {
     console.error('[ERRO] loginUsuario:', err);
@@ -183,7 +240,6 @@ exports.redefinirSenha = async (req, res) => {
 
 /* ============================================================
  *  FOTO DE PERFIL (S3) — multipart/form-data (campo: img_perfil)
- *  Requer o middleware: usuarioPerfilSingle (multer) na rota.
  * ============================================================ */
 exports.uploadFotoPerfil = async (req, res) => {
   const idUsuario = parseInt(req.params.id, 10);
@@ -207,8 +263,8 @@ exports.uploadFotoPerfil = async (req, res) => {
     return res.json({
       message: 'Foto de perfil atualizada com sucesso.',
       usuarioId: idUsuario,
-      img_perfil: makePublicImageUrl(savedKey), // URL pública
-      key: savedKey                              // key relativa salva no banco
+      img_perfil: makePublicImageUrl(savedKey),
+      key: savedKey
     });
   } catch (err) {
     console.error('[uploadFotoPerfil] Erro:', err);
@@ -226,7 +282,8 @@ exports.getUsuarioPorId = async (req, res) => {
   }
   try {
     const [rows] = await db.query(
-      `SELECT ID, NOME, EMAIL, CPFCNPJ, img_perfil FROM usuario WHERE ID = ? LIMIT 1`,
+      `SELECT ID, NOME, EMAIL, CPFCNPJ, CEP, ENDERECO, NUMERO, COMPLEMENTO, DDI, DDD, TELEFONE, img_perfil
+         FROM usuario WHERE ID = ? LIMIT 1`,
       [idUsuario]
     );
     if (!rows.length) return res.status(404).json({ error: 'Usuário não encontrado.' });
@@ -237,11 +294,246 @@ exports.getUsuarioPorId = async (req, res) => {
       nome: u.NOME,
       email: u.EMAIL,
       cpfCnpj: u.CPFCNPJ,
+      cep: u.CEP,
+      endereco: u.ENDERECO,
+      numero: u.NUMERO,
+      complemento: u.COMPLEMENTO,
+      ddi: u.DDI,
+      ddd: u.DDD,
+      telefone: u.TELEFONE,
       img_perfil: makePublicImageUrl(u.img_perfil || null),
       _key: u.img_perfil || null
     });
   } catch (err) {
     console.error('[getUsuarioPorId] Erro:', err);
     return res.status(500).json({ error: 'Erro interno ao buscar usuário.' });
+  }
+};
+
+/* ============================================================
+ *  ATUALIZAR DADOS DO USUÁRIO
+ * ============================================================ */
+exports.atualizarUsuario = async (req, res) => {
+  const idUsuario = parseInt(req.params.id, 10);
+  if (!Number.isFinite(idUsuario)) {
+    return res.status(400).json({ error: 'ID de usuário inválido.' });
+  }
+
+  const {
+    nome, email, cpfCnpj,
+    cep, endereco, numero, complemento,
+    ddi, ddd, telefone
+  } = req.body;
+
+  if (!nome || !email || !cpfCnpj) {
+    return res.status(400).json({ error: 'Nome, e-mail e CPF/CNPJ são obrigatórios.' });
+  }
+
+  try {
+    // Checar duplicidade de e-mail/CPF para OUTRO usuário
+    const [dup] = await db.query(
+      `SELECT ID, EMAIL, CPFCNPJ
+         FROM usuario
+        WHERE (EMAIL = ? OR CPFCNPJ = ?)
+          AND ID <> ?
+        LIMIT 1`,
+      [email, cpfCnpj, idUsuario]
+    );
+    if (dup.length) {
+      if (dup[0].EMAIL === email) return res.status(409).json({ error: 'E-mail já cadastrado.' });
+      if (dup[0].CPFCNPJ === cpfCnpj) return res.status(409).json({ error: 'CPF/CNPJ já cadastrado.' });
+    }
+
+    await db.query(
+      `UPDATE usuario
+          SET NOME = ?, EMAIL = ?, CPFCNPJ = ?, CEP = ?, ENDERECO = ?, NUMERO = ?, COMPLEMENTO = ?,
+              DDI = ?, DDD = ?, TELEFONE = ?
+        WHERE ID = ?`,
+      [nome, email, cpfCnpj, cep || null, endereco || null, numero || null, complemento || null,
+        ddi || null, ddd || null, telefone || null, idUsuario]
+    );
+
+    // Retorna o registro atualizado
+    const [rows] = await db.query(
+      `SELECT ID, NOME, EMAIL, CPFCNPJ, CEP, ENDERECO, NUMERO, COMPLEMENTO, DDI, DDD, TELEFONE, img_perfil
+         FROM usuario WHERE ID = ? LIMIT 1`,
+      [idUsuario]
+    );
+    const u = rows[0];
+    return res.json({
+      id: u.ID,
+      nome: u.NOME,
+      email: u.EMAIL,
+      cpfCnpj: u.CPFCNPJ,
+      cep: u.CEP,
+      endereco: u.ENDERECO,
+      numero: u.NUMERO,
+      complemento: u.COMPLEMENTO,
+      ddi: u.DDI,
+      ddd: u.DDD,
+      telefone: u.TELEFONE,
+      img_perfil: makePublicImageUrl(u.img_perfil || null)
+    });
+  } catch (err) {
+    console.error('[atualizarUsuario] Erro:', err);
+    return res.status(500).json({ error: 'Erro interno ao atualizar usuário.' });
+  }
+};
+
+/* ============================================================
+ *  ALTERAR SENHA (autenticado)
+ * ============================================================ */
+exports.alterarSenhaAutenticado = async (req, res) => {
+  const idUsuario = parseInt(req.params.id, 10);
+  const { senhaAtual, novaSenha } = req.body;
+
+  if (!Number.isFinite(idUsuario)) return res.status(400).json({ error: 'ID inválido.' });
+  if (!senhaAtual || !novaSenha) return res.status(400).json({ error: 'Informe senhaAtual e novaSenha.' });
+
+  try {
+    const [rows] = await db.query(`SELECT SENHA FROM usuario WHERE ID = ? LIMIT 1`, [idUsuario]);
+    if (!rows.length) return res.status(404).json({ error: 'Usuário não encontrado.' });
+
+    const ok = await bcrypt.compare(senhaAtual, rows[0].SENHA);
+    if (!ok) return res.status(401).json({ error: 'Senha atual incorreta.' });
+
+    const hash = await bcrypt.hash(novaSenha, 10);
+    await db.query(`UPDATE usuario SET SENHA = ? WHERE ID = ?`, [hash, idUsuario]);
+
+    res.json({ message: 'Senha alterada com sucesso.' });
+  } catch (err) {
+    console.error('[alterarSenhaAutenticado] Erro:', err);
+    res.status(500).json({ error: 'Erro interno ao alterar senha.' });
+  }
+};
+
+/* ============================================================
+ *  LISTAR EMPRESAS ONDE É ÚNICO ADMIN (para o fluxo de exclusão)
+ * ============================================================ */
+exports.getEmpresasOndeUnicoAdmin = async (req, res) => {
+  const idUsuario = parseInt(req.params.id, 10);
+  if (!Number.isFinite(idUsuario)) {
+    return res.status(400).json({ error: 'ID inválido.' });
+  }
+  try {
+    const lista = await empresasOndeUsuarioEhUnicoAdmin(idUsuario);
+    res.json(lista);
+  } catch (err) {
+    console.error('[getEmpresasOndeUnicoAdmin] Erro:', err);
+    res.status(500).json({ error: 'Erro ao listar empresas.' });
+  }
+};
+
+/* ============================================================
+ *  EXCLUIR USUÁRIO — Respeitando a regra de Único Admin
+ *  Body esperado:
+ *  {
+ *    "transfer": [ { "idEmpresa": 1, "novoAdminUserId": 99 }, ... ],
+ *    "deleteCompanies": [2, 3]
+ *  }
+ *  Para cada empresa onde o usuário é ÚNICO admin, você deve:
+ *   - transferir para novoAdminUserId, OU
+ *   - colocar o idEmpresa em deleteCompanies.
+ * ============================================================ */
+exports.excluirUsuario = async (req, res) => {
+  const idUsuario = parseInt(req.params.id, 10);
+  if (!Number.isFinite(idUsuario)) {
+    return res.status(400).json({ error: 'ID de usuário inválido.' });
+  }
+
+  const conn = await db.getConnection();
+  try {
+    const transfer = Array.isArray(req.body.transfer) ? req.body.transfer : [];
+    const deleteCompanies = Array.isArray(req.body.deleteCompanies) ? req.body.deleteCompanies : [];
+
+    // Empresas onde este usuário é o ÚNICO Admin
+    const empresasUnicoAdmin = await empresasOndeUsuarioEhUnicoAdmin(idUsuario);
+
+    // Validar que todas as empresas único-admin tenham uma ação (transferir ou deletar)
+    for (const emp of empresasUnicoAdmin) {
+      const temTransfer = transfer.some(t => Number(t.idEmpresa) === Number(emp.ID_EMPRESA));
+      const seraExcluida = deleteCompanies.some(eid => Number(eid) === Number(emp.ID_EMPRESA));
+      if (!temTransfer && !seraExcluida) {
+        return res.status(400).json({
+          error: `Usuário é o único Admin da empresa ${emp.NOME_EMPRESA} (#${emp.ID_EMPRESA}). Informe transfer ou deleteCompanies.`
+        });
+      }
+    }
+
+    await conn.beginTransaction();
+
+    // Executa exclusões de empresas solicitadas
+    for (const idEmpresa of deleteCompanies) {
+      // aqui você pode ter ON DELETE CASCADE. Se não tiver, faça a limpeza necessária.
+      // Exemplo mínimo:
+      await conn.query(`DELETE FROM permissoes WHERE ID_EMPRESA = ?`, [idEmpresa]);
+      await conn.query(`DELETE FROM fila WHERE ID_EMPRESA = ?`, [idEmpresa]); // se existir essa FK
+      await conn.query(`DELETE FROM configuracao_fila WHERE ID_EMPRESA = ?`, [idEmpresa]); // se existir
+      await conn.query(`DELETE FROM empresa WHERE ID_EMPRESA = ?`, [idEmpresa]);
+    }
+
+    // Executa transferências de Admin
+    for (const t of transfer) {
+      const idEmpresa = Number(t.idEmpresa);
+      const novoAdminUserId = Number(t.novoAdminUserId);
+
+      if (!Number.isFinite(idEmpresa) || !Number.isFinite(novoAdminUserId)) {
+        await conn.rollback();
+        return res.status(400).json({ error: 'Campos de transferência inválidos.' });
+      }
+
+      // Verifica se o novo usuário tem alguma permissão na empresa; se não, cria como Admin
+      const [jaTemPerm] = await conn.query(
+        `SELECT ID_USUARIO FROM permissoes WHERE ID_EMPRESA = ? AND ID_USUARIO = ? LIMIT 1`,
+        [idEmpresa, novoAdminUserId]
+      );
+
+      // Descobrir ID_PERFIL de Admin
+      const [perfilAdminRows] = await conn.query(
+        `SELECT ID_PERFIL FROM perfil WHERE (NIVEL = 3 OR LOWER(NOME_PERFIL) = 'admin') LIMIT 1`
+      );
+      if (!perfilAdminRows.length) {
+        await conn.rollback();
+        return res.status(500).json({ error: 'Perfil Admin não configurado.' });
+      }
+      const idPerfilAdmin = Number(perfilAdminRows[0].ID_PERFIL);
+
+      if (!jaTemPerm.length) {
+        await conn.query(
+          `INSERT INTO permissoes (ID_USUARIO, ID_EMPRESA, ID_PERFIL) VALUES (?, ?, ?)`,
+          [novoAdminUserId, idEmpresa, idPerfilAdmin]
+        );
+      } else {
+        // Atualiza papel para Admin (garante que será Admin)
+        await conn.query(
+          `UPDATE permissoes SET ID_PERFIL = ? WHERE ID_EMPRESA = ? AND ID_USUARIO = ?`,
+          [idPerfilAdmin, idEmpresa, novoAdminUserId]
+        );
+      }
+
+      // Se ainda assim houver só 1 admin (o usuário que vamos apagar), garante que agora existam pelo menos 2, ou que o novo esteja configurado
+      const qtdeAdmins = await contarAdminsDaEmpresa(idEmpresa);
+      if (qtdeAdmins < 1) {
+        await conn.rollback();
+        return res.status(500).json({ error: `Falha na transferência de Admin na empresa #${idEmpresa}.` });
+      }
+    }
+
+    // Remover permissões do usuário em todas as empresas
+    await conn.query(`DELETE FROM permissoes WHERE ID_USUARIO = ?`, [idUsuario]);
+
+    // Finalmente, remover o usuário
+    await conn.query(`DELETE FROM usuario WHERE ID = ?`, [idUsuario]);
+
+    await conn.commit();
+    res.json({ message: 'Usuário excluído com sucesso.' });
+  } catch (err) {
+    try { await db.releaseConnection && db.releaseConnection(); } catch (_) {}
+    try { await err?.rollback && err.rollback(); } catch (_) {}
+
+    console.error('[excluirUsuario] Erro:', err);
+    res.status(500).json({ error: 'Erro ao excluir usuário.' });
+  } finally {
+    try { conn.release(); } catch (_) {}
   }
 };

@@ -1,4 +1,3 @@
-// src/components/Menu/Menu.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -13,6 +12,7 @@ import {
   FaUserCircle
 } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import LanguageSelector from '../LanguageSelector/LanguageSelector';
 import ThemeToggleButton from '../ThemeToggleButton/ThemeToggleButton';
 import './Menu.css';
@@ -33,7 +33,6 @@ function getCurrentContext() {
       (emp?.ROLE
         ? String(emp.ROLE).toUpperCase()
         : normalizeRoleFromNivel(emp?.NIVEL));
-    // Corrige legado "STAF"
     const safeRole = role?.startsWith('STAF') ? 'STAFF' : role || 'CUSTOMER';
     const permissions = Array.isArray(emp?.PERMISSIONS) ? emp.PERMISSIONS : [];
     return { role: safeRole, permissions, nivel: emp?.NIVEL ?? null };
@@ -42,51 +41,41 @@ function getCurrentContext() {
   }
 }
 
-/**
- * Regras de acesso por recurso (coerente com PrivateRoute/App)
- * - dashboard: ADM, STAFF, ANALYST
- * - analytics: ADM, STAFF, ANALYST
- * - usersRoles (Home/Usuários): ADM, STAFF
- * - queues (Filas/Configuração de Filas): ADM, STAFF
- * - settings (Configuração base): ADM, STAFF
- */
 const ROLE_ALLOW = {
   dashboard: ['ADM', 'STAFF', 'ANALYST'],
   analytics: ['ADM', 'STAFF', 'ANALYST'],
   usersRoles: ['ADM', 'STAFF'],
   queues: ['ADM', 'STAFF'],
   settings: ['ADM', 'STAFF'],
+  profile: ['ADM', 'STAFF', 'ANALYST', 'CUSTOMER'], // <— novo: qualquer logado
 };
 
-// Recursos de gestão que podem (opcionalmente) exigir PERMISSIONS[:view] se a lista existir
 const RBAC_ENFORCED_RESOURCES = new Set(['usersRoles', 'queues', 'settings', 'queueEntries']);
 
-/**
- * Verifica se o usuário pode ver um recurso no menu.
- * - Primeiro checa PAPEL (ROLE_ALLOW).
- * - Para recursos de gestão (RBAC_ENFORCED_RESOURCES), se houver PERMISSIONS no snapshot,
- *   exige `${resource}:view` para exibir (endurece o front).
- * - Dashboard/Analytics não dependem de PERMISSIONS (só do papel).
- */
 function canSee(resource, role, permissions) {
-  const key = String(resource || '').toLowerCase();
-  const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF']; // default
+  const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF'];
   if (!allowedRoles.includes(role)) return false;
 
   if (RBAC_ENFORCED_RESOURCES.has(resource) && permissions?.length) {
     const needsView = `${resource}:view`;
-    // normaliza case para evitar divergência
     const hasView = permissions.some(p => String(p).toLowerCase() === needsView.toLowerCase());
     return hasView;
   }
-
   return true;
 }
 
+const API_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
+  (typeof window !== 'undefined' && window.location && window.location.hostname
+    ? `http://${window.location.hostname}:3001/api`
+    : 'http://localhost:3001/api');
+
 const Sidebar = () => {
   const { t } = useTranslation();
-
   const logo = '/imagens/logo.png';
+  const defaultAvatar = '/imagens/avatar-default.png';
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -97,20 +86,35 @@ const Sidebar = () => {
   const [cargoUsuario, setCargoUsuario] = useState('');
   const [nivelPermissao, setNivelPermissao] = useState(null);
 
+  const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
+  const [loadingAvatar, setLoadingAvatar] = useState(true);
+
   const { role, permissions, nivel } = useMemo(getCurrentContext, []);
   const MOBILE_BREAKPOINT = 768;
   const activePath = useMemo(() => location.pathname, [location.pathname]);
 
-  // Mapa dos itens com metadados de "resource" para checagem
+  const token = localStorage.getItem('token') || '';
+  const idUsuario = Number(localStorage.getItem('idUsuario') || 0);
+
+  const api = useMemo(() => {
+    const instance = axios.create({ baseURL: API_BASE });
+    instance.interceptors.request.use(config => {
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+      return config;
+    });
+    return instance;
+  }, [token]);
+
+  // Itens do menu (inclui o Perfil)
   const ALL_ITEMS = useMemo(() => ([
-    { to: '/dashboard',        icon: FaTachometerAlt, label: t('menu.dashboard'),     resource: 'dashboard'   },
-    { to: '/filas-cadastradas',icon: FaCogs,          label: t('menu.configuracao'),  resource: 'queues'      },
-    { to: '/filas',            icon: FaClipboardList, label: t('menu.gestao'),        resource: 'queues'      },
-    { to: '/relatorio',        icon: FaChartBar,      label: t('menu.relatorios'),    resource: 'analytics'   },
-    { to: '/home',             icon: FaUsers,         label: t('menu.usuarios'),      resource: 'usersRoles'  },
+    { to: '/dashboard',         icon: FaTachometerAlt, label: t('menu.dashboard'),    resource: 'dashboard' },
+    { to: '/filas-cadastradas', icon: FaCogs,          label: t('menu.configuracao'), resource: 'queues'     },
+    { to: '/filas',             icon: FaClipboardList, label: t('menu.gestao'),       resource: 'queues'     },
+    { to: '/relatorio',         icon: FaChartBar,      label: t('menu.relatorios'),   resource: 'analytics'  },
+    { to: '/home',              icon: FaUsers,         label: t('menu.usuarios'),     resource: 'usersRoles' },
+    { to: '/perfil',            icon: FaUserCircle,    label: t('menu.perfil') || 'Perfil', resource: 'profile' },
   ]), [t]);
 
-  // Filtra itens conforme papel/permissões
   const NAV_ITEMS = useMemo(() => {
     if (!role) return [];
     return ALL_ITEMS.filter(item => canSee(item.resource, role, permissions));
@@ -166,6 +170,28 @@ const Sidebar = () => {
     }
   }, [collapsed, isMobile]);
 
+  // Avatar
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoadingAvatar(true);
+      try {
+        if (!idUsuario) {
+          setAvatarUrl(defaultAvatar);
+          return;
+        }
+        const { data } = await api.get(`/usuarios/${idUsuario}`);
+        const url = data?.img_perfil || defaultAvatar;
+        if (alive) setAvatarUrl(url);
+      } catch {
+        if (alive) setAvatarUrl(defaultAvatar);
+      } finally {
+        if (alive) setLoadingAvatar(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [api, idUsuario]);
+
   const logout = () => {
     localStorage.clear();
     navigate('/login');
@@ -174,6 +200,8 @@ const Sidebar = () => {
   const toggleSidebar = () => {
     if (!isMobile) setCollapsed(prev => !prev);
   };
+
+  const goToProfile = () => navigate('/perfil');
 
   const renderSidebar = () => (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`} aria-label={t('menu.menuLateral')}>
@@ -213,15 +241,29 @@ const Sidebar = () => {
             <LanguageSelector variant="inline" />
           </div>
 
-          <div className="user-info">
-            <FaUserCircle className="avatar-icon" aria-hidden="true" />
-            <div>
+          {/* Avatar -> Perfil */}
+          <button
+            type="button"
+            onClick={goToProfile}
+            className="user-info btn-as-link"
+            aria-label={t('menu.irPerfil')}
+            title={t('menu.irPerfil')}
+          >
+            <div className="avatar-wrap">
+              <img
+                src={loadingAvatar ? defaultAvatar : avatarUrl}
+                alt="Foto do usuário"
+                className="avatar-img"
+                onError={(e) => { e.currentTarget.src = defaultAvatar; }}
+              />
+            </div>
+            <div className="user-meta">
               <div className="user-name">{nomeUsuario}</div>
               <div className="user-role">
                 {cargoUsuario}{nivelPermissao ? ` — ${nivelPermissao}` : ''}
               </div>
             </div>
-          </div>
+          </button>
 
           <button onClick={logout} className="logout-btn" aria-label={t('menu.sair')}>
             <FaSignOutAlt />
@@ -251,6 +293,24 @@ const Sidebar = () => {
           </NavLink>
         );
       })}
+
+      {/* Atalho para perfil */}
+      <button
+        type="button"
+        className="bottom-nav-item profile"
+        onClick={goToProfile}
+        aria-label={t('menu.irPerfil')}
+        title={t('menu.irPerfil')}
+      >
+        <img
+          src={loadingAvatar ? defaultAvatar : avatarUrl}
+          alt="Foto do usuário"
+          className="bottom-nav-avatar"
+          onError={(e) => { e.currentTarget.src = defaultAvatar; }}
+        />
+        <span className="bottom-nav-label">{t('menu.perfil') || 'Perfil'}</span>
+      </button>
+
       <button
         type="button"
         className="bottom-nav-item logout"

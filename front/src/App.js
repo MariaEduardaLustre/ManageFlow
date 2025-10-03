@@ -27,6 +27,7 @@ import EntrarFilaPage from './pages/EntrarFilaPage';
 import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao';
 import FilaStatus from './pages/FilaStatus';
 import FilaChamado from './pages/FilaChamado';
+import PerfilUsuario from './components/PerfilUsuario/PerfilUsuario';
 
 function App() {
   return (
@@ -58,7 +59,14 @@ function App() {
             <Route path="/gestao-fila/:idEmpresa/:dtMovto/:idFila" element={<PrivateRoute resource="queueEntries" action="view"><GestaoFilaClientes /></PrivateRoute>} />
             <Route path="/relatorio" element={<PrivateRoute resource="analytics" action={['view', 'reports_own']}><Relatorio /></PrivateRoute>} />
             <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
-
+            <Route
+            path="/perfil"
+            element={
+              <PrivateRoute resource="profile" action="view">
+                <PerfilUsuario />
+              </PrivateRoute>
+            }
+          />
             {/* 403 e fallback */}
             <Route path="/403" element={<Forbidden />} />
             <Route path="*" element={<LandingPage />} />
