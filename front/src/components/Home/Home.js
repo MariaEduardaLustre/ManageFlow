@@ -14,7 +14,6 @@ const Home = () => {
   // --- STATES ---
   const [usuarios, setUsuarios] = useState([]);
   const [perfis, setPerfis] = useState([]);
-  const [detalhesEmpresa, setDetalhesEmpresa] = useState(null);
   const [nomeUsuarioLogado, setNomeUsuarioLogado] = useState('');
   const [novoUsuario, setNovoUsuario] = useState('');
   const [perfilSelecionado, setPerfilSelecionado] = useState('');
@@ -25,7 +24,8 @@ const Home = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState(null);
-  const [mostrarModalEmpresa, setMostrarModalEmpresa] = useState(false);
+
+  // Estados e funções do modal de detalhes da empresa foram removidos.
 
   const navigate = useNavigate();
 
@@ -59,7 +59,6 @@ const Home = () => {
   const canInvite = hasPerm('usersRoles', 'create');
   const canEdit   = hasPerm('usersRoles', 'edit');
   const canDelete = hasPerm('usersRoles', 'delete');
-  // NEW: garantir visualização para STAFF (NIVEL=2) mesmo sem permissão explícita
   const canView   = hasPerm('usersRoles', ['read', 'edit', 'delete', 'create']) || nivel === 2 || nivel === 1;
   const viewOnly  = !canInvite && !canEdit && !canDelete && (nivel === 2);
 
@@ -80,7 +79,6 @@ const Home = () => {
 
     async function fetchData() {
       try {
-        // NEW: rota explícita de usuários da empresa
         const [usuariosRes, perfisRes] = await Promise.all([
           api.get(`/empresa/${idEmpresa}/usuarios`),
           api.get(`/empresas/perfis/${idEmpresa}`),
@@ -98,11 +96,7 @@ const Home = () => {
       } catch (error) {
         const status = error.response?.status;
         if (status === 401) return navigate('/login');
-
-        // IMPORTANTE: como staff deve ver a tabela, não jogamos pra /403.
-        // Em vez disso, mostramos a página e um aviso de leitura.
         if (status === 403) {
-          // Tenta ao menos carregar os perfis para renderizar nomes
           try {
             const perfisRes = await api.get(`/empresas/perfis/${idEmpresa}`);
             const listaPerfis = Array.isArray(perfisRes.data) ? perfisRes.data : [];
@@ -112,7 +106,6 @@ const Home = () => {
           handleShowErrorModal(t('home.erros.visualizacaoSomenteLeitura'));
           return;
         }
-
         handleShowErrorModal(t('home.erros.carregarDados'));
       }
     }
@@ -128,7 +121,6 @@ const Home = () => {
   const handleCloseConfirmDelete = () => { setUsuarioParaExcluir(null); setShowConfirmDeleteModal(false); };
   const handleShowAddUserModal = () => setShowAddUserModal(true);
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
-  const fecharModalEmpresa = () => setMostrarModalEmpresa(false);
 
   // --- AÇÕES ---
   const adicionarUsuario = async (event) => {
@@ -208,19 +200,6 @@ const Home = () => {
     }
   };
 
-  const exibirDetalhesEmpresa = async () => {
-    try {
-      const response = await api.get(`/empresas/detalhes/${idEmpresa}`);
-      setDetalhesEmpresa(response.data);
-      setMostrarModalEmpresa(true);
-    } catch (error) {
-      const status = error.response?.status;
-      if (status === 401) return navigate('/login');
-      if (status === 403) return navigate('/403');
-      handleShowErrorModal(t('home.erros.carregarDetalhesEmpresa'));
-    }
-  };
-
   // --- RENDER ---
   return (
     <div className="mf-home home-container">
@@ -236,7 +215,12 @@ const Home = () => {
                 {t('home.somenteLeitura.label') || 'Somente leitura'}
               </Badge>
             )}
-            <Button variant="light" onClick={exibirDetalhesEmpresa} className="home-empresa-btn">
+            {/* BOTÃO ATUALIZADO: Agora navega para a página de edição */}
+            <Button
+              variant="light"
+              onClick={() => navigate(`/empresa/editar/${idEmpresa}`)}
+              className="home-empresa-btn"
+            >
               {t('home.empresa')}: <strong>{nomeEmpresa || '...'}</strong>
             </Button>
           </div>
@@ -336,7 +320,7 @@ const Home = () => {
         )}
       </main>
 
-      {/* Modais */}
+      {/* Modais de gerenciamento de usuários */}
       <Modal show={showAddUserModal} onHide={handleCloseAddUserModal} centered>
         <Form onSubmit={adicionarUsuario}>
           <Modal.Header closeButton>
@@ -420,24 +404,7 @@ const Home = () => {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={mostrarModalEmpresa} onHide={fecharModalEmpresa} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('home.modalDetalhes.titulo')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {detalhesEmpresa && (
-            <>
-              <p><strong>{t('home.modalDetalhes.nome')}:</strong> {detalhesEmpresa.NOME_EMPRESA}</p>
-              <p><strong>{t('home.modalDetalhes.cnpj')}:</strong> {detalhesEmpresa.CNPJ}</p>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={fecharModalEmpresa}>
-            {t('home.botoes.fechar')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* O modal de detalhes da empresa foi removido daqui */}
     </div>
   );
 };

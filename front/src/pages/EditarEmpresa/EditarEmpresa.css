@@ -1,0 +1,129 @@
+/* src/pages/EditarEmpresa/EditarEmpresa.css */
+
+/* Estrutura geral da página, consistente com a Home */
+.editar-empresa-container {
+    display: flex;
+    height: 100vh;
+    background-color: var(--background-primary);
+}
+.editar-empresa-main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+}
+/* Título da página */
+.editar-empresa-main-content h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+/* Estilo do Card principal, seguindo o padrão do sistema */
+.card {
+    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    padding: 15px;
+}
+
+/* Estilos para o layout compacto */
+.form-row {
+    display: flex;
+    gap: 15px; /* Espaço entre os campos */
+    align-items: flex-start;
+}
+
+.form-group-endereco {
+    flex: 3; /* Ocupa 3/4 do espaço */
+}
+
+.form-group-numero {
+    flex: 1; /* Ocupa 1/4 do espaço */
+}
+
+/* Estilos do Formulário */
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary) !important;
+    margin-bottom: 8px;
+}
+
+/* Estilos para posicionar os ícones */
+.form-group-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary); /* Usa a cor secundária do tema */
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.form-control {
+    background-color: var(--background-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px !important;
+    padding: 10px 12px;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    /* Adiciona espaço à esquerda para o ícone não sobrepor o texto */
+    padding-left: 45px !important; 
+}
+
+/* Efeito de foco para os campos de texto */
+.form-control:focus {
+    border-color: var(--brand-primary) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+
+.form-control:disabled {
+    opacity: 0.6;
+}
+
+/* Estilo do Botão Principal */
+.btn-primary {
+    background-color: var(--brand-primary) !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: filter 0.2s ease;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.15);
+}
+
+/* Estilo dos Alertas */
+.alert {
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+/* Melhorias para telas menores (Responsividade) */
+@media (max-width: 768px) {
+    .editar-empresa-main-content {
+        padding: 20px;
+    }
+    .editar-empresa-main-content h1 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
+    /* Faz os campos voltarem a ficar um embaixo do outro em telas pequenas */
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}

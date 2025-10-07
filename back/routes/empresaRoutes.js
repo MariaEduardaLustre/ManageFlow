@@ -11,11 +11,7 @@ const {
 // Usamos `io = null` para tornar o `io` opcional e evitar erros se não for passado.
 module.exports = (io = null) => {
 
-  /**
-   * POST /criar-empresa
-   * - Lógica de perfis atualizada para o modelo do seu time.
-   * - Uso de INSERT IGNORE para evitar erros se os perfis já existirem.
-   */
+  // ... (a rota /criar-empresa e outras rotas GET não precisam de alteração)
   router.post('/criar-empresa', async (req, res) => {
     const {
       nomeEmpresa,
@@ -45,7 +41,6 @@ module.exports = (io = null) => {
       );
       const idEmpresa = empresaResult.insertId;
 
-      // Usando INSERT IGNORE para ser mais robusto
       await connection.query(
         `INSERT IGNORE INTO perfil (NOME_PERFIL, ID_EMPRESA, NIVEL) VALUES
            ('Administrador', ?, 1),
@@ -76,7 +71,6 @@ module.exports = (io = null) => {
     }
   });
 
-  // Rota para buscar empresas que o usuário tem acesso
   router.get('/empresas-do-usuario/:idUsuario', async (req, res) => {
     const { idUsuario } = req.params;
     try {
@@ -96,7 +90,6 @@ module.exports = (io = null) => {
     }
   });
 
-  // Rota para detalhes da empresa
   router.get('/detalhes/:idEmpresa', async (req, res) => {
     const { idEmpresa } = req.params;
     try {
@@ -115,7 +108,53 @@ module.exports = (io = null) => {
     }
   });
 
-  // Rota para buscar perfis de uma empresa
+  // =======================================================================
+  // == ROTA CORRIGIDA
+  // =======================================================================
+  router.put('/detalhes/:idEmpresa', async (req, res) => {
+    const { idEmpresa } = req.params;
+    
+    // ALTERADO: Nomes das variáveis agora correspondem ao que o frontend envia (maiúsculas)
+    const {
+      NOME_EMPRESA,
+      CNPJ,
+      EMAIL,
+      DDI,
+      DDD,
+      TELEFONE,
+      ENDERECO,
+      NUMERO,
+      LOGO
+    } = req.body;
+
+    // ALTERADO: Verificação agora usa as variáveis corretas
+    if (!NOME_EMPRESA || !CNPJ) {
+      return res.status(400).json({ error: 'Nome da Empresa e CNPJ são obrigatórios.' });
+    }
+
+    try {
+      // ALTERADO: Parâmetros do query agora usam as variáveis corretas
+      const [result] = await db.query(
+        `UPDATE empresa
+         SET NOME_EMPRESA = ?, CNPJ = ?, EMAIL = ?, DDI = ?, DDD = ?, TELEFONE = ?, ENDERECO = ?, NUMERO = ?, LOGO = ?
+         WHERE ID_EMPRESA = ?`,
+        [NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO, idEmpresa]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Empresa não encontrada para atualização.' });
+      }
+
+      return res.json({ message: 'Dados da empresa atualizados com sucesso!' });
+
+    } catch (error) {
+      console.error('Erro ao atualizar detalhes da empresa:', error);
+      return res.status(500).json({ error: 'Erro interno ao atualizar os dados da empresa.' });
+    }
+  });
+
+
+  // ... (Restante do arquivo, sem alterações) ...
   router.get('/perfis/:idEmpresa', async (req, res) => {
     const { idEmpresa } = req.params;
     try {
@@ -130,7 +169,6 @@ module.exports = (io = null) => {
     }
   });
 
-  // Rota para buscar filas da empresa
   router.get('/filas/:idEmpresa', async (req, res) => {
     const { idEmpresa } = req.params;
     try {
@@ -154,10 +192,6 @@ module.exports = (io = null) => {
     }
   });
 
-  /**
-   * GET /fila/:idEmpresa/:dtMovto/:idFila/clientes
-   * - Versão mais robusta que lida com datas no formato ISO (com 'T').
-   */
   router.get('/fila/:idEmpresa/:dtMovto/:idFila/clientes', async (req, res) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
     try {
@@ -181,10 +215,6 @@ module.exports = (io = null) => {
     }
   });
 
-  /**
-   * PUT /fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/atualizar-situacao
-   * - Mantida a versão do seu time, que já estava funcional.
-   */
   router.put('/fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/atualizar-situacao', async (req, res) => {
     const { idEmpresa, dtMovto, idFila, idCliente } = req.params;
     const { novaSituacao } = req.body;
@@ -232,10 +262,6 @@ module.exports = (io = null) => {
     }
   });
 
-  /**
-   * POST /fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/enviar-notificacao
-   * --- ESTA É A VERSÃO CORRIGIDA E COMPLETA COM TEMP_TOL DINÂMICO ---
-   */
   router.post('/fila/:idEmpresa/:dtMovto/:idFila/cliente/:idCliente/enviar-notificacao', async (req, res) => {
     const { idEmpresa, dtMovto, idFila, idCliente } = req.params;
     const dtMovtoFormatted = dtMovto.includes('T') ? dtMovto.split('T')[0] : dtMovto;
@@ -309,7 +335,6 @@ module.exports = (io = null) => {
     }
   });
 
-  // Rota para adicionar cliente na fila
   router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, res) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
     const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES, MEIO_NOTIFICACAO } = req.body;
@@ -371,7 +396,6 @@ module.exports = (io = null) => {
     }
   });
 
-  // Rotas de análise mantidas conforme versão do seu time
   router.get('/horarios-de-pico/:idEmpresa/:idFila', async (req, res) => {
     const { idEmpresa, idFila } = req.params;
     try {
@@ -414,6 +438,6 @@ module.exports = (io = null) => {
         res.status(500).json({ error: 'Erro interno ao buscar tempo médio de espera.' });
     }
   });
-
+  
   return router;
 };
