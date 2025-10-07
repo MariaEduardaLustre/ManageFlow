@@ -22,8 +22,11 @@ router.post('/usuarios', usuarioController.cadastrarUsuario);
 // Login
 router.post('/login', usuarioController.loginUsuario);
 
+
+
 // Solicitação de redefinição de senha
 router.post('/esqueci-senha', usuarioController.solicitarRedefinicaoSenha);
+
 
 // Redefinição de senha com o token
 router.post('/redefinir-senha', usuarioController.redefinirSenha);
