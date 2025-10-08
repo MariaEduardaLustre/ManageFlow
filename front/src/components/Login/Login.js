@@ -17,7 +17,8 @@ import "./Login.css";
 // React Bootstrap
 import { Modal, Button } from "react-bootstrap";
 
-const Login = () => {
+// O componente agora recebe 'onLoginSuccess' como uma propriedade (prop)
+const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({ email: "", senha: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [mostrarModalErro, setMostrarModalErro] = useState(false);
@@ -41,6 +42,7 @@ const Login = () => {
       const response = await api.post("/login", formData);
       const { token, idUsuario, nome } = response.data;
 
+      // 1. Salva os dados no localStorage como antes
       localStorage.setItem("token", token);
       localStorage.setItem("idUsuario", idUsuario);
       localStorage.setItem("nomeUsuario", nome);
@@ -50,10 +52,16 @@ const Login = () => {
 
       localStorage.removeItem("empresaSelecionada");
       sessionStorage.setItem("empresasDoUsuario", JSON.stringify(empresas));
+      
+      // 2. Chama a função do App.js para avisar que o login foi feito!
+      // Isso vai fazer o App.js re-renderizar e mostrar as rotas privadas.
+      onLoginSuccess();
 
+      // 3. Mostra o modal de sucesso
       setFormData({ email: "", senha: "" });
       setMensagemSucessoModal("Login realizado! Escolha a sua empresa.");
       setMostrarModalSucesso(true);
+
     } catch (err) {
       const msg = err.response?.data || "E-mail ou senha inválidos.";
       setMensagemErroModal(msg);
@@ -65,6 +73,7 @@ const Login = () => {
 
   const fecharModalErro = () => setMostrarModalErro(false);
 
+  // 4. A navegação acontece APÓS o usuário fechar o modal de sucesso
   const fecharModalSucesso = () => {
     setMostrarModalSucesso(false);
     navigate("/escolher-empresa");
@@ -81,7 +90,6 @@ const Login = () => {
       </div>
 
       <div className="mf-login__form-section">
-        {/* ✨ CONTÊINER ATUALIZADO PARA OS BOTÕES NO CANTO SUPERIOR DIREITO ✨ */}
         <div className="mf-login__top-controls">
           <ThemeToggleButton />
           <LanguageSelector />

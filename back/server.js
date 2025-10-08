@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://172.20.10.10:3000',
+  'http://192.168.0.198:3000', // Adicionado para permitir acesso local
   process.env.PUBLIC_FRONT_BASE_URL,
   process.env.FRONT_ORIGIN
 ].filter(Boolean);
@@ -23,42 +23,29 @@ const io = new Server(server, {
 });
 
 app.use(cors({ origin: allowedOrigins, credentials: true }));
-
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
-
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use((req, _res, next) => {
-  const len = req.headers['content-length'];
-  if (len) console.log('[body-size]', req.method, req.url, `${len} bytes`);
-  next();
-});
-
-// Carregamos as rotas públicas passando a instância 'io' para a fábrica.
+// Rotas públicas
 const configuracaoPublic = require('./routes/configuracaoPublicRoutes')(io);
 app.use('/api/configuracao', configuracaoPublic);
-
 const dashboardRoutes = require('./routes/dashboardRoutes')(io);
 app.use('/api/dashboard', dashboardRoutes);
+const avaliacaoRoutes = require('./routes/avaliacaoRoutes'); 
+app.use('/api/avaliacoes', avaliacaoRoutes);
 
-// 🔸 Restante das rotas...
+// Rotas protegidas
 const usuarioRoutes = require('./routes/usuarioRoutes');
 app.use('/api', usuarioRoutes);
-
 app.use('/api', authMiddleware, meRoutes);
-
 let empresaRoutesModule = require('./routes/empresaRoutes');
 const empresaRoutesResolved = typeof empresaRoutesModule === 'function' ? empresaRoutesModule(io) : empresaRoutesModule;
 app.use('/api/empresas', authMiddleware, empresaRoutesResolved);
-
 const configuracaoRoutes = require('./routes/configuracaoRoutes');
 app.use('/api/configuracao', authMiddleware, configuracaoRoutes);
-
 const filaRoutes = require('./routes/filaRoutes');
 app.use('/api/filas', authMiddleware, filaRoutes);
-
-// Relatórios (sempre com JWT)
 const relatorioRoutes = require('./routes/relatorioRoutes');
 app.use('/api/relatorios', authMiddleware, relatorioRoutes);
 

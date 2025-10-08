@@ -33,7 +33,6 @@ function getCurrentContext() {
       (emp?.ROLE
         ? String(emp.ROLE).toUpperCase()
         : normalizeRoleFromNivel(emp?.NIVEL));
-    // Corrige legado "STAF"
     const safeRole = role?.startsWith('STAF') ? 'STAFF' : role || 'CUSTOMER';
     const permissions = Array.isArray(emp?.PERMISSIONS) ? emp.PERMISSIONS : [];
     return { role: safeRole, permissions, nivel: emp?.NIVEL ?? null };
@@ -42,14 +41,6 @@ function getCurrentContext() {
   }
 }
 
-/**
- * Regras de acesso por recurso (coerente com PrivateRoute/App)
- * - dashboard: ADM, STAFF, ANALYST
- * - analytics: ADM, STAFF, ANALYST
- * - usersRoles (Home/Usuários): ADM, STAFF
- * - queues (Filas/Configuração de Filas): ADM, STAFF
- * - settings (Configuração base): ADM, STAFF
- */
 const ROLE_ALLOW = {
   dashboard: ['ADM', 'STAFF', 'ANALYST'],
   analytics: ['ADM', 'STAFF', 'ANALYST'],
@@ -58,24 +49,15 @@ const ROLE_ALLOW = {
   settings: ['ADM', 'STAFF'],
 };
 
-// Recursos de gestão que podem (opcionalmente) exigir PERMISSIONS[:view] se a lista existir
 const RBAC_ENFORCED_RESOURCES = new Set(['usersRoles', 'queues', 'settings', 'queueEntries']);
 
-/**
- * Verifica se o usuário pode ver um recurso no menu.
- * - Primeiro checa PAPEL (ROLE_ALLOW).
- * - Para recursos de gestão (RBAC_ENFORCED_RESOURCES), se houver PERMISSIONS no snapshot,
- *   exige `${resource}:view` para exibir (endurece o front).
- * - Dashboard/Analytics não dependem de PERMISSIONS (só do papel).
- */
 function canSee(resource, role, permissions) {
   const key = String(resource || '').toLowerCase();
-  const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF']; // default
+  const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF'];
   if (!allowedRoles.includes(role)) return false;
 
   if (RBAC_ENFORCED_RESOURCES.has(resource) && permissions?.length) {
     const needsView = `${resource}:view`;
-    // normaliza case para evitar divergência
     const hasView = permissions.some(p => String(p).toLowerCase() === needsView.toLowerCase());
     return hasView;
   }
@@ -83,7 +65,8 @@ function canSee(resource, role, permissions) {
   return true;
 }
 
-const Sidebar = () => {
+// ALTERADO: O componente agora recebe a propriedade 'onLogout'
+const Sidebar = ({ onLogout }) => {
   const { t } = useTranslation();
 
   const logo = '/imagens/logo.png';
@@ -101,7 +84,6 @@ const Sidebar = () => {
   const MOBILE_BREAKPOINT = 768;
   const activePath = useMemo(() => location.pathname, [location.pathname]);
 
-  // Mapa dos itens com metadados de "resource" para checagem
   const ALL_ITEMS = useMemo(() => ([
     { to: '/dashboard',        icon: FaTachometerAlt, label: t('menu.dashboard'),     resource: 'dashboard'   },
     { to: '/filas-cadastradas',icon: FaCogs,          label: t('menu.configuracao'),  resource: 'queues'      },
@@ -110,7 +92,6 @@ const Sidebar = () => {
     { to: '/home',             icon: FaUsers,         label: t('menu.usuarios'),      resource: 'usersRoles'  },
   ]), [t]);
 
-  // Filtra itens conforme papel/permissões
   const NAV_ITEMS = useMemo(() => {
     if (!role) return [];
     return ALL_ITEMS.filter(item => canSee(item.resource, role, permissions));
@@ -166,8 +147,12 @@ const Sidebar = () => {
     }
   }, [collapsed, isMobile]);
 
+  // ALTERADO: A função 'logout' agora chama 'onLogout'
   const logout = () => {
-    localStorage.clear();
+    // 1. Chama a função do App.js para limpar o localStorage e atualizar o estado
+    onLogout();
+    
+    // 2. Navega para a página de login
     navigate('/login');
   };
 

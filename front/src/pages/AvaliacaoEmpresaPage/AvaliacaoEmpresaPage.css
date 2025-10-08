@@ -1,0 +1,15 @@
+/* src/pages/AvaliacaoEmpresaPage/AvaliacaoEmpresaPage.css */
+.avaliacao-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f0f2f5; padding: 20px; font-family: 'Poppins', sans-serif; }
+.avaliacao-card { background: #ffffff; padding: 30px 40px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); width: 100%; max-width: 500px; text-align: center; }
+.avaliacao-card.error { background-color: #fef2f2; color: #991b1b; }
+.logo-circle { width: 80px; height: 80px; border-radius: 50%; background: #f8f9fa; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center; font-size: 32px; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+.logo-circle img { width: 100%; height: 100%; object-fit: cover; }
+.avaliacao-card h1 { margin: 0 0 10px; font-size: 1.8rem; color: #111827; }
+.avaliacao-card p { color: #6b7280; margin-bottom: 25px; }
+.estrelas-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+.estrela { cursor: pointer; transition: color 0.2s; }
+.comentario-textarea { width: 100%; min-height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: 'Poppins', sans-serif; font-size: 1rem; resize: vertical; margin-bottom: 20px; }
+.comentario-textarea:focus { outline: none; border-color: #3a5afe; box-shadow: 0 0 0 3px rgba(58, 90, 254, 0.2); }
+.submit-button { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; background-color: #3a5afe; color: #ffffff; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+.submit-button:hover { background-color: #2a48d8; }
+.submit-button:disabled { background-color: #9ca3af; cursor: not-allowed; }

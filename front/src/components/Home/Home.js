@@ -8,7 +8,8 @@ import './Home.css';
 import { Modal, Button, Form, Badge } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-const Home = () => {
+// ALTERADO: A página agora recebe 'onLogout' como uma propriedade
+const Home = ({ onLogout }) => {
   const { t } = useTranslation();
 
   // --- STATES ---
@@ -24,8 +25,6 @@ const Home = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState(null);
-
-  // Estados e funções do modal de detalhes da empresa foram removidos.
 
   const navigate = useNavigate();
 
@@ -55,7 +54,6 @@ const Home = () => {
     return false;
   };
 
-  // Políticas por papel
   const canInvite = hasPerm('usersRoles', 'create');
   const canEdit   = hasPerm('usersRoles', 'edit');
   const canDelete = hasPerm('usersRoles', 'delete');
@@ -112,7 +110,6 @@ const Home = () => {
     fetchData();
   }, [idEmpresa, navigate, t]);
 
-  // --- MODALS ---
   const handleShowErrorModal = (message) => { setErrorMessage(message); setShowErrorModal(true); };
   const handleCloseErrorModal = () => setShowErrorModal(false);
   const handleShowSuccessModal = (message) => { setSuccessMessage(message); setShowSuccessModal(true); };
@@ -122,7 +119,6 @@ const Home = () => {
   const handleShowAddUserModal = () => setShowAddUserModal(true);
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
 
-  // --- AÇÕES ---
   const adicionarUsuario = async (event) => {
     event.preventDefault();
     if (!canInvite) return handleShowErrorModal(t('home.erros.semPermissaoAdicionar'));
@@ -200,10 +196,10 @@ const Home = () => {
     }
   };
 
-  // --- RENDER ---
   return (
     <div className="mf-home home-container">
-      <Menu />
+      <Menu onLogout={onLogout} />
+      
       <main className="home-main-content">
         <header className="home-header">
           <h1 className="home-header-greeting">
@@ -215,7 +211,6 @@ const Home = () => {
                 {t('home.somenteLeitura.label') || 'Somente leitura'}
               </Badge>
             )}
-            {/* BOTÃO ATUALIZADO: Agora navega para a página de edição */}
             <Button
               variant="light"
               onClick={() => navigate(`/empresa/editar/${idEmpresa}`)}
@@ -314,13 +309,12 @@ const Home = () => {
           <section className="home-usuarios-section">
             <h2 className="home-section-title">{t('home.usuariosDaEmpresa')}</h2>
             <div className="alert alert-warning" role="alert">
-              {t('home.semPermissaoVisualizar') || 'Você não tem permissão para visualizar os usuários desta empresa.'}
+              {t('home.semPermissaoVisualizar') || 'Você não tem permissão para visualizar os usuários.'}
             </div>
           </section>
         )}
       </main>
 
-      {/* Modais de gerenciamento de usuários */}
       <Modal show={showAddUserModal} onHide={handleCloseAddUserModal} centered>
         <Form onSubmit={adicionarUsuario}>
           <Modal.Header closeButton>
@@ -399,12 +393,10 @@ const Home = () => {
         <Modal.Body>{successMessage}</Modal.Body>
         <Modal.Footer>
           <Button variant="success" onClick={handleCloseSuccessModal}>
-            {t('home.botoes.ok')}
+            OK
           </Button>
         </Modal.Footer>
       </Modal>
-
-      {/* O modal de detalhes da empresa foi removido daqui */}
     </div>
   );
 };
