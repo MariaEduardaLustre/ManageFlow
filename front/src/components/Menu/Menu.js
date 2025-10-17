@@ -53,6 +53,7 @@ const ROLE_ALLOW = {
 const RBAC_ENFORCED_RESOURCES = new Set(['usersRoles', 'queues', 'settings', 'queueEntries']);
 
 function canSee(resource, role, permissions) {
+  const key = String(resource || '').toLowerCase();
   const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF'];
   if (!allowedRoles.includes(role)) return false;
 
@@ -71,7 +72,9 @@ const API_BASE =
     ? `http://${window.location.hostname}:3001/api`
     : 'http://localhost:3001/api');
 
-const Sidebar = () => {
+
+// ALTERADO: O componente agora recebe a propriedade 'onLogout'
+const Sidebar = ({ onLogout }) => {
   const { t } = useTranslation();
   const logo = '/imagens/logo.png';
   const defaultAvatar = '/imagens/avatar-default.png';
@@ -193,7 +196,10 @@ const Sidebar = () => {
   }, [api, idUsuario]);
 
   const logout = () => {
-    localStorage.clear();
+    // 1. Chama a função do App.js para limpar o localStorage e atualizar o estado
+    onLogout();
+    
+    // 2. Navega para a página de login
     navigate('/login');
   };
 

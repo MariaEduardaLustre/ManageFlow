@@ -64,6 +64,16 @@ router.delete('/usuarios/:id', ensureAuth, usuarioController.excluirUsuario);
 
 /* ========= HELPERS / RBAC AUXILIAR ========= */
 
+
+// Solicitação de redefinição de senha
+router.post('/esqueci-senha', usuarioController.solicitarRedefinicaoSenha);
+
+
+// Redefinição de senha com o token
+router.post('/redefinir-senha', usuarioController.redefinirSenha);
+
+/* ========= HELPERS ========= */
+
 async function isLastAdmin(idEmpresa, idUsuarioParaAlterarOpcional = null) {
   const [rows] = await db.query(
     `

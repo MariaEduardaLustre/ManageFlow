@@ -240,7 +240,7 @@
     },
     "alertaBloqueio": {
       "titulo": "Queue blocked today:",
-      "texto": "new <em>public</em> entries are prevented. Management of clients already in the queue continues as normal."
+      "texto": "new entries are prevented. Management of clients already in the queue continues as normal."
     },
     "abas": {
       "aguardando": "Waiting & Called",

@@ -40,30 +40,25 @@ app.use('/api', docsRoutes); // /api/docs e /api/docs.json liberados
 /* ===== Rotas públicas ===== */
 const configuracaoPublic = require('./routes/configuracaoPublicRoutes')(io);
 app.use('/api/configuracao', configuracaoPublic);
-
 const dashboardRoutes = require('./routes/dashboardRoutes')(io);
 app.use('/api/dashboard', dashboardRoutes);
+const avaliacaoRoutes = require('./routes/avaliacaoRoutes'); 
+app.use('/api/avaliacoes', avaliacaoRoutes);
 
-/* ===== Rotas que podem ter auth por arquivo ===== */
+// Rotas protegidas
 const usuarioRoutes = require('./routes/usuarioRoutes');
 app.use('/api', usuarioRoutes);
-
-/* ===== Rotas protegidas ===== */
 app.use('/api', authMiddleware, meRoutes);
-
 let empresaRoutesModule = require('./routes/empresaRoutes');
 const empresaRoutesResolved = typeof empresaRoutesModule === 'function' ? empresaRoutesModule(io) : empresaRoutesModule;
 app.use('/api/empresas', authMiddleware, empresaRoutesResolved);
-
 const configuracaoRoutes = require('./routes/configuracaoRoutes');
 app.use('/api/configuracao', authMiddleware, configuracaoRoutes);
-
 const filaRoutes = require('./routes/filaRoutes');
 // atenção: aqui você tem as duas montagens. Se /api/fila for pública, deixe sem auth:
 app.use('/api/fila', filaRoutes);
 // e a coleção /api/filas com JWT
 app.use('/api/filas', authMiddleware, filaRoutes);
-
 const relatorioRoutes = require('./routes/relatorioRoutes');
 app.use('/api/relatorios', authMiddleware, relatorioRoutes);
 

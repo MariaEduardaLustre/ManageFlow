@@ -6,6 +6,7 @@
     "node-cron": "^4.2.1",
     "react-bootstrap": "^2.10.10",
     "react-i18next": "^15.7.3",
+    "react-select": "^5.10.2",
     "recharts": "^3.2.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",

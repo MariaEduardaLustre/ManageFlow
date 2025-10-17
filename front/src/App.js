@@ -1,12 +1,11 @@
-import React from 'react';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Route, BrowserRouter as Router, Routes, Navigate } from 'react-router-dom';
 import './App.css'; 
-// ✨ 1. IMPORTANDO OS PROVEDORES E A CONFIGURAÇÃO DE IDIOMA
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nextProvider } from 'react-i18next';
-import i18n from './i18n'; // O seu ficheiro de configuração i18n.js
+import i18n from './i18n';
 
-// Componentes
+// Importe todos os seus componentes
 import LanguageSelectorConditional from './components/LanguageSelectorConditional/LanguageSelectorConditional';
 import Cadastro from './components/Cadastro/Cadastro';
 import ConfiguracaoFila from './components/ConfiguracaoFila/ConfiguracaoFila';
@@ -24,32 +23,46 @@ import Dashboard from './components/Dashboard/Dashboard';
 import Relatorio from './components/Relatorio/Relatorio';
 import Forbidden from './pages/Forbidden';
 import EntrarFilaPage from './pages/EntrarFilaPage';
-import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao';
+import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao'; // <-- Confirme se o import existe
 import FilaStatus from './pages/FilaStatus';
 import FilaChamado from './pages/FilaChamado';
 import PerfilUsuario from './components/PerfilUsuario/PerfilUsuario';
+import EditarEmpresa from './pages/EditarEmpresa/EditarEmpresa';
+import AvaliacaoEmpresaPage from './pages/AvaliacaoEmpresaPage/AvaliacaoEmpresaPage';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsAuthenticated(false);
+  };
+
   return (
-    // ✨ 2. GARANTINDO QUE OS PROVEDORES ENVOLVAM TODA A APLICAÇÃO
     <I18nextProvider i18n={i18n}>
       <ThemeProvider>
         <Router>
-          {/* Este componente agora está DENTRO do ThemeProvider e não causará mais erros */}
           <LanguageSelectorConditional />
-          
           <Routes>
-            {/* Públicas */}
-            <Route path="/landing" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Cadastro />} />
-            <Route path="/esqueci-senha" element={<EsqueciSenha />} />
-            <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
-            <Route path="/entrar-fila/:token" element={<EntrarFilaPage />} />
-            <Route path="/escolher-empresa" element={<Empresa />} />
-            <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
-            <Route path="/entrar-fila/:token/status" element={<FilaStatus />} />
-            <Route path="/fila/:token/chamado" element={<FilaChamado />} />
+            {!isAuthenticated ? (
+              // --- ROTAS PÚBLICAS (se o usuário NÃO estiver autenticado) ---
+              <>
+                <Route path="/login" element={<Login onLoginSuccess={handleLogin} />} />
+                <Route path="/cadastro" element={<Cadastro />} />
+                <Route path="/landing" element={<LandingPage />} />
+                <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+                <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
+                <Route path="/entrar-fila/:token" element={<EntrarFilaPage />} />
+                <Route path="/entrar-fila/:token/status" element={<FilaStatus />} />
+                <Route path="/fila/:token/chamado" element={<FilaChamado />} />
+                <Route path="/avaliar/:token" element={<AvaliacaoEmpresaPage />} />
+                
+                {/* A rota do painel também deve ser acessível publicamente caso seja compartilhada */}
+                <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
 
             {/* Protegidas */}
             <Route path="/dashboard" element={<PrivateRoute resource="dashboard" action="view"><Dashboard /></PrivateRoute>} />

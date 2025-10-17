@@ -14,10 +14,11 @@ import {
 import Menu from "../Menu/Menu";
 import api from "../../services/api";
 import "./FilasCadastradas.css";
-import { useTranslation } from "react-i18next"; // 1. Importar
+import { useTranslation } from "react-i18next";
 
-const FilasCadastradas = () => {
-  const { t } = useTranslation(); // 2. Instanciar
+// ALTERADO: A página agora recebe 'onLogout' como uma propriedade
+const FilasCadastradas = ({ onLogout }) => {
+  const { t } = useTranslation();
   const [filas, setFilas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -67,7 +68,6 @@ const FilasCadastradas = () => {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
       } else {
-        // Fallback para ambientes não seguros
         const ta = document.createElement("textarea");
         ta.value = text;
         ta.setAttribute("readonly", "");
@@ -186,7 +186,8 @@ const FilasCadastradas = () => {
 
   return (
     <div className="mf-queues dashboard-container">
-      <Menu />
+      {/* ALTERADO: A propriedade 'onLogout' é passada para o componente Menu */}
+      <Menu onLogout={onLogout} />
 
       <main className="main-content">
         <div className="content-wrapper">

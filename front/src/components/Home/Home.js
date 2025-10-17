@@ -8,13 +8,13 @@ import './Home.css';
 import { Modal, Button, Form, Badge } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-const Home = () => {
+// ALTERADO: A página agora recebe 'onLogout' como uma propriedade
+const Home = ({ onLogout }) => {
   const { t } = useTranslation();
 
   // --- STATES ---
   const [usuarios, setUsuarios] = useState([]);
   const [perfis, setPerfis] = useState([]);
-  const [detalhesEmpresa, setDetalhesEmpresa] = useState(null);
   const [nomeUsuarioLogado, setNomeUsuarioLogado] = useState('');
   const [novoUsuario, setNovoUsuario] = useState('');
   const [perfilSelecionado, setPerfilSelecionado] = useState('');
@@ -25,7 +25,6 @@ const Home = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState(null);
-  const [mostrarModalEmpresa, setMostrarModalEmpresa] = useState(false);
 
   const navigate = useNavigate();
 
@@ -55,11 +54,9 @@ const Home = () => {
     return false;
   };
 
-  // Políticas por papel
   const canInvite = hasPerm('usersRoles', 'create');
   const canEdit   = hasPerm('usersRoles', 'edit');
   const canDelete = hasPerm('usersRoles', 'delete');
-  // NEW: garantir visualização para STAFF (NIVEL=2) mesmo sem permissão explícita
   const canView   = hasPerm('usersRoles', ['read', 'edit', 'delete', 'create']) || nivel === 2 || nivel === 1;
   const viewOnly  = !canInvite && !canEdit && !canDelete && (nivel === 2);
 
@@ -80,7 +77,6 @@ const Home = () => {
 
     async function fetchData() {
       try {
-        // NEW: rota explícita de usuários da empresa
         const [usuariosRes, perfisRes] = await Promise.all([
           api.get(`/empresa/${idEmpresa}/usuarios`),
           api.get(`/empresas/perfis/${idEmpresa}`),
@@ -98,11 +94,7 @@ const Home = () => {
       } catch (error) {
         const status = error.response?.status;
         if (status === 401) return navigate('/login');
-
-        // IMPORTANTE: como staff deve ver a tabela, não jogamos pra /403.
-        // Em vez disso, mostramos a página e um aviso de leitura.
         if (status === 403) {
-          // Tenta ao menos carregar os perfis para renderizar nomes
           try {
             const perfisRes = await api.get(`/empresas/perfis/${idEmpresa}`);
             const listaPerfis = Array.isArray(perfisRes.data) ? perfisRes.data : [];
@@ -112,14 +104,12 @@ const Home = () => {
           handleShowErrorModal(t('home.erros.visualizacaoSomenteLeitura'));
           return;
         }
-
         handleShowErrorModal(t('home.erros.carregarDados'));
       }
     }
     fetchData();
   }, [idEmpresa, navigate, t]);
 
-  // --- MODALS ---
   const handleShowErrorModal = (message) => { setErrorMessage(message); setShowErrorModal(true); };
   const handleCloseErrorModal = () => setShowErrorModal(false);
   const handleShowSuccessModal = (message) => { setSuccessMessage(message); setShowSuccessModal(true); };
@@ -128,9 +118,7 @@ const Home = () => {
   const handleCloseConfirmDelete = () => { setUsuarioParaExcluir(null); setShowConfirmDeleteModal(false); };
   const handleShowAddUserModal = () => setShowAddUserModal(true);
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
-  const fecharModalEmpresa = () => setMostrarModalEmpresa(false);
 
-  // --- AÇÕES ---
   const adicionarUsuario = async (event) => {
     event.preventDefault();
     if (!canInvite) return handleShowErrorModal(t('home.erros.semPermissaoAdicionar'));
@@ -208,23 +196,10 @@ const Home = () => {
     }
   };
 
-  const exibirDetalhesEmpresa = async () => {
-    try {
-      const response = await api.get(`/empresas/detalhes/${idEmpresa}`);
-      setDetalhesEmpresa(response.data);
-      setMostrarModalEmpresa(true);
-    } catch (error) {
-      const status = error.response?.status;
-      if (status === 401) return navigate('/login');
-      if (status === 403) return navigate('/403');
-      handleShowErrorModal(t('home.erros.carregarDetalhesEmpresa'));
-    }
-  };
-
-  // --- RENDER ---
   return (
     <div className="mf-home home-container">
-      <Menu />
+      <Menu onLogout={onLogout} />
+      
       <main className="home-main-content">
         <header className="home-header">
           <h1 className="home-header-greeting">
@@ -236,7 +211,11 @@ const Home = () => {
                 {t('home.somenteLeitura.label') || 'Somente leitura'}
               </Badge>
             )}
-            <Button variant="light" onClick={exibirDetalhesEmpresa} className="home-empresa-btn">
+            <Button
+              variant="light"
+              onClick={() => navigate(`/empresa/editar/${idEmpresa}`)}
+              className="home-empresa-btn"
+            >
               {t('home.empresa')}: <strong>{nomeEmpresa || '...'}</strong>
             </Button>
           </div>
@@ -330,13 +309,12 @@ const Home = () => {
           <section className="home-usuarios-section">
             <h2 className="home-section-title">{t('home.usuariosDaEmpresa')}</h2>
             <div className="alert alert-warning" role="alert">
-              {t('home.semPermissaoVisualizar') || 'Você não tem permissão para visualizar os usuários desta empresa.'}
+              {t('home.semPermissaoVisualizar') || 'Você não tem permissão para visualizar os usuários.'}
             </div>
           </section>
         )}
       </main>
 
-      {/* Modais */}
       <Modal show={showAddUserModal} onHide={handleCloseAddUserModal} centered>
         <Form onSubmit={adicionarUsuario}>
           <Modal.Header closeButton>
@@ -415,26 +393,7 @@ const Home = () => {
         <Modal.Body>{successMessage}</Modal.Body>
         <Modal.Footer>
           <Button variant="success" onClick={handleCloseSuccessModal}>
-            {t('home.botoes.ok')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={mostrarModalEmpresa} onHide={fecharModalEmpresa} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('home.modalDetalhes.titulo')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {detalhesEmpresa && (
-            <>
-              <p><strong>{t('home.modalDetalhes.nome')}:</strong> {detalhesEmpresa.NOME_EMPRESA}</p>
-              <p><strong>{t('home.modalDetalhes.cnpj')}:</strong> {detalhesEmpresa.CNPJ}</p>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={fecharModalEmpresa}>
-            {t('home.botoes.fechar')}
+            OK
           </Button>
         </Modal.Footer>
       </Modal>
