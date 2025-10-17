@@ -1,0 +1,872 @@
+openapi: 3.0.3
+info:
+  title: ManageFlow API
+  version: "1.0.0"
+  description: |
+    API do **ManageFlow** — Sistema de filas de espera para restaurantes (TCC).
+    - Autenticação via **JWT Bearer** na maioria das rotas.
+    - Rotas **Públicas** não exigem token.
+servers:
+  - url: "{baseUrl}/api"
+    description: Ambiente configurado por variável
+    variables:
+      baseUrl:
+        default: http://localhost:3001
+        description: URL base (use PUBLIC_API_BASE_URL em produção)
+
+tags:
+  - name: Auth
+    description: Autenticação e recuperação de senha
+  - name: Usuários & Permissões
+    description: Gestão de usuários vinculados à empresa (RBAC)
+  - name: Empresas
+    description: Dados de empresa e vínculos do usuário
+  - name: Configuração de Fila
+    description: CRUD da configuração base da fila (vigência, permissões, mídia)
+  - name: Fila do Dia
+    description: Operação diária da fila (BLOCK/SITUACAO e clientes)
+  - name: Público
+    description: Portal público por TOKEN_FILA (entrada e confirmação)
+  - name: Dashboard
+    description: KPIs e séries para o painel em tempo real
+  - name: Relatórios
+    description: Séries históricas (tempo de espera, desistências etc.)
+  - name: Uploads
+    description: Upload e retorno de URLs públicas (logo/banner/foto)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdEmpresaPath:
+      name: idEmpresa
+      in: path
+      required: true
+      schema: { type: integer }
+      description: ID da empresa
+    IdUsuarioPath:
+      name: idUsuario
+      in: path
+      required: true
+      schema: { type: integer }
+    IdConfFilaPath:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+      description: ID_CONF_FILA
+    IdFilaPath:
+      name: id_fila
+      in: path
+      required: true
+      schema: { type: integer }
+    TokenFilaPath:
+      name: token
+      in: path
+      required: true
+      schema: { type: string }
+      description: TOKEN_FILA público
+    DtMovtoPath:
+      name: dtMovto
+      in: path
+      required: true
+      schema:
+        type: string
+        format: date
+      description: Data do movimento (YYYY-MM-DD)
+
+  schemas:
+    DefaultError:
+      type: object
+      properties:
+        message: { type: string, example: "Erro ao processar requisição" }
+        details: { type: string, nullable: true }
+
+    LoginInput:
+      type: object
+      required: [email, senha]
+      properties:
+        email: { type: string, example: "admin@manageflow.app" }
+        senha: { type: string, example: "123456" }
+
+    LoginOutput:
+      type: object
+      properties:
+        token: { type: string }
+        usuario:
+          type: object
+          properties:
+            ID_USUARIO: { type: integer, example: 1 }
+            NOME: { type: string, example: "Admin" }
+            EMAIL: { type: string, example: "admin@manageflow.app" }
+
+    UsuarioCreate:
+      type: object
+      required: [nome, email, senha]
+      properties:
+        nome: { type: string }
+        email: { type: string }
+        cpfCnpj: { type: string, nullable: true }
+        senha: { type: string }
+        cep: { type: string, nullable: true }
+        endereco: { type: string, nullable: true }
+        numero: { type: string, nullable: true }
+        complemento: { type: string, nullable: true }
+        ddi: { type: string, nullable: true }
+        ddd: { type: string, nullable: true }
+        telefone: { type: string, nullable: true }
+
+    Empresa:
+      type: object
+      properties:
+        ID_EMPRESA: { type: integer, example: 10 }
+        NOME_EMPRESA: { type: string, example: "Restaurante Exemplo" }
+        ENDERECO: { type: string, example: "Av. Brasil, 100" }
+        CIDADE: { type: string, example: "Curitiba" }
+        UF: { type: string, example: "PR" }
+        CEP: { type: string, example: "80000-000" }
+        IMG_LOGO: { type: string, example: "/uploads/logo/10.png" }
+        IMG_LOGO_URL: { type: string, example: "https://api.dominio.com/uploads/logo/10.png" }
+
+    PerfilEmpresa:
+      type: object
+      properties:
+        ID_PERFIL: { type: integer, example: 1 }
+        NOME_PERFIL: { type: string, example: "ADM" }
+        NIVEL:
+          type: integer
+          description: 9=ADM; 5=STAF; 1=ANALYST (exemplo)
+
+    PermissaoUsuarioEmpresa:
+      type: object
+      properties:
+        idUsuario: { type: integer }
+        idEmpresa: { type: integer }
+        idPerfil: { type: integer }
+        nivel: { type: integer }
+
+    MePermissions:
+      type: object
+      properties:
+        idPerfil: { type: integer, example: 1 }
+        nomePerfil: { type: string, example: "ADM" }
+        nivel: { type: integer, example: 9 }
+        role:
+          type: string
+          enum: [ADM, STAF, ANALYST, CUSTOMER]
+          example: ADM
+
+    ConfiguracaoFila:
+      type: object
+      properties:
+        ID_CONF_FILA: { type: integer, example: 55 }
+        ID_EMPRESA: { type: integer, example: 10 }
+        NOME_FILA: { type: string, example: "Fila Principal" }
+        INI_VIG: { type: string, format: date, example: "2025-10-01" }
+        FIM_VIG: { type: string, format: date, nullable: true }
+        SITUACAO: { type: integer, example: 1 }
+        TOKEN_FILA: { type: string, example: "d122ed7b-35c9-41be-afd7-7b3d42" }
+        PER_LOC: { type: integer, example: 1 }
+        TOLERANCIA_MIN: { type: integer, example: 10 }
+        IMG_LOGO: { type: string, nullable: true }
+        IMG_BANNER: { type: string, nullable: true }
+        IMG_LOGO_URL: { type: string, nullable: true }
+        IMG_BANNER_URL: { type: string, nullable: true }
+
+    FilaDia:
+      type: object
+      properties:
+        ID_FILA: { type: integer, example: 777 }
+        ID_CONF_FILA: { type: integer, example: 55 }
+        DT_MOVTO: { type: string, format: date, example: "2025-10-17" }
+        SITUACAO: { type: integer, example: 1 }
+        BLOCK: { type: integer, example: 0 }
+
+    ClienteFila:
+      type: object
+      properties:
+        ID_CLIENTE_FILA: { type: integer, example: 1001 }
+        ID_FILA: { type: integer, example: 777 }
+        NOME: { type: string, example: "Beatriz Sakai" }
+        CPF: { type: string, nullable: true }
+        TELEFONE: { type: string, nullable: true }
+        QTD_PESSOAS: { type: integer, nullable: true }
+        STATUS:
+          type: string
+          enum: [AGUARDANDO, CHAMADO, CONFIRMADO, NAO_COMPARECEU, ATENDIDO, REMOVIDO]
+          example: AGUARDANDO
+        DT_ENTRA: { type: string, format: date-time }
+
+    JoinFilaInputPublic:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string, example: "Beatriz Sakai" }
+        cpf: { type: string, nullable: true }
+        telefone: { type: string, nullable: true }
+        qtdPessoas: { type: integer, nullable: true, example: 2 }
+        observacao: { type: string, nullable: true }
+        localizacao:
+          type: object
+          nullable: true
+          properties:
+            lat: { type: number, format: float }
+            lng: { type: number, format: float }
+
+    ToggleBlockInput:
+      type: object
+      required: [idConfFila, blocked]
+      properties:
+        idConfFila: { type: integer, example: 55 }
+        blocked: { type: boolean, example: true }
+
+    FilaBlockStatusInput:
+      type: object
+      required: [block]
+      properties:
+        block: { type: boolean, example: true }
+
+    FilaSituacaoInput:
+      type: object
+      required: [situacao]
+      properties:
+        situacao: { type: boolean, example: false }
+
+    AtualizarSituacaoClienteInput:
+      type: object
+      required: [situacao]
+      properties:
+        situacao:
+          type: string
+          enum: [AGUARDANDO, CHAMADO, CONFIRMADO, NAO_COMPARECEU, ATENDIDO, REMOVIDO]
+          example: CHAMADO
+
+    EnviarNotificacaoInput:
+      type: object
+      required: [tipo]
+      properties:
+        tipo:
+          type: string
+          example: chamada
+
+    UploadEmpresaPerfilResponse:
+      type: object
+      properties:
+        idEmpresa: { type: integer }
+        logo: { type: string, example: "/uploads/logo/10.png" }
+        url: { type: string, example: "https://api.dominio.com/uploads/logo/10.png" }
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ========= AUTH =========
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (público)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginInput" }
+      responses:
+        "200":
+          description: Token gerado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LoginOutput" }
+        "401":
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DefaultError" }
+
+  /usuarios:
+    post:
+      tags: [Auth]
+      summary: Criar usuário (público)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UsuarioCreate" }
+      responses:
+        "201":
+          description: Usuário criado
+        "400":
+          description: Erro de validação
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DefaultError" }
+
+  /esqueci-senha:
+    post:
+      tags: [Auth]
+      summary: Solicitar redefinição (público)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string }
+      responses:
+        "200": { description: E-mail enviado (se existir) }
+
+  /redefinir-senha:
+    post:
+      tags: [Auth]
+      summary: Redefinir senha (público, via token de e-mail)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, novaSenha]
+              properties:
+                token: { type: string }
+                novaSenha: { type: string }
+      responses:
+        "200": { description: Senha alterada }
+
+  # ======== ME / PERMISSIONS ========
+  /me/permissions:
+    get:
+      tags: [Usuários & Permissões]
+      summary: Papel do usuário logado na empresa (?empresaId=)
+      parameters:
+        - in: query
+          name: empresaId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Perfil do usuário na empresa
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MePermissions" }
+
+  # ======== EMPRESAS & USUÁRIOS ========
+  /empresas-do-usuario/{idUsuario}:
+    get:
+      tags: [Empresas]
+      summary: Empresas às quais o usuário tem acesso
+      parameters: [ { $ref: "#/components/parameters/IdUsuarioPath" } ]
+      responses:
+        "200":
+          description: Lista de empresas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Empresa" }
+
+  /detalhes/{idEmpresa}:
+    get:
+      tags: [Empresas]
+      summary: Detalhes da empresa
+      parameters: [ { $ref: "#/components/parameters/IdEmpresaPath" } ]
+      responses:
+        "200":
+          description: Empresa
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Empresa" }
+
+  /perfis/{idEmpresa}:
+    get:
+      tags: [Usuários & Permissões]
+      summary: Perfis (RBAC) da empresa
+      parameters: [ { $ref: "#/components/parameters/IdEmpresaPath" } ]
+      responses:
+        "200":
+          description: Perfis disponíveis
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PerfilEmpresa" }
+
+  /empresa/{idEmpresa}/usuarios:
+    get:
+      tags: [Usuários & Permissões]
+      summary: Listar usuários vinculados à empresa
+      parameters: [ { $ref: "#/components/parameters/IdEmpresaPath" } ]
+      responses:
+        "200":
+          description: Usuários vinculados
+    post:
+      tags: [Usuários & Permissões]
+      summary: Vincular usuário existente à empresa
+      parameters: [ { $ref: "#/components/parameters/IdEmpresaPath" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idUsuario, idPerfil]
+              properties:
+                idUsuario: { type: integer }
+                idPerfil: { type: integer }
+      responses:
+        "200": { description: Vínculo criado }
+
+  /empresa/{idEmpresa}/remover-usuario/{idUsuario}:
+    delete:
+      tags: [Usuários & Permissões]
+      summary: Remover vínculo do usuário com a empresa
+      parameters:
+        - $ref: "#/components/parameters/IdEmpresaPath"
+        - $ref: "#/components/parameters/IdUsuarioPath"
+      responses:
+        "200": { description: Vínculo removido }
+
+  /permissoes/{idEmpresa}/{idUsuario}:
+    put:
+      tags: [Usuários & Permissões]
+      summary: Atualizar papel/permissão do usuário (não permitir rebaixar ADM)
+      parameters:
+        - $ref: "#/components/parameters/IdEmpresaPath"
+        - $ref: "#/components/parameters/IdUsuarioPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idPerfil: { type: integer }
+                nivel: { type: integer }
+      responses:
+        "200": { description: Permissão atualizada }
+
+  # ======== CONFIGURAÇÃO DE FILA (BASE) ========
+  /configuracao-fila:
+    post:
+      tags: [Configuração de Fila]
+      summary: Criar configuração de fila (gera TOKEN_FILA)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConfiguracaoFila" }
+      responses:
+        "201":
+          description: Configuração criada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConfiguracaoFila" }
+
+  /configuracao-fila/{id}:
+    get:
+      tags: [Configuração de Fila]
+      summary: Obter configuração por ID
+      parameters: [ { $ref: "#/components/parameters/IdConfFilaPath" } ]
+      responses:
+        "200":
+          description: Configuração
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConfiguracaoFila" }
+        "404": { description: Não encontrado }
+    put:
+      tags: [Configuração de Fila]
+      summary: Atualizar configuração por ID
+      parameters: [ { $ref: "#/components/parameters/IdConfFilaPath" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConfiguracaoFila" }
+      responses:
+        "200": { description: Atualizado }
+
+  /filas:
+    get:
+      tags: [Configuração de Fila]
+      summary: Listar configurações de fila da empresa do usuário
+      responses:
+        "200":
+          description: Lista de configurações
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ConfiguracaoFila" }
+
+  /filas/contar/{idEmpresa}:
+    get:
+      tags: [Configuração de Fila]
+      summary: Contagem de configurações por empresa
+      parameters: [ { $ref: "#/components/parameters/IdEmpresaPath" } ]
+      responses:
+        "200":
+          description: Contagem
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+
+  /filas/{idEmpresa}:
+    get:
+      tags: [Configuração de Fila]
+      summary: Configurações da empresa específica
+      parameters: [ { $ref: "#/components/parameters/IdEmpresaPath" } ]
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ConfiguracaoFila" }
+
+  # ======== PÚBLICO (TOKEN_FILA) ========
+  /public/info/{token}:
+    get:
+      tags: [Público]
+      summary: Dados públicos da fila (nome, imagens normalizadas, regras)
+      security: []
+      parameters: [ { $ref: "#/components/parameters/TokenFilaPath" } ]
+      responses:
+        "200": { description: Informações públicas }
+
+  /public/status/{token}:
+    get:
+      tags: [Público]
+      summary: Status efetivo (vigência + ativa hoje + não bloqueada)
+      security: []
+      parameters: [ { $ref: "#/components/parameters/TokenFilaPath" } ]
+      responses:
+        "200":
+          description: Status da fila do dia
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FilaDia" }
+
+  /public/join/{token}:
+    post:
+      tags: [Público]
+      summary: Entrar na fila pública
+      security: []
+      parameters: [ { $ref: "#/components/parameters/TokenFilaPath" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/JoinFilaInputPublic" }
+      responses:
+        "201":
+          description: Cliente inserido na fila
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClienteFila" }
+        "409":
+          description: CPF já possui entrada hoje
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DefaultError" }
+
+  /public/leave/{token}:
+    post:
+      tags: [Público]
+      summary: Desistir/remover entrada na fila pública
+      security: []
+      parameters: [ { $ref: "#/components/parameters/TokenFilaPath" } ]
+      responses:
+        "200": { description: Removido }
+
+  /public/confirm/{token}:
+    post:
+      tags: [Público]
+      summary: Confirmar presença após ser chamado (respeita tolerância)
+      security: []
+      parameters: [ { $ref: "#/components/parameters/TokenFilaPath" } ]
+      responses:
+        "200": { description: Confirmado }
+
+  # ======== FILA DO DIA (OPERAÇÃO) ========
+  /filas/status:
+    get:
+      tags: [Fila do Dia]
+      summary: Status consolidado por configuração (?idConfFila=)
+      parameters:
+        - in: query
+          name: idConfFila
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FilaDia" }
+
+  /filas/toggle-block:
+    post:
+      tags: [Fila do Dia]
+      summary: Bloquear/Desbloquear por configuração (garante fila do dia)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ToggleBlockInput" }
+      responses:
+        "200": { description: Atualizado }
+
+  /filas/{id_fila}/block:
+    put:
+      tags: [Fila do Dia]
+      summary: Alterar BLOCK direto na fila do dia
+      parameters: [ { $ref: "#/components/parameters/IdFilaPath" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FilaBlockStatusInput" }
+      responses:
+        "200": { description: Atualizado }
+
+  /filas/{id_fila}/status:
+    put:
+      tags: [Fila do Dia]
+      summary: Alterar SITUACAO direto na fila do dia
+      parameters: [ { $ref: "#/components/parameters/IdFilaPath" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FilaSituacaoInput" }
+      responses:
+        "200": { description: Atualizado }
+
+  /fila/{idEmpresa}/{dtMovto}/{id_fila}/clientes:
+    get:
+      tags: [Fila do Dia]
+      summary: Listar clientes da fila do dia
+      parameters:
+        - $ref: "#/components/parameters/IdEmpresaPath"
+        - $ref: "#/components/parameters/DtMovtoPath"
+        - $ref: "#/components/parameters/IdFilaPath"
+      responses:
+        "200":
+          description: Clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ClienteFila" }
+
+  /fila/{idEmpresa}/{dtMovto}/{id_fila}/adicionar-cliente:
+    post:
+      tags: [Fila do Dia]
+      summary: Inserir cliente manualmente
+      parameters:
+        - $ref: "#/components/parameters/IdEmpresaPath"
+        - $ref: "#/components/parameters/DtMovtoPath"
+        - $ref: "#/components/parameters/IdFilaPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome]
+              properties:
+                nome: { type: string }
+                cpf: { type: string, nullable: true }
+                telefone: { type: string, nullable: true }
+                qtdPessoas: { type: integer, nullable: true }
+                observacao: { type: string, nullable: true }
+      responses:
+        "201":
+          description: Cliente inserido
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClienteFila" }
+
+  /fila/{idEmpresa}/{dtMovto}/{id_fila}/cliente/{idCliente}/atualizar-situacao:
+    put:
+      tags: [Fila do Dia]
+      summary: Atualizar situação do cliente (emite eventos)
+      parameters:
+        - $ref: "#/components/parameters/IdEmpresaPath"
+        - $ref: "#/components/parameters/DtMovtoPath"
+        - $ref: "#/components/parameters/IdFilaPath"
+        - name: idCliente
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AtualizarSituacaoClienteInput" }
+      responses:
+        "200": { description: Situação atualizada }
+
+  /fila/{idEmpresa}/{dtMovto}/{id_fila}/cliente/{idCliente}/enviar-notificacao:
+    post:
+      tags: [Fila do Dia]
+      summary: Enviar notificação (e agendar ausência quando aplicável)
+      parameters:
+        - $ref: "#/components/parameters/IdEmpresaPath"
+        - $ref: "#/components/parameters/DtMovtoPath"
+        - $ref: "#/components/parameters/IdFilaPath"
+        - name: idCliente
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EnviarNotificacaoInput" }
+      responses:
+        "200": { description: Notificação enviada }
+
+  # ======== DASHBOARD ========
+  /dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: KPIs e séries do painel (?idEmpresa=)
+      parameters:
+        - in: query
+          name: idEmpresa
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: KPIs e séries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kpis:
+                    type: object
+                    additionalProperties: true
+                  filas:
+                    type: array
+                    items:
+                      type: object
+                  joinsLastHours:
+                    type: array
+                    items:
+                      type: object
+
+  # ======== RELATÓRIOS ========
+  /relatorios/filas:
+    get:
+      tags: [Relatórios]
+      summary: Listar filas da empresa do usuário
+      responses:
+        "200":
+          description: Filas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ConfiguracaoFila" }
+
+  /relatorios/tempo-espera/{id_fila}:
+    get:
+      tags: [Relatórios]
+      summary: Tempo médio de espera por data
+      parameters: [ { $ref: "#/components/parameters/IdFilaPath" } ]
+      responses:
+        "200": { description: Série de tempo de espera }
+
+  /relatorios/desistencias/{id_fila}:
+    get:
+      tags: [Relatórios]
+      summary: Desistências por data
+      parameters: [ { $ref: "#/components/parameters/IdFilaPath" } ]
+      responses:
+        "200": { description: Série de desistências }
+
+  /relatorios/avaliacoes/{id_fila}:
+    get:
+      tags: [Relatórios]
+      summary: (Se ativo) Avaliações por data
+      parameters: [ { $ref: "#/components/parameters/IdFilaPath" } ]
+      responses:
+        "200": { description: Série de avaliações }
+
+  # ======== UPLOADS ========
+  /empresas/{idEmpresa}/perfil:
+    post:
+      tags: [Uploads]
+      summary: Upload de logo/perfil da empresa (multipart)
+      parameters: [ { $ref: "#/components/parameters/IdEmpresaPath" } ]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                img_perfil:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Upload OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadEmpresaPerfilResponse" }
+
+  /configuracoes/{id}/imagens:
+    post:
+      tags: [Uploads]
+      summary: Upload de logo e banner da configuração
+      parameters: [ { $ref: "#/components/parameters/IdConfFilaPath" } ]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                img_logo:
+                  type: string
+                  format: binary
+                img_banner:
+                  type: string
+                  format: binary
+      responses:
+        "200": { description: Upload OK }
+
+  /usuarios/{idUsuario}/foto:
+    post:
+      tags: [Uploads]
+      summary: Upload de foto do usuário
+      parameters: [ { $ref: "#/components/parameters/IdUsuarioPath" } ]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                foto:
+                  type: string
+                  format: binary
+      responses:
+        "200": { description: Upload OK }
