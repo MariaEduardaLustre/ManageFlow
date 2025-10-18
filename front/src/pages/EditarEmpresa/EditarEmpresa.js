@@ -4,7 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import Menu from '../../components/Menu/Menu';
 import { Form, Button, Container, Card, Alert, Modal } from 'react-bootstrap';
-import { FaBuilding, FaIdCard, FaEnvelope, FaHome, FaHashtag, FaStar, FaQrcode, FaLink, FaCopy, FaDownload, FaTimes } from 'react-icons/fa';
+// NOVO: Importando o ícone de seta para a esquerda
+import { FaArrowLeft, FaBuilding, FaIdCard, FaEnvelope, FaHome, FaHashtag, FaStar, FaQrcode, FaLink, FaCopy, FaDownload, FaTimes } from 'react-icons/fa';
 import './EditarEmpresa.css';
 
 const validarCNPJ = (cnpj) => {
@@ -36,7 +37,6 @@ const validarCNPJ = (cnpj) => {
     return true;
 };
 
-// ALTERADO: A página agora recebe 'onLogout' como uma propriedade
 const EditarEmpresa = ({ onLogout }) => {
     const { idEmpresa } = useParams();
     const navigate = useNavigate();
@@ -149,7 +149,16 @@ const EditarEmpresa = ({ onLogout }) => {
             <div className="editar-empresa-container">
                 <Menu onLogout={onLogout} />
                 <Container as="main" className="editar-empresa-main-content">
-                    <h1 className="mb-4">Dados da Empresa</h1>
+                    
+                    {/* ALTERADO: Título e botão agora estão dentro de um cabeçalho */}
+                    <div className="editar-empresa-header">
+                        <h1 className="mb-0">Dados da Empresa</h1>
+                        <Button variant="outline-secondary" className="btn-voltar" onClick={() => navigate('/home')}>
+                            <FaArrowLeft />
+                            Voltar para a Home
+                        </Button>
+                    </div>
+
                     <Card>
                         <Card.Body>
                             {!isAdmin && (<Alert variant="info">Você está em modo de visualização.</Alert>)}

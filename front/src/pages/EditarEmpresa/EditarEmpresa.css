@@ -1,7 +1,36 @@
 /* src/pages/EditarEmpresa/EditarEmpresa.css */
 .editar-empresa-container { display: flex; height: 100vh; background-color: var(--background-primary); }
 .editar-empresa-main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
-.editar-empresa-main-content h1 { font-size: 1.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+
+/* ======================================================= */
+/* ✨ NOVO: Estilos para o cabeçalho da página ✨ */
+/* ======================================================= */
+.editar-empresa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.editar-empresa-header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0; /* Remove a margem padrão do h1 */
+}
+
+.btn-voltar {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espaço entre o ícone e o texto */
+    font-weight: 500;
+}
+/* ======================================================= */
+
+
+/* Estilo do Card principal, seguindo o padrão do sistema */
 .card { background-color: var(--background-secondary) !important; border: 1px solid var(--border-color) !important; border-radius: 12px !important; box-shadow: none !important; padding: 15px; }
 .form-row { display: flex; gap: 15px; align-items: flex-start; }
 .form-group-endereco { flex: 3; }
@@ -24,6 +53,8 @@
 .qr-code-image { max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; }
 @media (max-width: 768px) {
     .editar-empresa-main-content { padding: 20px; }
-    .editar-empresa-main-content h1 { font-size: 1.5rem; margin-bottom: 20px; }
+    /* ATUALIZADO: Faz o cabeçalho se adaptar a telas menores */
+    .editar-empresa-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .editar-empresa-header h1 { font-size: 1.5rem; }
     .form-row { flex-direction: column; gap: 0; }
 }
