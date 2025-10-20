@@ -50,7 +50,7 @@
 
 .mf-rating-bar-row {
   display: flex;
-  align-items: center;
+  align-items: center; 
   gap: 12px;
   margin-bottom: 8px;
 }
@@ -109,4 +109,87 @@
   font-style: italic;
   color: var(--mf-text);
   word-break: break-word; 
+}
+
+
+/* ================================== */
+/* ===== Estilos para Gráficos (Atualizado) ===== */
+/* ================================== */
+
+/* 1. Estilo do container do botão de toggle REMOVIDO */
+/* .mf-graficos-toggle-container { ... } */
+
+
+/* 2. Container dos gráficos AGORA TEM A LINHA DIVISÓRIA */
+.mf-avaliacoes-graficos-container {
+  margin-top: 24px; 
+  padding-top: 24px; /* Adicionado de volta */
+  border-top: 1px solid var(--mf-border); /* Adicionado de volta */
+}
+
+
+/* Título da seção (reutilizado do Dashboard.css) */
+.mf-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+.mf-subsection-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 12px 0; /* Ajustado */
+  color: var(--mf-muted);
+}
+
+.mf-avaliacoes-graficos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.mf-grafico-item {
+  /* Os gráficos já são responsivos pelo container */
+}
+
+/* Em telas menores, gráficos ficam em coluna única */
+@media (max-width: 900px) {
+  .mf-avaliacoes-graficos-grid {
+    grid-template-columns: 1fr;
+    gap: 32px; /* Aumenta o espaço na vertical */
+  }
+}
+
+/* Tooltip (reutilizado do Dashboard.css) */
+.mf-tooltip-label {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.mf-tooltip-intro {
+  margin: 0;
+}
+
+/* ================================== */
+/* === Estilos Botões Comentários (Inalterado) === */
+/* ================================== */
+.mf-comentarios-botoes {
+  margin-top: 24px; 
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap; 
+}
+
+/* ================================== */
+/* === NOVO: Estilo Botão Header === */
+/* ================================== */
+
+/* O .mf-dash-header (do Dashboard.css) já é flex e justify-content: space-between */
+/* Precisamos apenas alinhar o botão, já que o header usa 'align-items: flex-end' */
+.mf-header-actions {
+  padding-bottom: 4px; /* Alinha o botão com a base do título */
+}
+
+.mf-header-button {
+  /* Opcional: reduzir um pouco o botão se parecer muito grande no header */
+  /* font-size: 14px; */
+  /* padding: 6px 12px; */
 }

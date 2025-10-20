@@ -203,5 +203,41 @@ router.get('/comentarios/:idEmpresa', async (req, res) => {
     }
 });
 
+// =======================================================
+// === NOVA ROTA PARA GRÁFICOS DE TENDÊNCIA ===
+// =======================================================
+router.get('/tendencia/:idEmpresa', async (req, res) => {
+    const { idEmpresa } = req.params;
+
+    try {
+        // Busca dados dos últimos 30 dias
+        const [tendencia] = await db.query(
+            `SELECT
+                DATE(DT_CRIACAO) AS data,
+                COUNT(*) AS contagem,
+                AVG(NOTA) AS mediaNota
+            FROM avaliacoes
+            WHERE ID_EMPRESA = ?
+              AND DT_CRIACAO >= CURDATE() - INTERVAL 30 DAY
+            GROUP BY DATE(DT_CRIACAO)
+            ORDER BY data ASC;`,
+            [idEmpresa]
+        );
+
+        // Formata os dados para o gráfico
+        const dadosFormatados = tendencia.map(item => ({
+            data: item.data, // Envia a data SQL 'YYYY-MM-DD'
+            contagem: Number(item.contagem),
+            mediaNota: Number(Number(item.mediaNota).toFixed(1)) // Arredonda a média
+        }));
+
+        res.json(dadosFormatados);
+
+    } catch (error) {
+        console.error('Erro ao buscar tendência de avaliações:', error);
+        res.status(500).json({ error: 'Erro interno no servidor.' });
+    }
+});
+
 
 module.exports = router;
