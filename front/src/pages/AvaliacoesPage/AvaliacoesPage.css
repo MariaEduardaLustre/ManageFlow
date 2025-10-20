@@ -1,0 +1,112 @@
+/* ================================== */
+/* ===== Estilos para Avaliações ===== */
+/* ================================== */
+
+/* Layout em Grid para o dashboard de avaliações */
+.mf-avaliacoes-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr; /* Coluna fixa à esquerda, flexível à direita */
+  gap: 24px;
+}
+
+/* Em telas menores, volta para coluna única */
+@media (max-width: 900px) {
+  .mf-avaliacoes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Coluna da Esquerda (Stats) */
+.mf-avaliacoes-col-stats .mf-stats {
+  /* O StatCard dentro da coluna de stats */
+  grid-template-columns: 1fr; /* Força o StatCard a ocupar 1 coluna */
+  margin-bottom: 16px;
+}
+.mf-avaliacoes-col-stats .mf-subsection-title {
+  margin-top: 16px; /* Título "Distribuição" */
+}
+
+/* Coluna da Direita (Comentários) */
+.mf-avaliacoes-col-comentarios {
+  min-width: 0; /* Ajuda o flex/grid a não estourar a tela */
+}
+
+/* Container para os filtros 'pill' */
+.mf-avaliacoes-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  margin-top: 8px;
+}
+
+/* (O estilo .mf-pill já existe no Dashboard.css e será reutilizado) */
+
+
+/* Ajustes nos estilos de comentários */
+.mf-avaliacoes-distribuicao {
+  margin-top: 16px;
+}
+
+.mf-rating-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.mf-rating-bar-row span:first-child {
+  width: 80px;
+  color: var(--mf-muted);
+  font-size: 13px;
+}
+.mf-rating-bar-row span:last-child {
+  width: 40px;
+  text-align: right;
+  font-weight: 600;
+}
+.mf-rating-bar {
+  flex: 1;
+  height: 10px;
+}
+.mf-rating-bar .progress-bar {
+  background-color: var(--mf-warn); 
+}
+
+
+.mf-avaliacoes-comentarios {
+  margin-top: 24px;
+}
+.mf-comentarios-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mf-comentario-card {
+  background: var(--mf-bg);
+  border: 1px solid var(--mf-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.mf-comentario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.mf-rating-stars {
+  display: flex;
+  gap: 2px;
+}
+.mf-comentario-data {
+  font-size: 12px;
+  color: var(--mf-muted);
+  white-space: nowrap;
+}
+.mf-comentario-texto {
+  margin: 0;
+  font-style: italic;
+  color: var(--mf-text);
+  word-break: break-word; 
+}

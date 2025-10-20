@@ -29,6 +29,9 @@ import FilaChamado from './pages/FilaChamado';
 import EditarEmpresa from './pages/EditarEmpresa/EditarEmpresa';
 import AvaliacaoEmpresaPage from './pages/AvaliacaoEmpresaPage/AvaliacaoEmpresaPage';
 
+// <-- ADICIONADO: Import da nova página de avaliações
+import AvaliacoesPage from './pages/AvaliacoesPage/AvaliacoesPage'; // Ajuste o caminho se necessário
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 
@@ -71,6 +74,10 @@ function App() {
                 <Route path="/home" element={<Home onLogout={handleLogout} />} />
                 <Route path="/empresa/editar/:idEmpresa" element={<EditarEmpresa onLogout={handleLogout} />} />
                 <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />} />
+                
+                {/* <-- ADICIONADO: Rota para a nova página de avaliações */}
+                <Route path="/dashboard/avaliacoes" element={<AvaliacoesPage onLogout={handleLogout} />} />
+
                 <Route path="/filas-cadastradas" element={<FilasCadastradas onLogout={handleLogout} />} />
                 <Route path="/filas" element={<FilaLista onLogout={handleLogout} />} />
                 <Route path="/relatorio" element={<Relatorio onLogout={handleLogout} />} />
