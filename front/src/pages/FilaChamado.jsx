@@ -19,6 +19,20 @@ const API_BASE =
 
 const LS_TICKET = "mf.queueEntry";
 
+function makeAvaliacaoToken(idEmpresa) {
+  return `AV-${idEmpresa}-TOKEN`;
+}
+
+function toISODate(date) {
+  // retorna YYYY-MM-DD no fuso do navegador
+  const d = new Date(date);
+  const pad = (n) => String(n).padStart(2, "0");
+  const y = d.getFullYear();
+  const m = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  return `${y}-${m}-${dd}`;
+}
+
 export default function FilaChamado() {
   const { token } = useParams();
   const navigate = useNavigate();
@@ -67,10 +81,39 @@ export default function FilaChamado() {
         setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [token]);
 
-  // socket opcional — se virar “atendido” ou “removido”, volta à entrada
+  // monta URL de avaliação com token + querystring do cliente (se disponível)
+  const buildAvaliacaoUrl = () => {
+    const t = ticketRef.current || {};
+    const idEmpresa = t.idEmpresa || t.ID_EMPRESA;
+    const idCliente = t.clienteFilaId || t.ID_CLIENTE;
+    const idFila = t.idFila || t.filaId || t.ID_FILA;
+    const dtMovto =
+      t.dtMovto || t.dataMovimento || t.DT_MOVTO || toISODate(new Date());
+
+    if (!idEmpresa) {
+      // fallback: só vai sem QS (a página ainda funciona, só não saúda o cliente)
+      return `/avaliar/${makeAvaliacaoToken(0)}`;
+    }
+
+    const tokenAvaliacao = makeAvaliacaoToken(idEmpresa);
+
+    // monta QS apenas se tivermos todos os campos (para puxar info do cliente)
+    const haveQS = idCliente && idFila && dtMovto;
+    const qs = haveQS
+      ? `?dt=${encodeURIComponent(dtMovto)}&idFila=${encodeURIComponent(
+          idFila
+        )}&idCliente=${encodeURIComponent(idCliente)}`
+      : "";
+
+    return `/avaliar/${tokenAvaliacao}${qs}`;
+  };
+
+  // socket — se virar “atendido”, redireciona para avaliação; removido volta pra entrada
   useEffect(() => {
     const SOCKET_URL =
       (typeof import.meta !== "undefined" &&
@@ -93,23 +136,40 @@ export default function FilaChamado() {
     socketRef.current.on("cliente_atualizado", (p) => {
       const t = ticketRef.current;
       if (!t) return;
-      // se o cliente foi finalizado/removido por staff, manda pra entrada
-      const sameClient = p?.clienteFilaId && t.clienteFilaId && p.clienteFilaId === t.clienteFilaId;
-      if (sameClient && ["atendido","removido","nao_compareceu","desistiu"].includes(p?.acao)) {
+      const sameClient =
+        p?.clienteFilaId && t.clienteFilaId && p.clienteFilaId === t.clienteFilaId;
+
+      if (!sameClient) return;
+
+      // Se o staff marcou como 'atendido' (apresentado), abre a avaliação
+      if (p?.acao === "atendido") {
+        const url = buildAvaliacaoUrl();
+        // limpa o ticket (se esse for o fluxo desejado)
+        localStorage.removeItem(LS_TICKET);
+        navigate(url);
+        return;
+      }
+
+      // Se removido/não compareceu/desistiu → volta pra entrada
+      if (["removido", "nao_compareceu", "desistiu"].includes(p?.acao)) {
         localStorage.removeItem(LS_TICKET);
         navigate(`/entrar-fila/${token}`);
       }
     });
 
     return () => {
-      if (socketRef.current) try { socketRef.current.disconnect(); } catch {}
+      if (socketRef.current)
+        try {
+          socketRef.current.disconnect();
+        } catch {}
     };
   }, [token, navigate]);
 
   const confirmarPresenca = async () => {
     if (!ticketRef.current?.clienteFilaId) return;
     try {
-      setErro(""); setOkMsg("");
+      setErro("");
+      setOkMsg("");
       const base = API_BASE.replace(/\/$/, "");
       const resp = await fetch(`${base}/configuracao/public/confirm/${token}`, {
         method: "POST",
@@ -128,7 +188,8 @@ export default function FilaChamado() {
     if (!ticketRef.current?.clienteFilaId) return;
     if (!window.confirm("Tem certeza que deseja sair da fila?")) return;
     try {
-      setErro(""); setOkMsg("");
+      setErro("");
+      setOkMsg("");
       const base = API_BASE.replace(/\/$/, "");
       const resp = await fetch(`${base}/configuracao/public/leave/${token}`, {
         method: "POST",
@@ -142,6 +203,11 @@ export default function FilaChamado() {
     } catch (e) {
       setErro(e.message || "Não foi possível remover você da fila.");
     }
+  };
+
+  const irAvaliar = () => {
+    const url = buildAvaliacaoUrl();
+    navigate(url);
   };
 
   const bannerUrl = cfg?.img_banner?.url || "";
@@ -183,9 +249,11 @@ export default function FilaChamado() {
             <button className="mf-called__btn" onClick={confirmarPresenca}>
               Já estou no local
             </button>
-            <Link className="mf-called__ghost" to={`/fila/${token}/status`}>
-              Ver minha posição
-            </Link>
+
+            {/* TROCA: "Ver minha posição" -> "Avaliar atendimento" */}
+            <button className="mf-called__ghost" onClick={irAvaliar}>
+              Avaliar atendimento
+            </button>
           </div>
 
           <button

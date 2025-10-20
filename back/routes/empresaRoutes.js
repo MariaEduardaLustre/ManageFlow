@@ -1,4 +1,3 @@
-// routes/empresaRoutes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/connection');
@@ -7,6 +6,46 @@ const {
   scheduleTimeoutForAbsence,
   sendInitialNotification
 } = require('../services/notificationService');
+
+// >>>>>>>>>>> NOVO: deps para upload
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+
+// helper para URL pública (não salvar localhost no banco)
+function makePublicBase(req) {
+  return (process.env.PUBLIC_API_BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
+}
+function makePublicImageUrl(rel, req) {
+  if (!rel) return null;
+  if (/^https?:\/\//i.test(rel)) return rel;
+  const base = makePublicBase(req);
+  return `${base}${rel.startsWith('/') ? '' : '/'}${rel}`;
+}
+
+// garantir pasta de upload
+const logosDir = path.join(__dirname, '..', 'uploads', 'logos');
+try { fs.mkdirSync(logosDir, { recursive: true }); } catch {}
+
+// storage do multer
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, logosDir),
+  filename: (_req, file, cb) => {
+    const ext = (path.extname(file.originalname) || '').toLowerCase();
+    const name = `logo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${ext}`;
+    cb(null, name);
+  }
+});
+const fileFilter = (_req, file, cb) => {
+  const ok = /image\/(png|jpeg|jpg|webp|gif)/i.test(file.mimetype);
+  if (!ok) return cb(new Error('TIPO_DE_IMAGEM_INVALIDO'));
+  cb(null, true);
+};
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter
+});
 
 // Usamos `io = null` para tornar o `io` opcional e evitar erros se não for passado.
 module.exports = (io = null) => {
@@ -109,6 +148,60 @@ module.exports = (io = null) => {
   });
 
   // =======================================================================
+  // == NOVO: Upload da LOGO da empresa (multipart)
+  //    POST /api/empresas/:idEmpresa/logo   (campo: 'logo')
+  // =======================================================================
+  router.post('/:idEmpresa/logo', upload.single('logo'), async (req, res) => {
+    try {
+      const idEmpresa = Number(req.params.idEmpresa);
+      if (!Number.isFinite(idEmpresa) || idEmpresa <= 0) {
+        // se subiu arquivo, remove para não ficar lixo
+        if (req.file) try { fs.unlinkSync(req.file.path); } catch {}
+        return res.status(400).json({ error: 'ID_EMPRESA_INVALIDO' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ error: 'ARQUIVO_OBRIGATORIO' });
+      }
+
+      // caminho relativo que vai pro banco
+      const relPath = `/uploads/logos/${req.file.filename}`;
+
+      // busca logo atual pra tentar limpar arquivo antigo
+      const [[row]] = await db.query(
+        `SELECT LOGO FROM empresa WHERE ID_EMPRESA = ? LIMIT 1`,
+        [idEmpresa]
+      );
+      if (!row) {
+        // empresa não existe -> remove arquivo recém salvo e erra
+        try { fs.unlinkSync(req.file.path); } catch {}
+        return res.status(404).json({ error: 'EMPRESA_NAO_ENCONTRADA' });
+      }
+
+      // atualiza no banco (sempre caminho relativo)
+      await db.query(
+        `UPDATE empresa SET LOGO = ? WHERE ID_EMPRESA = ?`,
+        [relPath, idEmpresa]
+      );
+
+      // remove logo antiga se for um caminho dentro de /uploads/logos/
+      const old = row.LOGO;
+      if (old && typeof old === 'string' && old.startsWith('/uploads/logos/')) {
+        const oldAbs = path.join(__dirname, '..', old);
+        if (fs.existsSync(oldAbs)) {
+          try { fs.unlinkSync(oldAbs); } catch {}
+        }
+      }
+
+      // responde com relativo + URL pública
+      const logoUrl = makePublicImageUrl(relPath, req);
+      return res.json({ logo: relPath, logoUrl });
+    } catch (err) {
+      console.error('[POST /empresas/:id/logo] erro:', err);
+      return res.status(500).json({ error: 'ERRO_INTERNO', detail: err.message });
+    }
+  });
+
+  // =======================================================================
   // == ROTA CORRIGIDA
   // =======================================================================
   router.put('/detalhes/:idEmpresa', async (req, res) => {
@@ -127,13 +220,11 @@ module.exports = (io = null) => {
       LOGO
     } = req.body;
 
-    // ALTERADO: Verificação agora usa as variáveis corretas
     if (!NOME_EMPRESA || !CNPJ) {
       return res.status(400).json({ error: 'Nome da Empresa e CNPJ são obrigatórios.' });
     }
 
     try {
-      // ALTERADO: Parâmetros do query agora usam as variáveis corretas
       const [result] = await db.query(
         `UPDATE empresa
          SET NOME_EMPRESA = ?, CNPJ = ?, EMAIL = ?, DDI = ?, DDD = ?, TELEFONE = ?, ENDERECO = ?, NUMERO = ?, LOGO = ?
@@ -152,7 +243,6 @@ module.exports = (io = null) => {
       return res.status(500).json({ error: 'Erro interno ao atualizar os dados da empresa.' });
     }
   });
-
 
   // ... (Restante do arquivo, sem alterações) ...
   router.get('/perfis/:idEmpresa', async (req, res) => {
@@ -425,7 +515,8 @@ module.exports = (io = null) => {
         const [tempos] = await db.query(
             `SELECT HOUR(DT_ENTRA) AS hora, AVG(TIMESTAMPDIFF(MINUTE, DT_ENTRA, DT_APRE)) AS media_espera_minutos
              FROM clientesfila
-             WHERE ID_EMPRESA = ? AND ID_FILA = ? AND DT_ENTRA IS NOT NULL AND DT_APRE IS NOT NULL AND SITUACAO = 1
+             WHERE ID_EMPRESA = ? AND ID_FILA = ? AND DT_ENTRA IS NOT NULL E
+               ND DT_APRE IS NOT NULL AND SITUACAO = 1
              GROUP BY hora ORDER BY hora`,
             [idEmpresa, idFila]
         );

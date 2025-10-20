@@ -1,9 +1,9 @@
-// /back/src/routes/uploadRoutes.js
 const express = require('express');
 const router = express.Router();
 
 const {
   empresaPerfilSingle,
+  empresaLogoSingle,     // se você também usar em outro lugar
   configuracaoFields,
   usuarioPerfilSingle
 } = require('../middlewares/s3Upload');
@@ -12,38 +12,35 @@ const empresaController = require('../controllers/empresaController');
 const configuracaoFilaController = require('../controllers/configuracaoController');
 const usuarioController = require('../controllers/usuarioController');
 
-// PERFIL da EMPRESA (empresa.LOGO)
+// PERFIL da EMPRESA (foto de perfil exibida no perfil público)
+// campo: img_perfil
 router.post(
   '/empresas/:id/perfil',
-  // auth?,
+  // auth? (adicione seu middleware de autenticação aqui se necessário)
   empresaPerfilSingle,
   empresaController.uploadPerfilEmpresa
 );
-router.get(
-  '/empresas/:id',
-  // auth?,
-  empresaController.getEmpresa
-);
 
-// LOGO/BANNER da CONFIGURAÇÃO DE FILA (configuracaofila.IMG_LOGO / IMG_BANNER em JSON)
+// (opcional) obter empresa normalizada (útil p/ debug)
+router.get('/empresas/:id', empresaController.getEmpresa);
+
+// LOGO/BANNER da CONFIGURAÇÃO DE FILA
 router.post(
   '/configuracoes/:id/imagens',
-  // auth?,
   configuracaoFields,
   configuracaoFilaController.uploadImagensConfiguracao
 );
 router.get(
   '/configuracoes/:id',
-  // auth?,
   configuracaoFilaController.getConfiguracao
 );
 
-// FOTO de PERFIL do USUÁRIO (usuario.img_perfil)
+// FOTO de PERFIL do USUÁRIO
 router.post(
   '/usuarios/:id/foto',
-  // auth?,
   usuarioPerfilSingle,
   usuarioController.uploadFotoPerfil
 );
 router.get('/usuarios/:id', usuarioController.getUsuarioPorId);
+
 module.exports = router;

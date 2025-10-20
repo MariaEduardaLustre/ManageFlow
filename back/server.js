@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.0.57:3000',
+  'http://192.168.0.31:3000',
   process.env.PUBLIC_FRONT_BASE_URL,
   process.env.FRONT_ORIGIN
 ].filter(Boolean);
@@ -44,6 +44,8 @@ const dashboardRoutes = require('./routes/dashboardRoutes')(io);
 app.use('/api/dashboard', dashboardRoutes);
 const avaliacaoRoutes = require('./routes/avaliacaoRoutes'); 
 app.use('/api/avaliacoes', avaliacaoRoutes);
+const publicEmpresaRoutes = require('./routes/publicEmpresaRoutes');
+app.use('/api/public', publicEmpresaRoutes);
 
 // Rotas protegidas
 const usuarioRoutes = require('./routes/usuarioRoutes');

@@ -810,27 +810,7 @@ paths:
         "200": { description: Série de avaliações }
 
   # ======== UPLOADS ========
-  /empresas/{idEmpresa}/perfil:
-    post:
-      tags: [Uploads]
-      summary: Upload de logo/perfil da empresa (multipart)
-      parameters: [ { $ref: "#/components/parameters/IdEmpresaPath" } ]
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                img_perfil:
-                  type: string
-                  format: binary
-      responses:
-        "200":
-          description: Upload OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/UploadEmpresaPerfilResponse" }
+  
 
   /configuracoes/{id}/imagens:
     post:
