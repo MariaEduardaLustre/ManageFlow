@@ -1,4 +1,4 @@
-// routes/empresaRoutes.js
+// back/src/routes/empresaRoutes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/connection');
@@ -7,6 +7,9 @@ const {
   scheduleTimeoutForAbsence,
   sendInitialNotification
 } = require('../services/notificationService');
+
+// ✅ igual ao Perfil de Usuário: centraliza a normalização da URL
+const { makePublicImageUrl } = require('../utils/image');
 
 // Usamos `io = null` para tornar o `io` opcional e evitar erros se não for passado.
 module.exports = (io = null) => {
@@ -90,18 +93,34 @@ module.exports = (io = null) => {
     }
   });
 
+  // =========================
+  // ✅ ROTA AJUSTADA (igual PerfilUsuario: retorna URL absoluta)
+  // =========================
   router.get('/detalhes/:idEmpresa', async (req, res) => {
     const { idEmpresa } = req.params;
     try {
-      const [empresa] = await db.query(
+      const [rows] = await db.query(
         `SELECT ID_EMPRESA, NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO
-         FROM empresa WHERE ID_EMPRESA = ?`,
+         FROM empresa WHERE ID_EMPRESA = ? LIMIT 1`,
         [idEmpresa]
       );
-      if (empresa.length === 0) {
+      if (rows.length === 0) {
         return res.status(404).json({ error: 'Empresa não encontrada.' });
       }
-      return res.json(empresa[0]);
+
+      const e = rows[0];
+      // Gera URL pública (S3/CloudFront ou fallback local), igual ao PerfilUsuario
+      const publicUrl = makePublicImageUrl(e.LOGO || '');
+
+      // Mantém os campos originais + adiciona campos usados no front (como no PerfilUsuario)
+      return res.json({
+        ...e,
+        // novos/compatíveis com PerfilUsuario
+        img_perfil: publicUrl,
+        img_perfil_url: publicUrl,
+        // compat extra que o EditarEmpresa já tenta:
+        LOGO_URL: publicUrl
+      });
     } catch (err) {
       console.error('Erro ao buscar detalhes da empresa:', err);
       return res.status(500).json({ error: 'Erro interno ao buscar detalhes da empresa.' });
@@ -109,50 +128,77 @@ module.exports = (io = null) => {
   });
 
   // =======================================================================
-  // == ROTA CORRIGIDA
+  // == ROTA CORRIGIDA (update mantém como estava; o front manda uppercase)
   // =======================================================================
-  router.put('/detalhes/:idEmpresa', async (req, res) => {
-    const { idEmpresa } = req.params;
-    
-    // ALTERADO: Nomes das variáveis agora correspondem ao que o frontend envia (maiúsculas)
-    const {
-      NOME_EMPRESA,
-      CNPJ,
-      EMAIL,
-      DDI,
-      DDD,
-      TELEFONE,
-      ENDERECO,
-      NUMERO,
-      LOGO
-    } = req.body;
+router.put('/detalhes/:idEmpresa', async (req, res) => {
+  const { idEmpresa } = req.params;
 
-    // ALTERADO: Verificação agora usa as variáveis corretas
-    if (!NOME_EMPRESA || !CNPJ) {
-      return res.status(400).json({ error: 'Nome da Empresa e CNPJ são obrigatórios.' });
+  // O front manda maiúsculas; mantenho compat
+  const {
+    NOME_EMPRESA,
+    CNPJ,
+    EMAIL,
+    DDI,
+    DDD,
+    TELEFONE,
+    ENDERECO,
+    NUMERO,
+    LOGO, // pode vir undefined / '' quando o usuário não mexeu na imagem
+  } = req.body || {};
+
+  if (!NOME_EMPRESA || !CNPJ) {
+    return res.status(400).json({ error: 'Nome da Empresa e CNPJ são obrigatórios.' });
+  }
+
+  try {
+    // Monta SET dinamicamente, pulando LOGO quando vier vazio/undefined
+    const sets = [];
+    const params = [];
+
+    const push = (col, val) => { sets.push(`${col} = ?`); params.push(val); };
+
+    push('NOME_EMPRESA', NOME_EMPRESA);
+    push('CNPJ', CNPJ);
+    push('EMAIL', EMAIL ?? null);
+    push('DDI', DDI ?? null);
+    push('DDD', DDD ?? null);
+    push('TELEFONE', TELEFONE ?? null);
+    push('ENDERECO', ENDERECO ?? null);
+    push('NUMERO', NUMERO ?? null);
+
+    // Só atualiza LOGO se vier com um valor não vazio
+    const hasLogo =
+      typeof LOGO !== 'undefined' &&
+      LOGO !== null &&
+      String(LOGO).trim() !== '';
+
+    if (hasLogo) {
+      push('LOGO', String(LOGO).trim());
     }
 
-    try {
-      // ALTERADO: Parâmetros do query agora usam as variáveis corretas
-      const [result] = await db.query(
-        `UPDATE empresa
-         SET NOME_EMPRESA = ?, CNPJ = ?, EMAIL = ?, DDI = ?, DDD = ?, TELEFONE = ?, ENDERECO = ?, NUMERO = ?, LOGO = ?
-         WHERE ID_EMPRESA = ?`,
-        [NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO, idEmpresa]
-      );
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Empresa não encontrada para atualização.' });
-      }
-
-      return res.json({ message: 'Dados da empresa atualizados com sucesso!' });
-
-    } catch (error) {
-      console.error('Erro ao atualizar detalhes da empresa:', error);
-      return res.status(500).json({ error: 'Erro interno ao atualizar os dados da empresa.' });
+    // Nada a atualizar? (improvável porque NOME/CNPJ vêm) — protege mesmo assim
+    if (sets.length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo para atualizar.' });
     }
-  });
 
+    const sql = `
+      UPDATE empresa
+         SET ${sets.join(', ')}
+       WHERE ID_EMPRESA = ?`;
+    params.push(idEmpresa);
+
+    const [result] = await db.query(sql, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Empresa não encontrada para atualização.' });
+    }
+
+    return res.json({ message: 'Dados da empresa atualizados com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao atualizar detalhes da empresa:', error);
+    return res.status(500).json({ error: 'Erro interno ao atualizar os dados da empresa.' });
+  }
+});
 
   // ... (Restante do arquivo, sem alterações) ...
   router.get('/perfis/:idEmpresa', async (req, res) => {
@@ -244,17 +290,17 @@ module.exports = (io = null) => {
       } else {
         params = [novaSituacao, idEmpresa, dtMovtoFormatted, idFila, idCliente];
       }
-      
+
       const [result] = await db.query(query, params);
 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'Cliente da fila não encontrado ou dados já atualizados.' });
       }
-      
-      if(io) {
+
+      if (io) {
         io.emit('cliente_atualizado', { idEmpresa, idFila, idCliente, novaSituacao });
       }
-      
+
       return res.json({ message: 'Situação do cliente atualizada com sucesso!' });
     } catch (err) {
       console.error('Erro ao atualizar situação do cliente:', err);
@@ -278,7 +324,7 @@ module.exports = (io = null) => {
          LIMIT 1`,
         [idEmpresa, idFila, dtMovtoFormatted]
       );
-      
+
       if (!filaConfig) {
         console.warn(`Aviso: Configuração de fila não encontrada para a fila ${idFila}. Usando tempo de tolerância padrão.`);
       }
@@ -312,7 +358,7 @@ module.exports = (io = null) => {
       } catch (notificationError) {
         console.warn('AVISO: A notificação para o cliente falhou, mas o status foi atualizado.', notificationError);
       }
-      
+
       const tempoToleranciaMinutos = (filaConfig && filaConfig.TEMP_TOL) ? filaConfig.TEMP_TOL : 15;
       const timeoutEmMs = tempoToleranciaMinutos * 60 * 1000;
 
@@ -322,8 +368,8 @@ module.exports = (io = null) => {
         io.emit('cliente_atualizado', { idEmpresa, idFila, idCliente, novaSituacao: 3 });
       }
 
-      return res.status(200).json({ 
-        message: `Notificação enviada! Tolerância de ${tempoToleranciaMinutos} minutos aplicada.` 
+      return res.status(200).json({
+        message: `Notificação enviada! Tolerância de ${tempoToleranciaMinutos} minutos aplicada.`
       });
 
     } catch (error) {
@@ -338,7 +384,7 @@ module.exports = (io = null) => {
   router.post('/fila/:idEmpresa/:dtMovto/:idFila/adicionar-cliente', async (req, res) => {
     const { idEmpresa, dtMovto, idFila } = req.params;
     const { NOME, CPFCNPJ, DT_NASC, DDDCEL, NR_CEL, EMAIL, RG, NR_QTDPES, MEIO_NOTIFICACAO } = req.body;
-    
+
     if (!NOME || !CPFCNPJ) {
         return res.status(400).json({ error: 'Nome e CPF/CNPJ são obrigatórios.' });
     }
@@ -352,7 +398,7 @@ module.exports = (io = null) => {
 
         const [[maxIdResult]] = await connection.query('SELECT MAX(ID_CLIENTE) as maxId FROM clientesfila');
         const idCliente = (maxIdResult.maxId || 0) + 1;
-        
+
         const [jaNaFila] = await connection.query(
             'SELECT 1 FROM clientesfila WHERE ID_EMPRESA = ? AND DATE(DT_MOVTO) = ? AND ID_FILA = ? AND CPFCNPJ = ?',
             [idEmpresa, dtMovto.split('T')[0], idFila, CPFCNPJ]
@@ -362,7 +408,7 @@ module.exports = (io = null) => {
             await connection.rollback();
             return res.status(409).json({ error: 'Este cliente já se encontra na fila hoje.' });
         }
-        
+
         await connection.query(
             `INSERT INTO clientesfila (ID_EMPRESA, DT_MOVTO, ID_FILA, ID_CLIENTE, CPFCNPJ, RG, NOME, DT_NASC, EMAIL, NR_QTDPES, DDDCEL, NR_CEL, DT_ENTRA, SITUACAO, MEIO_NOTIFICACAO)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, ?)`,
@@ -374,7 +420,7 @@ module.exports = (io = null) => {
              WHERE ID_EMPRESA = ? AND DATE(DT_MOVTO) = ? AND ID_FILA = ? AND (SITUACAO = 0 OR SITUACAO = 3)`,
             [idEmpresa, dtMovto.split('T')[0], idFila]
         );
-        
+
         await connection.commit();
 
         const clienteCompleto = { ...req.body, ID_CLIENTE: idCliente, ID_EMPRESA: idEmpresa, ID_FILA: idFila, DT_MOVTO: dtMovto };
@@ -385,7 +431,7 @@ module.exports = (io = null) => {
         if (io) {
           io.emit('cliente_atualizado', { idEmpresa, idFila, idCliente, novaSituacao: 0 });
         }
-        
+
         return res.status(201).json({ message: 'Cliente adicionado à fila com sucesso!' });
     } catch (error) {
         await connection.rollback();
@@ -438,6 +484,6 @@ module.exports = (io = null) => {
         res.status(500).json({ error: 'Erro interno ao buscar tempo médio de espera.' });
     }
   });
-  
+
   return router;
 };

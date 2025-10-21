@@ -137,7 +137,8 @@
     "menuLateral": "Side menu",
     "navegacaoInferior": "Bottom navigation",
     "usuarioPadrao": "User",
-    "semPerfil": "No Profile"
+    "semPerfil": "No Profile",
+    "empresa":"Company"
   },
   "home": {
     "saudacao": "Hello {{nome}}",

@@ -8,9 +8,12 @@ const ctrl = require('../controllers/publicEmpresaController');
 // FRONT sem / no fim
 const FRONTEND_URL = (process.env.PUBLIC_FRONT_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
-// --- helpers de token do perfil ---
+// --------------------
+// Helpers de token (PERFIL)
+// Token do perfil: PV-<ID_EMPRESA>-TOKEN
+// --------------------
 function makePerfilToken(idEmpresa) {
-  return `AV-${idEmpresa}-TOKEN`;
+  return `PV-${idEmpresa}-TOKEN`;
 }
 function parseEmpresaIdFromPerfilToken(token) {
   if (!token || typeof token !== 'string') return null;
@@ -20,12 +23,16 @@ function parseEmpresaIdFromPerfilToken(token) {
   return Number.isFinite(id) ? id : null;
 }
 
-// --- dados do perfil ---
+// --------------------
+// Dados do perfil (por id e por token)
+// --------------------
 router.get('/empresa/:id', ctrl.getPerfilEmpresaById);
 router.get('/empresa/by-token/:token', ctrl.getPerfilEmpresaByToken);
 
-// --- geração de link e QR do perfil ---
+// --------------------
+// Geração de link e QR do perfil
 // GET /api/public/perfil-link/:idEmpresa
+// --------------------
 router.get('/perfil-link/:idEmpresa', async (req, res) => {
   try {
     const idEmpresa = Number(req.params.idEmpresa);
@@ -42,8 +49,10 @@ router.get('/perfil-link/:idEmpresa', async (req, res) => {
     }
 
     const token = makePerfilToken(idEmpresa);
-    const url = `${FRONTEND_URL}/empresa/${idEmpresa}/perfil`; // por ID
-    const urlByToken = `${FRONTEND_URL}/perfil/${token}`;       // por token
+
+    // url por id (se você tiver essa página) e url por token (página pública)
+    const url = `${FRONTEND_URL}/empresa/${idEmpresa}/perfil`; // opcional / por ID
+    const urlByToken = `${FRONTEND_URL}/perfil/${token}`;      // principal / por token
 
     return res.json({ url, urlByToken, token });
   } catch (error) {
@@ -52,19 +61,22 @@ router.get('/perfil-link/:idEmpresa', async (req, res) => {
   }
 });
 
+// --------------------
 // GET /api/public/qr/perfil/:token
+// Retorna a imagem PNG do QR que aponta para a rota pública do perfil
+// --------------------
 router.get('/qr/perfil/:token', (req, res) => {
   try {
     const { token } = req.params;
-    const idEmp = parseEmpresaIdFromPerfilToken(token);
-    if (!idEmp) return res.status(400).send('Token inválido');
+    const id = parseEmpresaIdFromPerfilToken(token);
+    if (!id) return res.status(400).send('Token inválido');
 
-    const urlParaQr = `${FRONTEND_URL}/perfil/${token}`;
-    const png = qr.image(urlParaQr, { type: 'png', margin: 2, size: 8 });
+    const link = `${FRONTEND_URL}/perfil/${token}`;
+    const png = qr.image(link, { type: 'png', margin: 2, size: 8 });
     res.setHeader('Content-Type', 'image/png');
     png.pipe(res);
-  } catch (error) {
-    console.error('[GET /public/qr/perfil/:token] erro:', { message: error.message });
+  } catch (err) {
+    console.error('[GET /public/qr/perfil/:token] erro:', err);
     return res.status(500).send('Erro ao gerar QR Code');
   }
 });

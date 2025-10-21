@@ -9,7 +9,8 @@ import {
   FaSignOutAlt,
   FaAngleLeft,
   FaAngleRight,
-  FaUserCircle
+  FaUserCircle,
+  FaBuilding,
 } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
@@ -47,13 +48,13 @@ const ROLE_ALLOW = {
   usersRoles: ['ADM', 'STAFF'],
   queues: ['ADM', 'STAFF'],
   settings: ['ADM', 'STAFF'],
-  profile: ['ADM', 'STAFF', 'ANALYST', 'CUSTOMER'], // <— novo: qualquer logado
+  company: ['ADM', 'STAFF'],
+  profile: ['ADM', 'STAFF', 'ANALYST', 'CUSTOMER'],
 };
 
 const RBAC_ENFORCED_RESOURCES = new Set(['usersRoles', 'queues', 'settings', 'queueEntries']);
 
 function canSee(resource, role, permissions) {
-  const key = String(resource || '').toLowerCase();
   const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF'];
   if (!allowedRoles.includes(role)) return false;
 
@@ -71,7 +72,6 @@ const API_BASE =
   (typeof window !== 'undefined' && window.location && window.location.hostname
     ? `http://${window.location.hostname}:3001/api`
     : 'http://localhost:3001/api');
-
 
 // ALTERADO: O componente agora recebe a propriedade 'onLogout'
 const Sidebar = ({ onLogout }) => {
@@ -99,6 +99,28 @@ const Sidebar = ({ onLogout }) => {
   const token = localStorage.getItem('token') || '';
   const idUsuario = Number(localStorage.getItem('idUsuario') || 0);
 
+  // ID da empresa selecionada para montar /empresa/editar/:id
+  const [empresaId, setEmpresaId] = useState(null);
+  const readEmpresaId = () => {
+    try {
+      const raw = localStorage.getItem('empresaSelecionada');
+      const emp = raw ? JSON.parse(raw) : null;
+      const id = emp?.ID_EMPRESA ?? emp?.idEmpresa ?? null;
+      setEmpresaId(Number.isFinite(Number(id)) ? Number(id) : null);
+    } catch {
+      setEmpresaId(null);
+    }
+  };
+
+  useEffect(() => {
+    readEmpresaId();
+    const onStorage = (e) => {
+      if (e.key === 'empresaSelecionada') readEmpresaId();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [location.key]);
+
   const api = useMemo(() => {
     const instance = axios.create({ baseURL: API_BASE });
     instance.interceptors.request.use(config => {
@@ -108,14 +130,14 @@ const Sidebar = ({ onLogout }) => {
     return instance;
   }, [token]);
 
-  // Itens do menu (inclui o Perfil)
   const ALL_ITEMS = useMemo(() => ([
-    { to: '/dashboard',         icon: FaTachometerAlt, label: t('menu.dashboard'),    resource: 'dashboard' },
-    { to: '/filas-cadastradas', icon: FaCogs,          label: t('menu.configuracao'), resource: 'queues'     },
-    { to: '/filas',             icon: FaClipboardList, label: t('menu.gestao'),       resource: 'queues'     },
-    { to: '/relatorio',         icon: FaChartBar,      label: t('menu.relatorios'),   resource: 'analytics'  },
-    { to: '/home',              icon: FaUsers,         label: t('menu.usuarios'),     resource: 'usersRoles' },
-    { to: '/perfil',            icon: FaUserCircle,    label: t('menu.perfil') || 'Perfil', resource: 'profile' },
+    { to: '/dashboard',         icon: FaTachometerAlt, label: t('menu.dashboard'),            resource: 'dashboard' },
+    { to: '/filas-cadastradas', icon: FaCogs,          label: t('menu.configuracao'),         resource: 'queues'     },
+    { to: '/filas',             icon: FaClipboardList, label: t('menu.gestao'),               resource: 'queues'     },
+    { to: '/relatorio',         icon: FaChartBar,      label: t('menu.relatorios'),           resource: 'analytics'  },
+    { to: '/home',              icon: FaUsers,         label: t('menu.usuarios'),             resource: 'usersRoles' },
+    { to: '/empresa/editar/:id',icon: FaBuilding,      label: t('menu.empresa') || 'Empresa', resource: 'company', dynamic: true }, // rota dinâmica
+    { to: '/perfil',            icon: FaUserCircle,    label: t('menu.perfil') || 'Perfil',   resource: 'profile'    },
   ]), [t]);
 
   const NAV_ITEMS = useMemo(() => {
@@ -196,10 +218,7 @@ const Sidebar = ({ onLogout }) => {
   }, [api, idUsuario]);
 
   const logout = () => {
-    // 1. Chama a função do App.js para limpar o localStorage e atualizar o estado
     onLogout();
-    
-    // 2. Navega para a página de login
     navigate('/login');
   };
 
@@ -208,6 +227,15 @@ const Sidebar = ({ onLogout }) => {
   };
 
   const goToProfile = () => navigate('/perfil');
+
+  const goToCompany = (e) => {
+    if (!empresaId) {
+      e?.preventDefault?.();
+      alert('Selecione uma empresa primeiro.');
+      return;
+    }
+    navigate(`/empresa/editar/${empresaId}`);
+  };
 
   const renderSidebar = () => (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`} aria-label={t('menu.menuLateral')}>
@@ -227,16 +255,40 @@ const Sidebar = ({ onLogout }) => {
 
       <nav className="sidebar-menu">
         <ul>
-          {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            >
-              <Icon />
-              {!collapsed && <span>{label}</span>}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map(({ to, icon: Icon, label, resource, dynamic }) => {
+            // Item "Empresa" com rota dinâmica /empresa/editar/:id
+            if (resource === 'company' && dynamic) {
+              const resolvedTo = empresaId ? `/empresa/editar/${empresaId}` : '#';
+              return (
+                <NavLink
+                  key="company"
+                  to={resolvedTo}
+                  onClick={(e) => {
+                    if (!empresaId) {
+                      e.preventDefault();
+                      alert('Selecione uma empresa primeiro.');
+                    }
+                  }}
+                  className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+                >
+                  <Icon />
+                  {!collapsed && <span>{label}</span>}
+                </NavLink>
+              );
+            }
+
+            // Demais itens
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+              >
+                <Icon />
+                {!collapsed && <span>{label}</span>}
+              </NavLink>
+            );
+          })}
         </ul>
       </nav>
 
@@ -247,7 +299,6 @@ const Sidebar = ({ onLogout }) => {
             <LanguageSelector variant="inline" />
           </div>
 
-          {/* Avatar -> Perfil */}
           <button
             type="button"
             onClick={goToProfile}
@@ -282,7 +333,24 @@ const Sidebar = ({ onLogout }) => {
 
   const renderBottomNav = () => (
     <nav className="bottom-nav" aria-label={t('menu.navegacaoInferior')}>
-      {NAV_ITEMS.map(({ to, icon: Icon, label }) => {
+      {NAV_ITEMS.map(({ to, icon: Icon, label, resource, dynamic }) => {
+        if (resource === 'company' && dynamic) {
+          const isActive = activePath.startsWith('/empresa/editar/');
+          return (
+            <button
+              key="company-bottom"
+              type="button"
+              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+              onClick={goToCompany}
+              aria-label={label}
+              title={label}
+            >
+              <Icon className="bottom-nav-icon" />
+              <span className="bottom-nav-label">{label}</span>
+            </button>
+          );
+        }
+
         const isActive = activePath.startsWith(to);
         return (
           <NavLink
@@ -300,7 +368,6 @@ const Sidebar = ({ onLogout }) => {
         );
       })}
 
-      {/* Atalho para perfil */}
       <button
         type="button"
         className="bottom-nav-item profile"

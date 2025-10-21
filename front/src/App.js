@@ -32,6 +32,7 @@ import EmpresaPublicaPorToken from './pages/EmpresaPublica/EmpresaPublicaPorToke
 
 // <-- ADICIONADO: Import da nova página de avaliações
 import AvaliacoesPage from './pages/AvaliacoesPage/AvaliacoesPage'; // Ajuste o caminho se necessário
+import PerfilUsuario from './components/PerfilUsuario/PerfilUsuario';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -87,7 +88,14 @@ function App() {
                 
                 {/* NOVO: Adicionada a rota do Painel de Exibição aqui também */}
                 <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
-
+                <Route
+            path="/perfil"
+            element={
+              <PrivateRoute resource="profile" action="view">
+                <PerfilUsuario />
+              </PrivateRoute>
+            }
+          />
                 <Route path="/escolher-empresa" element={<Empresa />} />
                 <Route path="/login" element={<Navigate to="/home" />} />
                 <Route path="/403" element={<Forbidden />} />

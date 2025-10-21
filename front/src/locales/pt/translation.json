@@ -138,7 +138,8 @@
     "navegacaoInferior": "Navegação inferior",
     "usuarioPadrao": "Usuário",
     "semPerfil": "Sem Perfil",
-    "perfil": "Meu perfil"
+    "perfil": "Meu perfil",
+    "empresa": "Empresa"
   },
   "home": {
     "saudacao": "Olá {{nome}}",
