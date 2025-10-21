@@ -7,13 +7,14 @@ const { Server } = require('socket.io');
 const path = require('path');
 const authMiddleware = require('./auth/jwt');
 const meRoutes = require('./routes/me');
-
+const uploadRoutes = require('./routes/uploadRoutes'); 
+const empresaPerfilRoutes = require('./routes/empresaPerfilRoutes');
 const app = express();
 const server = http.createServer(app);
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.0.31:3000',
+  'http://192.168.0.49:3000',
   process.env.PUBLIC_FRONT_BASE_URL,
   process.env.FRONT_ORIGIN
 ].filter(Boolean);
@@ -46,7 +47,8 @@ const avaliacaoRoutes = require('./routes/avaliacaoRoutes');
 app.use('/api/avaliacoes', avaliacaoRoutes);
 const publicEmpresaRoutes = require('./routes/publicEmpresaRoutes');
 app.use('/api/public', publicEmpresaRoutes);
-
+app.use('/api', uploadRoutes);                 // mantém suas rotas de upload existentes
+app.use('/api/empresas', empresaPerfilRoutes);
 // Rotas protegidas
 const usuarioRoutes = require('./routes/usuarioRoutes');
 app.use('/api', usuarioRoutes);

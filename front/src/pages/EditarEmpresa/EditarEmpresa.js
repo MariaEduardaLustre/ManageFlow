@@ -80,10 +80,10 @@ const EditarEmpresa = ({ onLogout }) => {
   const [qrPerfilLoading, setQrPerfilLoading] = useState(false);
   const [showQrPerfilModal, setShowQrPerfilModal] = useState(false);
 
-  // -------- Logo Upload --------
-  const [logoPreview, setLogoPreview] = useState('');
-  const [logoFile, setLogoFile] = useState(null);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
+  // -------- Foto de PERFIL da EMPRESA (não é a LOGO da configuração) --------
+  const [perfilPreview, setPerfilPreview] = useState('');
+  const [perfilFile, setPerfilFile] = useState(null);
+  const [uploadingPerfil, setUploadingPerfil] = useState(false);
 
   const empresaSelecionada = useMemo(() => JSON.parse(localStorage.getItem('empresaSelecionada') || 'null'), []);
   const isAdmin = empresaSelecionada?.NIVEL === 1;
@@ -91,14 +91,16 @@ const EditarEmpresa = ({ onLogout }) => {
   useEffect(() => {
     const fetchEmpresaData = async () => {
       try {
+        // sua rota de detalhes
         const response = await api.get(`/empresas/detalhes/${idEmpresa}`);
         const emp = response.data || {};
         setEmpresa(emp);
-        if (emp.CNPJ) setIsCnpjValid(validarCNPJ(emp.CNPJ));
-        // tenta compor a url da logo da empresa (perfil público usa esta)
-        const currentLogo =
-          emp.LOGO_URL || emp.logo_url || emp.logo || emp.LOGO || '';
-        setLogoPreview(toPublicImgUrl(currentLogo));
+        if (emp.CNPJ) setIsCnpjValid(validarCNPJ((emp.CNPJ || '').toString()));
+
+        // a foto de perfil da empresa é a que vem de empresa.LOGO normalizada no back
+        const currentPerfil =
+          emp.LOGO_URL || emp.logo_url || emp.LOGO || emp.logo || emp.img_perfil || '';
+        setPerfilPreview(toPublicImgUrl(currentPerfil));
       } catch (err) {
         setError('Não foi possível carregar os dados da empresa.');
       } finally {
@@ -191,7 +193,6 @@ const EditarEmpresa = ({ onLogout }) => {
   const gerarLinkPerfil = async () => {
     try {
       const { data } = await api.get(`/public/perfil-link/${idEmpresa}`);
-      // Usamos apenas a URL por token
       setPerfilUrlByToken(data.urlByToken);
       setPerfilToken(data.token);
     } catch (error) {
@@ -228,49 +229,47 @@ const EditarEmpresa = ({ onLogout }) => {
     document.body.removeChild(a);
   };
 
-  // --------- Upload da LOGO (perfil público) ----------
-  const onSelectLogo = (e) => {
+  // --------- Upload da FOTO DE PERFIL (empresa) ----------
+
+  // onChange: guarda arquivo e mostra preview local
+  const handlePerfilChange = (e) => {
     const file = e.target.files?.[0];
-    setLogoFile(file || null);
-    if (file) {
-      const localPreview = URL.createObjectURL(file);
-      setLogoPreview(localPreview);
-    }
+    if (!file) return;
+    setPerfilFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setPerfilPreview(reader.result);
+    reader.readAsDataURL(file);
   };
 
-  const enviarLogo = async () => {
-    if (!logoFile) {
-      alert('Selecione um arquivo de imagem.');
+  // Envia para /empresas/:id/perfil com campo 'img_perfil'
+  const enviarPerfil = async () => {
+    if (!perfilFile) {
+      alert('Selecione uma imagem para o perfil.');
       return;
     }
     try {
-      setUploadingLogo(true);
+      setUploadingPerfil(true);
       setError(''); setSuccess('');
       const fd = new FormData();
-      // campo 'logo' esperado pelo back (multer.single('logo'))
-      fd.append('logo', logoFile);
+      fd.append('img_perfil', perfilFile); // nome esperado pelo back (empresaPerfilSingle)
 
-      // endpoint de upload da logo (ajuste se seu back usar outro caminho)
-      const { data } = await api.post(`/empresas/${idEmpresa}/logo`, fd, {
+      const { data } = await api.post(`/empresas/${idEmpresa}/perfil`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      // Esperado: { logo: "/uploads/..." , logoUrl: "https://..." }  (qualquer um serve)
-      const novaUrl = data.logoUrl || toPublicImgUrl(data.logo) || logoPreview;
-      setLogoPreview(novaUrl);
-
-      // Atualiza o objeto empresa em memória
+      // data.key -> caminho relativo salvo no banco (empresa.LOGO)
+      // data.img_perfil -> URL pública normalizada
       setEmpresa((prev) => ({
         ...prev,
-        LOGO: data.logo || prev.LOGO,
-        LOGO_URL: novaUrl
+        LOGO: data.key || prev.LOGO,
+        LOGO_URL: data.img_perfil
       }));
-
-      setSuccess('Logo atualizada com sucesso!');
+      setPerfilPreview(data.img_perfil || toPublicImgUrl(data.key) || perfilPreview);
+      setSuccess('Foto de perfil da empresa atualizada com sucesso!');
     } catch (err) {
-      setError(err?.response?.data?.error || 'Erro ao enviar a logo.');
+      setError(err?.response?.data?.error || 'Erro ao enviar a foto de perfil.');
     } finally {
-      setUploadingLogo(false);
+      setUploadingPerfil(false);
     }
   };
 
@@ -310,23 +309,23 @@ const EditarEmpresa = ({ onLogout }) => {
                   </div>
                 </Form.Group>
 
-                {/* NOVO: LOGO DA EMPRESA (perfil público) */}
+                {/* FOTO DE PERFIL DA EMPRESA (para Perfil Público) */}
                 <Form.Group className="mb-3">
-                  <Form.Label>Logo da Empresa (usada no Perfil Público)</Form.Label>
+                  <Form.Label>Foto de Perfil da Empresa (exibida no Perfil Público)</Form.Label>
                   <Row className="align-items-center g-3">
                     <Col xs="auto">
                       <div className="mf-logo-preview" style={{ width: 88, height: 88, borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-                        {logoPreview ? <img src={logoPreview} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <FaImage size={28} style={{ opacity: .6 }} />}
+                        {perfilPreview ? <img src={perfilPreview} alt="Foto de Perfil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <FaImage size={28} style={{ opacity: .6 }} />}
                       </div>
                     </Col>
                     <Col>
                       <div className="d-flex gap-2 flex-wrap">
-                        <Form.Control type="file" accept="image/*" onChange={onSelectLogo} disabled={!isAdmin} />
-                        <Button variant="outline-secondary" onClick={enviarLogo} disabled={!isAdmin || !logoFile || uploadingLogo}>
-                          {uploadingLogo ? (<><Spinner size="sm" className="me-2" /> Enviando...</>) : (<><FaUpload className="me-2" /> Enviar logo</>)}
+                        <Form.Control type="file" accept="image/*" onChange={handlePerfilChange} disabled={!isAdmin} />
+                        <Button variant="outline-secondary" onClick={enviarPerfil} disabled={!isAdmin || !perfilFile || uploadingPerfil}>
+                          {uploadingPerfil ? (<><Spinner size="sm" className="me-2" /> Enviando...</>) : (<><FaUpload className="me-2" /> Enviar foto</>)}
                         </Button>
                       </div>
-                      <Form.Text className="text-muted">Formatos comuns (.png, .jpg). A imagem será salva no armazenamento configurado (S3/local) e usada no perfil público.</Form.Text>
+                      <Form.Text className="text-muted">Formatos: .png, .jpg, .webp, .gif (até 6MB). O caminho relativo será salvo no banco e a URL pública será usada na exibição.</Form.Text>
                     </Col>
                   </Row>
                 </Form.Group>
@@ -387,13 +386,10 @@ const EditarEmpresa = ({ onLogout }) => {
           <Card className="mt-4">
             <Card.Body>
               <Card.Title className="card-title-icon"><FaGlobeAmericas /> Perfil Público</Card.Title>
-              <Card.Text>Link público com logo, nome e avaliações da sua empresa (acesso por token).</Card.Text>
-
-              {/* Mostra apenas a URL por token */}
+              <Card.Text>Link público com foto de perfil, nome e avaliações da sua empresa (acesso por token).</Card.Text>
               {perfilUrlByToken && (
                 <div className="url-display-box alt"><FaLink /><span>{perfilUrlByToken}</span></div>
               )}
-
               <div className="botoes-acao">
                 <Button variant="secondary" onClick={gerarLinkPerfil}>
                   {perfilUrlByToken ? 'Gerar Novo Link' : 'Gerar Link'}
