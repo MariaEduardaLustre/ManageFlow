@@ -6,6 +6,12 @@ import CountUp from "react-countup";
 import dayjs from "dayjs";
 import "./Dashboard.css";
 import { useTranslation } from "react-i18next";
+import StatCard from "../StatCard/StatCard";
+// ADICIONADO: Imports para o Link de navegação e ícones
+import { Link } from 'react-router-dom';
+import { FaStar, FaArrowRight } from 'react-icons/fa';
+
+// REMOVIDO: Import do DashboardAvaliacoes
 
 /** Recharts */
 import {
@@ -29,16 +35,6 @@ import {
 import { Alert, Button, Form } from "react-bootstrap";
 
 /* ===================== UI Helpers ===================== */
-const StatCard = ({ title, value, suffix, subtitle }) => (
-    <div className="mf-stat">
-        <div className="mf-stat-title">{title}</div>
-        <div className="mf-stat-value">
-            <CountUp end={Number(value || 0)} duration={0.6} separator="." />
-            {suffix ? <span className="mf-stat-suffix">{suffix}</span> : null}
-        </div>
-        {subtitle ? <div className="mf-stat-sub">{subtitle}</div> : null}
-    </div>
-);
 
 const StatusDot = ({ status }) => {
     const cls =
@@ -233,7 +229,6 @@ const TempoDeEspera = ({ idEmpresa, idFila, t }) => {
 };
 /* ===================== /Partes adicionadas ===================== */
 
-// ALTERADO: A página agora recebe 'onLogout' como uma propriedade
 const Dashboard = ({ onLogout }) => {
     const { t } = useTranslation();
     const empresaSel = JSON.parse(localStorage.getItem("empresaSelecionada"));
@@ -399,6 +394,27 @@ const Dashboard = ({ onLogout }) => {
                     <div className="mf-last-refresh">{dayjs().format("DD/MM/YYYY HH:mm:ss")}</div>
                 </div>
 
+                {/* ========================================== */}
+                {/* ===== CARD DE NAVEGAÇÃO (MOVIDO PARA CIMA) ===== */}
+                {/* ========================================== */}
+                <div className="mf-nav-card-container">
+                    <Link to="/dashboard/avaliacoes" className="mf-nav-card">
+                        <div className="mf-nav-card-icon">
+                            <FaStar />
+                        </div>
+                        <div className="mf-nav-card-content">
+                            <h3>Painel de Avaliações</h3>
+                            <p>Ver média geral, distribuição e comentários da empresa.</p>
+                        </div>
+                        <div className="mf-nav-card-arrow">
+                            <FaArrowRight />
+                        </div>
+                    </Link>
+                </div>
+
+                {/* ========================================== */}
+                {/* ===== STATS CARDS (AGORA ABAIXO) ===== */}
+                {/* ========================================== */}
                 <div className="mf-stats">
                     <StatCard title={t('dashboard.cards.total')} value={totals.totalQueues} subtitle={t('dashboard.cards.totalSub')} />
                     <StatCard title={t('dashboard.cards.ativas')} value={totals.activeQueues} subtitle={t('dashboard.cards.ativasSub')} />
@@ -514,6 +530,11 @@ const Dashboard = ({ onLogout }) => {
                         {filas.length === 0 ? t('dashboard.erros.nenhumaFilaAnalise') : t('dashboard.erros.selecioneEmpresa')}
                     </p>
                 )}
+
+                {/* ========================================== */}
+                {/* ===== SEÇÃO DE AVALIAÇÕES REMOVIDA DAQUI ===== */}
+                {/* ========================================== */}
+
             </div>
         </div>
     );

@@ -13,9 +13,6 @@
 
 /* ======================================================= */
 /* ✨ A MÁGICA ACONTECE AQUI ✨ */
-/* Quando o body tiver o atributo data-theme='dark', 
-   redefinimos as variáveis locais do dashboard 
-   usando as variáveis globais do tema escuro. */
 /* ======================================================= */
 body[data-theme='dark'] .mf-dash {
   --mf-bg: var(--background-primary);
@@ -70,11 +67,70 @@ body[data-theme='dark'] .mf-dash {
   color: var(--mf-muted);
 }
 
-/* ===== KPIs ===== */
+/* ================================== */
+/* ===== CARD DE NAVEGAÇÃO (CSS ATUALIZADO) ===== */
+/* ================================== */
+.mf-nav-card-container {
+  /* margin-top: 16px;  <-- REMOVIDO */
+  margin-bottom: 16px; /* <-- ADICIONADO */
+}
+.mf-nav-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--mf-card);
+  border: 1px solid var(--mf-border);
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: var(--mf-shadow);
+  text-decoration: none;
+  color: var(--mf-text);
+  transition: all 0.2s ease-in-out;
+}
+.mf-nav-card:hover {
+  border-color: var(--mf-brand);
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.1);
+  transform: translateY(-2px);
+  color: var(--mf-text);
+}
+body[data-theme='dark'] .mf-nav-card:hover {
+  box-shadow: 0 0 0 1px var(--mf-brand);
+}
+
+.mf-nav-card-icon {
+  flex-shrink: 0;
+  font-size: 24px;
+  color: var(--mf-warn); /* Cor de 'aviso' (amarelo) */
+}
+.mf-nav-card-content {
+  flex: 1;
+}
+.mf-nav-card-content h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.mf-nav-card-content p {
+  margin: 0;
+  color: var(--mf-muted);
+}
+.mf-nav-card-arrow {
+  font-size: 20px;
+  color: var(--mf-muted);
+  transition: transform 0.2s ease-in-out;
+}
+.mf-nav-card:hover .mf-nav-card-arrow {
+  color: var(--mf-brand);
+  transform: translateX(4px);
+}
+
+
+/* ===== KPIs (CSS ATUALIZADO) ===== */
 .mf-stats {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
+  /* margin-top: 16px; <-- REMOVIDO (espaçamento agora vem do nav-card) */
 }
 @media (max-width: 1280px) {
   .mf-stats {
@@ -369,3 +425,8 @@ body[data-theme='dark'] .mf-table tbody tr:hover {
     padding: 12px 14px;
   }
 }
+
+/* ================================== */
+/* ===== ESTILOS DE AVALIAÇÕES REMOVIDOS ===== */
+/* (Foram movidos para AvaliacoesPage.css) */
+/* ================================== */

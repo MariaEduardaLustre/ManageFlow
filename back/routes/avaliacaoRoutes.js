@@ -4,8 +4,7 @@ const router = express.Router();
 const db = require('../database/connection'); // mysql2/promise
 const qr = require('qr-image');
 
-// FRONT sem barra final
-const FRONTEND_URL = (process.env.PUBLIC_FRONT_BASE_URL || 'http://localhost:3000').replace(/\/+$/,'');
+const FRONTEND_URL = process.env.PUBLIC_FRONT_BASE_URL || 'http://localhost:3000';
 
 /** Token de avaliação: AV-<ID_EMPRESA>-TOKEN */
 function makeAvaliacaoToken(idEmpresa) {
@@ -54,7 +53,7 @@ router.get('/info-empresa/:token', async (req, res) => {
  * NOVO: GET /api/avaliacoes/info-cliente
  * Query: token=AV-<id>-TOKEN&dtMovto=YYYY-MM-DD&idFila=...&idCliente=...
  * Retorna { clienteNome, idCliente, idFila, dtMovto }
- * -> Usa tabela clientes_fila (ajuste o nome se for diferente no seu schema)
+ * -> Usa tabela clientesfila (ajuste o nome se for diferente no seu schema)
  */
 router.get('/info-cliente', async (req, res) => {
   try {
@@ -163,6 +162,160 @@ router.get('/qr/avaliacao/:token', (req, res) => {
     png.pipe(res);
   } catch (err) {
     return res.status(500).send('Erro ao gerar QR Code');
+  }
+});
+
+// =======================================================
+// === ROTAS ATUALIZADAS PARA O DASHBOARD ===
+// =======================================================
+
+// Rota para obter estatísticas (AGORA COM FILTRO DE NOTA)
+router.get('/stats/:idEmpresa', async (req, res) => {
+  const { idEmpresa } = req.params;
+  const { nota } = req.query; // filtro de nota
+
+  try {
+    // A query de estatísticas gerais (média, total) NÃO deve ser filtrada
+    const [[statsGeral]] = await db.query(
+      `SELECT
+         AVG(NOTA) AS mediaGeral,
+         COUNT(*) AS totalAvaliacoes
+       FROM avaliacoes
+       WHERE ID_EMPRESA = ?;`,
+      [idEmpresa]
+    );
+
+    // Distribuição total por nota (sem filtro)
+    const [[distribuicao]] = await db.query(
+      `SELECT
+         SUM(CASE WHEN NOTA = 5 THEN 1 ELSE 0 END) AS estrelas5,
+         SUM(CASE WHEN NOTA = 4 THEN 1 ELSE 0 END) AS estrelas4,
+         SUM(CASE WHEN NOTA = 3 THEN 1 ELSE 0 END) AS estrelas3,
+         SUM(CASE WHEN NOTA = 2 THEN 1 ELSE 0 END) AS estrelas2,
+         SUM(CASE WHEN NOTA = 1 THEN 1 ELSE 0 END) AS estrelas1
+       FROM avaliacoes
+       WHERE ID_EMPRESA = ?;`,
+      [idEmpresa]
+    );
+
+    // Total filtrado (para cards quando usuário selecionar a nota)
+    let notaFilterQuery = '';
+    const queryParams = [idEmpresa];
+    if (nota && Number(nota) > 0) {
+      notaFilterQuery = 'AND NOTA = ?';
+      queryParams.push(Number(nota));
+    }
+    const [[{ totalFiltrado }]] = await db.query(
+      `SELECT COUNT(*) as totalFiltrado
+       FROM avaliacoes
+       WHERE ID_EMPRESA = ? ${notaFilterQuery}`,
+      queryParams
+    );
+
+    res.json({
+      mediaGeral: Number(statsGeral.mediaGeral || 0),
+      totalAvaliacoes: Number(statsGeral.totalAvaliacoes || 0), // Total real
+      totalFiltrado: Number(totalFiltrado || 0), // Total p/ filtro atual
+      distribuicao: [
+        { nota: 5, contagem: Number(distribuicao.estrelas5 || 0) },
+        { nota: 4, contagem: Number(distribuicao.estrelas4 || 0) },
+        { nota: 3, contagem: Number(distribuicao.estrelas3 || 0) },
+        { nota: 2, contagem: Number(distribuicao.estrelas2 || 0) },
+        { nota: 1, contagem: Number(distribuicao.estrelas1 || 0) }
+      ]
+    });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas de avaliação:', error);
+    res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+});
+
+// Rota para obter comentários (AGORA COM FILTRO DE NOTA)
+router.get('/comentarios/:idEmpresa', async (req, res) => {
+  const { idEmpresa } = req.params;
+  const { nota, page = 1, limit = 5 } = req.query; // nota, paginação
+
+  const nLimit = parseInt(limit, 10);
+  const nOffset = (parseInt(page, 10) - 1) * nLimit;
+
+  try {
+    let notaFilterQuery = '';
+    const queryParams = [idEmpresa];
+
+    if (nota && Number(nota) > 0) {
+      notaFilterQuery = 'AND NOTA = ?';
+      queryParams.push(Number(nota));
+    }
+
+    // Comentários paginados e filtrados
+    const queryComentarios = `
+      SELECT NOTA, COMENTARIO, DT_CRIACAO
+      FROM avaliacoes
+      WHERE ID_EMPRESA = ? 
+        AND COMENTARIO IS NOT NULL 
+        AND TRIM(COMENTARIO) <> ''
+        ${notaFilterQuery}
+      ORDER BY DT_CRIACAO DESC
+      LIMIT ?
+      OFFSET ?;`;
+    queryParams.push(nLimit, nOffset);
+    const [comentarios] = await db.query(queryComentarios, queryParams);
+
+    // Total para paginação (com mesmo filtro)
+    const queryTotal = `
+      SELECT COUNT(*) AS total
+      FROM avaliacoes
+      WHERE ID_EMPRESA = ? 
+        AND COMENTARIO IS NOT NULL 
+        AND TRIM(COMENTARIO) <> ''
+        ${notaFilterQuery};`;
+    const totalParams = queryParams.slice(0, queryParams.length - 2); // sem limit/offset
+    const [[{ total }]] = await db.query(queryTotal, totalParams);
+
+    res.json({
+      comentarios,
+      totalComentarios: total,
+      pagina: parseInt(page, 10),
+      totalPaginas: Math.ceil(total / nLimit)
+    });
+  } catch (error) {
+    console.error('Erro ao buscar comentários:', error);
+    res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+});
+
+// =======================================================
+// === NOVA ROTA PARA GRÁFICOS DE TENDÊNCIA ===
+// =======================================================
+router.get('/tendencia/:idEmpresa', async (req, res) => {
+  const { idEmpresa } = req.params;
+
+  try {
+    // Busca dados dos últimos 30 dias
+    const [tendencia] = await db.query(
+      `SELECT
+         DATE(DT_CRIACAO) AS data,
+         COUNT(*) AS contagem,
+         AVG(NOTA) AS mediaNota
+       FROM avaliacoes
+       WHERE ID_EMPRESA = ?
+         AND DT_CRIACAO >= CURDATE() - INTERVAL 30 DAY
+       GROUP BY DATE(DT_CRIACAO)
+       ORDER BY data ASC;`,
+      [idEmpresa]
+    );
+
+    // Formata os dados para o gráfico
+    const dadosFormatados = tendencia.map(item => ({
+      data: item.data, // 'YYYY-MM-DD'
+      contagem: Number(item.contagem),
+      mediaNota: Number(Number(item.mediaNota).toFixed(1))
+    }));
+
+    res.json(dadosFormatados);
+  } catch (error) {
+    console.error('Erro ao buscar tendência de avaliações:', error);
+    res.status(500).json({ error: 'Erro interno no servidor.' });
   }
 });
 
