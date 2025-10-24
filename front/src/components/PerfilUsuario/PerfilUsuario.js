@@ -182,7 +182,7 @@ export default function PerfilUsuario() {
       {/* Cabeçalho */}
       <div className="topbar">
         <div className="title-wrap">
-          <h1>Meu Perfil</h1>
+          <h2>Meu Perfil</h2>
           <span className={`badge ${isEditing ? 'editing' : 'view'}`}>
             {isEditing ? 'Editando' : 'Visualização'}
           </span>

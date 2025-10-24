@@ -212,7 +212,11 @@
     "cancelar": "Cancelar",
     "fechar": "Fechar",
     "carregando": "Carregando...",
-    "carregandoClientes": "Carregando clientes..."
+    "carregandoClientes": "Carregando clientes...",
+    "atualizadoEm": "Atualizado às",
+    "tempoReal": "Tempo real",
+    "offline": "Offline",
+    "voltar": "Voltar"
   },
   "filaLista": {
     "titulo": "Filas",
@@ -224,8 +228,8 @@
     "tabela": {
       "nomeFila": "NOME DA FILA",
       "dataInicio": "DATA INÍCIO FILA",
-      "dataFim": "DATA FIM FILA",
       "aguardando": "AGUARDANDO",
+      "chamadas": "CHAMADOS (NÃO APRESENTADOS)",
       "bloqueada": "BLOQUEADA"
     }
   },
@@ -358,7 +362,7 @@
     "titulo": "Dashboard",
     "subtitulo": "Visão geral em tempo real das suas filas",
     "selecionarFila": "Selecionar Fila",
-    "analiseFila": "Análise de dados para a fila <strong>{{nomeFila}}</strong>",
+    "analiseFila": "Análise de dados para a fila {{nomeFila}}",
     "status": {
       "ativa": "Ativa",
       "inativa": "Inativa",
@@ -369,7 +373,7 @@
       "totalSub": "Todas as filas cadastradas",
       "ativas": "Filas Ativas",
       "ativasSub": "Disponíveis para clientes",
-      "inativasBloqueadas": "Filas Inativas/Bloqueadas",
+      "inativasBloqueadas": "Inativas/Bloqueadas",
       "inativasBloqueadasSub": "Indisponíveis agora",
       "pessoasHoje": "Pessoas Hoje",
       "pessoasHojeSub": "Entradas nas filas (hoje)",

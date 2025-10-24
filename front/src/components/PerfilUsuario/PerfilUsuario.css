@@ -14,7 +14,12 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: linear-gradient(180deg, rgba(245,247,251,0.95), rgba(245,247,251,0.85));
+  background: #ffffff;
+  margin: 20px;
+  margin-bottom: 0;
+  border-radius: 12px;
+  
+  border: 1px solid #e5e7eb;
   backdrop-filter: saturate(1.2) blur(4px);
   display: flex;
   align-items: center;
@@ -85,11 +90,12 @@
   color: #111827;
   border: 1px solid #e5e7eb;
 }
-.btn.ghost:hover { background: #ffffff; }
+.btn.ghost:hover { background: #ef4444;
+color: #ffffff !important; }
 
 .btn.ghost.danger {
   color: #ef4444;
-  border-color: #fecaca;
+  border-color: #ef4444;
 }
 .btn.neutral {
   background: #eef2ff;
@@ -139,6 +145,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  justify-content: center;
 }
 .avatar {
   width: 220px;

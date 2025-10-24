@@ -1,53 +1,91 @@
-/* Define as variáveis de cores para o tema claro (padrão) */
+/* ================== TEMA (variáveis) ================== */
+/* Claro */
 body[data-theme='light'] {
-  --background-primary: #f3f4f6; /* Fundo principal mais suave */
-  --background-secondary: #ffffff; /* Fundo de cards, sidebar */
-  --text-primary: #111827; /* Texto principal */
-  --text-secondary: #6b7280; /* Texto secundário, mais claro */
-  --border-color: #e5e7eb; /* Cor das bordas */
-  --brand-primary: #3A5AFE; /* Cor principal da marca */
-  --brand-primary-hover: #e9efff; /* Fundo de hover ativo */
-  --brand-text-active: #3A5AFE; /* Texto ativo */
-}
+  --background-primary: #f3f4f6;
+  --background-secondary: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --brand-primary: #3A5AFE;
+  --brand-primary-hover: #e9efff;
+  --brand-text-active: #3A5AFE;
 
-/* Define as variáveis para o tema escuro */
+  /* tipografia */
+  --font-family: 'Mulish', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-size-root: 16px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+}
+/* Escuro */
 body[data-theme='dark'] {
-  --background-primary: #111827; /* Fundo principal escuro */
-  --background-secondary: #1f2937; /* Fundo de cards, sidebar escuro */
-  --text-primary: #f9fafb; /* Texto principal claro */
-  --text-secondary: #9ca3af; /* Texto secundário */
-  --border-color: #374151; /* Cor das bordas */
-  --brand-primary: #60a5fa; /* Cor principal da marca, mais brilhante */
-  --brand-primary-hover: #374151; /* Fundo de hover ativo */
-  --brand-text-active: #60a5fa; /* Texto ativo */
+  --background-primary: #111827;
+  --background-secondary: #1f2937;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #374151;
+  --brand-primary: #60a5fa;
+  --brand-primary-hover: #374151;
+  --brand-text-active: #60a5fa;
+
+  /* mesma tipografia no dark (evita salto) */
+  --font-family: 'Mulish', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-size-root: 16px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
 }
 
-/* Aplica uma transição suave na troca de cores */
+/* ================== BASE / RESET ================== */
+html, body, #root { height: 100%; }
+
+html {
+  font-size: var(--font-size-root);      /* fixa base rem */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
+  margin: 0;
   background-color: var(--background-primary);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+
+  /* transições só de cor/fundo (nada de font-size/weight) */
+  transition: background-color .2s ease, color .2s ease;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap');
-body, html {
-  font-family: 'Mulish', sans-serif;
-}
-.App {
-  text-align: center;
+/* Herdar tipografia estável em todo lugar */
+*, *::before, *::after {
+  box-sizing: border-box;
+  font: inherit;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Limita transições globais: ignora propriedades de fonte */
+* {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Links neutros (sem alteração de peso/tamanho) */
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: none; }
+
+/* Títulos com pesos fixos */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-medium);
+  margin: 0;
 }
 
+/* ================== APP (opcional de template) ================== */
+.App { text-align: center; }
+
+/* Evita fontes calculadas com vmin (causa "pulos"); use rem */
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -55,19 +93,16 @@ body, html {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: 1rem; /* estava calc(10px + 2vmin) */
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.App-logo { height: 40vmin; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo { animation: App-logo-spin infinite 20s linear; }
 }
+@keyframes App-logo-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* ================== AJUSTES PONTUAIS ================== */
+/* Sidebar transita apenas layout/cor (não fonte) */
+.sidebar { transition: width .3s ease, padding .3s ease, background-color .2s ease; }

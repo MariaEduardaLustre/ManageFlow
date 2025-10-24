@@ -1,299 +1,240 @@
-/* Estilos gerais do contêiner e sidebar */
-.home-container {
-    display: flex;
-    min-height: 100vh;
-    background-color: var(--background-primary); /* MODIFICADO */
+/* ================== FILAS — LISTA (ESCOPO) ================== */
+/* Envolva a página com .filas-list-page para isolar estilos */
+.filas-list-page{
+    padding: 15px;
+}
+/* Badge com nome da empresa (topo da página) */
+.filas-list-page .empresa-titulo-container {
+  background-color: var(--brand-primary);
+  border-radius: 8px;
+  padding: 8px 15px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  color: var(--background-secondary);
+  width: fit-content;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: background-color .2s ease, transform .2s ease;
+  cursor: pointer;
+  margin-left: auto; /* alinha à direita, como no seu layout */
+}
+.filas-list-page .empresa-titulo-container:hover {
+  filter: brightness(1.1);
+  transform: none;
+}
+.filas-list-page .empresa-nome {
+  font-size: 1.1em;
+  font-weight: bold;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
 
-/* Sidebar */
-.sidebar {
-    width: 250px;
-    background-color: var(--background-secondary); /* MODIFICADO */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    border-right: 1px solid var(--border-color); /* MODIFICADO */
-    flex-shrink: 0;
+/* Card de cabeçalho da página */
+.filas-list-page .fila-header-card {
+  background-color: var(--background-secondary);
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin: 0 0 10px 0;
+  align-self: flex-start;
+  width: 100%;
 }
 
-.sidebar .logo {
-    text-align: center;
-    margin-bottom: 30px;
+/* Seção que contém a tabela de filas */
+.filas-list-page .filas-section {
+  background-color: var(--background-secondary);
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-top: 0;
+  align-self: flex-start;
+  width: 100%;
 }
 
-.sidebar .responsive-image {
-    width: 150px;
-    height: auto;
+/* Título da seção */
+.filas-list-page .section-title {
+  font-size: 1.8em;
+  color: var(--text-primary);
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  text-align: left;
+  padding-left: 10px;
 }
 
-.sidebar nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+/* ================== TABELA ================== */
+.filas-list-page .filas-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  margin-top: 0;
+  background-color: var(--background-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  table-layout: fixed;
 }
 
-.sidebar nav ul li {
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-secondary); /* MODIFICADO */
-    cursor: pointer;
-    padding: 10px;
-    border-radius: 8px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    font-size: 1.05em;
+.filas-list-page .filas-table th,
+.filas-list-page .filas-table td {
+  border: none;
+  padding: 15px 20px;
+  text-align: left;
+  background-color: var(--background-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.sidebar nav ul li:hover {
-    background-color: var(--brand-primary-hover); /* MODIFICADO */
-    color: var(--brand-primary); /* MODIFICADO */
+.filas-list-page .filas-table th {
+  background-color: var(--background-primary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
 }
 
-.sidebar nav ul li.active {
-    background-color: var(--brand-primary-hover); /* MODIFICADO */
-    font-weight: bold;
-    color: var(--brand-primary); /* MODIFICADO */
+.filas-list-page .filas-table tr {
+  transition: transform .2s ease, box-shadow .2s ease;
 }
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: auto;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color); /* MODIFICADO */
+body[data-theme='light'] .filas-list-page .filas-table tr {
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
 }
-
-.user-info img {
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    object-fit: cover;
+body[data-theme='light'] .filas-list-page .filas-table tr:hover {
+  background-color: #fcfcfc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
+  background-color: rgba(255,255,255,0.05);
 }
 
-/* Estilos do conteúdo principal */
-.main-content {
-    flex-grow: 1;
-    padding: 30px;
-    background-color: var(--background-primary); /* MODIFICADO */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+.filas-list-page .filas-table th:first-child { border-top-left-radius: 10px; }
+.filas-list-page .filas-table th:last-child  { border-top-right-radius: 10px; }
+.filas-list-page .filas-table tbody tr td:first-child { border-bottom-left-radius: 10px; border-top-left-radius: 10px; }
+.filas-list-page .filas-table tbody tr td:last-child  { border-bottom-right-radius: 10px; border-top-right-radius: 10px; }
+
+/* Erro da listagem */
+.filas-list-page .fila-lista-error {
+  color: #dc3545;
+  font-weight: bold;
+  margin-top: 15px;
+  text-align: center;
 }
 
-/* ESTILOS DO CABEÇALHO DA EMPRESA (BADGE) */
-.empresa-titulo-container {
-    background-color: var(--brand-primary); /* MODIFICADO */
-    border-radius: 8px;
-    padding: 8px 15px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    color: var(--background-secondary); /* MODIFICADO para contraste */
-    width: fit-content;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    cursor: pointer;
-    margin-left: auto;
-    margin-right: 0;
-}
-.empresa-titulo-container:hover {
-    filter: brightness(1.1); /* MODIFICADO */
-    transform: none;
+/* ================== MODAL (detalhes/visualização) ================== */
+.filas-list-page .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn .3s ease-out;
 }
 
-.empresa-nome {
-    font-size: 1.1em;
-    font-weight: bold;
-    line-height: 1;
-    white-space: nowrap;
-    text-align: center;
+.filas-list-page .modal-content {
+  background-color: var(--background-secondary);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn .3s ease-out;
 }
 
-/* Seção da lista de filas */
-.filas-section {
-    background-color: var(--background-secondary); /* MODIFICADO */
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: none; /* MODIFICADO */
-    border: 1px solid var(--border-color); /* MODIFICADO */
-    margin-top: 0;
-    align-self: flex-start;
-    width: 100%;
+.filas-list-page .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+.filas-list-page .modal-header h2 {
+  margin: 0;
+  color: var(--text-primary);
 }
 
-.section-title {
-    font-size: 1.8em;
-    color: var(--text-primary); /* MODIFICADO */
-    margin-bottom: 25px;
-    padding-bottom: 10px;
-    text-align: left;
-    padding-left: 10px;
+.filas-list-page .modal-close-button {
+  background: none;
+  border: none;
+  font-size: 2em;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: color .2s ease, background-color .2s ease;
+}
+.filas-list-page .modal-close-button:hover {
+  color: var(--text-primary);
+  background-color: var(--brand-primary-hover);
 }
 
-/* Estilos da tabela de filas */
-.filas-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px;
-    margin-top: 0;
-    background-color: var(--background-secondary); /* MODIFICADO */
-    border-radius: 12px;
-    overflow: hidden;
-    table-layout: fixed;
+.filas-list-page .modal-body {
+  flex-grow: 1;
+  font-size: 1.1em;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.filas-list-page .modal-body p { margin-bottom: 10px; }
+.filas-list-page .modal-body strong { color: var(--text-primary); }
+
+.filas-list-page .modal-empresa-logo {
+  max-width: 150px;
+  height: auto;
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  padding: 5px;
+  border-radius: 5px;
+  background-color: var(--background-primary);
 }
 
-.filas-table th,
-.filas-table td {
-    border: none;
-    padding: 15px 20px;
-    text-align: left;
-    background-color: var(--background-secondary); /* MODIFICADO */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.filas-list-page .modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  margin-top: 20px;
+  text-align: right;
+}
+.filas-list-page .modal-close-button-footer {
+  background-color: var(--brand-primary);
+  color: var(--background-secondary);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color .2s ease, transform .1s ease;
+}
+.filas-list-page .modal-close-button-footer:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
-.filas-table th {
-    background-color: var(--background-primary); /* MODIFICADO */
-    color: var(--text-secondary); /* MODIFICADO */
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.9em;
-    letter-spacing: 0.5px;
-}
-
-.filas-table tr {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-body[data-theme='light'] .filas-table tr {
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-}
-body[data-theme='light'] .filas-table tr:hover {
-    background-color: #fcfcfc;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-body[data-theme='dark'] .filas-table tr:hover td {
-    background-color: rgba(255, 255, 255, 0.05); /* MODIFICADO */
-}
-
-
-.filas-table th:first-child { border-top-left-radius: 10px; }
-.filas-table th:last-child { border-top-right-radius: 10px; }
-.filas-table tbody tr td:first-child { border-bottom-left-radius: 10px; border-top-left-radius: 10px; }
-.filas-table tbody tr td:last-child { border-bottom-right-radius: 10px; border-top-right-radius: 10px; }
-
-.fila-lista-error {
-    color: #dc3545;
-    font-weight: bold;
-    margin-top: 15px;
-    text-align: center;
-}
-
-/* ------------------- ESTILOS DO MODAL ------------------- */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 1000; animation: fadeIn 0.3s ease-out;
-}
-
-.modal-content {
-    background-color: var(--background-secondary); /* MODIFICADO */
-    padding: 30px; border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-    width: 90%; max-width: 500px; max-height: 90vh;
-    overflow-y: auto; display: flex; flex-direction: column;
-    animation: slideIn 0.3s ease-out;
-}
-
-.modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid var(--border-color); /* MODIFICADO */
-    padding-bottom: 15px; margin-bottom: 20px;
-}
-
-.modal-header h2 {
-    margin: 0; font-size: 1.8em; color: var(--text-primary); /* MODIFICADO */
-}
-
-.modal-close-button {
-    background: none; border: none; font-size: 2em;
-    color: var(--text-secondary); /* MODIFICADO */
-    cursor: pointer; padding: 5px 10px; border-radius: 5px;
-    transition: color 0.2s ease, background-color 0.2s ease;
-}
-
-.modal-close-button:hover {
-    color: var(--text-primary); /* MODIFICADO */
-    background-color: var(--brand-primary-hover); /* MODIFICADO */
-}
-
-.modal-body {
-    flex-grow: 1; font-size: 1.1em; line-height: 1.6;
-    color: var(--text-secondary); /* MODIFICADO */
-}
-.modal-body p { margin-bottom: 10px; }
-.modal-body strong { color: var(--text-primary); } /* MODIFICADO */
-
-.modal-empresa-logo {
-    max-width: 150px; height: auto; margin-top: 10px;
-    border: 1px solid var(--border-color); /* MODIFICADO */
-    padding: 5px; border-radius: 5px;
-    background-color: var(--background-primary); /* MODIFICADO */
-}
-
-.modal-footer {
-    border-top: 1px solid var(--border-color); /* MODIFICADO */
-    padding-top: 20px; margin-top: 20px; text-align: right;
-}
-
-.modal-close-button-footer {
-    background-color: var(--brand-primary); /* MODIFICADO */
-    color: var(--background-secondary); /* MODIFICADO */
-    padding: 10px 20px; border: none; border-radius: 6px;
-    cursor: pointer; font-size: 1em;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.modal-close-button-footer:hover {
-    filter: brightness(1.1); /* MODIFICADO */
-    transform: translateY(-1px);
-}
-
+/* Animações */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-
-/* ------------------- MEDIA QUERIES PARA RESPONSIVIDADE ------------------- */
-
-@media (max-width: 1024px) { /* ... (sem mudanças de cor aqui) */ }
-
+/* ================== RESPONSIVO ================== */
 @media (max-width: 768px) {
-    .home-container { flex-direction: column; }
-    .sidebar {
-        width: 100%; height: auto; padding: 15px 20px;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color); /* MODIFICADO */
-        flex-direction: row; justify-content: space-between;
-        align-items: center;
-    }
-    /* ... (outras regras responsivas) */
-    .empresa-titulo-container {
-        border-radius: 8px !important;
-        font-weight: 500 !important;
-        background-color: var(--background-secondary) !important; /* MODIFICADO */
-        border: 1px solid var(--border-color) !important; /* MODIFICADO */
-        padding: 10px 20px !important;
-        color: var(--text-primary) !important; /* Adicionado para garantir a cor do texto */
-    }
-    .filas-section {
-        overflow-x: auto; -webkit-overflow-scrolling: touch;
-        align-self: stretch;
-    }
-}
+  .filas-list-page .filas-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    align-self: stretch;
+  }
 
-@media (max-width: 480px) { /* ... (sem mudanças de cor aqui) */ }
+  .filas-list-page .empresa-titulo-container {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 10px 20px !important;
+    color: var(--text-primary) !important;
+  }
+}

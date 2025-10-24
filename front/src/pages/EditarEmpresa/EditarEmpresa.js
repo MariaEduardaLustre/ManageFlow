@@ -79,7 +79,6 @@ const EditarEmpresa = ({ onLogout }) => {
   );
   const isAdmin = empresaSelecionada?.NIVEL === 1;
 
-  // Igual ao Perfil de Usuário: usamos a URL absoluta enviada pelo back (img_perfil)
   const defaultAvatar = '/imagens/avatar-default.png';
 
   useEffect(() => {
@@ -97,8 +96,6 @@ const EditarEmpresa = ({ onLogout }) => {
         });
         const cnpjToValidate = String(emp.CNPJ || emp.cnpj || '');
         if (cnpjToValidate) setIsCnpjValid(validarCNPJ(cnpjToValidate));
-
-        // SOMENTE URL ABSOLUTA vinda do back (como no PerfilUsuario)
         setPerfilPreview(emp.img_perfil || emp.LOGO_URL || '');
       } catch (err) {
         setError(err?.response?.data?.error || 'Não foi possível carregar os dados da empresa.');
@@ -138,6 +135,12 @@ const EditarEmpresa = ({ onLogout }) => {
     } catch (err) {
       setError(err?.response?.data?.error || 'Erro ao atualizar os dados.');
     }
+  };
+
+  // Voltar (header)
+  const handleVoltar = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/home');
   };
 
   // Avaliações
@@ -227,7 +230,7 @@ const EditarEmpresa = ({ onLogout }) => {
     document.body.removeChild(a);
   };
 
-  // Upload da FOTO DE PERFIL (empresa) — igual ao PerfilUsuario (usa URL devolvida)
+  // Upload da foto de perfil
   const handlePerfilChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -247,12 +250,9 @@ const EditarEmpresa = ({ onLogout }) => {
       setError(''); setSuccess('');
       const fd = new FormData();
       fd.append('img_perfil', perfilFile);
-
-      // back retorna { img_perfil: 'URL absoluta', key: '/uploads/...' }
       const { data } = await api.post(`/empresas/${idEmpresa}/perfil`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-
       setPerfilPreview(data.img_perfil || '');
       setEmpresa((prev) => ({
         ...prev,
@@ -270,239 +270,235 @@ const EditarEmpresa = ({ onLogout }) => {
   // Loading
   if (loading) {
     return (
-      <>
-        <div className="editar-empresa-container">
-          <Menu onLogout={onLogout} />
-          <Container as="main" className="editar-empresa-main-content">
-            <div className="editar-empresa-header">
-              <h1 className="mb-0">Dados da Empresa</h1>
-              <Button variant="outline-secondary" className="btn-voltar" onClick={() => navigate('/home')}>
-                <FaArrowLeft />
-                Voltar para a Home
-              </Button>
+      <div className="editar-empresa-container">
+        <Menu onLogout={onLogout} />
+        <Container as="main" className="editar-empresa-main-content">
+          {/* HEADER SEPARADO (mesmo no loading) */}
+          <section className="editar-header-card">
+            <div className="editar-header-row">
+              <h1 className="editar-header-title">Dados da Empresa</h1>
+              <div className="editar-header-actions">
+                <Button variant="outline-secondary" className="btn-voltar" onClick={handleVoltar}>
+                  <FaArrowLeft />&nbsp;Voltar
+                </Button>
+              </div>
             </div>
+          </section>
 
-            <Card>
-              <Card.Body>
-                {!isAdmin && (<Alert variant="info">Você está em modo de visualização.</Alert>)}
-                {error && <Alert variant="danger">{error}</Alert>}
-                {success && <Alert variant="success">{success}</Alert>}
-                <Form onSubmit={() => {}} noValidate>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Nome da Empresa</Form.Label>
-                    <div className="form-group-with-icon">
-                      <FaBuilding className="form-icon" />
-                      <Form.Control type="text" name="NOME_EMPRESA" value={empresa.NOME_EMPRESA || ''} disabled />
-                    </div>
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>CNPJ</Form.Label>
-                    <div className="form-group-with-icon">
-                      <FaIdCard className="form-icon" />
-                      <Form.Control type="text" name="CNPJ" value={empresa.CNPJ || ''} disabled />
-                    </div>
-                  </Form.Group>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Container>
-        </div>
-      </>
+          <Card>
+            <Card.Body>
+              <Alert variant="info" className="mb-0 d-flex align-items-center gap-2">
+                <Spinner animation="border" size="sm" />&nbsp;Carregando...
+              </Alert>
+            </Card.Body>
+          </Card>
+        </Container>
+      </div>
     );
   }
 
   // Render
   return (
-    <>
-      <div className="editar-empresa-container">
-        <Menu onLogout={onLogout} />
-        <Container as="main" className="editar-empresa-main-content">
-          <h1 className="mb-4">Dados da Empresa</h1>
-          <Card>
-            <Card.Body>
-              {!isAdmin && (<Alert variant="info">Você está em modo de visualização.</Alert>)}
-              {error && <Alert variant="danger">{error}</Alert>}
-              {success && <Alert variant="success">{success}</Alert>}
+    <div className="editar-empresa-container">
+      <Menu onLogout={onLogout} />
+      <Container as="main" className="editar-empresa-main-content">
+        {/* HEADER SEPARADO (título + voltar) */}
+        <section className="editar-header-card">
+          <div className="editar-header-row">
+            <h2>Dados da Empresa</h2>
+            <div className="editar-header-actions">
+              <Button variant="outline-secondary" className="btn-voltar" onClick={handleVoltar}>
+                <FaArrowLeft />&nbsp;Voltar
+              </Button>
+            </div>
+          </div>
+        </section>
 
-              <Form onSubmit={handleSubmit} noValidate>
-                <Form.Group className="mb-3">
-                  <Form.Label>Nome da Empresa</Form.Label>
-                  <div className="form-group-with-icon">
-                    <FaBuilding className="form-icon" />
-                    <Form.Control
-                      type="text"
-                      name="NOME_EMPRESA"
-                      value={empresa.NOME_EMPRESA || ''}
-                      onChange={handleChange}
-                      disabled={!isAdmin}
-                      required
-                    />
-                  </div>
-                </Form.Group>
+        {/* CONTEÚDO */}
+        <Card>
+          <Card.Body>
+            {!isAdmin && (<Alert variant="info">Você está em modo de visualização.</Alert>)}
+            {error && <Alert variant="danger">{error}</Alert>}
+            {success && <Alert variant="success">{success}</Alert>}
 
-                {/* FOTO DE PERFIL DA EMPRESA (como PerfilUsuario: usa URL absoluta do back) */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Foto de Perfil da Empresa (exibida no Perfil Público)</Form.Label>
-                  <Row className="align-items-center g-3">
-                    <Col xs="auto">
-                      <div
-                        className="mf-logo-preview"
-                        style={{
-                          width: 88, height: 88, borderRadius: 12, overflow: 'hidden',
-                          border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', background: '#f8fafc'
-                        }}
-                      >
-                        {perfilPreview ? (
-                          <img
-                            src={perfilPreview || defaultAvatar}
-                            alt="Foto de Perfil"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            onError={(e) => { e.currentTarget.src = defaultAvatar; }}
-                          />
-                        ) : (
-                          <FaImage size={28} style={{ opacity: .6 }} />
-                        )}
-                      </div>
-                    </Col>
-                    <Col>
-                      <div className="d-flex gap-2 flex-wrap">
-                        <Form.Control type="file" accept="image/*" onChange={handlePerfilChange} disabled={!isAdmin} />
-                        <Button
-                          variant="outline-secondary"
-                          onClick={enviarPerfil}
-                          disabled={!isAdmin || !perfilFile || uploadingPerfil}
-                        >
-                          {uploadingPerfil ? (<><Spinner size="sm" className="me-2" /> Enviando...</>) : (<><FaUpload className="me-2" /> Enviar foto</>)}
-                        </Button>
-                      </div>
-                      <Form.Text className="text-muted">
-                        O backend já retorna a URL pública (S3/CloudFront) em <code>img_perfil</code>.
-                      </Form.Text>
-                    </Col>
-                  </Row>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>CNPJ</Form.Label>
-                  <div className="form-group-with-icon">
-                    <FaIdCard className="form-icon" />
-                    <Form.Control
-                      type="text"
-                      name="CNPJ"
-                      value={empresa.CNPJ || ''}
-                      onChange={handleChange}
-                      disabled={!isAdmin}
-                      required
-                      maxLength={14}
-                      isInvalid={!isCnpjValid && (empresa.CNPJ || '').length > 0}
-                    />
-                  </div>
-                  {!isCnpjValid && (empresa.CNPJ || '').length > 0 && (
-                    <Form.Text className="text-danger">CNPJ inválido.</Form.Text>
-                  )}
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Email</Form.Label>
-                  <div className="form-group-with-icon">
-                    <FaEnvelope className="form-icon" />
-                    <Form.Control
-                      type="email"
-                      name="EMAIL"
-                      value={empresa.EMAIL || ''}
-                      onChange={handleChange}
-                      disabled={!isAdmin}
-                    />
-                  </div>
-                </Form.Group>
-
-                <div className="form-row">
-                  <Form.Group className="mb-3 form-group-endereco">
-                    <Form.Label>Endereço</Form.Label>
-                    <div className="form-group-with-icon">
-                      <FaHome className="form-icon" />
-                      <Form.Control
-                        type="text"
-                        name="ENDERECO"
-                        value={empresa.ENDERECO || ''}
-                        onChange={handleChange}
-                        disabled={!isAdmin}
-                      />
-                    </div>
-                  </Form.Group>
-
-                  <Form.Group className="mb-3 form-group-numero">
-                    <Form.Label>Número</Form.Label>
-                    <div className="form-group-with-icon">
-                      <FaHashtag className="form-icon" />
-                      <Form.Control
-                        type="text"
-                        name="NUMERO"
-                        value={empresa.NUMERO || ''}
-                        onChange={handleChange}
-                        disabled={!isAdmin}
-                      />
-                    </div>
-                  </Form.Group>
+            <Form onSubmit={handleSubmit} noValidate>
+              <Form.Group className="mb-3">
+                <Form.Label>Nome da Empresa</Form.Label>
+                <div className="form-group-with-icon">
+                  <FaBuilding className="form-icon" />
+                  <Form.Control
+                    type="text"
+                    name="NOME_EMPRESA"
+                    value={empresa.NOME_EMPRESA || ''}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                    required
+                  />
                 </div>
+              </Form.Group>
 
-                {isAdmin && (
-                  <Button variant="primary" type="submit" className="mt-2">
-                    Salvar Alterações
-                  </Button>
+              {/* Foto de Perfil */}
+              <Form.Group className="mb-3">
+                <Form.Label>Foto de Perfil da Empresa (exibida no Perfil Público)</Form.Label>
+                <Row className="align-items-center g-3">
+                  <Col xs="auto">
+                    <div
+                      className="mf-logo-preview"
+                      style={{
+                        width: 88, height: 88, borderRadius: 12, overflow: 'hidden',
+                        border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', background: '#f8fafc'
+                      }}
+                    >
+                      {perfilPreview ? (
+                        <img
+                          src={perfilPreview || defaultAvatar}
+                          alt="Foto de Perfil"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => { e.currentTarget.src = defaultAvatar; }}
+                        />
+                      ) : (
+                        <FaImage size={28} style={{ opacity: .6 }} />
+                      )}
+                    </div>
+                  </Col>
+                  <Col>
+                    <div className="d-flex gap-2 flex-wrap">
+                      <Form.Control type="file" accept="image/*" onChange={handlePerfilChange} disabled={!isAdmin} />
+                      <Button
+                        variant="outline-secondary"
+                        onClick={enviarPerfil}
+                        disabled={!isAdmin || !perfilFile || uploadingPerfil}
+                      >
+                        {uploadingPerfil ? (<><Spinner size="sm" className="me-2" /> Enviando...</>) : (<><FaUpload className="me-2" /> Enviar foto</>)}
+                      </Button>
+                    </div>
+                    <Form.Text className="text-muted">
+                      O backend já retorna a URL pública (S3/CloudFront) em <code>img_perfil</code>.
+                    </Form.Text>
+                  </Col>
+                </Row>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>CNPJ</Form.Label>
+                <div className="form-group-with-icon">
+                  <FaIdCard className="form-icon" />
+                  <Form.Control
+                    type="text"
+                    name="CNPJ"
+                    value={empresa.CNPJ || ''}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                    required
+                    maxLength={14}
+                    isInvalid={!isCnpjValid && (empresa.CNPJ || '').length > 0}
+                  />
+                </div>
+                {!isCnpjValid && (empresa.CNPJ || '').length > 0 && (
+                  <Form.Text className="text-danger">CNPJ inválido.</Form.Text>
                 )}
-              </Form>
-            </Card.Body>
-          </Card>
+              </Form.Group>
 
-          {/* Bloco de Avaliações */}
-          <Card className="mt-4">
-            <Card.Body>
-              <Card.Title className="card-title-icon"><FaStar /> Avaliações de Clientes</Card.Title>
-              <Card.Text>Use o link ou QR Code para que seus clientes possam avaliar o atendimento.</Card.Text>
-              {avaliacaoUrl && (
-                <div className="url-display-box"><FaLink /><span>{avaliacaoUrl}</span></div>
-              )}
-              <div className="botoes-acao">
-                <Button variant="secondary" onClick={gerarLinkAvaliacao}>
-                  {avaliacaoUrl ? 'Gerar Novo Link' : 'Gerar Link'}
-                </Button>
-                <Button variant="outline-primary" onClick={() => copiarLink(avaliacaoUrl)} disabled={!avaliacaoUrl}>
-                  <FaCopy /> Copiar
-                </Button>
-                <Button variant="outline-primary" onClick={exibirQrCode} disabled={!avaliacaoUrl}>
-                  <FaQrcode /> QR Code
-                </Button>
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <div className="form-group-with-icon">
+                  <FaEnvelope className="form-icon" />
+                  <Form.Control
+                    type="email"
+                    name="EMAIL"
+                    value={empresa.EMAIL || ''}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                  />
+                </div>
+              </Form.Group>
+
+              <div className="form-row">
+                <Form.Group className="mb-3 form-group-endereco">
+                  <Form.Label>Endereço</Form.Label>
+                  <div className="form-group-with-icon">
+                    <FaHome className="form-icon" />
+                    <Form.Control
+                      type="text"
+                      name="ENDERECO"
+                      value={empresa.ENDERECO || ''}
+                      onChange={handleChange}
+                      disabled={!isAdmin}
+                    />
+                  </div>
+                </Form.Group>
+
+                <Form.Group className="mb-3 form-group-numero">
+                  <Form.Label>Número</Form.Label>
+                  <div className="form-group-with-icon">
+                    <FaHashtag className="form-icon" />
+                    <Form.Control
+                      type="text"
+                      name="NUMERO"
+                      value={empresa.NUMERO || ''}
+                      onChange={handleChange}
+                      disabled={!isAdmin}
+                    />
+                  </div>
+                </Form.Group>
               </div>
-            </Card.Body>
-          </Card>
 
-          {/* Perfil Público — APENAS TOKEN */}
-          <Card className="mt-4">
-            <Card.Body>
-              <Card.Title className="card-title-icon"><FaGlobeAmericas /> Perfil Público</Card.Title>
-              <Card.Text>Link público com foto de perfil, nome e avaliações da sua empresa (acesso por token).</Card.Text>
-              {perfilUrlByToken && (
-                <div className="url-display-box alt"><FaLink /><span>{perfilUrlByToken}</span></div>
+              {isAdmin && (
+                <Button variant="primary" type="submit" className="mt-2">
+                  Salvar Alterações
+                </Button>
               )}
-              <div className="botoes-acao">
-                <Button variant="secondary" onClick={gerarLinkPerfil}>
-                  {perfilUrlByToken ? 'Gerar Novo Link' : 'Gerar Link'}
-                </Button>
-                <Button variant="outline-primary" onClick={() => copiarLink(perfilUrlByToken)} disabled={!perfilUrlByToken}>
-                  <FaCopy /> Copiar
-                </Button>
-                <Button variant="outline-primary" onClick={exibirQrCodePerfil} disabled={!perfilToken}>
-                  <FaQrcode /> QR Code
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        </Container>
-      </div>
+            </Form>
+          </Card.Body>
+        </Card>
 
-      {/* Modal de confirmação de salvar dados */}
+        {/* Bloco de Avaliações */}
+        <Card className="mt-4">
+          <Card.Body>
+            <Card.Title className="card-title-icon"><FaStar /> Avaliações de Clientes</Card.Title>
+            <Card.Text>Use o link ou QR Code para que seus clientes possam avaliar o atendimento.</Card.Text>
+            {avaliacaoUrl && (
+              <div className="url-display-box"><FaLink /><span>{avaliacaoUrl}</span></div>
+            )}
+            <div className="botoes-acao">
+              <Button variant="secondary" onClick={gerarLinkAvaliacao}>
+                {avaliacaoUrl ? 'Gerar Novo Link' : 'Gerar Link'}
+              </Button>
+              <Button variant="outline-primary" onClick={() => copiarLink(avaliacaoUrl)} disabled={!avaliacaoUrl}>
+                <FaCopy /> Copiar
+              </Button>
+              <Button variant="outline-primary" onClick={exibirQrCode} disabled={!avaliacaoUrl}>
+                <FaQrcode /> QR Code
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+
+        {/* Perfil Público — APENAS TOKEN */}
+        <Card className="mt-4">
+          <Card.Body>
+            <Card.Title className="card-title-icon"><FaGlobeAmericas /> Perfil Público</Card.Title>
+            <Card.Text>Link público com foto de perfil, nome e avaliações da sua empresa (acesso por token).</Card.Text>
+            {perfilUrlByToken && (
+              <div className="url-display-box alt"><FaLink /><span>{perfilUrlByToken}</span></div>
+            )}
+            <div className="botoes-acao">
+              <Button variant="secondary" onClick={gerarLinkPerfil}>
+                {perfilUrlByToken ? 'Gerar Novo Link' : 'Gerar Link'}
+              </Button>
+              <Button variant="outline-primary" onClick={() => copiarLink(perfilUrlByToken)} disabled={!perfilUrlByToken}>
+                <FaCopy /> Copiar
+              </Button>
+              <Button variant="outline-primary" onClick={exibirQrCodePerfil} disabled={!perfilToken}>
+                <FaQrcode /> QR Code
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+      </Container>
+
+      {/* Modal de confirmação */}
       <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
         <Modal.Header closeButton><Modal.Title>Confirmar Alterações</Modal.Title></Modal.Header>
         <Modal.Body>Você tem certeza de que deseja salvar as alterações?</Modal.Body>
@@ -539,7 +535,7 @@ const EditarEmpresa = ({ onLogout }) => {
           <Button variant="primary" onClick={handleDownloadQrPerfil} disabled={!qrPerfilUrl}><FaDownload /> Baixar</Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </div>
   );
 };
 

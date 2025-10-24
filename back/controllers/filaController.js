@@ -1,11 +1,13 @@
+// back/src/controllers/filaController.js
 const db = require('../database/connection');
 
-// ----------------- Helpers -----------------
+/* ----------------- Helpers ----------------- */
 function toIntOrNull(v) {
   if (v == null || v === '') return null;
   const n = parseInt(String(v), 10);
   return Number.isFinite(n) ? n : null;
 }
+
 function isWithinRange(ini_vig, fim_vig) {
   const today = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''), 10);
   const ini = toIntOrNull(ini_vig);
@@ -13,23 +15,18 @@ function isWithinRange(ini_vig, fim_vig) {
   return (ini == null || today >= ini) && (fim == null || today <= fim);
 }
 
-// ---------------------------------------------------------------------
-// LISTA FILAS + CONFIG + QTDE_AGUARDANDO (SITUACAO IN (0,3))
-// ---------------------------------------------------------------------
-/**
- * GET /empresas/filas/:idEmpresa
- * GET /empresas/filas?idEmpresa=...
- *
- * Retorna:
- *  - ID_FILA, ID_EMPRESA, ID_CONF_FILA
- *  - DT_MOVTO, DT_INI
- *  - BLOCK (boolean), SITUACAO (boolean)
- *  - NOME_FILA (da ConfiguracaoFila)
- *  - FIM_VIG (da ConfiguracaoFila)  -> use como “Data Fim Fila”
- *  - QTDE_AGUARDANDO                -> clientes com SITUACAO 0 (Aguardando) OU 3 (Chamado)
- *
- * Obs.: compatível com ONLY_FULL_GROUP_BY (subselect agregado com GROUP BY).
- */
+function yyyymmddFromDate(d) {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = d.getFullYear();
+  return `${yy}${mm}${dd}`;
+}
+
+/* ---------------------------------------------------------------------
+   LISTA FILAS + CONFIG
+   - QTDE_AGUARDANDO (SIT=0)
+   - QTDE_CHAMADAS   (SIT=3)
+--------------------------------------------------------------------- */
 exports.listarFilasComConfiguracao = async (req, res) => {
   const idEmpresaParam = req.params.idEmpresa ?? req.query.idEmpresa;
   if (!idEmpresaParam) {
@@ -40,10 +37,23 @@ exports.listarFilasComConfiguracao = async (req, res) => {
     return res.status(400).json({ erro: 'ID da Empresa deve ser um número válido.' });
   }
 
-  // IMPORTANTE:
-  // - Tabela de itens da fila: aqui usei "clientesfila" e coluna "SITUACAO" (0,1,2,3,4).
-  //   Ajuste o nome se no seu schema for diferente.
-  // - A contagem é por ID_FILA (do dia), então não é necessário filtrar data no subselect.
+  const all = String(req.query.all || '0') === '1';
+  const hojeFlag = all ? false : (String(req.query.hoje || '1') === '1');
+  const apenasAtivas = all ? false : (String(req.query.apenasAtivas || '1') === '1');
+
+  const whereParts = ['f.ID_EMPRESA = ?'];
+  const whereParams = [idEmpresa];
+
+  if (hojeFlag) {
+    whereParts.push('f.DT_MOVTO >= CURDATE() AND f.DT_MOVTO < CURDATE() + INTERVAL 1 DAY');
+  }
+  if (apenasAtivas) {
+    whereParts.push('f.SITUACAO = 1');
+    whereParts.push('f.BLOCK = 0');
+  }
+
+  const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+
   const sql = `
     SELECT
       f.ID_FILA,
@@ -55,7 +65,8 @@ exports.listarFilasComConfiguracao = async (req, res) => {
       f.SITUACAO,
       cf.NOME_FILA,
       cf.FIM_VIG,
-      COALESCE(w.QTDE_AGUARDANDO, 0) AS QTDE_AGUARDANDO
+      COALESCE(w.QTDE_AGUARDANDO, 0) AS QTDE_AGUARDANDO,
+      COALESCE(w2.QTDE_CHAMADAS, 0)   AS QTDE_CHAMADAS
     FROM fila f
     INNER JOIN ConfiguracaoFila cf
             ON cf.ID_CONF_FILA = f.ID_CONF_FILA
@@ -64,28 +75,38 @@ exports.listarFilasComConfiguracao = async (req, res) => {
         fc.ID_FILA,
         COUNT(*) AS QTDE_AGUARDANDO
       FROM clientesfila fc
-      WHERE fc.SITUACAO IN (0, 3)  -- 0=Aguardando, 3=Chamado
+      WHERE fc.SITUACAO = 0
       GROUP BY fc.ID_FILA
     ) w
       ON w.ID_FILA = f.ID_FILA
-    WHERE f.ID_EMPRESA = ?
+    LEFT JOIN (
+      SELECT
+        fc2.ID_FILA,
+        COUNT(*) AS QTDE_CHAMADAS
+      FROM clientesfila fc2
+      WHERE fc2.SITUACAO = 3
+      GROUP BY fc2.ID_FILA
+    ) w2
+      ON w2.ID_FILA = f.ID_FILA
+    ${whereSql}
     ORDER BY f.DT_MOVTO DESC, f.ID_FILA DESC
   `;
 
   try {
-    const [rows] = await db.execute(sql, [idEmpresa]);
+    const [rows] = await db.execute(sql, whereParams);
 
     const formatted = rows.map((r) => ({
       ID_FILA: r.ID_FILA,
       ID_EMPRESA: r.ID_EMPRESA,
       ID_CONF_FILA: r.ID_CONF_FILA,
       NOME_FILA: r.NOME_FILA,
-      DT_MOVTO: r.DT_MOVTO,  // deixe o front formatar
+      DT_MOVTO: r.DT_MOVTO,
       DT_INI: r.DT_INI,
-      FIM_VIG: r.FIM_VIG,    // fim da vigência da configuração
+      FIM_VIG: r.FIM_VIG,
       BLOCK: r.BLOCK === 1,
       SITUACAO: r.SITUACAO === 1,
       QTDE_AGUARDANDO: Number(r.QTDE_AGUARDANDO) || 0,
+      QTDE_CHAMADAS: Number(r.QTDE_CHAMADAS) || 0,
     }));
 
     return res.json(formatted);
@@ -95,7 +116,57 @@ exports.listarFilasComConfiguracao = async (req, res) => {
   }
 };
 
-// ----------------- Toggles por ID_FILA (BLOCK/SITUACAO) -----------------
+/* ---------------------------------------------------------------------
+   COUNT por fila (endpoint dedicado)
+   GET /filas/:idFila/count?status=aguardando|chamadas&data=YYYYMMDD
+   - aguardando => SIT=0
+   - chamadas   => SIT=3
+--------------------------------------------------------------------- */
+exports.countByFila = async (req, res) => {
+  const idFila = parseInt(req.params.idFila, 10);
+  if (Number.isNaN(idFila)) return res.status(400).json({ erro: 'idFila inválido' });
+
+  const status = String(req.query.status || 'aguardando').toLowerCase();
+  const dataYmd = req.query.data ? String(req.query.data) : null;
+
+  const statusMap = {
+    aguardando: 0,
+    chamadas: 3,
+    chamada: 3,
+    'chamadas_nao_apresentadas': 3,
+  };
+  const situacaoCode = statusMap[status];
+  if (situacaoCode === undefined) {
+    return res.status(400).json({ erro: 'status inválido' });
+  }
+
+  try {
+    if (dataYmd && /^\d{8}$/.test(dataYmd)) {
+      const [[f]] = await db.query(
+        `SELECT DATE_FORMAT(DT_MOVTO, '%Y%m%d') AS YMD FROM fila WHERE ID_FILA = ? LIMIT 1`,
+        [idFila]
+      );
+      if (!f) return res.status(404).json({ erro: 'fila_not_found' });
+      if (String(f.YMD) !== dataYmd) {
+        return res.status(409).json({ erro: 'fila_nao_pertence_a_data' });
+      }
+    }
+
+    const [[row]] = await db.query(
+      `SELECT COUNT(*) AS QTD
+         FROM clientesfila
+        WHERE ID_FILA = ? AND SITUACAO = ?`,
+      [idFila, situacaoCode]
+    );
+    const count = Number(row?.QTD ?? 0);
+    return res.json({ count });
+  } catch (e) {
+    console.error('[filas/count] ERRO:', e);
+    return res.status(500).json({ erro: 'internal_error' });
+  }
+};
+
+/* ----------------- Toggles por ID_FILA (BLOCK/SITUACAO) ----------------- */
 exports.toggleFilaBlock = async (req, res) => {
   const { id_fila } = req.params;
   const { block } = req.body;
@@ -138,7 +209,7 @@ exports.toggleFilaSituacao = async (req, res) => {
   }
 };
 
-// ----------------- STATUS / TOGGLE por ID_CONF_FILA -----------------
+/* ----------------- STATUS / TOGGLE por ID_CONF_FILA ----------------- */
 exports.statusByConf = async (req, res) => {
   const idConfFila = Number(req.query.idConfFila);
   if (!idConfFila) return res.status(400).json({ erro: 'idConfFila é obrigatório' });
@@ -259,7 +330,9 @@ exports.toggleBlockByConf = async (req, res) => {
 
 exports.applyConfigToToday = async (req, res) => {
   const { idConfFila, bloquearHoje } = req.body || {};
-  if (!idConfFila) return res.status(400).json({ erro: 'idConfFila é obrigatório' });
+  if (!idConfila && idConfFila !== 0) { // pequena proteção caso chegue undefined
+    return res.status(400).json({ erro: 'idConfFila é obrigatório' });
+  }
 
   const conn = await db.getConnection();
   try {
@@ -322,36 +395,34 @@ exports.applyConfigToToday = async (req, res) => {
     conn.release();
   }
 };
-// Função para listar as filas configuradas por empresa
+
+/* ---------------------------------------------------------------------
+   Listar configurações por empresa
+--------------------------------------------------------------------- */
 exports.listarFilasPorEmpresa = async (req, res) => {
-    const { id_empresa } = req.params; // ID da empresa passada como parâmetro
+  const { id_empresa } = req.params;
+  if (!id_empresa) {
+    return res.status(400).json({ erro: 'ID da empresa é obrigatório.' });
+  }
 
-    if (!id_empresa) {
-        return res.status(400).json({ erro: 'ID da empresa é obrigatório.' });
-    }
+  const sql = `
+    SELECT
+      cf.ID_CONF_FILA,
+      cf.ID_EMPRESA,
+      cf.NOME_FILA,
+      cf.INI_VIG,
+      cf.FIM_VIG,
+      cf.SITUACAO
+    FROM ConfiguracaoFila cf
+    WHERE cf.ID_EMPRESA = ?
+    ORDER BY cf.NOME_FILA ASC, cf.ID_CONF_FILA DESC
+  `;
 
-    const sql = `
-        SELECT 
-            f.NOME_FILA, 
-            COUNT(cf.ID_FILA) AS contagem, 
-            COALESCE(f.DT_ALTERACAO, f.INI_VIG, NOW()) AS data_configuracao
-        FROM 
-            clientesfila cf
-        JOIN 
-            ConfiguracaoFila f ON f.ID_FILA = cf.ID_FILA
-        WHERE 
-            cf.ID_EMPRESA = ?
-        GROUP BY 
-            f.NOME_FILA
-        ORDER BY 
-            data_configuracao DESC
-    `;
-
-    try {
-        const [results] = await db.execute(sql, [id_empresa]);
-        res.status(200).json(results); // Retorna as filas encontradas
-    } catch (err) {
-        console.error('Erro ao listar filas por empresa:', err);
-        res.status(500).json({ erro: 'Erro interno ao listar filas.', detalhes: err.message });
-    }
+  try {
+    const [rows] = await db.execute(sql, [id_empresa]);
+    return res.status(200).json(rows);
+  } catch (err) {
+    console.error('Erro ao listar filas por empresa:', err);
+    return res.status(500).json({ erro: 'Erro interno ao listar filas.', detalhes: err.message });
+  }
 };

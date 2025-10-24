@@ -46,11 +46,15 @@ body[data-theme='dark'] .mf-dash {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+  background: var(--mf-card);
+  border: 1px solid var(--mf-border);
+  padding: 20px;
+  border-radius: 14px;
 }
-.mf-dash-header h1 {
+.mf-dash-header h2 {
   margin: 0;
-  font-size: 28px;
   line-height: 1.1;
+  font-weight: 600;
 }
 .mf-subtitle {
   color: var(--mf-muted);
@@ -425,8 +429,51 @@ body[data-theme='dark'] .mf-table tbody tr:hover {
     padding: 12px 14px;
   }
 }
+/* ===== Ícones nos KPIs (StatCard) ===== */
+.mf-stat {
+  position: relative;
+}
 
-/* ================================== */
-/* ===== ESTILOS DE AVALIAÇÕES REMOVIDOS ===== */
-/* (Foram movidos para AvaliacoesPage.css) */
-/* ================================== */
+.mf-stat--with-icon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mf-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(58, 90, 254, 0.10); /* base brand */
+  color: var(--mf-brand);
+  flex-shrink: 0;
+  font-size: 20px;
+}
+
+/* Área textual do card quando há ícone */
+.mf-stat-content { flex: 1; min-width: 0; }
+
+/* Filete lateral por "accent" */
+.mf-stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 8px;
+  background: var(--mf-brand);
+  opacity: 0.9;
+}
+
+/* Variações de cor */
+.mf-stat--ok::before   { background: var(--mf-ok); }
+.mf-stat--warn::before { background: var(--mf-warn); }
+.mf-stat--gray::before { background: #9ca3af; }
+
+/* Ícone acompanha a variação */
+.mf-stat--ok .mf-stat-icon   { background: rgba(34,197,94,0.10); color: var(--mf-ok); }
+.mf-stat--warn .mf-stat-icon { background: rgba(245,158,11,0.12); color: var(--mf-warn); }
+.mf-stat--gray .mf-stat-icon { background: rgba(156,163,175,0.15); color: #6b7280; }
