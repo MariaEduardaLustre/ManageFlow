@@ -12,7 +12,7 @@ const { putToS3, keyUsuarioPerfil } = require('../middlewares/s3Upload');
 require('dotenv').config();
 
 /* ============================================================
- *  LOGIN
+ * LOGIN
  * ============================================================ */
 exports.loginUsuario = async (req, res) => {
   const { email, senha } = req.body;
@@ -53,7 +53,7 @@ exports.loginUsuario = async (req, res) => {
 };
 
 /* ============================================================
- *  CADASTRO
+ * CADASTRO
  * ============================================================ */
 exports.cadastrarUsuario = async (req, res) => {
   const {
@@ -95,7 +95,7 @@ exports.cadastrarUsuario = async (req, res) => {
 };
 
 /* ============================================================
- *  ESQUECI SENHA
+ * ESQUECI SENHA
  * ============================================================ */
 exports.solicitarRedefinicaoSenha = async (req, res) => {
   const { email } = req.body;
@@ -139,20 +139,29 @@ exports.solicitarRedefinicaoSenha = async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.send('Um link para redefinição de senha foi enviado para o seu e-mail.');
+    
+    // ================== MELHORIA AQUI ==================
+    // Envia resposta JSON também para esta rota (boa prática)
+    res.status(200).json({ message: 'Um link para redefinição de senha foi enviado para o seu e-mail.' });
+    // ===================================================
+
   } catch (err) {
     console.error('[FORGOT] 500 error:', err);
-    res.status(500).send('Erro interno ao processar solicitação de senha.');
+    // ================== MELHORIA AQUI ==================
+    res.status(500).json({ error: 'Erro interno ao processar solicitação de senha.' });
+    // ===================================================
   }
 };
 
 /* ============================================================
- *  REDEFINIR SENHA
+ * REDEFINIR SENHA
  * ============================================================ */
 exports.redefinirSenha = async (req, res) => {
   const { token, novaSenha } = req.body;
   if (!token || !novaSenha) {
-    return res.status(400).send('Token e nova senha são obrigatórios.');
+    // ================== MELHORIA AQUI ==================
+    return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
+    // ===================================================
   }
 
   try {
@@ -161,7 +170,9 @@ exports.redefinirSenha = async (req, res) => {
       [token, new Date()]
     );
     if (results.length === 0) {
-      return res.status(400).send('Token inválido ou expirado.');
+      // ================== MELHORIA AQUI ==================
+      return res.status(400).json({ error: 'Token inválido ou expirado.' });
+      // ===================================================
     }
 
     const usuario = results[0];
@@ -174,18 +185,25 @@ exports.redefinirSenha = async (req, res) => {
       [senhaCriptografada, usuario.ID]
     );
 
-    res.send('Senha redefinida com sucesso!');
+    // ================== CORREÇÃO PRINCIPAL ==================
+    // Alterado de res.send() para res.json()
+    res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+    // ========================================================
+
   } catch (error) {
     console.error('[RESET] 500 error:', error);
-    res.status(500).send('Erro interno ao redefinir a senha.');
+    // ================== CORREÇÃO PRINCIPAL ==================
+    // Alterado de res.send() para res.json()
+    res.status(500).json({ error: 'Erro interno ao redefinir a senha.' });
+    // ========================================================
   }
 };
 
 /* ============================================================
- *  FOTO DE PERFIL (S3) — multipart/form-data (campo: img_perfil)
- *  Requer o middleware: usuarioPerfilSingle (multer) na rota.
+ * FOTO DE PERFIL (S3)
  * ============================================================ */
 exports.uploadFotoPerfil = async (req, res) => {
+  // ... (código inalterado)
   const idUsuario = parseInt(req.params.id, 10);
   if (!Number.isFinite(idUsuario)) {
     return res.status(400).json({ error: 'ID de usuário inválido.' });
@@ -217,9 +235,10 @@ exports.uploadFotoPerfil = async (req, res) => {
 };
 
 /* ============================================================
- *  GET USUÁRIO POR ID (retorna URL pública da foto)
+ * GET USUÁRIO POR ID (retorna URL pública da foto)
  * ============================================================ */
 exports.getUsuarioPorId = async (req, res) => {
+  // ... (código inalterado)
   const idUsuario = parseInt(req.params.id, 10);
   if (!Number.isFinite(idUsuario)) {
     return res.status(400).json({ error: 'ID de usuário inválido.' });

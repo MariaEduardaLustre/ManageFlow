@@ -1,87 +1,146 @@
-.redefinir-senha-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #f9f9f9;
-    padding: 20px;
-  }
-  
-  .redefinir-senha-container h2 {
-    text-align: center;
-    font-size: 2rem;
-    color: #1e73be;
-    margin-bottom: 30px;
-  }
-  
-  .redefinir-senha-container form {
-    background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .redefinir-senha-container .form-group {
-    margin-bottom: 20px;
-  }
-  
-  .redefinir-senha-container .form-group input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 25px;
-    font-size: 1rem;
-    margin-top: 5px;
-    outline: none;
-  }
-  
-  .redefinir-senha-container .form-group input:focus {
-    border-color: #4254cb;
-    box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
-  }
-  
-  .redefinir-senha-container button.btn-primary {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    background-color: #1e73be;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    margin-top: 20px;
-  }
-  
-  .redefinir-senha-container button.btn-primary:hover {
-    background-color: #1e41a5;
-  }
-  
-  .redefinir-senha-container .mensagem-sucesso {
-    color: green;
-    text-align: center;
-    margin-bottom: 15px;
-  }
-  
-  .redefinir-senha-container .mensagem-erro {
-    color: red;
-    text-align: center;
-    margin-bottom: 15px;
-  }
+/* --- CSS para Redefinir Senha (Completo e Atualizado) --- */
 
+.redefinir-senha-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  /* Cor de fundo cinza claro, igual ao seu dashboard */
+  background-color: #f9f9f9;
+  padding: 20px;
+}
+ 
+.redefinir-senha-container h2 {
+  text-align: center;
+  font-size: 2rem;
+  /* MUDANÇA: Cor do título atualizada para o azul principal do sistema */
+  color: #4254cb;
+  margin-bottom: 30px;
+}
+ 
+.redefinir-senha-container form {
+  background-color: white;
+  padding: 30px;
+  /* Borda arredondada igual aos cards do seu dashboard */
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+ 
+.redefinir-senha-container .form-group {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* Adicionando estilo para a Label */
+.redefinir-senha-container .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #555;
+}
+ 
+.redefinir-senha-container .form-group input {
+  width: 100%;
+  padding: 12px;
+  /* MUDANÇA: Estilo de input inspirado na tela de login */
+  background-color: #f8f9fa; /* Fundo cinza claro */
+  border: 1px solid #f8f9fa; /* Borda da mesma cor do fundo */
+  border-radius: 10px;       /* Borda um pouco menos redonda */
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box; /* Garante que o padding não afete a largura total */
+}
+ 
+.redefinir-senha-container .form-group input:focus {
+  /* MUDANÇA: Estilo de foco mais moderno */
+  border-color: #4254cb;
+  background-color: #ffffff;
+  /* Sombra suave no foco */
+  box-shadow: 0 0 0 3px rgba(66, 84, 203, 0.2);
+}
+ 
+.redefinir-senha-container button.btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: bold; /* Dando mais destaque ao texto */
+  /* MUDANÇA: Cor do botão atualizada para o azul principal */
+  background-color: #4254cb;
+  color: white;
+  border: none;
+  border-radius: 25px; /* Botão bem arredondado, como no login */
+  cursor: pointer;
+  margin-top: 10px; /* Ajuste de margem */
+}
+ 
+.redefinir-senha-container button.btn-primary:hover {
+  /* MUDANÇA: Cor de hover um pouco mais escura */
+  background-color: #3a4ab7;
+}
+
+/* Estilo para botão desativado */
+.redefinir-senha-container button.btn-primary:disabled {
+  background-color: #b0b8d7;
+  cursor: not-allowed;
+}
+ 
+.redefinir-senha-container .mensagem-sucesso {
+  color: #0f5132; /* Verde mais escuro */
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+ 
+.redefinir-senha-container .mensagem-erro {
+  color: red;
+  text-align: center;
+  margin-top: 15px; /* Aparece abaixo do formulário */
+}
+
+/* Esta classe já existia no seu código original */
 .mensagem-alerta {
-  color: red; /* Ou outra cor de sua preferência */
+  color: red; 
   font-size: 0.9em;
   margin-top: 5px;
 }
-  
-  @media (max-width: 768px) {
-    .redefinir-senha-container form {
-      padding: 25px;
-      max-width: 90%;
-    }
+ 
+@media (max-width: 768px) {
+  .redefinir-senha-container form,
+  .redefinir-senha-container .mensagem-card { /* Aplicando media query ao card também */
+    padding: 25px;
+    max-width: 90%;
   }
+}
+
+/* ============================================== */
+/* --- NOVO BLOCO: ESTILO DO CARD DE SUCESSO    --- */
+/* ============================================== */
+
+.redefinir-senha-container .mensagem-card {
+  /* Cópia dos estilos do <form> para manter a consistência */
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  
+  /* Centralização do conteúdo */
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center; 
+  box-sizing: border-box;
+  text-align: center; 
+}
+
+/* Ajuste da margem da mensagem dentro do card */
+.redefinir-senha-container .mensagem-card .mensagem-sucesso {
+  margin-bottom: 20px; 
+}
