@@ -3,25 +3,13 @@ import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import Menu from '../Menu/Menu';
 import './FilaLista.css';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next'; // <-- 1. Importação continua a mesma
 
 /* Datas */
-const formatarDataParaExibicao = (val) => {
-    if (val === null || val === undefined || val === '') return 'N/A';
-    const d = new Date(val);
-    if (!isNaN(d.getTime())) {
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const yy = d.getFullYear();
-        return `${dd}/${mm}/${yy}`;
-    }
-    const s = String(val);
-    if (/^\d{8}$/.test(s)) {
-        const yy = s.slice(0, 4), mm = s.slice(4, 6), dd = s.slice(6, 8);
-        return `${dd}/${mm}/${yy}`;
-    }
-    return s;
-};
+// <-- 2. A função 'formatarDataParaExibicao' foi REMOVIDA.
+//    Ela será substituída por uma lógica dentro do componente.
+
+// A função formatarDataParaURL continua, pois é necessária para a navegação.
 const formatarDataParaURL = (val) => {
     if (val === null || val === undefined || val === '') return '';
     const d = new Date(val);
@@ -36,9 +24,49 @@ const formatarDataParaURL = (val) => {
     return '';
 };
 
-// ALTERADO: A página agora recebe 'onLogout' como uma propriedade
 const FilaLista = ({ onLogout }) => {
-    const { t } = useTranslation();
+    // <-- 3. ALTERADO: Pedimos o 'i18n' ao hook useTranslation
+    const { t, i18n } = useTranslation(); 
+    
+    // <-- 4. ADICIONADO: Obtemos o idioma atual (ex: 'pt', 'en')
+    const idiomaAtual = i18n.language;
+
+    // <-- 5. ADICIONADO: Definimos as opções de formatação da data
+    //    Queremos apenas dia, mês e ano, sem a hora.
+    const opcoesDeFormatacao = {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+    };
+
+    // <-- 6. ADICIONADO: Criamos o formatador de data internacional
+    const formatadorDeData = new Intl.DateTimeFormat(idiomaAtual, opcoesDeFormatacao);
+
+    // <-- 7. ADICIONADO: Uma nova função de formatação que usa o formatador
+    //    Esta substitui a 'formatarDataParaExibicao' que removemos.
+    const formatarData = (val) => {
+        if (val === null || val === undefined || val === '') return 'N/A';
+        const d = new Date(val);
+        
+        // Verifica se a data é válida
+        if (isNaN(d.getTime())) {
+            // Se não for, tenta lidar com o formato 'yyyymmdd' que a função antiga tratava
+            const s = String(val);
+            if (/^\d{8}$/.test(s)) {
+                const yy = s.slice(0, 4), mm = s.slice(4, 6), dd = s.slice(6, 8);
+                // Cria a data a partir das partes
+                const dataManual = new Date(`${yy}-${mm}-${dd}T00:00:00`); // Adiciona T00:00:00 para evitar problemas de fuso
+                if (isNaN(dataManual.getTime())) return s; // Se ainda for inválida, retorna a string
+                return formatadorDeData.format(dataManual);
+            }
+            return s; // Retorna a string original se não for uma data
+        }
+        
+        // Se a data for válida, formata-a
+        return formatadorDeData.format(d);
+    };
+
+    // O resto do seu código permanece igual
     const [filas, setFilas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -76,7 +104,6 @@ const FilaLista = ({ onLogout }) => {
 
     return (
         <div className="home-container">
-            {/* ALTERADO: A propriedade 'onLogout' é passada para o componente Menu */}
             <Menu onLogout={onLogout} />
 
             <main className="main-content">
@@ -114,8 +141,10 @@ const FilaLista = ({ onLogout }) => {
                                             style={{ cursor: 'pointer' }}
                                         >
                                             <td>{fila.NOME_FILA}</td>
-                                            <td>{formatarDataParaExibicao(fila.DT_INI)}</td>
-                                            <td>{formatarDataParaExibicao(fila.FIM_VIG)}</td>
+                                            {/* <-- 8. ALTERADO: Usamos a nova função 'formatarData' */}
+                                            <td>{formatarData(fila.DT_INI)}</td>
+                                            {/* <-- 8. ALTERADO: Usamos a nova função 'formatarData' */}
+                                            <td>{formatarData(fila.FIM_VIG)}</td>
                                             <td>{Number(fila.QTDE_AGUARDANDO) || 0}</td>
                                             <td>{fila.BLOCK ? t('geral.sim') : t('geral.nao')}</td>
                                         </tr>

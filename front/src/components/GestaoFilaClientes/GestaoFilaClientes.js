@@ -17,11 +17,11 @@ import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import Menu from '../Menu/Menu';
 import './GestaoFilaClientes.css';
 
-// ALTERADO: A página agora recebe 'onLogout' como uma propriedade
+// Página recebe 'onLogout' como prop
 const GestaoFilaClientes = ({ onLogout }) => {
     const { idEmpresa, dtMovto, idFila } = useParams();
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // <- agora também usamos i18n
 
     const [clientesFila, setClientesFila] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -43,6 +43,19 @@ const GestaoFilaClientes = ({ onLogout }) => {
     });
     const [abaAtiva, setAbaAtiva] = useState('aguardando');
 
+    // ======== NOVO: garante idioma do HTML para inputs nativos (date) ========
+    useEffect(() => {
+        const htmlLang = i18n.language?.startsWith('en') ? 'en' : 'pt-BR';
+        document.documentElement.lang = htmlLang;
+    }, [i18n.language]);
+
+    // ======== NOVO: helpers do campo de data ========
+    const getDateInputLang = () => (i18n.language?.startsWith('en') ? 'en-US' : 'pt-BR');
+    const getDatePlaceholder = () => (i18n.language?.startsWith('en') ? 'mm/dd/yyyy' : 'dd/mm/aaaa');
+
+    // ------------------------
+    // helpers
+    // ------------------------
     const isValidCPF = (cpf) => {
         if (typeof cpf !== 'string') return false;
         cpf = cpf.replace(/[^\d]+/g, '');
@@ -95,20 +108,35 @@ const GestaoFilaClientes = ({ onLogout }) => {
         setShowFeedbackModal(true);
     };
 
+    // Locale dinâmico a partir do i18n
+    const getLocale = () => {
+        const lang = (i18n.language || 'pt-BR').toLowerCase();
+        if (lang.startsWith('en')) return 'en-US';
+        if (lang.startsWith('pt')) return 'pt-BR';
+        // fallback
+        return 'en-US';
+    };
+
+    // 🔄 Datas e horários internacionalizados
     const formatarData = (dataSQL) => {
         if (!dataSQL) return 'N/A';
         const date = new Date(dataSQL);
         if (isNaN(date.getTime())) return String(dataSQL).substring(0, 10);
+
+        // dtMovto vem como "data do movimento" (data pura). Para evitar off-by-one,
+        // mantemos timezone em UTC na data (sem hora).
         const options = { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' };
-        return new Intl.DateTimeFormat('pt-BR', options).format(date);
+        return new Intl.DateTimeFormat(getLocale(), options).format(date);
     };
 
     const formatarHora = (timestampSQL) => {
         if (!timestampSQL) return 'N/A';
         const date = new Date(timestampSQL);
         if (isNaN(date.getTime())) return 'N/A';
-        const options = { hour: '2-digit', minute: '2-digit', hour12: false };
-        return new Intl.DateTimeFormat('pt-BR', options).format(date);
+
+        const isEnglish = getLocale() === 'en-US';
+        const options = { hour: '2-digit', minute: '2-digit', hour12: isEnglish };
+        return new Intl.DateTimeFormat(getLocale(), options).format(date);
     };
 
     const formatarCpfCnpj = (valor) => {
@@ -119,6 +147,9 @@ const GestaoFilaClientes = ({ onLogout }) => {
         return valor;
     };
 
+    // ------------------------
+    // data fetching
+    // ------------------------
     const fetchClientesFilaCompleta = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -183,6 +214,9 @@ const GestaoFilaClientes = ({ onLogout }) => {
         };
     }, [idEmpresa, dtMovto, idFila, navigate, fetchClientesFilaCompleta, fetchFilaStatus]);
 
+    // ------------------------
+    // UI helpers
+    // ------------------------
     const getSituacaoText = (situacao) => {
         switch (Number(situacao)) {
             case 0: return t('gestaoFila.status.aguardando');
@@ -205,6 +239,9 @@ const GestaoFilaClientes = ({ onLogout }) => {
         }
     };
 
+    // ------------------------
+    // actions
+    // ------------------------
     const handleUpdateSituacao = async (cliente, novaSituacao, mensagemSucesso, mensagemErro) => {
         const situacaoOriginal = cliente.SITUACAO;
         setClientesFila((prev) =>
@@ -227,10 +264,20 @@ const GestaoFilaClientes = ({ onLogout }) => {
     };
 
     const handleConfirmarPresenca = (cliente) =>
-        handleUpdateSituacao(cliente, 1, t('gestaoFila.feedback.presencaConfirmada', { nome: cliente.NOME }), t('gestaoFila.erros.confirmarPresenca'));
+        handleUpdateSituacao(
+            cliente,
+            1,
+            t('gestaoFila.feedback.presencaConfirmada', { nome: cliente.NOME }),
+            t('gestaoFila.erros.confirmarPresenca')
+        );
 
     const handleNaoCompareceu = (cliente) =>
-        handleUpdateSituacao(cliente, 2, t('gestaoFila.feedback.naoCompareceu', { nome: cliente.NOME }), t('gestaoFila.erros.marcarAusencia'));
+        handleUpdateSituacao(
+            cliente,
+            2,
+            t('gestaoFila.feedback.naoCompareceu', { nome: cliente.NOME }),
+            t('gestaoFila.erros.marcarAusencia')
+        );
 
     const handleEnviarNotificacao = async (cliente) => {
         const url = `/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/enviar-notificacao`;
@@ -248,10 +295,10 @@ const GestaoFilaClientes = ({ onLogout }) => {
 
     const handleAdicionarCliente = async (e) => {
         e.preventDefault();
-        
+
         if (novoCliente.NOME.trim().length < 3) {
             openFeedbackModal('O nome deve ter no mínimo 3 letras.', 'danger');
-            return; 
+            return;
         }
 
         const doc = novoCliente.CPFCNPJ.replace(/[^\d]+/g, '');
@@ -280,7 +327,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
             openFeedbackModal(msg, 'danger');
         }
     };
-    
+
     const handleCloseAddModal = () => setShowAddModal(false);
     const handleShowAddModal = () => {
         setNovoCliente({ NOME: '', CPFCNPJ: '', DT_NASC: '', DDDCEL: '', NR_CEL: '', MEIO_NOTIFICACAO: 'whatsapp', EMAIL: '' });
@@ -314,6 +361,9 @@ const GestaoFilaClientes = ({ onLogout }) => {
         }
     };
 
+    // ------------------------
+    // filtros
+    // ------------------------
     const filtrarClientes = () => {
         switch (abaAtiva) {
             case 'aguardando': return clientesFila.filter((c) => Number(c.SITUACAO) === 0 || Number(c.SITUACAO) === 3);
@@ -325,6 +375,9 @@ const GestaoFilaClientes = ({ onLogout }) => {
 
     const clientesFiltrados = filtrarClientes();
 
+    // ------------------------
+    // render
+    // ------------------------
     return (
         <div className="home-container">
             <Menu onLogout={onLogout} />
@@ -396,17 +449,49 @@ const GestaoFilaClientes = ({ onLogout }) => {
                                 </thead>
                                 <tbody>
                                     {clientesFiltrados.map((cliente) => (
-                                        <tr key={String(cliente.ID_EMPRESA) + '-' + String(cliente.DT_MOVTO) + '-' + String(cliente.ID_FILA) + '-' + String(cliente.ID_CLIENTE)} className="linha-cliente">
+                                        <tr
+                                          key={
+                                            String(cliente.ID_EMPRESA) + '-' +
+                                            String(cliente.DT_MOVTO) + '-' +
+                                            String(cliente.ID_FILA) + '-' +
+                                            String(cliente.ID_CLIENTE)
+                                          }
+                                          className="linha-cliente"
+                                        >
                                             <td>{cliente.NOME || 'N/A'}</td>
                                             <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>
-                                            <td>{formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_MOVTO)}</td>
+                                            <td>
+                                                {formatarHora(cliente.DT_ENTRA)} - {formatarData(cliente.DT_ENTRA)}
+                                            </td>
                                             <td className="coluna-status-acoes">
                                                 <div className="conteudo-status-acoes">
-                                                    <div className="situacao-wrapper"><span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>{getSituacaoText(cliente.SITUACAO)}</span></div>
+                                                    <div className="situacao-wrapper">
+                                                        <span className={`situacao-badge ${getSituacaoClass(cliente.SITUACAO)}`}>
+                                                            {getSituacaoText(cliente.SITUACAO)}
+                                                        </span>
+                                                    </div>
                                                     <div className="botoes-acoes-contexto">
-                                                        <button className="btn-acao btn-notificar" onClick={() => handleEnviarNotificacao(cliente)} title={t('gestaoFila.acoes.notificar')}><FaPaperPlane /></button>
-                                                        <button className="btn-acao btn-confirmar" onClick={() => handleConfirmarPresenca(cliente)} title={t('gestaoFila.acoes.confirmar')}><FaCheckCircle /></button>
-                                                        <button className="btn-acao btn-nao-compareceu" onClick={() => handleNaoCompareceu(cliente)} title={t('gestaoFila.acoes.naoCompareceu')}><FaTimesCircle /></button>
+                                                        <button
+                                                            className="btn-acao btn-notificar"
+                                                            onClick={() => handleEnviarNotificacao(cliente)}
+                                                            title={t('gestaoFila.acoes.notificar')}
+                                                        >
+                                                            <FaPaperPlane />
+                                                        </button>
+                                                        <button
+                                                            className="btn-acao btn-confirmar"
+                                                            onClick={() => handleConfirmarPresenca(cliente)}
+                                                            title={t('gestaoFila.acoes.confirmar')}
+                                                        >
+                                                            <FaCheckCircle />
+                                                        </button>
+                                                        <button
+                                                            className="btn-acao btn-nao-compareceu"
+                                                            onClick={() => handleNaoCompareceu(cliente)}
+                                                            title={t('gestaoFila.acoes.naoCompareceu')}
+                                                        >
+                                                            <FaTimesCircle />
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </td>
@@ -435,7 +520,16 @@ const GestaoFilaClientes = ({ onLogout }) => {
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>{t('gestaoFila.modalAdicionar.nascimento')}</Form.Label>
-                            <Form.Control type="date" name="DT_NASC" value={novoCliente.DT_NASC} onChange={handleNovoClienteChange} />
+                            <Form.Control
+                                type="date"
+                                name="DT_NASC"
+                                value={novoCliente.DT_NASC}
+                                onChange={handleNovoClienteChange}
+                                // ======== NOVO: idioma do calendário e dica visual ========
+                                lang={getDateInputLang()}
+                                placeholder={getDatePlaceholder()}
+                                inputMode="numeric"
+                            />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>{t('gestaoFila.modalAdicionar.notificacao')}</Form.Label>
