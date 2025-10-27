@@ -1,6 +1,5 @@
  #   ManageFlow 
 
-![Status do Projeto](https://img.shields.io/badge/Status-Concluído%20(TCC)-brightgreen)
 
 Sistema web para gestão de filas de espera em estabelecimentos (restaurantes/bebidas), focado em otimizar a operação e a experiência do cliente. 
 
