@@ -1,110 +1,140 @@
-// src/pages/AvaliacaoEmpresaPage/AvaliacaoEmpresaPage.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import api from '../../services/api';
+import axios from 'axios';
 import { FaStar } from 'react-icons/fa';
 import './AvaliacaoEmpresaPage.css';
 
-const AvaliacaoEmpresaPage = () => {
+/**
+ * Resolve a mesma base usada em EmpresaPublicaPorToken
+ */
+const API_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
+  (typeof window !== 'undefined' && window.location && window.location.hostname
+    ? `http://${window.location.hostname}:3001/api`
+    : 'http://localhost:3001/api');
+
+/** Lê querystring (?dt=...&idFila=...&idCliente=...) */
+function useQS(search) {
+  return useMemo(() => {
+    const sp = new URLSearchParams(search);
+    return {
+      dtMovto: sp.get('dt') || '',
+      idFila: sp.get('idFila') || '',
+      idCliente: sp.get('idCliente') || '',
+    };
+  }, [search]);
+}
+
+export default function AvaliacaoEmpresaPage() {
   const { token } = useParams();
   const location = useLocation();
+  const { dtMovto, idFila, idCliente } = useQS(location.search);
 
-  const [empresa, setEmpresa] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const api = useMemo(() => axios.create({ baseURL: API_BASE }), []);
+
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
+
+  const [empresa, setEmpresa] = useState(null); // { id, nome, logo }
+  const [clienteNome, setClienteNome] = useState('');
 
   const [nota, setNota] = useState(0);
   const [hoverNota, setHoverNota] = useState(0);
   const [comentario, setComentario] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  // NOVO: dados do cliente (opcionais)
-  const [clienteNome, setClienteNome] = useState('');
+  const defaultAvatar = '/imagens/avatar-default.png';
 
-  // Lê querystring: ?dt=YYYY-MM-DD&idFila=...&idCliente=...
-  function getQS() {
-    const sp = new URLSearchParams(location.search);
-    const dtMovto = sp.get('dt') || '';
-    const idFila = sp.get('idFila') || '';
-    const idCliente = sp.get('idCliente') || '';
-    return { dtMovto, idFila, idCliente };
-  }
-
+  /**
+   * Busca os dados da empresa pelo token — EXATAMENTE como a outra página faz:
+   * GET /public/empresa/by-token/:token -> { empresa: { id, nome, logo }, resumo, avaliacoes }
+   */
   useEffect(() => {
-    const fetchAll = async () => {
+    async function load() {
+      if (!token) return;
       try {
-        setLoading(true);
-        setError('');
+        setCarregando(true);
+        setErro(null);
 
-        // 1) Info da empresa pelo token
-        const { data: emp } = await api.get(`/avaliacoes/info-empresa/${token}`);
-        // compat: emp pode vir {nomeEmpresa, logo} ou {NOME_EMPRESA, LOGO}
-        const empresaNormalizada = {
-          idEmpresa: emp.idEmpresa || emp.ID_EMPRESA,
-          nomeEmpresa: emp.nomeEmpresa || emp.NOME_EMPRESA,
-          logo: emp.logo || emp.LOGO,
-        };
-        setEmpresa(empresaNormalizada);
+        const { data } = await api.get(`/public/empresa/by-token/${encodeURIComponent(token)}`);
+        // A estrutura usada na página pública:
+        // const { empresa, resumo, avaliacoes } = data;
+        // Aqui precisamos só da empresa (id/nome/logo)
+        if (!data || !data.empresa) {
+          throw new Error('Empresa não encontrada para este token.');
+        }
 
-        // 2) Se vieram dados do cliente na URL, buscar nome para saudar e enviar junto
-        const { dtMovto, idFila, idCliente } = getQS();
+        // Garante chaves padronizadas
+        const emp = data.empresa;
+        setEmpresa({
+          id: emp.id || emp.ID || emp.idEmpresa || emp.ID_EMPRESA || null,
+          nome: emp.nome || emp.NOME || emp.nomeEmpresa || emp.NOME_EMPRESA || 'Empresa',
+          logo: emp.logo || emp.LOGO || emp.LOGO_URL || emp.img_perfil || '',
+        });
+
+        // (Opcional) Buscar nome do cliente se vieram parâmetros
         if (dtMovto && idFila && idCliente) {
           try {
             const { data: cli } = await api.get('/avaliacoes/info-cliente', {
-              params: { token, dtMovto, idFila, idCliente }
+              params: { token, dtMovto, idFila, idCliente },
             });
             if (cli?.clienteNome) setClienteNome(cli.clienteNome);
-          } catch (e) {
-            // Se não achar, segue sem nome
-            console.warn('Cliente não encontrado para os parâmetros informados.', e?.response?.data || e.message);
+          } catch {
+            // silencioso — segue sem nome
           }
         }
-      } catch (err) {
-        setError('Link de avaliação inválido ou a empresa não foi encontrada.');
+      } catch (e) {
+        setErro(e?.response?.data?.detail || e?.response?.data?.error || e.message);
       } finally {
-        setLoading(false);
+        setCarregando(false);
       }
-    };
-    fetchAll();
-  }, [token, location.search]);
+    }
+    load();
+  }, [api, token, dtMovto, idFila, idCliente]);
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (nota === 0) {
       alert('Por favor, selecione uma nota de 1 a 5 estrelas.');
       return;
     }
-    setSubmitting(true);
-    setError('');
     try {
+      setSubmitting(true);
+      setErro(null);
       await api.post('/avaliacoes', {
         token,
         nota,
         comentario,
-        // envia o clienteNome quando tivermos
-        clienteNome: clienteNome || undefined
+        clienteNome: clienteNome || undefined,
       });
       setSuccess(true);
     } catch (err) {
-      setError(err?.response?.data?.detail || 'Ocorreu um erro ao enviar sua avaliação. Tente novamente.');
+      setErro(err?.response?.data?.detail || err?.response?.data?.error || 'Ocorreu um erro ao enviar sua avaliação. Tente novamente.');
     } finally {
       setSubmitting(false);
     }
-  };
+  }
 
-  if (loading) return <div className="avaliacao-container"><p>Carregando...</p></div>;
-  if (error) return <div className="avaliacao-container"><div className="avaliacao-card error">{error}</div></div>;
+  if (carregando) return <div className="avaliacao-container"><p>Carregando...</p></div>;
+  if (erro) return <div className="avaliacao-container"><div className="avaliacao-card error">Erro: {erro}</div></div>;
 
   if (success) {
     return (
       <div className="avaliacao-container" key="success-view">
         <div className="avaliacao-card">
           <div className="logo-circle">
-            {empresa?.logo ? <img src={empresa.logo} alt={empresa.nomeEmpresa} /> : '⭐'}
+            {empresa?.logo ? (
+              <img
+                src={empresa.logo}
+                alt={empresa?.nome || 'Empresa'}
+                onError={(e) => { e.currentTarget.src = defaultAvatar; }}
+              />
+            ) : '⭐'}
           </div>
           <h1>Obrigado!</h1>
-          <p>Sua avaliação sobre a <strong>{empresa?.nomeEmpresa}</strong> foi registrada com sucesso.</p>
+          <p>Sua avaliação sobre a <strong>{empresa?.nome}</strong> foi registrada com sucesso.</p>
         </div>
       </div>
     );
@@ -114,12 +144,18 @@ const AvaliacaoEmpresaPage = () => {
     <div className="avaliacao-container" key="form-view">
       <div className="avaliacao-card">
         <div className="logo-circle">
-          {empresa?.logo ? <img src={empresa.logo} alt={empresa.nomeEmpresa} /> : '🏢'}
+          {empresa?.logo ? (
+            <img
+              src={empresa.logo}
+              alt={empresa?.nome || 'Empresa'}
+              onError={(e) => { e.currentTarget.src = defaultAvatar; }}
+            />
+          ) : '🏢'}
         </div>
 
         <h1>
           {clienteNome ? <>Olá, {clienteNome}! </> : null}
-          Avalie {empresa?.nomeEmpresa}
+          Avalie {empresa?.nome}
         </h1>
         <p>Sua opinião é muito importante para nós!</p>
 
@@ -155,6 +191,4 @@ const AvaliacaoEmpresaPage = () => {
       </div>
     </div>
   );
-};
-
-export default AvaliacaoEmpresaPage;
+}

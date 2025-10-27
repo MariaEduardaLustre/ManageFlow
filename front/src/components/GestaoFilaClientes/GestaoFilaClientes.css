@@ -1,5 +1,7 @@
 /* Escopo da página */
-.gestao-fila-page {}
+.gestao-fila-page {
+    padding: 24px;
+}
 
 /* =================== HEADER DA PÁGINA (CARD) =================== */
 .gestao-fila-page .gestao-header-card{

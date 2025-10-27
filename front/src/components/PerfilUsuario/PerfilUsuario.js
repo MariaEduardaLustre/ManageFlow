@@ -207,7 +207,7 @@ export default function PerfilUsuario() {
       </div>
 
       {/* Mensagens */}
-      <div className="container">
+      <div className="perfil container">
         {erro && <div className="alert error">{erro}</div>}
         {msg && <div className="alert ok">{msg}</div>}
 

@@ -1,66 +1,182 @@
 /* src/pages/EditarEmpresa/EditarEmpresa.css */
-.editar-empresa-container { display: flex; height: 100vh; background-color: var(--background-primary); }
-.editar-empresa-main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
+.editar-empresa-container {
+  display: flex;
+  height: 100vh;
+  background-color: var(--background-primary);
+  padding: 24px;
+}
+.editar-empresa-main-content {
+  flex: 1;
+  overflow-y: auto;
+}
 
 /* ======================================================= */
 /* ✨ NOVO: Estilos para o cabeçalho da página ✨ */
 /* ======================================================= */
 .editar-empresa-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .editar-empresa-header h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0; /* Remove a margem padrão do h1 */
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0; /* Remove a margem padrão do h1 */
 }
 
 .btn-voltar {
-    display: flex;
-    align-items: center;
-    gap: 8px; /* Espaço entre o ícone e o texto */
-    font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre o ícone e o texto */
+  font-weight: 500;
 }
 /* ======================================================= */
 
-
 /* Estilo do Card principal, seguindo o padrão do sistema */
-.card { background-color: var(--background-secondary) !important; border: 1px solid var(--border-color) !important; border-radius: 12px !important; box-shadow: none !important; padding: 15px; }
-.form-row { display: flex; gap: 15px; align-items: flex-start; }
-.form-group-endereco { flex: 3; }
-.form-group-numero { flex: 1; }
-.form-label { font-size: 0.9rem; font-weight: 500; color: var(--text-secondary) !important; margin-bottom: 8px; }
-.form-group-with-icon { position: relative; display: flex; align-items: center; }
-.form-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 1rem; pointer-events: none; z-index: 2; }
-.form-control { background-color: var(--background-primary) !important; color: var(--text-primary) !important; border: 1px solid var(--border-color) !important; border-radius: 6px !important; padding: 10px 12px; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; padding-left: 45px !important; }
-.form-control:focus { border-color: var(--brand-primary) !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important; }
-.form-control:disabled { opacity: 0.6; }
-.btn-primary { background-color: var(--brand-primary) !important; border: none !important; border-radius: 6px !important; font-weight: 500; padding: 10px 20px; transition: filter 0.2s ease; }
-.btn-primary:hover { filter: brightness(1.15); }
-.alert { border-radius: 6px; font-size: 0.95rem; }
-.card-title-icon { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
-.url-display-box { display: flex; align-items: center; gap: 10px; background-color: var(--background-primary); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-top: 15px; font-family: monospace; font-size: 0.9rem; color: var(--text-secondary); word-break: break-all; }
-.botoes-acao { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-.btn-secondary { background-color: var(--background-secondary) !important; color: var(--text-primary) !important; border-color: var(--border-color) !important; }
-.btn-outline-primary { color: var(--brand-primary) !important; border-color: var(--brand-primary) !important; }
-.btn-outline-primary:hover { background-color: var(--brand-primary) !important; color: #fff !important; }
-.qr-code-image { max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; }
+.card {
+  background-color: var(--background-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  padding: 15px;
+}
+.form-row {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+.form-group-endereco {
+  flex: 3;
+}
+.form-group-numero {
+  flex: 1;
+}
+.form-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary) !important;
+  margin-bottom: 8px;
+}
+.form-group-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.form-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 2;
+}
+.form-control {
+  background-color: var(--background-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  padding: 10px 12px;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  padding-left: 45px !important;
+}
+.form-control:focus {
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+.form-control:disabled {
+  opacity: 0.6;
+}
+.btn-primary {
+  background-color: var(--brand-primary) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-weight: 500;
+  padding: 10px 20px;
+  transition: filter 0.2s ease;
+}
+.btn-primary:hover {
+  filter: brightness(1.15);
+}
+.alert {
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+.card-title-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.url-display-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--background-primary);
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  margin-top: 15px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+.botoes-acao {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.btn-secondary {
+  background-color: var(--background-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+.btn-outline-primary {
+  color: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+}
+.btn-outline-primary:hover {
+  background-color: var(--brand-primary) !important;
+  color: #fff !important;
+}
+.qr-code-image {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+}
 @media (max-width: 768px) {
-    .editar-empresa-main-content { padding: 20px; }
-    /* ATUALIZADO: Faz o cabeçalho se adaptar a telas menores */
-    .editar-empresa-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-    .editar-empresa-header h1 { font-size: 1.5rem; }
-    .form-row { flex-direction: column; gap: 0; }
+  .editar-empresa-main-content {
+    padding: 20px;
+  }
+  /* ATUALIZADO: Faz o cabeçalho se adaptar a telas menores */
+  .editar-empresa-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .editar-empresa-header h1 {
+    font-size: 1.5rem;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
 }
 
 /* HEADER separado do Editar Empresa */
-.editar-header-card{
+.editar-header-card {
   background-color: var(--background-secondary);
   padding: 30px 20px;
   border-radius: 12px;
@@ -69,7 +185,7 @@
   margin: 0 0 16px 0;
 }
 
-.editar-header-row{
+.editar-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -77,14 +193,14 @@
   flex-wrap: wrap;
 }
 
-.editar-header-title{
+.editar-header-title {
   margin: 0;
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--text-primary);
 }
 
-.editar-header-actions{
+.editar-header-actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;

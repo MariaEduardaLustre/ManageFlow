@@ -1,7 +1,7 @@
 /* ================== FILAS — LISTA (ESCOPO) ================== */
 /* Envolva a página com .filas-list-page para isolar estilos */
 .filas-list-page{
-    padding: 15px;
+    padding: 24px;
 }
 /* Badge com nome da empresa (topo da página) */
 .filas-list-page .empresa-titulo-container {
