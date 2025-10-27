@@ -3,6 +3,7 @@
     "axios": "^1.11.0",
     "bootstrap": "^5.3.6",
     "i18next": "^25.4.2",
+    "lucide-react": "^0.546.0",
     "node-cron": "^4.2.1",
     "react-bootstrap": "^2.10.10",
     "react-i18next": "^15.7.3",
