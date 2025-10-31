@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // CORREÇÃO DE SINTAXE
 import api from '../../services/api';
 import { io } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +21,7 @@ import './GestaoFilaClientes.css';
 const GestaoFilaClientes = ({ onLogout }) => {
     const { idEmpresa, dtMovto, idFila } = useParams();
     const navigate = useNavigate();
-    const { t, i18n } = useTranslation(); // <- agora também usamos i18n
+    const { t, i18n } = useTranslation();
 
     const [clientesFila, setClientesFila] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -178,7 +178,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
         } catch (e) {
             // silencioso
         } finally {
-            setStatusLoading(false);
+            setStatusLoading(false); // Garante que o loading para, mesmo em caso de erro na busca
         }
     }, [idEmpresa, idFila]);
 
@@ -450,13 +450,13 @@ const GestaoFilaClientes = ({ onLogout }) => {
                                 <tbody>
                                     {clientesFiltrados.map((cliente) => (
                                         <tr
-                                          key={
-                                            String(cliente.ID_EMPRESA) + '-' +
-                                            String(cliente.DT_MOVTO) + '-' +
-                                            String(cliente.ID_FILA) + '-' +
-                                            String(cliente.ID_CLIENTE)
-                                          }
-                                          className="linha-cliente"
+                                            key={
+                                                String(cliente.ID_EMPRESA) + '-' +
+                                                String(cliente.DT_MOVTO) + '-' +
+                                                String(cliente.ID_FILA) + '-' +
+                                                String(cliente.ID_CLIENTE)
+                                            }
+                                            className="linha-cliente"
                                         >
                                             <td>{cliente.NOME || 'N/A'}</td>
                                             <td>{formatarCpfCnpj(cliente.CPFCNPJ)}</td>

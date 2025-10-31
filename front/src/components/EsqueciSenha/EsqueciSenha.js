@@ -1,15 +1,17 @@
-// Ficheiro: EsqueciSenha.js (Versão Completa)
 import React, { useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next'; // <-- 1. IMPORTAÇÕES i18n
 import api from '../../services/api';
-import './EsqueciSenha.css'; // O CSS que vamos atualizar
+import './EsqueciSenha.css';
+
+// NÃO PRECISAMOS MAIS DE NADA RELACIONADO AO TEMA AQUI!
 
 const EsqueciSenha = () => {
+  const { t } = useTranslation(); // <-- 2. INICIALIZAÇÃO DO HOOK i18n
   const [email, setEmail] = useState('');
   
-  // --- Nossos estados ---
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);  
   const [sucesso, setSucesso] = useState(false);  
 
   const handleSubmit = async (e) => {
@@ -24,68 +26,69 @@ const EsqueciSenha = () => {
       if (response.data && response.data.message) {
         setMensagem(response.data.message);
       } else {
-        setMensagem('Link enviado com sucesso!'); // Mensagem padrão
+        setMensagem(t('esqueciSenha.mensagens.sucessoPadrao')); 
       }
-      setSucesso(true); // <<< SUCESSO! Isto vai esconder o formulário
+      setSucesso(true); 
 
     } catch (error) {
       if (error.response && error.response.data) {
         const errorMessage = error.response.data.message || error.response.data;
         setErro(errorMessage);
       } else {
-        setErro('Ocorreu um erro ao solicitar a redefinição de senha.');
+        setErro(t('esqueciSenha.mensagens.erroPadrao'));
       }
     } finally {
-      setLoading(false); // Re-ativa o botão
+      setLoading(false);
     }
   };
 
   return (
+    // <-- 3. O DIV VOLTA A SER SIMPLES
     <div className="esqueci-senha-container">
-      <h2>Esqueci minha senha</h2>
+      <h2>{t('esqueciSenha.titulo')}</h2>
 
       {sucesso ? (
         
-        // --- TELA DE SUCESSO ---
-        // AQUI ESTÁ A MUDANÇA: Adicionamos a className "mensagem-card"
-        <div className="mensagem-card"> 
+        <div className="mensagem-card">  
           <p className="mensagem-sucesso">{mensagem}</p>
           <p>
-            <a href="/login">Voltar para o Login</a>
+            <a href="/login">{t('esqueciSenha.links.voltarLogin')}</a>
           </p>
         </div>
 
       ) : (
 
-        // --- TELA DO FORMULÁRIO ---
         <>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="email">E-mail:</label>
+              <label htmlFor="email">{t('esqueciSenha.labelEmail')}</label>
               <input
                 type="email"
                 id="email"
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Digite seu e-mail" // Adicionando placeholder
+                placeholder={t('esqueciSenha.placeholderEmail')}
                 required
-                disabled={loading} // Desativa input
+                disabled={loading}
               />
             </div>
             <button 
               type="submit" 
               className="btn-primary" 
-              disabled={loading} // Desativa botão
+              disabled={loading}
             >
-              {loading ? 'Enviando...' : 'Enviar link de recuperação'}
+              {loading ? t('esqueciSenha.botoes.enviando') : t('esqueciSenha.botoes.enviar')}
             </button>
           </form>
         
-          {/* Mostra o erro aqui em baixo */}
           {erro && <p className="mensagem-erro">{erro}</p>}
 
-          <p>Lembrou a senha? <a href="/login">Fazer login</a></p>
+          <p>
+            <Trans i18nKey="esqueciSenha.links.lembrouSenha">
+              Lembrou a senha? <a href="/login">Fazer login</a>
+            </Trans>
+          </p>
         </>
       )}
     </div>

@@ -1,121 +1,165 @@
-/* --- CSS para Esqueci Senha (Completo e Atualizado) --- */
+/* ============================================== */
+/* --- 1. DEFINIÇÃO DAS VARIÁVEIS DE TEMA   --- */
+/* ============================================== */
 
+/* --- TEMA CLARO (LIGHT) --- */
+/* A MUDANÇA ESTÁ AQUI: O seletor agora ouve o body */
+body[data-theme="light"] .esqueci-senha-container {
+  --cor-fundo-pagina: #f9f9f9;
+  --cor-fundo-card: #ffffff;
+  --cor-texto-primario: #555;
+  --cor-texto-titulo: #4254cb;
+  --cor-primaria: #4254cb;
+  --cor-primaria-hover: #3a4ab7;
+  --cor-primaria-desativado: #b0b8d7;
+  --cor-texto-botao: #ffffff;
+  --cor-fundo-input: #f8f9fa;
+  --cor-borda-input: #f8f9fa;
+  --cor-fundo-input-focus: #ffffff;
+  --cor-borda-input-focus: #4254cb;
+  --cor-sombra-input-focus: rgba(66, 84, 203, 0.2);
+  --cor-sombra-card: rgba(0, 0, 0, 0.1);
+  --cor-texto-sucesso: #0f5132;
+  --cor-texto-erro: #d9534f;
+  --cor-texto-link: #4254cb;
+}
+
+/* --- TEMA ESCURO (DARK) --- */
+/* A MUDANÇA ESTÁ AQUI: O seletor agora ouve o body */
+body[data-theme="dark"] .esqueci-senha-container {
+  --cor-fundo-pagina: #121212;
+  --cor-fundo-card: #1e1e1e;
+  --cor-texto-primario: #e0e0e0;
+  --cor-texto-titulo: #6a7ff0;
+  --cor-primaria: #6a7ff0;
+  --cor-primaria-hover: #8a9cff;
+  --cor-primaria-desativado: #4a4e69;
+  --cor-texto-botao: #1e1e1e;
+  --cor-fundo-input: #2a2a2a;
+  --cor-borda-input: #2a2a2a;
+  --cor-fundo-input-focus: #1e1e1e;
+  --cor-borda-input-focus: #6a7ff0;
+  --cor-sombra-input-focus: rgba(106, 127, 240, 0.3);
+  --cor-sombra-card: rgba(0, 0, 0, 0.5);
+  --cor-texto-sucesso: #2a9d8f;
+  --cor-texto-erro: #f07167;
+  --cor-texto-link: #6a7ff0;
+}
+
+
+/* ============================================== */
+/* --- 2. ESTILOS REATORIZADOS USANDO VARIÁVEIS --- */
+/* ============================================== */
+/* O seletor .esqueci-senha-container "herda" as variáveis
+  definidas nos blocos acima, dependendo do data-theme do body
+*/
 .esqueci-senha-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  /* Cor de fundo cinza claro, igual ao seu dashboard */
-  background-color: #f9f9f9; 
+  background-color: var(--cor-fundo-pagina); 
   padding: 20px;
+  transition: background-color 0.3s ease;
 }
- 
+  
 .esqueci-senha-container h2 {
   text-align: center;
   font-size: 2rem;
-  /* MUDANÇA: Cor do título atualizada para o azul principal do sistema */
-  color: #4254cb; 
+  color: var(--cor-texto-titulo); 
   margin-bottom: 30px;
 }
- 
+  
 .esqueci-senha-container form {
-  background-color: white;
+  background-color: var(--cor-fundo-card);
+  box-shadow: 0 2px 4px var(--cor-sombra-card);
   padding: 30px;
-  /* Borda arredondada igual aos cards do seu dashboard */
   border-radius: 8px; 
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
   display: flex;
   flex-direction: column;
 }
- 
+  
 .esqueci-senha-container .form-group {
   margin-bottom: 20px;
   width: 100%;
 }
 
-/* Adicionando estilo para a Label */
 .esqueci-senha-container .form-group label {
   display: block;
   margin-bottom: 5px;
   font-weight: 600;
-  color: #555;
+  color: var(--cor-texto-primario);
 }
- 
+  
 .esqueci-senha-container .form-group input {
   width: 100%;
   padding: 12px;
-  /* MUDANÇA: Estilo de input inspirado na tela de login */
-  background-color: #f8f9fa; /* Fundo cinza claro */
-  border: 1px solid #f8f9fa; /* Borda da mesma cor do fundo */
-  border-radius: 10px;       /* Borda um pouco menos redonda */
+  background-color: var(--cor-fundo-input);
+  border: 1px solid var(--cor-borda-input);
+  color: var(--cor-texto-primario); 
+  border-radius: 10px;        
   font-size: 1rem;
   outline: none;
-  box-sizing: border-box; /* Garante que o padding não afete a largura total */
+  box-sizing: border-box;
 }
- 
+  
 .esqueci-senha-container .form-group input:focus {
-  /* MUDANÇA: Estilo de foco mais moderno */
-  border-color: #4254cb;
-  background-color: #ffffff;
-  /* Sombra suave no foco */
-  box-shadow: 0 0 0 3px rgba(66, 84, 203, 0.2); 
+  border-color: var(--cor-borda-input-focus);
+  background-color: var(--cor-fundo-input-focus);
+  box-shadow: 0 0 0 3px var(--cor-sombra-input-focus); 
 }
- 
+  
 .esqueci-senha-container button.btn-primary {
   width: 100%;
   padding: 12px;
   font-size: 1rem;
-  font-weight: bold; /* Dando mais destaque ao texto */
-  /* MUDANÇA: Cor do botão atualizada para o azul principal */
-  background-color: #4254cb; 
-  color: white;
+  font-weight: bold; 
+  background-color: var(--cor-primaria); 
+  color: var(--cor-texto-botao);
   border: none;
-  border-radius: 25px; /* Botão bem arredondado, como no login */
+  border-radius: 25px; 
   cursor: pointer;
-  margin-top: 10px; /* Ajuste de margem */
+  margin-top: 10px; 
 }
- 
+  
 .esqueci-senha-container button.btn-primary:hover {
-  /* MUDANÇA: Cor de hover um pouco mais escura */
-  background-color: #3a4ab7; 
+  background-color: var(--cor-primaria-hover); 
 }
 
-/* Estilo para botão desativado */
 .esqueci-senha-container button.btn-primary:disabled {
-  background-color: #b0b8d7;
+  background-color: var(--cor-primaria-desativado);
   cursor: not-allowed;
 }
- 
+  
 .esqueci-senha-container .mensagem-sucesso {
-  color: #0f5132; /* Verde mais escuro */
+  color: var(--cor-texto-sucesso);
   font-weight: 500;
   text-align: center;
   margin-bottom: 15px;
   font-size: 1.1rem;
 }
- 
+  
 .esqueci-senha-container .mensagem-erro {
-  color: red;
+  color: var(--cor-texto-erro);
   text-align: center;
-  margin-top: 15px; /* Aparece abaixo do formulário */
+  margin-top: 15px;
 }
- 
+  
 .esqueci-senha-container p {
   text-align: center;
   margin-top: 20px;
-  color: #555;
+  color: var(--cor-texto-primario);
 }
- 
+  
 .esqueci-senha-container p a {
-  /* Esta cor já estava correta! */
-  color: #4254cb; 
+  color: var(--cor-texto-link); 
   text-decoration: none;
-  font-weight: 600; /* Dando um leve destaque */
+  font-weight: 600; 
 }
- 
+  
 .esqueci-senha-container p a:hover {
   text-decoration: underline;
 }
@@ -127,20 +171,13 @@
   }
 }
 
-/* ============================================== */
-/* --- NOVO BLOCO: ESTILO DO CARD DE SUCESSO    --- */
-/* ============================================== */
-
 .esqueci-senha-container .mensagem-card {
-  /* Cópia dos estilos do <form> para manter a consistência */
-  background-color: white;
+  background-color: var(--cor-fundo-card);
+  box-shadow: 0 2px 4px var(--cor-sombra-card);
   padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
-  
-  /* Centralização do conteúdo */
   display: flex; 
   flex-direction: column;
   align-items: center; 
@@ -149,12 +186,10 @@
   text-align: center; 
 }
 
-/* Ajuste da margem da mensagem dentro do card */
 .esqueci-senha-container .mensagem-card .mensagem-sucesso {
   margin-bottom: 20px; 
 }
 
-/* Ajuste da margem do parágrafo do link "Voltar" */
 .esqueci-senha-container .mensagem-card p {
     margin-top: 0;
 }

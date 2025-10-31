@@ -1,22 +1,21 @@
-// Ficheiro: RedefinirSenha.js (Versão Completa)
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
-import './RedefinirSenha.css'; // O CSS que vamos atualizar
+import './RedefinirSenha.css';
 
 const RedefinirSenha = () => {
+  const { t } = useTranslation();
   const { token } = useParams();
   const navigate = useNavigate();
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('');
   
-  // --- Nossos estados ---
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sucesso, setSucesso] = useState(false); // Para esconder o formulário
+  const [sucesso, setSucesso] = useState(false); 
 
-  // Validação
   const [senhaValida, setSenhaValida] = useState(true);
   const [senhasCoincidem, setSenhasCoincidem] = useState(true);
 
@@ -48,11 +47,11 @@ const RedefinirSenha = () => {
     setErro('');
 
     if (!validarSenhaSegura(novaSenha)) {
-      setErro('A nova senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.');
+      setErro(t('redefinirSenha.mensagens.alerta.senhaInvalida'));
       return;
     }
     if (novaSenha !== confirmarNovaSenha) {
-      setErro('As senhas não coincidem!');
+      setErro(t('redefinirSenha.mensagens.alerta.senhasNaoCoincidem'));
       return;
     }
 
@@ -64,9 +63,9 @@ const RedefinirSenha = () => {
       if (response.data && response.data.message) {
         setMensagem(response.data.message);
       } else {
-        setMensagem('Senha redefinida com sucesso!'); // Mensagem padrão
+        setMensagem(t('redefinirSenha.mensagens.sucessoPadrao'));
       }
-      setSucesso(true); // <<< SUCESSO! Isto vai esconder o formulário
+      setSucesso(true); 
 
     } catch (error) {
       console.error('Erro ao redefinir a senha:', error);
@@ -74,35 +73,32 @@ const RedefinirSenha = () => {
         const errorMessage = error.response.data.error || error.response.data.message || error.response.data;
         setErro(errorMessage);
       } else {
-        setErro('Ocorreu um erro ao redefinir a senha.');
+        setErro(t('redefinirSenha.mensagens.erroPadrao'));
       }
     } finally {
-      setLoading(false); // Re-ativa botões
+      setLoading(false);
     }
   };
 
   return (
     <div className="redefinir-senha-container">
-      <h2>Redefinir Senha</h2>
+      <h2>{t('redefinirSenha.titulo')}</h2>
 
       {sucesso ? (
         
-        // --- TELA DE SUCESSO ---
-        // AQUI ESTÁ A MUDANÇA: Adicionamos a className "mensagem-card"
         <div className="mensagem-card"> 
           <p className="mensagem-sucesso">{mensagem}</p>
           <button onClick={() => navigate('/login')} className="btn-primary">
-            Ir para Login
+            {t('redefinirSenha.botoes.irLogin')}
           </button>
         </div>
 
       ) : (
 
-        // --- TELA DO FORMULÁRIO ---
         <>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="novaSenha">Nova Senha:</label>
+              <label htmlFor="novaSenha">{t('redefinirSenha.labels.novaSenha')}</label>
               <input
                 type="password"
                 id="novaSenha"
@@ -113,12 +109,12 @@ const RedefinirSenha = () => {
               />
               {!senhaValida && novaSenha.length > 0 && (
                 <p className="mensagem-alerta">
-                  A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.
+                  {t('redefinirSenha.mensagens.alerta.senhaInvalida')}
                 </p>
               )}
             </div>
             <div className="form-group">
-              <label htmlFor="confirmarNovaSenha">Confirmar Nova Senha:</label>
+              <label htmlFor="confirmarNovaSenha">{t('redefinirSenha.labels.confirmarNovaSenha')}</label>
               <input
                 type="password"
                 id="confirmarNovaSenha"
@@ -128,7 +124,9 @@ const RedefinirSenha = () => {
                 disabled={loading}
               />
               {!senhasCoincidem && confirmarNovaSenha.length > 0 && (
-                <p className="mensagem-alerta">As senhas não coincidem!</p>
+                <p className="mensagem-alerta">
+                  {t('redefinirSenha.mensagens.alerta.senhasNaoCoincidem')}
+                </p>
               )}
             </div>
             <button 
@@ -136,7 +134,7 @@ const RedefinirSenha = () => {
               className="btn-primary" 
               disabled={loading}
             >
-              {loading ? 'Salvando...' : 'Redefinir Senha'}
+              {loading ? t('redefinirSenha.botoes.salvando') : t('redefinirSenha.botoes.redefinir')}
             </button>
           </form>
           {erro && <p className="mensagem-erro">{erro}</p>}

@@ -4,40 +4,40 @@
     "placeholder": {
       "nome": "Full Name",
       "email": "E-mail",
-      "cpfCnpj": "SSN/EIN",
+      "cpfCnpj": "Tax ID / Personal ID",
       "senha": "Password",
       "confirmarSenha": "Confirm your password",
       "ddd": "Area Code",
       "telefone": "Phone",
-      "cep": "Zip Code",
+      "cep": "ZIP Code",
       "numero": "Number",
-      "endereco": "Address",
+      "endereco": "Address (Street)",
       "complemento": "Complement (Optional)"
     },
     "botoes": {
-      "cadastrar": "Register"
+      "cadastrar": "Sign Up"
     },
     "links": {
       "login": "Already have an account?",
-      "loginLink": "Login here"
+      "loginLink": "Log in"
     },
     "mensagens": {
       "alerta": {
-        "nomeInvalido": "Please enter a valid name with at least 3 letters.",
-        "emailInvalido": "Please enter a valid e-mail.",
-        "cpfCnpjInvalido": "Invalid SSN or EIN!",
-        "senhaInvalida": "The password must contain at least 8 characters, one uppercase letter, and one special character.",
+        "nomeInvalido": "Enter a valid name with at least 3 letters.",
+        "emailInvalido": "Enter a valid e-mail.",
+        "cpfCnpjInvalido": "Invalid Tax ID / Personal ID!",
+        "senhaInvalida": "Password must contain at least 8 characters, one uppercase letter, and one special character.",
         "senhasNaoCoincidem": "Passwords do not match!",
-        "camposObrigatorios": "Please fill out all required fields.",
-        "erroCep": "Zip code not found.",
-        "erroGeralCep": "Error fetching zip code.",
+        "camposObrigatorios": "Please, fill in all required fields.",
+        "erroCep": "ZIP Code not found.",
+        "erroGeralCep": "Error fetching ZIP Code.",
         "erroGenerico": "An error occurred while registering the user."
       },
       "modal": {
         "confirmacaoTitulo": "Confirm Registration",
-        "confirmacaoBody": "Do you really want to confirm the registration with the information provided?",
+        "confirmacaoBody": "Do you really want to confirm the registration with the provided data?",
         "confirmacaoBotaoCancelar": "Cancel",
-        "confirmacaoBotaoSim": "Yes, Register",
+        "confirmacaoBotaoSim": "Yes, Sign Up",
         "sucessoTitulo": "Success!",
         "sucessoBotaoFechar": "Close",
         "erroTitulo": "An Error Occurred",
@@ -45,7 +45,7 @@
       }
     },
     "selects": {
-      "pais": "Select a country"
+      "pais": "Select the country"
     }
   },
   "login": {
@@ -58,13 +58,13 @@
       "esqueciSenha": "Forgot your password?",
       "cliqueAqui": "Click here!",
       "semConta": "Don't have an account yet?",
-      "cadastreSe": "Sign Up"
+      "cadastreSe": "Sign up"
     },
     "botoes": {
       "entrar": "Log In",
       "entrando": "Logging in...",
-      "google": "Log in with Google",
-      "apple": "Log in with Apple"
+      "google": "Sign in with Google",
+      "apple": "Sign in with Apple"
     },
     "mensagens": {
       "sucesso": {
@@ -82,24 +82,61 @@
       }
     }
   },
+  "esqueciSenha": {
+    "titulo": "Forgot my password",
+    "labelEmail": "E-mail:",
+    "placeholderEmail": "Enter your e-mail",
+    "botoes": {
+      "enviar": "Send recovery link",
+      "enviando": "Sending..."
+    },
+    "links": {
+      "voltarLogin": "Back to Login",
+      "lembrouSenha": "Remembered your password? <1>Log in</1>"
+    },
+    "mensagens": {
+      "sucessoPadrao": "Link sent successfully!",
+      "erroPadrao": "An error occurred while requesting the password reset."
+    }
+  },
+  "redefinirSenha": {
+    "titulo": "Reset Password",
+    "labels": {
+      "novaSenha": "New Password:",
+      "confirmarNovaSenha": "Confirm New Password:"
+    },
+    "botoes": {
+      "redefinir": "Reset Password",
+      "salvando": "Saving...",
+      "irLogin": "Go to Login"
+    },
+    "mensagens": {
+      "sucessoPadrao": "Password reset successfully!",
+      "erroPadrao": "An error occurred while resetting the password.",
+      "alerta": {
+        "senhaInvalida": "Password must contain at least 8 characters, one uppercase letter, and one special character.",
+        "senhasNaoCoincidem": "Passwords do not match!"
+      }
+    }
+  },
   "landing": {
     "nav": {
       "home": "Home",
       "servicos": "Services",
       "sobre": "About Us",
-      "entrar": "Login",
+      "entrar": "Log In",
       "cadastrar": "Sign Up"
     },
     "hero": {
-      "titulo": "Manage queues intelligently and improve your customers' experience",
-      "descricao": "ManageFlow is the complete digital solution for restaurants that want to automate queue management, reduce customer waiting time, and improve service organization.",
+      "titulo": "Manage queues intelligently and improve your customer experience",
+      "descricao": "ManageFlow is the complete digital solution for restaurants wanting to automate queue management, reduce customer wait times, and improve service organization.",
       "comeceAgora": "Get Started Now"
     },
     "servicos": {
       "titulo": "Our Services",
       "subtitulo": "Our commitment is to simplify the management of your establishment, providing a fluid and organized experience.",
       "fila": {
-        "titulo": "Waiting Queue",
+        "titulo": "Waiting List",
         "descricao": "Organize your queue digitally and efficiently, informing the estimated waiting time."
       },
       "reserva": {
@@ -108,7 +145,7 @@
       },
       "painel": {
         "titulo": "TV Panel",
-        "descricao": "Display the queue status in real time on a visible panel for everyone on-site."
+        "descricao": "Display the queue status in real-time on a panel visible to everyone on site."
       },
       "avaliacoes": {
         "titulo": "Reviews",
@@ -116,22 +153,22 @@
       }
     },
     "sobre": {
-      "titulo": "What our customers say?",
-      "depoimento": "Flow has transformed the way we manage our customers. Our organization has improved by 100% and the feedback is incredible!",
+      "titulo": "What our customers say",
+      "depoimento": "Flow transformed the way we manage our customers. The organization improved 100% and the feedback is incredible!",
       "cargo": "Founder Circle"
     },
     "rodape": {
-      "slogan": "Simplified queue management to optimize customer experience.",
+      "slogan": "Simplified queue management to optimize the customer experience.",
       "direitos": "2025 ManageFlow. All rights reserved."
     }
   },
   "menu": {
     "dashboard": "Dashboard",
-    "configuracao": "Settings",
+    "configuracao": "Configuration",
     "gestao": "Queue Management",
     "relatorios": "Reports",
     "usuarios": "Users",
-    "sair": "Logout",
+    "sair": "Log Out",
     "expandir": "Expand menu",
     "recolher": "Collapse menu",
     "menuLateral": "Side menu",
@@ -162,8 +199,8 @@
     },
     "modalAdicionar": {
       "titulo": "Add New Member",
-      "labelCpfEmail": "User's SSN or Email",
-      "placeholderCpfEmail": "Enter SSN or Email",
+      "labelCpfEmail": "User's Tax ID or Email",
+      "placeholderCpfEmail": "Enter Tax ID or Email",
       "labelPerfil": "Permission Profile"
     },
     "modalExcluir": {
@@ -179,20 +216,20 @@
     "modalDetalhes": {
       "titulo": "Company Details",
       "nome": "Name",
-      "cnpj": "EIN"
+      "cnpj": "Tax ID (CNPJ)"
     },
     "erros": {
-      "carregarDados": "Could not load page data. Please try again.",
+      "carregarDados": "Could not load page data. Try again.",
       "semPermissaoAdicionar": "You do not have permission to add members.",
-      "preenchaCampos": "Please fill in the SSN/Email and select a profile.",
+      "preenchaCampos": "Please, fill in the Tax ID/Email and select a profile.",
       "adicionarUsuario": "Error adding user.",
       "semPermissaoRemover": "You do not have permission to remove members.",
       "autoRemocao": "You cannot remove yourself from the company here.",
-      "removerAdmin": "It is not allowed to remove Administrator users from here.",
-      "removerUsuario": "Error removing user. (Hint: you cannot remove the last Administrator.)",
+      "removerAdmin": "It is not allowed to remove Administrator users here.",
+      "removerUsuario": "Error removing user. (Tip: you cannot remove the last Administrator.)",
       "semPermissaoAlterar": "You do not have permission to change profiles.",
       "alterarAdmin": "It is not allowed to change an Administrator's permission.",
-      "atualizarPermissao": "Could not update permission. (Hint: you cannot demote the last Administrator.)",
+      "atualizarPermissao": "Could not update permission. (Tip: you cannot demote the last Administrator.)",
       "carregarDetalhesEmpresa": "Error loading company details."
     },
     "sucesso": {
@@ -210,7 +247,7 @@
     "cancelar": "Cancel",
     "fechar": "Close",
     "carregando": "Loading...",
-    "carregandoClientes": "Loading clients..."
+    "carregandoClientes": "Loading customers..."
   },
   "filaLista": {
     "titulo": "Queues",
@@ -221,42 +258,42 @@
     },
     "tabela": {
       "nomeFila": "QUEUE NAME",
-      "dataInicio": "START DATE",
-      "dataFim": "END DATE",
+      "dataInicio": "QUEUE START DATE",
+      "dataFim": "QUEUE END DATE",
       "aguardando": "WAITING",
       "bloqueada": "BLOCKED"
     }
   },
   "gestaoFila": {
-    "titulo": "Clients in Queue",
-    "nenhumCliente": "No clients in the queue.",
+    "titulo": "Customers in Queue",
+    "nenhumCliente": "No customers in the queue.",
     "botoes": {
       "bloquear": "Block queue",
       "bloquearTitle": "Block queue (prevent new public entries)",
       "desbloquear": "Unblock queue",
       "desbloquearTitle": "Unblock queue (allow new public entries)",
-      "adicionar": "Add Client",
+      "adicionar": "Add Customer",
       "verPainel": "View Panel"
     },
     "alertaBloqueio": {
       "titulo": "Queue blocked today:",
-      "texto": "new entries are prevented. Management of clients already in the queue continues as normal."
+      "texto": "new entries are prevented. Management of customers already in the queue continues as normal."
     },
     "abas": {
       "aguardando": "Waiting & Called",
       "confirmados": "Confirmed",
-      "naoCompareceu": "No-shows"
+      "naoCompareceu": "No-Show"
     },
     "tabela": {
-      "cliente": "CLIENT NAME",
-      "cpfCnpj": "SSN/EIN",
+      "cliente": "CUSTOMER NAME",
+      "cpfCnpj": "TAX ID",
       "entrada": "ENTRY",
-      "statusAcoes": "STATUS & ACTIONS"
+      "statusAcoes": "STATUS AND ACTIONS"
     },
     "status": {
       "aguardando": "Waiting",
       "confirmado": "Presence Confirmed",
-      "naoCompareceu": "No-show",
+      "naoCompareceu": "No-Show",
       "chamado": "Called",
       "atendido": "Served",
       "desconhecido": "Unknown"
@@ -264,40 +301,40 @@
     "acoes": {
       "notificar": "Send Notification",
       "confirmar": "Confirm Presence",
-      "naoCompareceu": "No-show"
+      "naoCompareceu": "No-Show"
     },
     "modalAdicionar": {
-      "titulo": "Add New Client",
+      "titulo": "Add New Customer",
       "nome": "Full Name",
-      "cpfCnpj": "SSN/EIN",
+      "cpfCnpj": "Tax ID",
       "nascimento": "Date of Birth",
       "notificacao": "Notification Method",
-      "celular": "Mobile",
+      "celular": "Mobile Phone",
       "adicionar": "Add to Queue"
     },
     "feedback": {
       "presencaConfirmada": "{{nome}}'s presence confirmed!",
-      "naoCompareceu": "{{nome}} marked as a no-show.",
-      "notificado": "Client notified.",
-      "clienteAdicionado": "Client added successfully!",
+      "naoCompareceu": "{{nome}} marked as no-show.",
+      "notificado": "Customer notified.",
+      "clienteAdicionado": "Customer added successfully!",
       "filaBloqueada": "Queue blocked for new public entries today.",
       "filaDesbloqueada": "Queue unblocked for new public entries."
     },
     "erros": {
-      "carregarClientes": "Could not load clients from the queue.",
-      "nenhumCliente": "No clients found for this queue.",
+      "carregarClientes": "Could not load queue customers.",
+      "nenhumCliente": "No customers found for this queue.",
       "confirmarPresenca": "Error confirming presence.",
       "marcarAusencia": "Error marking absence.",
-      "agendarTimeout": "Error scheduling timeout. Please try again.",
-      "adicionarCliente": "Error adding client.",
-      "alterarBloqueio": "Could not change the queue block status."
+      "agendarTimeout": "Error scheduling timeout. Try again.",
+      "adicionarCliente": "Error adding customer.",
+      "alterarBloqueio": "Could not change queue block status."
     }
   },
   "filasCadastradas": {
     "titulo": "Queue Settings",
     "buscaPlaceholder": "Search by name, link, or ID",
     "ordenarPor": "Sort by:",
-    "recente": "Newest",
+    "recente": "Most recent",
     "mostrandoItens_one": "Showing {{count}} item",
     "mostrandoItens_other": "Showing {{count}} items",
     "cards": {
@@ -306,7 +343,7 @@
     },
     "tabela": {
       "nome": "Queue name",
-      "id": "Conf. ID",
+      "id": "Config ID",
       "link": "Entry link",
       "qrCode": "QR Code",
       "status": "Status",
@@ -324,9 +361,9 @@
       "excluirDefinitivamente": "Delete permanently"
     },
     "acoes": {
-      "editar": "Edit settings",
+      "editar": "Edit configuration",
       "editarLabel": "Edit {{nome}}",
-      "excluir": "Delete settings",
+      "excluir": "Delete configuration",
       "excluirLabel": "Delete {{nome}}",
       "abrirQr": "Open QR modal (auto-generates)"
     },
@@ -336,15 +373,15 @@
       "alt": "QR Code"
     },
     "modalExcluir": {
-      "titulo": "Delete settings",
-      "confirmacao": "Are you sure you want to delete the settings for <strong>“{{nome}}”</strong> (ID {{id}})?",
-      "subtexto": "This action will also remove associated queues and clients. It cannot be undone."
+      "titulo": "Delete configuration",
+      "confirmacao": "Are you sure you want to delete the configuration <strong>“{{nome}}”</strong> (ID {{id}})?",
+      "subtexto": "This action will also remove associated queues and customers. It cannot be undone."
     },
     "erros": {
       "nenhumaEmpresa": "No company selected.",
       "carregar": "Error loading: {{message}}",
       "tokenNaoEncontrado": "Queue token not found.",
-      "gerarQr": "Could not generate the QR Code.",
+      "gerarQr": "Could not generate QR Code.",
       "excluir": "Could not delete: {{message}}"
     },
     "feedback": {
@@ -366,25 +403,25 @@
       "total": "Total Queues",
       "totalSub": "All registered queues",
       "ativas": "Active Queues",
-      "ativasSub": "Available to clients",
+      "ativasSub": "Available to customers",
       "inativasBloqueadas": "Inactive/Blocked Queues",
-      "inativasBloqueadasSub": "Unavailable right now",
+      "inativasBloqueadasSub": "Unavailable now",
       "pessoasHoje": "People Today",
       "pessoasHojeSub": "Entries in queues (today)",
       "esperaMedia": "Average Wait",
-      "esperaMediaSub": "Clients waiting"
+      "esperaMediaSub": "Customers waiting"
     },
     "graficos": {
-      "entradasHoje": "Entries by hour (today)",
-      "statusFilas": "Queue status",
+      "entradasHoje": "Entries per hour (today)",
+      "statusFilas": "Queue Status",
       "semDadosHoje": "No data today.",
-      "hora": "Time",
+      "hora": "Hour",
       "tempoEspera": "Wait Time",
       "horaDoDia": "Time of Day",
-      "numClientes": "No. of Clients",
-      "clientes": "Clients",
+      "numClientes": "No. of Customers",
+      "clientes": "Customers",
       "minutos": "Minutes",
-      "tempoDeEspera": "Wait Time"
+      "tempoDeEspera": "Waiting Time"
     },
     "tabela": {
       "titulo": "Queues (today)",
@@ -406,7 +443,7 @@
       "carregando": "Loading peak data...",
       "nenhumDado": "No peak data available for analysis.",
       "hora": "Hour",
-      "totalClientes": "Total Clients"
+      "totalClientes": "Total Customers"
     },
     "tempoEspera": {
       "titulo": "Average Wait Time by Hour",
@@ -418,10 +455,10 @@
       "exportarJson": "Export to JSON"
     },
     "erros": {
-      "dadosInsuficientes": "There is not enough queue data for this company.",
+      "dadosInsuficientes": "Not enough queue data for this company.",
       "carregarDados": "Could not load data. Please try again later.",
       "nenhumDadoEspera": "No wait time data found for this company.",
-      "nenhumaFilaAnalise": "No queue available for detailed analysis.",
+      "nenhumaFilaAnalise": "No queues available for detailed analysis.",
       "selecioneEmpresa": "Select a company or wait for the queues to load."
     }
   }
