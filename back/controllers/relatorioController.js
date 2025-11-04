@@ -141,15 +141,15 @@ exports.avaliacoesTodasFilas = async (req, res) => {
     res.status(500).json({ erro: 'Erro ao buscar avaliações.' });
   }
 };
-
 // 5) Desempenho por fila (atendidos / desistentes / em espera)
+//    ✨ ATUALIZADO: Adicionadas médias de tempo de espera para atendidos e desistentes
 exports.desempenhoPorFila = async (req, res) => {
   try {
     const { inicio, fim } = req.query;
     const params = [];
-    let where = '';
+    let where = 'WHERE 1=1'; // Inicia com 1=1 para facilitar a adição de filtros
     if (inicio && fim) {
-      where = 'WHERE DATE(c.DT_ENTRA) BETWEEN ? AND ?';
+      where += ' AND DATE(c.DT_ENTRA) BETWEEN ? AND ?';
       params.push(inicio, fim);
     }
 
@@ -158,7 +158,27 @@ exports.desempenhoPorFila = async (req, res) => {
         cf.NOME_FILA AS fila,
         SUM(CASE WHEN c.SITUACAO = 1 THEN 1 ELSE 0 END) AS atendidos,
         SUM(CASE WHEN c.SITUACAO = 2 THEN 1 ELSE 0 END) AS desistentes,
-        SUM(CASE WHEN (c.SITUACAO <> 1 AND c.DT_SAIDA IS NULL) THEN 1 ELSE 0 END) AS em_espera
+        SUM(CASE WHEN c.SITUACAO = 0 THEN 1 ELSE 0 END) AS em_espera,
+
+        -- Novo: Média de espera de quem foi ATENDIDO (Entrada -> Chamada)
+        CAST(AVG(
+          CASE 
+            WHEN c.SITUACAO = 1 AND c.DT_CHAMA IS NOT NULL 
+            THEN TIMESTAMPDIFF(MINUTE, c.DT_ENTRA, c.DT_CHAMA) 
+            ELSE NULL 
+          END
+        ) AS DECIMAL(10,1)) AS media_espera_atendidos,
+
+        -- Novo: Média de espera de quem DESISTIU (Entrada -> Saída)
+        -- (Assumindo que DT_SAIDA é preenchido na desistência)
+        CAST(AVG(
+          CASE 
+            WHEN c.SITUACAO = 2 AND c.DT_SAIDA IS NOT NULL 
+            THEN TIMESTAMPDIFF(MINUTE, c.DT_ENTRA, c.DT_SAIDA) 
+            ELSE NULL 
+          END
+        ) AS DECIMAL(10,1)) AS media_espera_desistentes
+
       FROM clientesfila c
       JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
       ${where}
@@ -208,5 +228,37 @@ exports.listarFilas = async (req, res) => {
   } catch (err) {
     console.error('Erro listarFilas:', err);
     res.status(500).json({ erro: 'Erro ao buscar filas.' });
+  }
+};
+
+
+// 8) Listar avaliações detalhadas (para exportação)
+exports.listarAvaliacoesDetalhadas = async (req, res) => {
+  try {
+    const { inicio, fim } = req.query;
+    const params = [];
+    let where = 'WHERE 1=1';
+
+    if (inicio && fim) {
+      where += ' AND DATE(a.DATA_AVALIACAO) BETWEEN ? AND ?';
+      params.push(inicio, fim);
+    }
+    // Nota: A tabela 'avaliacoes' não parece ter ID_FILA,
+    // então não podemos filtrar por fila aqui.
+
+    const sql = `
+      SELECT
+        a.DATA_AVALIACAO AS data,
+        a.NOTA AS nota,
+        a.COMENTARIO AS comentario
+      FROM avaliacoes a
+      ${where}
+      ORDER BY a.DATA_AVALIACAO DESC
+    `;
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro listarAvaliacoesDetalhadas:', err);
+    res.status(500).json({ erro: 'Erro ao buscar avaliações detalhadas.' });
   }
 };

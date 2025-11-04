@@ -10,4 +10,7 @@ router.get('/desempenho-fila', relatorioController.desempenhoPorFila);
 router.get('/distribuicao-notas', relatorioController.distribuicaoNotas);
 router.get('/filas', relatorioController.listarFilas);
 
+// ✨ ADICIONE ESTA LINHA FALTANTE:
+router.get('/avaliacoes-detalhadas', relatorioController.listarAvaliacoesDetalhadas);
+
 module.exports = router;
