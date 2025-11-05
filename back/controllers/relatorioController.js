@@ -262,3 +262,5 @@ exports.listarAvaliacoesDetalhadas = async (req, res) => {
     res.status(500).json({ erro: 'Erro ao buscar avaliações detalhadas.' });
   }
 };
+
+
