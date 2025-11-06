@@ -41,6 +41,28 @@ const validarCNPJ = (cnpj) => {
   return true;
 };
 
+// 🔧 aceita string ou objeto { url, key }
+function normalizeImg(v) {
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'object' && v !== null) {
+    return v.url || v.href || '';
+  }
+  return '';
+}
+
+// 🔥 cache-buster: evita imagem antiga do cache do navegador/CDN
+function withCacheBuster(url, seed = Date.now()) {
+  if (!url) return url;
+  try {
+    // mantém querystring existente e só adiciona v=
+    const hasQ = url.includes('?');
+    return `${url}${hasQ ? '&' : '?'}v=${encodeURIComponent(seed)}`;
+  } catch {
+    return url;
+  }
+}
+
 const EditarEmpresa = ({ onLogout }) => {
   const { idEmpresa } = useParams();
   const navigate = useNavigate();
@@ -96,7 +118,18 @@ const EditarEmpresa = ({ onLogout }) => {
         });
         const cnpjToValidate = String(emp.CNPJ || emp.cnpj || '');
         if (cnpjToValidate) setIsCnpjValid(validarCNPJ(cnpjToValidate));
-        setPerfilPreview(emp.img_perfil || emp.LOGO_URL || '');
+
+        // 🔧 aceita string OU objeto { url }
+        const img =
+          normalizeImg(emp.img_perfil) ||
+          normalizeImg(emp.img_perfil_url) ||
+          normalizeImg(emp.LOGO_URL) ||
+          normalizeImg(emp.LOGO) ||
+          '';
+
+        // ⚠️ ao carregar do backend, não coloca cache-buster
+        // (só usamos após upload para forçar troca visual)
+        setPerfilPreview(img);
       } catch (err) {
         setError(err?.response?.data?.error || 'Não foi possível carregar os dados da empresa.');
       } finally {
@@ -196,7 +229,7 @@ const EditarEmpresa = ({ onLogout }) => {
       const { data } = await api.get(`/public/perfil-link/${idEmpresa}`);
       setPerfilUrlByToken(data.urlByToken);
       setPerfilToken(data.token);
-    } catch (error) {
+    } catch {
       alert('Erro ao gerar o link do perfil público.');
     }
   };
@@ -213,7 +246,7 @@ const EditarEmpresa = ({ onLogout }) => {
       if (qrPerfilUrl) URL.revokeObjectURL(qrPerfilUrl);
       const url = URL.createObjectURL(response.data);
       setQrPerfilUrl(url);
-    } catch (error) {
+    } catch {
       alert('Erro ao gerar QR Code do perfil.');
     } finally {
       setQrPerfilLoading(false);
@@ -236,7 +269,7 @@ const EditarEmpresa = ({ onLogout }) => {
     if (!file) return;
     setPerfilFile(file);
     const reader = new FileReader();
-    reader.onload = () => setPerfilPreview(reader.result);
+    reader.onload = () => setPerfilPreview(reader.result); // preview local
     reader.readAsDataURL(file);
   };
 
@@ -253,12 +286,24 @@ const EditarEmpresa = ({ onLogout }) => {
       const { data } = await api.post(`/empresas/${idEmpresa}/perfil`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setPerfilPreview(data.img_perfil || '');
+
+      // 🔧 backend pode devolver string ou { url, key }
+      const rawUrl = normalizeImg(data.img_perfil);
+
+      // 🔥 cache-buster: força o <img> a recarregar a nova versão
+      const url = withCacheBuster(rawUrl);
+
+      setPerfilPreview(url || '');
+
       setEmpresa((prev) => ({
         ...prev,
         LOGO: data.key || prev.LOGO,
-        LOGO_URL: data.img_perfil || prev.LOGO_URL
+        LOGO_URL: url || prev.LOGO_URL
       }));
+
+      // opcional: limpar o input
+      setPerfilFile(null);
+
       setSuccess('Foto de perfil da empresa atualizada com sucesso!');
     } catch (err) {
       setError(err?.response?.data?.error || 'Erro ao enviar a foto de perfil.');
@@ -267,13 +312,11 @@ const EditarEmpresa = ({ onLogout }) => {
     }
   };
 
-  // Loading
   if (loading) {
     return (
       <div className="editar-empresa-container">
         <Menu onLogout={onLogout} />
         <Container as="main" className="editar-empresa-main-content">
-          {/* HEADER SEPARADO (mesmo no loading) */}
           <section className="editar-header-card">
             <div className="editar-header-row">
               <h1 className="editar-header-title">Dados da Empresa</h1>
@@ -297,12 +340,10 @@ const EditarEmpresa = ({ onLogout }) => {
     );
   }
 
-  // Render
   return (
     <div className="editar-empresa-container">
       <Menu onLogout={onLogout} />
       <Container as="main" className="editar-empresa-main-content">
-        {/* HEADER SEPARADO (título + voltar) */}
         <section className="editar-header-card">
           <div className="editar-header-row">
             <h2>Dados da Empresa</h2>
@@ -314,7 +355,6 @@ const EditarEmpresa = ({ onLogout }) => {
           </div>
         </section>
 
-        {/* CONTEÚDO */}
         <Card>
           <Card.Body>
             {!isAdmin && (<Alert variant="info">Você está em modo de visualização.</Alert>)}
@@ -354,6 +394,7 @@ const EditarEmpresa = ({ onLogout }) => {
                         <img
                           src={perfilPreview || defaultAvatar}
                           alt="Foto de Perfil"
+                          crossOrigin="anonymous" // ajuda em ambientes com CDN
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={(e) => { e.currentTarget.src = defaultAvatar; }}
                         />
@@ -374,7 +415,7 @@ const EditarEmpresa = ({ onLogout }) => {
                       </Button>
                     </div>
                     <Form.Text className="text-muted">
-                      O backend já retorna a URL pública (S3/CloudFront) em <code>img_perfil</code>.
+                      O backend retorna URL de acesso no campo <code>img_perfil</code>.
                     </Form.Text>
                   </Col>
                 </Row>
@@ -453,7 +494,7 @@ const EditarEmpresa = ({ onLogout }) => {
           </Card.Body>
         </Card>
 
-        {/* Bloco de Avaliações */}
+        {/* Avaliações */}
         <Card className="mt-4">
           <Card.Body>
             <Card.Title className="card-title-icon"><FaStar /> Avaliações de Clientes</Card.Title>

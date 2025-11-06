@@ -5,8 +5,8 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-// S3 helpers
-const { makePublicImageUrl } = require('../utils/image');
+// S3 helpers (privado: usa URL pré-assinada)
+const { makeImageAccessUrl, normalizeKey } = require('../utils/image');
 const { putToS3, keyUsuarioPerfil } = require('../middlewares/s3Upload');
 
 require('dotenv').config();
@@ -80,7 +80,7 @@ exports.loginUsuario = async (req, res) => {
   }
 
   try {
-    const [results] = await db.query('SELECT * FROM usuario WHERE EMAIL = ?', [email]);
+    const [results] = await db.query('SELECT * FROM usuario WHERE EMAIL = ? LIMIT 1', [email]);
     if (results.length === 0) {
       return res.status(401).send('Usuário ou senha inválidos.');
     }
@@ -97,11 +97,13 @@ exports.loginUsuario = async (req, res) => {
       { expiresIn: '8h' }
     );
 
+    const imgUrl = usuario.img_perfil ? await makeImageAccessUrl(usuario.img_perfil) : null;
+
     return res.json({
       token,
       idUsuario: usuario.ID,
       nome: usuario.NOME,
-      img_perfil: makePublicImageUrl(usuario.img_perfil || null)
+      img_perfil: imgUrl
     });
   } catch (err) {
     console.error('[ERRO] loginUsuario:', err);
@@ -156,12 +158,12 @@ exports.cadastrarUsuario = async (req, res) => {
  * ============================================================ */
 exports.solicitarRedefinicaoSenha = async (req, res) => {
   const { email } = req.body;
-  if (!email) return res.status(400).send('Por favor, informe seu e-mail.');
+  if (!email) return res.status(400).json({ error: 'Por favor, informe seu e-mail.' });
 
   try {
-    const [results] = await db.query('SELECT ID, EMAIL FROM usuario WHERE EMAIL = ?', [email]);
+    const [results] = await db.query('SELECT ID, EMAIL FROM usuario WHERE EMAIL = ? LIMIT 1', [email]);
     if (results.length === 0) {
-      return res.status(404).send('E-mail não encontrado.');
+      return res.status(404).json({ error: 'E-mail não encontrado.' });
     }
 
     const usuario = results[0];
@@ -196,10 +198,11 @@ exports.solicitarRedefinicaoSenha = async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.send('Um link para redefinição de senha foi enviado para o seu e-mail.');
+    // Responder em JSON (padronização)
+    res.status(200).json({ message: 'Um link para redefinição de senha foi enviado para o seu e-mail.' });
   } catch (err) {
     console.error('[FORGOT] 500 error:', err);
-    res.status(500).send('Erro interno ao processar solicitação de senha.');
+    res.status(500).json({ error: 'Erro interno ao processar solicitação de senha.' });
   }
 };
 
@@ -209,7 +212,7 @@ exports.solicitarRedefinicaoSenha = async (req, res) => {
 exports.redefinirSenha = async (req, res) => {
   const { token, novaSenha } = req.body;
   if (!token || !novaSenha) {
-    return res.status(400).send('Token e nova senha são obrigatórios.');
+    return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
   }
 
   try {
@@ -218,7 +221,7 @@ exports.redefinirSenha = async (req, res) => {
       [token, new Date()]
     );
     if (results.length === 0) {
-      return res.status(400).send('Token inválido ou expirado.');
+      return res.status(400).json({ error: 'Token inválido ou expirado.' });
     }
 
     const usuario = results[0];
@@ -231,10 +234,10 @@ exports.redefinirSenha = async (req, res) => {
       [senhaCriptografada, usuario.ID]
     );
 
-    res.send('Senha redefinida com sucesso!');
+    res.status(200).json({ message: 'Senha redefinida com sucesso!' });
   } catch (error) {
     console.error('[RESET] 500 error:', error);
-    res.status(500).send('Erro interno ao redefinir a senha.');
+    res.status(500).json({ error: 'Erro interno ao redefinir a senha.' });
   }
 };
 
@@ -253,7 +256,7 @@ exports.uploadFotoPerfil = async (req, res) => {
 
     const f = req.file;
     const key = keyUsuarioPerfil(idUsuario, f.mimetype); // /uploads/usuarios/:id/perfil/...
-    const savedKey = await putToS3(f.buffer, key, f.mimetype);
+    const savedKey = normalizeKey(await putToS3(f.buffer, key, f.mimetype));
 
     await db.query(
       `UPDATE usuario SET img_perfil = ? WHERE ID = ?`,
@@ -263,8 +266,8 @@ exports.uploadFotoPerfil = async (req, res) => {
     return res.json({
       message: 'Foto de perfil atualizada com sucesso.',
       usuarioId: idUsuario,
-      img_perfil: makePublicImageUrl(savedKey),
-      key: savedKey
+      img_perfil: await makeImageAccessUrl(savedKey), // URL de acesso (assinada)
+      key: savedKey                                   // key relativa salva no banco
     });
   } catch (err) {
     console.error('[uploadFotoPerfil] Erro:', err);
@@ -273,7 +276,7 @@ exports.uploadFotoPerfil = async (req, res) => {
 };
 
 /* ============================================================
- *  GET USUÁRIO POR ID (retorna URL pública da foto)
+ *  GET USUÁRIO POR ID (retorna URL de acesso da foto)
  * ============================================================ */
 exports.getUsuarioPorId = async (req, res) => {
   const idUsuario = parseInt(req.params.id, 10);
@@ -289,6 +292,8 @@ exports.getUsuarioPorId = async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Usuário não encontrado.' });
 
     const u = rows[0];
+    const url = u.img_perfil ? await makeImageAccessUrl(u.img_perfil) : null;
+
     return res.json({
       id: u.ID,
       nome: u.NOME,
@@ -301,7 +306,7 @@ exports.getUsuarioPorId = async (req, res) => {
       ddi: u.DDI,
       ddd: u.DDD,
       telefone: u.TELEFONE,
-      img_perfil: makePublicImageUrl(u.img_perfil || null),
+      img_perfil: url,
       _key: u.img_perfil || null
     });
   } catch (err) {
@@ -359,7 +364,10 @@ exports.atualizarUsuario = async (req, res) => {
          FROM usuario WHERE ID = ? LIMIT 1`,
       [idUsuario]
     );
+
     const u = rows[0];
+    const fotoUrl = u.img_perfil ? await makeImageAccessUrl(u.img_perfil) : null;
+
     return res.json({
       id: u.ID,
       nome: u.NOME,
@@ -372,7 +380,7 @@ exports.atualizarUsuario = async (req, res) => {
       ddi: u.DDI,
       ddd: u.DDD,
       telefone: u.TELEFONE,
-      img_perfil: makePublicImageUrl(u.img_perfil || null)
+      img_perfil: fotoUrl
     });
   } catch (err) {
     console.error('[atualizarUsuario] Erro:', err);
