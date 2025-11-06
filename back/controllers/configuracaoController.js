@@ -655,7 +655,7 @@ exports.getPublicInfoByToken = async (req, res) => {
       cf.INI_VIG, cf.FIM_VIG, cf.CAMPOS, cf.MENSAGEM,
       cf.IMG_BANNER, cf.IMG_LOGO, cf.TEMP_TOL, cf.QTDE_MAX,
       cf.PER_SAIR, cf.PER_LOC, cf.SITUACAO,
-      e.NOME AS NOME_EMPRESA,
+      e.NOME_EMPRESA,
       cf.QDTE_MIN AS QTDE_MIN
     FROM ConfiguracaoFila cf
     JOIN empresa e ON e.ID_EMPRESA = cf.ID_EMPRESA

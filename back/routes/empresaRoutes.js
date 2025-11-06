@@ -129,36 +129,50 @@ module.exports = (io = null) => {
   // --------------------------------------------------------------------------------
   // DETALHES DA EMPRESA (normaliza URL da LOGO via S3/CDN)
   // --------------------------------------------------------------------------------
-  router.get('/detalhes/:idEmpresa', async (req, res) => {
-    const { idEmpresa } = req.params;
-    try {
-      const [rows] = await db.query(
-        `SELECT ID_EMPRESA, NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO
-         FROM empresa WHERE ID_EMPRESA = ? LIMIT 1`,
-        [idEmpresa]
-      );
-      if (rows.length === 0) {
-        return res.status(404).json({ error: 'Empresa não encontrada.' });
-      }
-
-      const e = rows[0];
-      // LOGO pode ser key, url, ou JSON {key,url}
-      const logo = parseJsonKeyOrUrl(e.LOGO);
-      const publicUrl = logo.key
-        ? await makeImageAccessUrl(logo.key) // gera URL de acesso (pré-assinada/CloudFront)
-        : (logo.url || '');
-
-      return res.json({
-        ...e,
-        img_perfil: publicUrl,      // usado pelo front
-        img_perfil_url: publicUrl,  // alias
-        LOGO_URL: publicUrl         // compat
-      });
-    } catch (err) {
-      console.error('Erro ao buscar detalhes da empresa:', err);
-      return res.status(500).json({ error: 'Erro interno ao buscar detalhes da empresa.' });
+router.get('/detalhes/:idEmpresa', async (req, res) => {
+  const { idEmpresa } = req.params;
+  try {
+    const [rows] = await db.query(
+      `SELECT ID_EMPRESA, NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO
+       FROM empresa WHERE ID_EMPRESA = ? LIMIT 1`,
+      [idEmpresa]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Empresa não encontrada.' });
     }
-  });
+
+    const e = rows[0];
+
+    // 1) LOGO pode ser:
+    //    - JSON string: {"key":"/uploads/.."} ou {"url":"https://..."}
+    //    - string '/uploads/...'
+    //    - string 'https://...'
+    const { key, url } = parseJsonKeyOrUrl(e.LOGO);
+
+    let logoUrl = '';
+    if (key) {
+      // 2) Se temos key do S3, gera URL de acesso correta (assinada ou pública via CloudFront)
+      logoUrl = await makeImageAccessUrl(key, 600); // 10 min
+    } else if (url) {
+      // 3) Se estava salvo como URL pública, só devolve a própria
+      logoUrl = url;
+    } else {
+      // 4) Sem logo
+      logoUrl = '';
+    }
+
+    return res.json({
+      ...e,
+      img_perfil: logoUrl,
+      img_perfil_url: logoUrl,
+      LOGO_URL: logoUrl,
+    });
+  } catch (err) {
+    console.error('[GET /empresas/detalhes/:id] erro:', err);
+    return res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 
   // --------------------------------------------------------------------------------
   // ATUALIZAR DADOS DA EMPRESA (não mexe na LOGO se não vier valor)

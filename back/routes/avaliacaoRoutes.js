@@ -1,10 +1,12 @@
-// back/src/routes/avaliacaoRoutes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/connection'); // mysql2/promise
 const qr = require('qr-image');
 
 const FRONTEND_URL = process.env.PUBLIC_FRONT_BASE_URL || 'http://localhost:3000';
+
+// ✅ usa util que gera URL pública ou assinada
+const { makeImageAccessUrl } = require('../utils/image');
 
 /** Token de avaliação: AV-<ID_EMPRESA>-TOKEN */
 function makeAvaliacaoToken(idEmpresa) {
@@ -23,6 +25,7 @@ function isValidDateISO(d) {
 }
 
 // --------- INFO EMPRESA PELO TOKEN (público) -----------
+// Agora devolve LOGO_URL / img_perfil como URL FINAL (presigned se bucket privado)
 router.get('/info-empresa/:token', async (req, res) => {
   try {
     const idEmpresa = parseEmpresaIdFromAvaliacaoToken(req.params.token);
@@ -34,15 +37,24 @@ router.get('/info-empresa/:token', async (req, res) => {
     );
     if (!empresa) return res.status(404).json({ error: 'EMPRESA_NAO_ENCONTRADA' });
 
-    // Retorna no formato "novo" e também o "legado" para compatibilidade
+    // 🔐 gera URL (presigned se S3_URL_MODE != 'public')
+    const logoUrl = await makeImageAccessUrl(empresa.LOGO);
+
     return res.json({
       idEmpresa: empresa.ID_EMPRESA,
       nomeEmpresa: empresa.NOME_EMPRESA,
-      logo: empresa.LOGO,
-      // compat:
+      logo: empresa.LOGO,       // chave/valor cru salvo no banco
+      logo_url: logoUrl,        // ✅ URL final para <img>
+
+      // compat
       ID_EMPRESA: empresa.ID_EMPRESA,
       NOME_EMPRESA: empresa.NOME_EMPRESA,
-      LOGO: empresa.LOGO
+      LOGO: empresa.LOGO,
+      LOGO_URL: logoUrl,
+
+      // compat com telas que esperam estes nomes
+      img_perfil: logoUrl,
+      img_perfil_url: logoUrl,
     });
   } catch (err) {
     return res.status(500).json({ error: 'ERRO_INTERNO', detail: err.message });
@@ -50,10 +62,8 @@ router.get('/info-empresa/:token', async (req, res) => {
 });
 
 /**
- * NOVO: GET /api/avaliacoes/info-cliente
+ * GET /api/avaliacoes/info-cliente
  * Query: token=AV-<id>-TOKEN&dtMovto=YYYY-MM-DD&idFila=...&idCliente=...
- * Retorna { clienteNome, idCliente, idFila, dtMovto }
- * -> Usa tabela clientesfila (ajuste o nome se for diferente no seu schema)
  */
 router.get('/info-cliente', async (req, res) => {
   try {
@@ -67,7 +77,6 @@ router.get('/info-cliente', async (req, res) => {
       return res.status(400).json({ error: 'PARAMS_INVALIDOS', detail: 'Informe dtMovto=YYYY-MM-DD, idFila e idCliente numéricos.' });
     }
 
-    // Ajuste o nome/colunas se sua tabela for diferente
     const [rows] = await db.query(
       `
       SELECT
@@ -111,7 +120,6 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'NOTA_INVALIDA', detail: 'nota deve ser 1..5' });
     }
 
-    // garante empresa existente (evita FK)
     const [[existe]] = await db.query(`SELECT 1 FROM empresa WHERE ID_EMPRESA = ? LIMIT 1`, [idEmpresa]);
     if (!existe) return res.status(404).json({ error: 'EMPRESA_NAO_ENCONTRADA' });
 
@@ -165,27 +173,18 @@ router.get('/qr/avaliacao/:token', (req, res) => {
   }
 });
 
-// =======================================================
-// === ROTAS ATUALIZADAS PARA O DASHBOARD ===
-// =======================================================
-
-// Rota para obter estatísticas (AGORA COM FILTRO DE NOTA)
+// ================== DASHBOARD ==================
 router.get('/stats/:idEmpresa', async (req, res) => {
   const { idEmpresa } = req.params;
-  const { nota } = req.query; // filtro de nota
+  const { nota } = req.query;
 
   try {
-    // A query de estatísticas gerais (média, total) NÃO deve ser filtrada
     const [[statsGeral]] = await db.query(
-      `SELECT
-         AVG(NOTA) AS mediaGeral,
-         COUNT(*) AS totalAvaliacoes
-       FROM avaliacoes
-       WHERE ID_EMPRESA = ?;`,
+      `SELECT AVG(NOTA) AS mediaGeral, COUNT(*) AS totalAvaliacoes
+       FROM avaliacoes WHERE ID_EMPRESA = ?;`,
       [idEmpresa]
     );
 
-    // Distribuição total por nota (sem filtro)
     const [[distribuicao]] = await db.query(
       `SELECT
          SUM(CASE WHEN NOTA = 5 THEN 1 ELSE 0 END) AS estrelas5,
@@ -193,29 +192,25 @@ router.get('/stats/:idEmpresa', async (req, res) => {
          SUM(CASE WHEN NOTA = 3 THEN 1 ELSE 0 END) AS estrelas3,
          SUM(CASE WHEN NOTA = 2 THEN 1 ELSE 0 END) AS estrelas2,
          SUM(CASE WHEN NOTA = 1 THEN 1 ELSE 0 END) AS estrelas1
-       FROM avaliacoes
-       WHERE ID_EMPRESA = ?;`,
+       FROM avaliacoes WHERE ID_EMPRESA = ?;`,
       [idEmpresa]
     );
 
-    // Total filtrado (para cards quando usuário selecionar a nota)
     let notaFilterQuery = '';
-    const queryParams = [idEmpresa];
+    const params = [idEmpresa];
     if (nota && Number(nota) > 0) {
       notaFilterQuery = 'AND NOTA = ?';
-      queryParams.push(Number(nota));
+      params.push(Number(nota));
     }
     const [[{ totalFiltrado }]] = await db.query(
-      `SELECT COUNT(*) as totalFiltrado
-       FROM avaliacoes
-       WHERE ID_EMPRESA = ? ${notaFilterQuery}`,
-      queryParams
+      `SELECT COUNT(*) as totalFiltrado FROM avaliacoes WHERE ID_EMPRESA = ? ${notaFilterQuery}`,
+      params
     );
 
     res.json({
       mediaGeral: Number(statsGeral.mediaGeral || 0),
-      totalAvaliacoes: Number(statsGeral.totalAvaliacoes || 0), // Total real
-      totalFiltrado: Number(totalFiltrado || 0), // Total p/ filtro atual
+      totalAvaliacoes: Number(statsGeral.totalAvaliacoes || 0),
+      totalFiltrado: Number(totalFiltrado || 0),
       distribuicao: [
         { nota: 5, contagem: Number(distribuicao.estrelas5 || 0) },
         { nota: 4, contagem: Number(distribuicao.estrelas4 || 0) },
@@ -230,47 +225,40 @@ router.get('/stats/:idEmpresa', async (req, res) => {
   }
 });
 
-// Rota para obter comentários (AGORA COM FILTRO DE NOTA)
 router.get('/comentarios/:idEmpresa', async (req, res) => {
   const { idEmpresa } = req.params;
-  const { nota, page = 1, limit = 5 } = req.query; // nota, paginação
+  const { nota, page = 1, limit = 5 } = req.query;
 
   const nLimit = parseInt(limit, 10);
   const nOffset = (parseInt(page, 10) - 1) * nLimit;
 
   try {
     let notaFilterQuery = '';
-    const queryParams = [idEmpresa];
-
+    const params = [idEmpresa];
     if (nota && Number(nota) > 0) {
       notaFilterQuery = 'AND NOTA = ?';
-      queryParams.push(Number(nota));
+      params.push(Number(nota));
     }
 
-    // Comentários paginados e filtrados
-    const queryComentarios = `
+    const sql = `
       SELECT NOTA, COMENTARIO, DT_CRIACAO
       FROM avaliacoes
-      WHERE ID_EMPRESA = ? 
-        AND COMENTARIO IS NOT NULL 
+      WHERE ID_EMPRESA = ?
+        AND COMENTARIO IS NOT NULL
         AND TRIM(COMENTARIO) <> ''
         ${notaFilterQuery}
       ORDER BY DT_CRIACAO DESC
-      LIMIT ?
-      OFFSET ?;`;
-    queryParams.push(nLimit, nOffset);
-    const [comentarios] = await db.query(queryComentarios, queryParams);
+      LIMIT ? OFFSET ?;`;
+    const [comentarios] = await db.query(sql, [...params, nLimit, nOffset]);
 
-    // Total para paginação (com mesmo filtro)
-    const queryTotal = `
+    const sqlTotal = `
       SELECT COUNT(*) AS total
       FROM avaliacoes
-      WHERE ID_EMPRESA = ? 
-        AND COMENTARIO IS NOT NULL 
+      WHERE ID_EMPRESA = ?
+        AND COMENTARIO IS NOT NULL
         AND TRIM(COMENTARIO) <> ''
         ${notaFilterQuery};`;
-    const totalParams = queryParams.slice(0, queryParams.length - 2); // sem limit/offset
-    const [[{ total }]] = await db.query(queryTotal, totalParams);
+    const [[{ total }]] = await db.query(sqlTotal, params);
 
     res.json({
       comentarios,
@@ -284,19 +272,12 @@ router.get('/comentarios/:idEmpresa', async (req, res) => {
   }
 });
 
-// =======================================================
-// === NOVA ROTA PARA GRÁFICOS DE TENDÊNCIA ===
-// =======================================================
 router.get('/tendencia/:idEmpresa', async (req, res) => {
   const { idEmpresa } = req.params;
 
   try {
-    // Busca dados dos últimos 30 dias
     const [tendencia] = await db.query(
-      `SELECT
-         DATE(DT_CRIACAO) AS data,
-         COUNT(*) AS contagem,
-         AVG(NOTA) AS mediaNota
+      `SELECT DATE(DT_CRIACAO) AS data, COUNT(*) AS contagem, AVG(NOTA) AS mediaNota
        FROM avaliacoes
        WHERE ID_EMPRESA = ?
          AND DT_CRIACAO >= CURDATE() - INTERVAL 30 DAY
@@ -305,9 +286,8 @@ router.get('/tendencia/:idEmpresa', async (req, res) => {
       [idEmpresa]
     );
 
-    // Formata os dados para o gráfico
     const dadosFormatados = tendencia.map(item => ({
-      data: item.data, // 'YYYY-MM-DD'
+      data: item.data,
       contagem: Number(item.contagem),
       mediaNota: Number(Number(item.mediaNota).toFixed(1))
     }));

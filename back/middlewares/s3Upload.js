@@ -1,7 +1,7 @@
-// /back/src/middlewares/s3Upload.js
 const multer = require('multer');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const crypto = require('crypto');
+const path = require('path');
 const s3 = require('../services/s3Client');
 
 const upload = multer({
@@ -31,7 +31,6 @@ function randomName(prefix = '') {
   return `${prefix}${ts}-${rnd}`;
 }
 
-// middlewares/s3Upload.js
 async function putToS3(buffer, key, mimetype) {
   const bucket = process.env.S3_BUCKET;
   const cmd = new PutObjectCommand({
@@ -39,7 +38,7 @@ async function putToS3(buffer, key, mimetype) {
     Key: key.replace(/^\//, ''),
     Body: buffer,
     ContentType: mimetype
-    // ACL: 'public-read'  <- REMOVA (ou comente)
+    // ACL: 'public-read'  // <- NÃO usar (bucket privado)
   });
   await s3.send(cmd);
   return key.startsWith('/') ? key : `/${key}`;
@@ -67,13 +66,44 @@ function keyUsuarioPerfil(idUsuario, mimetype) {
   return `/uploads/usuarios/${idUsuario}/perfil/${fname}`;
 }
 
-/** Multer fields */
-const empresaPerfilSingle = upload.single('img_perfil'); // perfil da empresa
+/**
+ * Pipeline que:
+ *  1) recebe multipart (campo 'img_perfil')
+ *  2) sobe no S3 (privado)
+ *  3) injeta req.fileUploaded = { key, contentType, size }
+ */
+const empresaPerfilSingle = [
+  upload.single('img_perfil'),
+  async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'Arquivo img_perfil é obrigatório.' });
+      }
+      const empresaId = String(req.params.id || '').replace(/\D+/g, '') || '0';
+      const key = keyEmpresaPerfil(empresaId, req.file.mimetype);
+
+      const savedKey = await putToS3(req.file.buffer, key, req.file.mimetype);
+
+      req.fileUploaded = {
+        key: savedKey,
+        contentType: req.file.mimetype,
+        size: req.file.size,
+        filename: path.basename(savedKey),
+      };
+      next();
+    } catch (err) {
+      console.error('[empresaPerfilSingle] erro upload S3:', err);
+      return res.status(500).json({ error: 'Erro ao enviar imagem ao S3.' });
+    }
+  }
+];
+
 const configuracaoFields = upload.fields([
-  { name: 'img_logo',   maxCount: 1 }, // LOGO da configuração de fila
-  { name: 'img_banner', maxCount: 1 }  // BANNER da configuração de fila
+  { name: 'img_logo',   maxCount: 1 },
+  { name: 'img_banner', maxCount: 1 }
 ]);
-const usuarioPerfilSingle = upload.single('img_perfil'); // perfil do usuário
+
+const usuarioPerfilSingle = upload.single('img_perfil');
 
 module.exports = {
   putToS3,

@@ -1,17 +1,14 @@
-// back/src/controllers/publicEmpresaController.js
+// /back/src/controllers/publicEmpresaController.js
 const db = require('../database/connection');
 
-let makePublicImageUrl;
+// Preferimos a URL de acesso (signed/public) para bucket privado.
+let makeImageAccessUrl, normalizeKey;
 try {
-  ({ makePublicImageUrl } = require('../utils/image'));
+  ({ makeImageAccessUrl, normalizeKey } = require('../utils/image'));
 } catch {
-  makePublicImageUrl = (path, req) => {
-    if (!path) return null;
-    const base =
-      process.env.PUBLIC_API_BASE_URL ||
-      `${req.protocol}://${req.get('host')}`;
-    return path.startsWith('http') ? path : `${base}${path}`;
-  };
+  // fallback bem simples: devolve o próprio path (apenas para dev)
+  makeImageAccessUrl = async (path) => path || null;
+  normalizeKey = (k) => (k ? (k.startsWith('/') ? k : `/${k}`) : null);
 }
 
 /** Helper: sanitiza paginação */
@@ -22,11 +19,46 @@ function parsePagination(qs) {
   return { page, pageSize, offset };
 }
 
+/** Interpreta um valor de coluna de imagem (JSON/key/URL) */
+function extractKeyOrUrl(raw) {
+  if (raw == null) return { key: '', url: '' };
+
+  if (typeof raw === 'object') {
+    return {
+      key: raw?.key ? String(raw.key) : '',
+      url: raw?.url ? String(raw.url) : ''
+    };
+  }
+
+  const s = String(raw).trim();
+  if (!s) return { key: '', url: '' };
+
+  // JSON {"key": "..."} | {"url": "..."}
+  if (s.startsWith('{') && s.endsWith('}')) {
+    try {
+      const obj = JSON.parse(s);
+      return {
+        key: obj?.key ? String(obj.key) : '',
+        url: obj?.url ? String(obj.url) : ''
+      };
+    } catch {
+      // segue o fluxo
+    }
+  }
+
+  if (s.startsWith('/uploads/')) return { key: s, url: '' };
+  if (/^https?:\/\//i.test(s)) return { key: '', url: s };
+
+  // qualquer outra string: tratamos como key relativa
+  return { key: s, url: '' };
+}
+
 /** GET /api/public/empresa/:id
  * Retorna:
  * {
  *   empresa: { id, nome, logo },
  *   resumo: { media, total, dist: { "1": n, "2": n, ... "5": n } },
+ *   paginacao: { page, pageSize },
  *   avaliacoes: [{ id, data, nota, comentario, criadoEm }]
  * }
  */
@@ -76,9 +108,7 @@ exports.getPerfilEmpresaById = async (req, res) => {
     const dist = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
     for (const r of distRows) {
       const e = String(r.estrelas);
-      if (['1', '2', '3', '4', '5'].includes(e)) {
-        dist[e] = Number(r.qtd);
-      }
+      if (dist[e] !== undefined) dist[e] = Number(r.qtd);
     }
 
     // 4) Lista paginada
@@ -104,7 +134,16 @@ exports.getPerfilEmpresaById = async (req, res) => {
       criadoEm: it.CREATED_AT,
     }));
 
-    const logoUrl = makePublicImageUrl(empresa.LOGO, req);
+    // ======== LOGO: gera URL de acesso (assinada se privado) ========
+    const { key: logoKeyRaw, url: logoUrlRaw } = extractKeyOrUrl(empresa.LOGO);
+    let logoUrl = null;
+    if (logoKeyRaw) {
+      const keyNorm = normalizeKey(logoKeyRaw);
+      logoUrl = keyNorm ? await makeImageAccessUrl(keyNorm) : null;
+    } else if (logoUrlRaw) {
+      // já é URL absoluta salva (legado/público)
+      logoUrl = logoUrlRaw;
+    }
 
     return res.json({
       empresa: {
@@ -146,7 +185,10 @@ exports.getPerfilEmpresaByToken = async (req, res) => {
   const { token } = req.params;
   const idEmpresa = parseEmpresaIdFromAnyToken(token);
   if (!idEmpresa) {
-    return res.status(400).json({ error: 'TOKEN_INVALIDO', detail: 'Formato esperado: AV-<ID_EMPRESA>-TOKEN ou PV-<ID_EMPRESA>-TOKEN.' });
+    return res.status(400).json({
+      error: 'TOKEN_INVALIDO',
+      detail: 'Formato esperado: AV-<ID_EMPRESA>-TOKEN ou PV-<ID_EMPRESA>-TOKEN.'
+    });
   }
   req.params.id = String(idEmpresa);
   return exports.getPerfilEmpresaById(req, res);
