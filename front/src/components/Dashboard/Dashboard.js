@@ -5,9 +5,11 @@ import { socket } from "../../services/socket";
 import CountUp from "react-countup";
 import dayjs from "dayjs";
 import "./Dashboard.css";
-import { useTranslation } from "react-i18next"; // 1. Importar
+import { useTranslation } from "react-i18next";
+import StatCard from "../StatCard/StatCard";
+import { Link } from 'react-router-dom';
+import { FaStar, FaArrowRight, FaLayerGroup, FaPlayCircle, FaBan, FaUsers, FaClock } from 'react-icons/fa';
 
-/** Recharts */
 import {
   ResponsiveContainer,
   AreaChart,
@@ -25,21 +27,9 @@ import {
   Line,
 } from "recharts";
 
-/** Bootstrap */
 import { Alert, Button, Form } from "react-bootstrap";
 
 /* ===================== UI Helpers ===================== */
-const StatCard = ({ title, value, suffix, subtitle }) => (
-  <div className="mf-stat">
-    <div className="mf-stat-title">{title}</div>
-    <div className="mf-stat-value">
-      <CountUp end={Number(value || 0)} duration={0.6} separator="." />
-      {suffix ? <span className="mf-stat-suffix">{suffix}</span> : null}
-    </div>
-    {subtitle ? <div className="mf-stat-sub">{subtitle}</div> : null}
-  </div>
-);
-
 const StatusDot = ({ status }) => {
   const cls =
     status === "ATIVA"
@@ -119,7 +109,7 @@ const HorariosDePico = ({ idEmpresa, idFila, t }) => {
     };
     fetchHorariosDePico();
   }, [idEmpresa, idFila, t]);
-  
+
   const exportarCSV = () => {
     if (!dadosPico?.dadosPorHora?.length) return;
     const headers = [t('dashboard.horariosPico.hora'), t('dashboard.horariosPico.totalClientes')];
@@ -147,7 +137,7 @@ const HorariosDePico = ({ idEmpresa, idFila, t }) => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-  
+
   if (loading) return <div className="mf-center-muted">{t('dashboard.horariosPico.carregando')}</div>;
   if (error) return <Alert variant="danger" className="mt-4">{error}</Alert>;
   if (!dadosPico || dadosPico.dadosPorHora.length === 0)
@@ -233,8 +223,8 @@ const TempoDeEspera = ({ idEmpresa, idFila, t }) => {
 };
 /* ===================== /Partes adicionadas ===================== */
 
-const Dashboard = () => {
-  const { t } = useTranslation(); // 2. Instanciar
+const Dashboard = ({ onLogout }) => {
+  const { t } = useTranslation();
   const empresaSel = JSON.parse(localStorage.getItem("empresaSelecionada"));
   const idEmpresa = empresaSel?.ID_EMPRESA || null;
 
@@ -266,7 +256,7 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-  
+
   const enrichPerQueue = async (baseSummary) => {
     if (!baseSummary || !Array.isArray(baseSummary.perQueue)) {
       setEnriched(baseSummary);
@@ -287,7 +277,7 @@ const Dashboard = () => {
       } catch {
         const blockedFallback = Boolean(item.original.blocked);
         const effectiveActiveFallback = true;
-        const status = resolveStatus({ blocked: blockedFallback, effectiveActive: effectiveActiveFallback }, t);
+               const status = resolveStatus({ blocked: blockedFallback, effectiveActive: effectiveActiveFallback }, t);
         return { ...item.original, blocked: blockedFallback ? 1 : 0, effectiveActive: effectiveActiveFallback, status };
       }
     };
@@ -302,7 +292,7 @@ const Dashboard = () => {
     const merged = { ...baseSummary, totals: { ...baseSummary.totals, totalQueues, activeQueues, blockedQueues, inactiveQueues }, perQueue: enrichedPerQueue };
     setEnriched(merged);
   };
-  
+
   useEffect(() => {
     setLoading(true);
     loadSummary();
@@ -324,7 +314,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!summary) return;
     enrichPerQueue(summary);
-  }, [summary, t]); // Adicionado t como dependência
+  }, [summary, t]);
 
   useEffect(() => {
     const fetchFilas = async () => {
@@ -346,7 +336,7 @@ const Dashboard = () => {
     };
     fetchFilas();
   }, [idEmpresa]);
-  
+
   const handleFilaChange = (e) => {
     const idFilaSelecionada = e.target.value;
     const fila = filas.find((f) => String(f.ID_FILA) === String(idFilaSelecionada));
@@ -368,7 +358,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="mf-dash">
-        <Menu />
+        <Menu onLogout={onLogout} />
         <div className="mf-dash-content">
           <div className="mf-loading">{t('geral.carregando')}</div>
         </div>
@@ -388,22 +378,70 @@ const Dashboard = () => {
 
   return (
     <div className="mf-dash">
-      <Menu />
+      <Menu onLogout={onLogout} />
       <div className="mf-dash-content">
         <div className="mf-dash-header">
           <div>
-            <h1>{t('dashboard.titulo')}</h1>
+            <h2>{t('dashboard.titulo')}</h2>
             <p className="mf-subtitle">{t('dashboard.subtitulo')} {empresaSel?.NOME_EMPRESA ? ` — ${empresaSel.NOME_EMPRESA}` : ""}.</p>
           </div>
           <div className="mf-last-refresh">{dayjs().format("DD/MM/YYYY HH:mm:ss")}</div>
         </div>
 
+        {/* Card de navegação */}
+        <div className="mf-nav-card-container">
+          <Link to="/dashboard/avaliacoes" className="mf-nav-card">
+            <div className="mf-nav-card-icon">
+              <FaStar />
+            </div>
+            <div className="mf-nav-card-content">
+              <h3>Painel de Avaliações</h3>
+              <p>Ver média geral, distribuição e comentários da empresa.</p>
+            </div>
+            <div className="mf-nav-card-arrow">
+              <FaArrowRight />
+            </div>
+          </Link>
+        </div>
+
+        {/* KPIs com ÍCONES */}
         <div className="mf-stats">
-          <StatCard title={t('dashboard.cards.total')} value={totals.totalQueues} subtitle={t('dashboard.cards.totalSub')} />
-          <StatCard title={t('dashboard.cards.ativas')} value={totals.activeQueues} subtitle={t('dashboard.cards.ativasSub')} />
-          <StatCard title={t('dashboard.cards.inativasBloqueadas')} value={totalInactiveBlocked} subtitle={t('dashboard.cards.inativasBloqueadasSub')} />
-          <StatCard title={t('dashboard.cards.pessoasHoje')} value={totals.peopleToday} subtitle={t('dashboard.cards.pessoasHojeSub')} />
-          <StatCard title={t('dashboard.cards.esperaMedia')} value={Math.round(totals.avgWaitMinutes || 0)} suffix=" min" subtitle={t('dashboard.cards.esperaMediaSub')} />
+          <StatCard
+            title={t('dashboard.cards.total')}
+            value={totals.totalQueues}
+            subtitle={t('dashboard.cards.totalSub')}
+            icon={<FaLayerGroup />}
+            accent="brand"
+          />
+          <StatCard
+            title={t('dashboard.cards.ativas')}
+            value={totals.activeQueues}
+            subtitle={t('dashboard.cards.ativasSub')}
+            icon={<FaPlayCircle />}
+            accent="ok"
+          />
+          <StatCard
+            title={t('dashboard.cards.inativasBloqueadas')}
+            value={totalInactiveBlocked}
+            subtitle={t('dashboard.cards.inativasBloqueadasSub')}
+            icon={<FaBan />}
+            accent="warn"
+          />
+          <StatCard
+            title={t('dashboard.cards.pessoasHoje')}
+            value={totals.peopleToday}
+            subtitle={t('dashboard.cards.pessoasHojeSub')}
+            icon={<FaUsers />}
+            accent="brand"
+          />
+          <StatCard
+            title={t('dashboard.cards.esperaMedia')}
+            value={Math.round(totals.avgWaitMinutes || 0)}
+            suffix=" min"
+            subtitle={t('dashboard.cards.esperaMediaSub')}
+            icon={<FaClock />}
+            accent="gray"
+          />
         </div>
 
         <div className="mf-charts">
@@ -492,6 +530,7 @@ const Dashboard = () => {
             </table>
           </div>
         </div>
+
         {filas.length > 0 && (
           <div className="d-flex justify-content-end align-items-center mb-3">
             <Form.Group className="mf-select-group">
@@ -502,6 +541,7 @@ const Dashboard = () => {
             </Form.Group>
           </div>
         )}
+
         {idEmpresa && selectedFila ? (
           <>
             <p className="mf-note">{t('dashboard.analiseFila', { nomeFila: selectedFila.NOME_FILA })}</p>

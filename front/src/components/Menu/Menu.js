@@ -1,4 +1,3 @@
-// src/components/Menu/Menu.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -10,11 +9,14 @@ import {
   FaSignOutAlt,
   FaAngleLeft,
   FaAngleRight,
-  FaUserCircle
+  FaUserCircle,
+  FaBuilding,
 } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import LanguageSelector from '../LanguageSelector/LanguageSelector';
 import ThemeToggleButton from '../ThemeToggleButton/ThemeToggleButton';
+import { useTheme } from '../../context/ThemeContext'; // <<<<<< usa o ThemeContext
 import './Menu.css';
 
 function normalizeRoleFromNivel(nivel) {
@@ -33,7 +35,6 @@ function getCurrentContext() {
       (emp?.ROLE
         ? String(emp.ROLE).toUpperCase()
         : normalizeRoleFromNivel(emp?.NIVEL));
-    // Corrige legado "STAF"
     const safeRole = role?.startsWith('STAF') ? 'STAFF' : role || 'CUSTOMER';
     const permissions = Array.isArray(emp?.PERMISSIONS) ? emp.PERMISSIONS : [];
     return { role: safeRole, permissions, nivel: emp?.NIVEL ?? null };
@@ -42,144 +43,207 @@ function getCurrentContext() {
   }
 }
 
-/**
- * Regras de acesso por recurso (coerente com PrivateRoute/App)
- * - dashboard: ADM, STAFF, ANALYST
- * - analytics: ADM, STAFF, ANALYST
- * - usersRoles (Home/Usuários): ADM, STAFF
- * - queues (Filas/Configuração de Filas): ADM, STAFF
- * - settings (Configuração base): ADM, STAFF
- */
 const ROLE_ALLOW = {
   dashboard: ['ADM', 'STAFF', 'ANALYST'],
   analytics: ['ADM', 'STAFF', 'ANALYST'],
   usersRoles: ['ADM', 'STAFF'],
   queues: ['ADM', 'STAFF'],
   settings: ['ADM', 'STAFF'],
+  company: ['ADM', 'STAFF'],
+  profile: ['ADM', 'STAFF', 'ANALYST', 'CUSTOMER'],
 };
 
-// Recursos de gestão que podem (opcionalmente) exigir PERMISSIONS[:view] se a lista existir
 const RBAC_ENFORCED_RESOURCES = new Set(['usersRoles', 'queues', 'settings', 'queueEntries']);
 
-/**
- * Verifica se o usuário pode ver um recurso no menu.
- * - Primeiro checa PAPEL (ROLE_ALLOW).
- * - Para recursos de gestão (RBAC_ENFORCED_RESOURCES), se houver PERMISSIONS no snapshot,
- *   exige `${resource}:view` para exibir (endurece o front).
- * - Dashboard/Analytics não dependem de PERMISSIONS (só do papel).
- */
 function canSee(resource, role, permissions) {
-  const key = String(resource || '').toLowerCase();
-  const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF']; // default
+  const allowedRoles = ROLE_ALLOW[resource] || ['ADM', 'STAFF'];
   if (!allowedRoles.includes(role)) return false;
-
   if (RBAC_ENFORCED_RESOURCES.has(resource) && permissions?.length) {
     const needsView = `${resource}:view`;
-    // normaliza case para evitar divergência
     const hasView = permissions.some(p => String(p).toLowerCase() === needsView.toLowerCase());
     return hasView;
   }
-
   return true;
 }
 
-const Sidebar = () => {
-  const { t } = useTranslation();
+const API_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
+  (typeof window !== 'undefined' && window.location && window.location.hostname
+    ? `http://${window.location.hostname}:3001/api`
+    : 'http://localhost:3001/api');
 
-  const logo = '/imagens/logo.png';
+function deriveApiOrigin(apiBase) {
+  try {
+    const url = new URL(apiBase, window.location.origin);
+    const withoutApi = url.pathname.replace(/\/api\/?$/, '') || '/';
+    url.pathname = withoutApi;
+    return url.origin;
+  } catch {
+    return String(apiBase || '').replace(/\/api\/?$/, '');
+  }
+}
+const API_ORIGIN = deriveApiOrigin(API_BASE);
+
+function normalizePublicImageUrl(maybePath) {
+  if (!maybePath) return '';
+  const val = String(maybePath).trim();
+  if (/^(https?:)?\/\//i.test(val) || /^data:image\//i.test(val)) return val;
+  const rel = val.startsWith('/') ? val : `/${val}`;
+  return `${API_ORIGIN}${rel}`;
+}
+
+function extractLogoFromEmpresa(emp) {
+  const candidates = [
+    emp?.IMG_LOGO_URL,
+    emp?.IMG_LOGO,
+    emp?.img_logo,
+    emp?.logoUrl,
+    emp?.logo,
+    emp?.IMAGEM_LOGO,
+  ].filter(Boolean);
+  return candidates[0] || '';
+}
+
+const Sidebar = ({ onLogout }) => {
+  const { t } = useTranslation();
+  const { theme } = useTheme(); // <<<<<< pega o tema atual ("light" | "dark")
+
+  // logos (ajuste os caminhos se precisar)
+  const logoLight = '/imagens/logo.png';
+  const logoDark  = '/imagens/logo-dark.png';
+
+  // escolhe a logo pelo tema
+  const logoSrc = theme === 'dark' ? logoDark : logoLight;
+
+  const defaultCompanyLogo = '/imagens/company-default.png';
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const [nomeUsuario, setNomeUsuario] = useState('');
-  const [cargoUsuario, setCargoUsuario] = useState('');
-  const [nivelPermissao, setNivelPermissao] = useState(null);
+  const [empresaId, setEmpresaId] = useState(null);
+  const [empresaNome, setEmpresaNome] = useState('');
+  const [empresaLogo, setEmpresaLogo] = useState(defaultCompanyLogo);
 
   const { role, permissions, nivel } = useMemo(getCurrentContext, []);
   const MOBILE_BREAKPOINT = 768;
-  const activePath = useMemo(() => location.pathname, [location.pathname]);
 
-  // Mapa dos itens com metadados de "resource" para checagem
+  const token = localStorage.getItem('token') || '';
+
+  const api = useMemo(() => {
+    const instance = axios.create({ baseURL: API_BASE });
+    instance.interceptors.request.use(config => {
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+      return config;
+    });
+    return instance;
+  }, [token]);
+
+  const readEmpresaFromStorage = () => {
+    try {
+      const raw = localStorage.getItem('empresaSelecionada');
+      const emp = raw ? JSON.parse(raw) : null;
+      const id = emp?.ID_EMPRESA ?? emp?.idEmpresa ?? null;
+      const nome = emp?.NOME_EMPRESA ?? emp?.nomeEmpresa ?? '';
+      const logoCandidate = extractLogoFromEmpresa(emp);
+      setEmpresaId(Number.isFinite(Number(id)) ? Number(id) : null);
+      setEmpresaNome(nome || '');
+      if (logoCandidate) setEmpresaLogo(normalizePublicImageUrl(logoCandidate));
+      else setEmpresaLogo(defaultCompanyLogo);
+    } catch {
+      setEmpresaId(null);
+      setEmpresaNome('');
+      setEmpresaLogo(defaultCompanyLogo);
+    }
+  };
+
+  useEffect(() => {
+    readEmpresaFromStorage();
+    const onStorage = (e) => {
+      if (e.key === 'empresaSelecionada') readEmpresaFromStorage();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [location.key]);
+
   const ALL_ITEMS = useMemo(() => ([
-    { to: '/dashboard',        icon: FaTachometerAlt, label: t('menu.dashboard'),     resource: 'dashboard'   },
-    { to: '/filas-cadastradas',icon: FaCogs,          label: t('menu.configuracao'),  resource: 'queues'      },
-    { to: '/filas',            icon: FaClipboardList, label: t('menu.gestao'),        resource: 'queues'      },
-    { to: '/relatorio',        icon: FaChartBar,      label: t('menu.relatorios'),    resource: 'analytics'   },
-    { to: '/home',             icon: FaUsers,         label: t('menu.usuarios'),      resource: 'usersRoles'  },
+    { to: '/dashboard',         icon: FaTachometerAlt, label: t('menu.dashboard'),            resource: 'dashboard', end: true },
+    { to: '/filas-cadastradas', icon: FaCogs,          label: t('menu.configuracao'),         resource: 'queues',     end: true },
+    { to: '/filas',             icon: FaClipboardList, label: t('menu.gestao'),               resource: 'queues',     end: true },
+    { to: '/relatorio',         icon: FaChartBar,      label: t('menu.relatorios'),           resource: 'analytics',  end: true },
+    { to: '/home',              icon: FaUsers,         label: t('menu.usuarios'),             resource: 'usersRoles', end: true },
+    { to: '/empresa/editar/:id',icon: FaBuilding,      label: t('menu.empresa') || 'Empresa', resource: 'company',    dynamic: true, end: true },
+    { to: '/perfil',            icon: FaUserCircle,    label: t('menu.perfil') || 'Perfil',   resource: 'profile',    end: true },
   ]), [t]);
 
-  // Filtra itens conforme papel/permissões
   const NAV_ITEMS = useMemo(() => {
     if (!role) return [];
     return ALL_ITEMS.filter(item => canSee(item.resource, role, permissions));
   }, [ALL_ITEMS, role, permissions]);
 
+  // classes de layout + estado mobile
   useEffect(() => {
-    const nomeSalvo = localStorage.getItem('nomeUsuario') || t('menu.usuarioPadrao');
-    setNomeUsuario(nomeSalvo);
-
-    try {
-      const empresaInfo = JSON.parse(localStorage.getItem('empresaSelecionada') || 'null');
-      const perfilSalvo = empresaInfo ? empresaInfo.NOME_PERFIL : t('menu.semPerfil');
-      const nivelSalvo  = typeof nivel === 'number' ? nivel : (empresaInfo ? empresaInfo.NIVEL : null);
-      setCargoUsuario(perfilSalvo);
-      setNivelPermissao(nivelSalvo ?? null);
-    } catch {
-      setCargoUsuario(t('menu.semPerfil'));
-      setNivelPermissao(null);
-    }
-
-    const handleResize = () => {
+    const syncLayout = () => {
       const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
       setIsMobile(mobile);
-      setCollapsed(mobile);
-      if (mobile) {
-        document.body.classList.remove('has-sidebar', 'sidebar-collapsed');
-        document.body.classList.add('has-bottomnav');
-      } else {
-        document.body.classList.remove('has-bottomnav');
-        document.body.classList.add('has-sidebar');
-        if (collapsed) document.body.classList.add('sidebar-collapsed');
-        else document.body.classList.remove('sidebar-collapsed');
-      }
+
+      document.body.classList.toggle('has-bottomnav', mobile);
+      document.body.classList.toggle('has-sidebar', !mobile);
+      document.body.classList.toggle('sidebar-collapsed', !mobile && collapsed);
     };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    if (!isMobile) {
-      document.body.classList.add('has-sidebar');
-    }
-
+    syncLayout();
+    window.addEventListener('resize', syncLayout);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', syncLayout);
       document.body.classList.remove('has-sidebar', 'sidebar-collapsed', 'has-bottomnav');
     };
-  }, [t, collapsed, isMobile, nivel]);
+  }, [collapsed]);
 
+  // logo da empresa (fallback remoto)
   useEffect(() => {
-    if (!isMobile) {
-      if (collapsed) document.body.classList.add('sidebar-collapsed');
-      else document.body.classList.remove('sidebar-collapsed');
-    }
-  }, [collapsed, isMobile]);
+    let cancel = false;
+    (async () => {
+      if (!empresaId) return;
+      const hasDefault = !empresaLogo || empresaLogo === defaultCompanyLogo;
+      if (!hasDefault) return;
+      try {
+        const { data } = await api.get(`/empresas/${empresaId}`);
+        const candidate = extractLogoFromEmpresa(data || {});
+        if (!cancel && candidate) setEmpresaLogo(normalizePublicImageUrl(candidate));
+      } catch {}
+    })();
+    return () => { cancel = true; };
+  }, [api, empresaId, empresaLogo]);
 
-  const logout = () => {
-    localStorage.clear();
-    navigate('/login');
-  };
+  const logout = () => { onLogout?.(); navigate('/login'); };
 
   const toggleSidebar = () => {
-    if (!isMobile) setCollapsed(prev => !prev);
+    setCollapsed(prev => {
+      const next = !prev;
+      const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
+      document.body.classList.toggle('sidebar-collapsed', !mobile && next);
+      return next;
+    });
+  };
+
+  const goToCompany = (e) => {
+    if (!empresaId) { e?.preventDefault?.(); alert('Selecione uma empresa primeiro.'); return; }
+    navigate(`/empresa/editar/${empresaId}`);
   };
 
   const renderSidebar = () => (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`} aria-label={t('menu.menuLateral')}>
       <div className="sidebar-header">
         <div className="sidebar-logo" role="img" aria-label="Logo">
-          <img src={logo} alt="Logo" />
+          {/* troca automática da logo por tema */}
+          <img
+            src={logoSrc}
+            srcSet={`${logoSrc} 1x, ${logoSrc} 2x`}
+            alt="Logo"
+          />
         </div>
         <button
           className="toggle-btn"
@@ -191,37 +255,79 @@ const Sidebar = () => {
         </button>
       </div>
 
+      {!collapsed && (
+        <div className="sidebar-underlogo">
+          <ThemeToggleButton size="sm" />
+          <LanguageSelector variant="inline" size="sm" />
+        </div>
+      )}
+
       <nav className="sidebar-menu">
         <ul>
-          {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            >
-              <Icon />
-              {!collapsed && <span>{label}</span>}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map(({ to, icon: Icon, label, resource, dynamic, end }) => {
+            if (resource === 'company' && dynamic) {
+              const resolvedTo = empresaId ? `/empresa/editar/${empresaId}` : '#';
+              return (
+                <NavLink
+                  key="company"
+                  to={resolvedTo}
+                  end
+                  onClick={(e) => { if (!empresaId) { e.preventDefault(); alert('Selecione uma empresa primeiro.'); } }}
+                  className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+                >
+                  <Icon />
+                  {!collapsed && <span>{label}</span>}
+                </NavLink>
+              );
+            }
+
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+              >
+                <Icon />
+                {!collapsed && <span>{label}</span>}
+              </NavLink>
+            );
+          })}
         </ul>
       </nav>
 
       {!collapsed && (
         <div className="sidebar-footer">
-          <div className="sidebar-controls">
-            <ThemeToggleButton />
-            <LanguageSelector variant="inline" />
-          </div>
-
-          <div className="user-info">
-            <FaUserCircle className="avatar-icon" aria-hidden="true" />
-            <div>
-              <div className="user-name">{nomeUsuario}</div>
-              <div className="user-role">
-                {cargoUsuario}{nivelPermissao ? ` — ${nivelPermissao}` : ''}
-              </div>
+          {/* Badge Empresa */}
+          <button
+            type="button"
+            onClick={goToCompany}
+            className="company-badge btn-as-link"
+            aria-label={t('menu.irEmpresa') || 'Ir para Empresa'}
+            title={t('menu.irEmpresa') || 'Ir para Empresa'}
+          >
+            <div className="company-logo-wrap">
+              <img
+                src={empresaLogo || defaultCompanyLogo}
+                alt="Logo da empresa"
+                className="company-logo-img"
+                onError={(e) => { e.currentTarget.src = defaultCompanyLogo; }}
+              />
             </div>
-          </div>
+            <div className="company-meta">
+              <div className="company-name" title={empresaNome || 'Empresa'}>
+                <FaBuilding className="company-icon" />
+                <span className="company-name-text">
+                  {empresaNome || (t('menu.empresa') || 'Empresa')}
+                </span>
+              </div>
+              {empresaId ? (
+                <div className="company-id">ID: {empresaId}</div>
+              ) : (
+                <div className="company-id muted">{t('menu.selecioneEmpresa') || 'Selecione uma empresa'}</div>
+              )}
+            </div>
+          </button>
 
           <button onClick={logout} className="logout-btn" aria-label={t('menu.sair')}>
             <FaSignOutAlt />
@@ -232,17 +338,35 @@ const Sidebar = () => {
     </aside>
   );
 
+  // Bottom nav — sem Perfil e sem Sair
   const renderBottomNav = () => (
     <nav className="bottom-nav" aria-label={t('menu.navegacaoInferior')}>
-      {NAV_ITEMS.map(({ to, icon: Icon, label }) => {
-        const isActive = activePath.startsWith(to);
+      {NAV_ITEMS.map(({ to, icon: Icon, label, resource, dynamic }) => {
+        if (resource === 'profile') return null;
+
+        if (resource === 'company' && dynamic) {
+          const isActive = location.pathname.startsWith('/empresa/editar/');
+          return (
+            <button
+              key="company-bottom"
+              type="button"
+              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+              onClick={goToCompany}
+              aria-label={label}
+              title={label}
+            >
+              <Icon className="bottom-nav-icon" />
+              <span className="bottom-nav-label">{label}</span>
+            </button>
+          );
+        }
+
         return (
           <NavLink
             key={to}
             to={to}
-            className={({ isActive: linkActive }) =>
-              `bottom-nav-item ${linkActive || isActive ? 'active' : ''}`
-            }
+            end
+            className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
             aria-label={label}
             title={label}
           >
@@ -251,16 +375,6 @@ const Sidebar = () => {
           </NavLink>
         );
       })}
-      <button
-        type="button"
-        className="bottom-nav-item logout"
-        onClick={logout}
-        aria-label={t('menu.sair')}
-        title={t('menu.sair')}
-      >
-        <FaSignOutAlt className="bottom-nav-icon" />
-        <span className="bottom-nav-label">{t('menu.sair')}</span>
-      </button>
     </nav>
   );
 

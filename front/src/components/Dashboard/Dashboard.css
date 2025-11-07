@@ -13,9 +13,6 @@
 
 /* ======================================================= */
 /* ✨ A MÁGICA ACONTECE AQUI ✨ */
-/* Quando o body tiver o atributo data-theme='dark', 
-   redefinimos as variáveis locais do dashboard 
-   usando as variáveis globais do tema escuro. */
 /* ======================================================= */
 body[data-theme='dark'] .mf-dash {
   --mf-bg: var(--background-primary);
@@ -49,11 +46,15 @@ body[data-theme='dark'] .mf-dash {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+  background: var(--mf-card);
+  border: 1px solid var(--mf-border);
+  padding: 20px;
+  border-radius: 14px;
 }
-.mf-dash-header h1 {
+.mf-dash-header h2 {
   margin: 0;
-  font-size: 28px;
   line-height: 1.1;
+  font-weight: 600;
 }
 .mf-subtitle {
   color: var(--mf-muted);
@@ -70,11 +71,70 @@ body[data-theme='dark'] .mf-dash {
   color: var(--mf-muted);
 }
 
-/* ===== KPIs ===== */
+/* ================================== */
+/* ===== CARD DE NAVEGAÇÃO (CSS ATUALIZADO) ===== */
+/* ================================== */
+.mf-nav-card-container {
+  /* margin-top: 16px;  <-- REMOVIDO */
+  margin-bottom: 16px; /* <-- ADICIONADO */
+}
+.mf-nav-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--mf-card);
+  border: 1px solid var(--mf-border);
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: var(--mf-shadow);
+  text-decoration: none;
+  color: var(--mf-text);
+  transition: all 0.2s ease-in-out;
+}
+.mf-nav-card:hover {
+  border-color: var(--mf-brand);
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.1);
+  transform: translateY(-2px);
+  color: var(--mf-text);
+}
+body[data-theme='dark'] .mf-nav-card:hover {
+  box-shadow: 0 0 0 1px var(--mf-brand);
+}
+
+.mf-nav-card-icon {
+  flex-shrink: 0;
+  font-size: 24px;
+  color: var(--mf-warn); /* Cor de 'aviso' (amarelo) */
+}
+.mf-nav-card-content {
+  flex: 1;
+}
+.mf-nav-card-content h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.mf-nav-card-content p {
+  margin: 0;
+  color: var(--mf-muted);
+}
+.mf-nav-card-arrow {
+  font-size: 20px;
+  color: var(--mf-muted);
+  transition: transform 0.2s ease-in-out;
+}
+.mf-nav-card:hover .mf-nav-card-arrow {
+  color: var(--mf-brand);
+  transform: translateX(4px);
+}
+
+
+/* ===== KPIs (CSS ATUALIZADO) ===== */
 .mf-stats {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
+  /* margin-top: 16px; <-- REMOVIDO (espaçamento agora vem do nav-card) */
 }
 @media (max-width: 1280px) {
   .mf-stats {
@@ -369,3 +429,51 @@ body[data-theme='dark'] .mf-table tbody tr:hover {
     padding: 12px 14px;
   }
 }
+/* ===== Ícones nos KPIs (StatCard) ===== */
+.mf-stat {
+  position: relative;
+}
+
+.mf-stat--with-icon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mf-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(58, 90, 254, 0.10); /* base brand */
+  color: var(--mf-brand);
+  flex-shrink: 0;
+  font-size: 20px;
+}
+
+/* Área textual do card quando há ícone */
+.mf-stat-content { flex: 1; min-width: 0; }
+
+/* Filete lateral por "accent" */
+.mf-stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 8px;
+  background: var(--mf-brand);
+  opacity: 0.9;
+}
+
+/* Variações de cor */
+.mf-stat--ok::before   { background: var(--mf-ok); }
+.mf-stat--warn::before { background: var(--mf-warn); }
+.mf-stat--gray::before { background: #9ca3af; }
+
+/* Ícone acompanha a variação */
+.mf-stat--ok .mf-stat-icon   { background: rgba(34,197,94,0.10); color: var(--mf-ok); }
+.mf-stat--warn .mf-stat-icon { background: rgba(245,158,11,0.12); color: var(--mf-warn); }
+.mf-stat--gray .mf-stat-icon { background: rgba(156,163,175,0.15); color: #6b7280; }

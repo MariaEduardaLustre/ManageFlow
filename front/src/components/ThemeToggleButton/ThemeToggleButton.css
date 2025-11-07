@@ -4,9 +4,9 @@
     color: var(--text-secondary); /* Cor do ícone */
     
     /* Tamanho e forma */
-    width: 40px;
-    height: 40px;
-    border-radius: 8px; /* Bordas arredondadas */
+    width: 35px;
+    height: 35px;
+    border-radius: 5px; /* Bordas arredondadas */
     padding: 0; /* Removemos o preenchimento para centralizar o ícone */
 
     /* Alinhamento do ícone */

@@ -1,4 +1,4 @@
-// src/pages/EntrarFilaPage.jsx
+// front/src/pages/EntrarFilaPage.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 
@@ -12,6 +12,32 @@ const API_BASE =
 
 const LS_TICKET = 'mf.queueEntry';
 
+/* Helpers CPF (front) */
+function onlyDigits(v = '') {
+  return String(v).replace(/\D+/g, '');
+}
+function formatCpf(digits = '') {
+  const d = onlyDigits(digits).padEnd(11, ' ');
+  // 000.000.000-00 (apenas exibição)
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`.replace(/[ .-] ?$/g,'');
+}
+function isValidCpf(cpf) {
+  const s = onlyDigits(cpf);
+  if (s.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(s)) return false;
+  let sum = 0, rest;
+  for (let i = 1; i <= 9; i++) sum += parseInt(s.substring(i-1, i)) * (11 - i);
+  rest = (sum * 10) % 11;
+  if (rest === 10 || rest === 11) rest = 0;
+  if (rest !== parseInt(s.substring(9, 10))) return false;
+  sum = 0;
+  for (let i = 1; i <= 10; i++) sum += parseInt(s.substring(i-1, i)) * (12 - i);
+  rest = (sum * 10) % 11;
+  if (rest === 10 || rest === 11) rest = 0;
+  if (rest !== parseInt(s.substring(10, 11))) return false;
+  return true;
+}
+
 export default function EntrarFilaPage() {
   const { token } = useParams();
   const navigate = useNavigate();
@@ -24,7 +50,7 @@ export default function EntrarFilaPage() {
   // estado do formulário
   const [form, setForm] = useState({
     nome: '',
-    cpf: '',
+    cpfDigits: '',   // <- sempre só dígitos
     rg: '',
     dddcel: '',
     nr_cel: '',
@@ -38,6 +64,10 @@ export default function EntrarFilaPage() {
   const [okMsg, setOkMsg] = useState('');
   const [posicao, setPosicao] = useState(null);
 
+  // estado de localização (exibição opcional)
+  const [locStatus, setLocStatus] = useState(null); // 'checking' | 'allowed' | 'denied' | 'out_of_radius' | null
+  const [locInfo, setLocInfo] = useState(null); // {distanceText, maxKm} | null
+
   // carrega config pública pelo token (ROTA: /configuracao/public/info/:token)
   useEffect(() => {
     let alive = true;
@@ -45,6 +75,8 @@ export default function EntrarFilaPage() {
       try {
         setLoading(true);
         setErro('');
+        setLocStatus(null);
+        setLocInfo(null);
 
         const base = API_BASE.replace(/\/$/, '');
         const url = `${base}/configuracao/public/info/${token}`;
@@ -94,6 +126,11 @@ export default function EntrarFilaPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'cpf') {
+      // usuário digita livremente, mas guardamos apenas dígitos
+      setForm((p) => ({ ...p, cpfDigits: onlyDigits(value).slice(0, 11) }));
+      return;
+    }
     setForm((p) => ({ ...p, [name]: value }));
   };
 
@@ -105,31 +142,101 @@ export default function EntrarFilaPage() {
     return Math.min(Math.max(n, min), max);
   };
 
+  // helper: promisificar geolocalização
+  const getCurrentPosition = () =>
+    new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocalização não suportada no dispositivo.'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve(pos),
+        (err) => reject(err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+
+  // valida a posição do cliente no backend quando exigido
+  const validateLocationIfNeeded = async () => {
+    if (!cfg?.permitir_localizacao) return { allowed: true, coords: null, distanceText: null, maxKm: null };
+
+    setLocStatus('checking');
+    setLocInfo(null);
+
+    try {
+      const pos = await getCurrentPosition();
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      const base = API_BASE.replace(/\/$/, '');
+      const validateUrl = `${base}/fila/${encodeURIComponent(token)}/validate-location?lat=${lat}&lng=${lng}`;
+      const r = await fetch(validateUrl);
+      const j = await r.json().catch(() => ({}));
+
+      if (!r.ok) {
+        setLocStatus('denied');
+        return { allowed: false, coords: { lat, lng }, distanceText: null, maxKm: null };
+      }
+
+      if (j.allowed) {
+        const maxKm = j.maxDistanceMeters ? Math.round(j.maxDistanceMeters / 1000) : null;
+        setLocStatus('allowed');
+        setLocInfo({ distanceText: j.distanceText || null, maxKm });
+        return { allowed: true, coords: { lat, lng }, distanceText: j.distanceText || null, maxKm };
+      } else {
+        const maxKm = j.maxDistanceMeters ? Math.round(j.maxDistanceMeters / 1000) : null;
+        setLocStatus('out_of_radius');
+        setLocInfo({ distanceText: j.distanceText || null, maxKm });
+        return { allowed: false, coords: { lat, lng }, distanceText: j.distanceText || null, maxKm };
+      }
+    } catch {
+      setLocStatus('denied');
+      return { allowed: false, coords: null, distanceText: null, maxKm: null };
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setOkMsg('');
     setPosicao(null);
 
-    if (!form.nome || !form.cpf) {
+    if (!form.nome || !form.cpfDigits) {
       alert('Informe Nome e CPF.');
+      return;
+    }
+    if (form.cpfDigits.length !== 11 || !isValidCpf(form.cpfDigits)) {
+      alert('CPF inválido.');
+      return;
+    }
+
+    // 1) se exigir localização, valida antes de enviar o JOIN
+    const loc = await validateLocationIfNeeded();
+    if (cfg?.permitir_localizacao && !loc.allowed) {
+      let msg = 'Não foi possível validar sua localização. ';
+      if (locStatus === 'denied') msg = 'Permissão de localização negada. Ative a localização para entrar na fila.';
+      if (locStatus === 'out_of_radius') {
+        msg = `Você está fora do raio permitido${loc?.distanceText ? ` (distância: ${loc.distanceText})` : ''}${loc?.maxKm ? ` — máximo ${loc.maxKm} km` : ''}.`;
+      }
+      alert(msg);
       return;
     }
 
     const payload = {
       nome: form.nome,
-      cpf: form.cpf,
+      cpf: form.cpfDigits, // <- sempre só dígitos
       rg: form.rg || null,
       dddcel: form.dddcel || null,
       nr_cel: form.nr_cel || null,
       email: form.email || null,
       dt_nasc: form.dt_nasc || null,
-      nr_qtdpes: clampQtd(form.nr_qtdpes)
+      nr_qtdpes: clampQtd(form.nr_qtdpes),
+      lat: loc?.coords?.lat ?? null,
+      lng: loc?.coords?.lng ?? null
     };
 
     try {
       setSending(true);
 
-      // POST /configuracao/public/join/:token
       const base = API_BASE.replace(/\/$/, '');
       const url = `${base}/configuracao/public/join/${token}`;
 
@@ -156,16 +263,13 @@ export default function EntrarFilaPage() {
         idEmpresa: data.idEmpresa ?? data.ID_EMPRESA ?? null,
         idFila: data.idFila ?? data.ID_FILA ?? null,
         dtMovto: data.dtMovto ?? data.DT_MOVTO ?? null,
-        // o join público devolve id_cliente → usamos como identificador do cliente na fila
         clienteFilaId: data.id_cliente ?? data.clienteFilaId ?? data.ID_CLIENTE_FILA ?? null,
-        idCliente:     data.id_cliente ?? null, // opcional, pela clareza
+        idCliente:     data.id_cliente ?? null
       };
-       localStorage.setItem(LS_TICKET, JSON.stringify(ticket));
+      localStorage.setItem(LS_TICKET, JSON.stringify(ticket));
 
       setOkMsg(`Entrada realizada! Você está na posição ${data.posicao ?? '—'}.`);
       setPosicao(data.posicao ?? null);
-
-      // Redireciona para a tela de status
       navigate(`/entrar-fila/${token}/status`);
     } catch (err) {
       alert(err.message || 'Falha ao entrar na fila.');
@@ -219,13 +323,12 @@ export default function EntrarFilaPage() {
     );
   }
 
-  // imagens
   const bannerUrl = cfg.img_banner?.url || '';
   const logoUrl = (cfg.empresa && cfg.empresa.logo_url) || '';
+  const cpfMask = formatCpf(form.cpfDigits);
 
   return (
     <div style={{ minHeight: '100vh', background: '#f6f7f9' }}>
-      {/* topo com banner */}
       <div
         style={{
           height: 160,
@@ -234,10 +337,8 @@ export default function EntrarFilaPage() {
             : 'linear-gradient(135deg,#111827,#1f2937)'
         }}
       />
-      {/* cartão central */}
       <div style={styles.wrapper}>
         <div style={{ ...styles.card, marginTop: -64 }}>
-          {/* logo sobreposto */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: -80 }}>
             <div style={{
               width: 96, height: 96, borderRadius: 9999,
@@ -257,14 +358,38 @@ export default function EntrarFilaPage() {
             <p style={{ marginTop: 8, opacity: 0.8, textAlign: 'center' }}>{cfg.mensagem}</p>
           )}
 
-          {/* infos padrão */}
           <div style={styles.infoRow}>
             <InfoPill label="Pessoas por entrada" value={`${cfg.qtde_min}–${cfg.qtde_max}`} />
             {Number.isFinite(cfg.temp_tol) && <InfoPill label="Tolerância" value={`${cfg.temp_tol} min`} />}
             <InfoPill label="Status" value={cfg.situacao === 1 ? 'Ativa' : 'Inativa'} />
+            {cfg?.permitir_localizacao ? (
+              <InfoPill label="Localização" value={`Obrigatória${cfg?.raio_metros ? ` (≤ ${Math.round(cfg.raio_metros/1000)} km)` : ''}`} />
+            ) : (
+              <InfoPill label="Localização" value="Dispensada" />
+            )}
           </div>
 
-          {/* formulário */}
+          {cfg?.permitir_localizacao && (
+            <div style={{ marginTop: 8, textAlign: 'center' }}>
+              {locStatus === 'checking' && <small style={{ color: '#2563eb' }}>Validando sua localização…</small>}
+              {locStatus === 'allowed' && (
+                <small style={{ color: '#10b981' }}>
+                  Localização ok{locInfo?.distanceText ? ` (${locInfo.distanceText})` : ''}.
+                </small>
+              )}
+              {locStatus === 'out_of_radius' && (
+                <small style={{ color: '#ef4444' }}>
+                  Fora do raio permitido{locInfo?.distanceText ? ` (${locInfo.distanceText})` : ''}{locInfo?.maxKm ? ` — máx ${locInfo.maxKm} km` : ''}.
+                </small>
+              )}
+              {locStatus === 'denied' && (
+                <small style={{ color: '#ef4444' }}>
+                  Permissão de localização negada. Ative para entrar na fila.
+                </small>
+              )}
+            </div>
+          )}
+
           <form onSubmit={onSubmit} style={{ marginTop: 12 }}>
             <Field label="Nome completo" required>
               <input
@@ -283,12 +408,16 @@ export default function EntrarFilaPage() {
                 name="cpf"
                 type="text"
                 inputMode="numeric"
-                value={form.cpf}
+                value={cpfMask}
                 onChange={handleChange}
                 placeholder="000.000.000-00"
                 style={styles.input}
+                maxLength={14}
                 required
               />
+              <small style={{ opacity: 0.7 }}>
+                Será validado e enviado só com dígitos.
+              </small>
             </Field>
 
             {camposAtivos.rg && (
@@ -378,7 +507,16 @@ export default function EntrarFilaPage() {
               </div>
             )}
 
-            <button type="submit" style={styles.button} disabled={sending || cfg.situacao !== 1}>
+            <button
+              type="submit"
+              style={styles.button}
+              disabled={sending || cfg.situacao !== 1}
+              onClick={() => {
+                if (cfg?.permitir_localizacao && locStatus == null) {
+                  validateLocationIfNeeded().catch(() => {});
+                }
+              }}
+            >
               {sending ? 'Enviando…' : 'Entrar na fila'}
             </button>
           </form>
@@ -438,6 +576,6 @@ const styles = {
   infoRow: { display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' },
   okBox: {
     marginTop: 10, padding: '10px 12px', background: '#ecfdf5',
-    color: '#065f46', border: '1px solid #a7f3d0', borderRadius: 10
+    color: '#065f46', border: '1px solid #a7f3d0', borderRadius: '10'
   }
 };

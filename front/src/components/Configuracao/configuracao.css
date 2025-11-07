@@ -1,13 +1,13 @@
-/* carregamento da fonte (ok ser global) */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+/* ====== NAMESPACE de página ====== */
+/* Envolva sua página com .configuracao-fila .mf-config-page para escopo completo */
 
-/* ====== NAMESPACE da página ====== */
-.mf-config {
+/* Fonte: deixe o carregamento via <link> no index.html (sem @import aqui) */
+
+/* ====== Variáveis / Base ====== */
+.configuracao-fila .mf-config-page {
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-}
 
-/* Variáveis para o TEMA CLARO (Padrão) */
-.mf-config {
+  /* Tema claro (default) — variáveis locais */
   --primary-purple: #7B3EBC;
   --light-purple: #F3ECF9;
   --text-color: #333;
@@ -18,11 +18,8 @@
   --red-error: #FF0000;
 }
 
-/* ======================================================= */
-/* ✨ ADIÇÃO PARA O TEMA ESCURO ✨ */
-/* Redefinimos as variáveis locais usando as globais do tema escuro */
-/* ======================================================= */
-body[data-theme='dark'] .mf-config {
+/* Tema escuro: reusa tokens globais do app */
+body[data-theme='dark'] .configuracao-fila .mf-config-page {
   --primary-purple: var(--brand-primary);
   --light-purple: var(--brand-primary-hover);
   --text-color: var(--text-primary);
@@ -31,9 +28,9 @@ body[data-theme='dark'] .mf-config {
   --background-gray: var(--background-primary);
   --white: var(--background-secondary);
 }
-/* ======================================================= */
 
-.mf-config::before {
+/* Fundo da página (apenas nesta tela) */
+.configuracao-fila .mf-config-page::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -42,65 +39,61 @@ body[data-theme='dark'] .mf-config {
   pointer-events: none;
 }
 
-.mf-config.configuracao-fila {
+/* Wrapper principal desta tela */
+.configuracao-fila .mf-config-page {
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
-  background-color: var(--background-gray); /* Agora é dinâmico */
+  background-color: var(--background-gray);
 }
 
 /* ====== HEADER ====== */
-.mf-config .header {
+.configuracao-fila .mf-config-page .header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 5px;
   margin-bottom: 15px;
+  background-color: var(--white);
+  padding: 25px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
 }
 
-.mf-config .voltar-btn {
+.configuracao-fila .mf-config-page .voltar-btn {
   background: transparent;
   border: none;
   font-size: 16px;
-  color: var(--gray-text); /* MODIFICADO */
+  color: var(--gray-text);
   cursor: pointer;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.mf-config .voltar-btn:hover {
-  background-color: transparent;
-}
-.mf-config .voltar-btn:focus,
-.mf-config .voltar-btn:active {
-  outline: none;
-  box-shadow: none;
-}
+.configuracao-fila .mf-config-page .voltar-btn:hover { background-color: transparent; }
+.configuracao-fila .mf-config-page .voltar-btn:focus,
+.configuracao-fila .mf-config-page .voltar-btn:active { outline: none; box-shadow: none; }
 
-.mf-config .header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-color); /* MODIFICADO */
+.configuracao-fila .mf-config-page .header h2 {
+  color: var(--text-color);
   margin: 0;
 }
-
-.mf-config .subtitle {
+.configuracao-fila .mf-config-page .subtitle {
   font-size: 14px;
   color: var(--gray-text);
   margin-bottom: 30px;
 }
 
 /* ====== SECTION CARD ====== */
-.mf-config .section-card {
+.configuracao-fila .mf-config-page .section-card {
   background-color: var(--white);
   padding: 25px;
   border-radius: 10px;
   border: 1px solid var(--border-color);
   margin-bottom: 30px;
 }
-
-.mf-config .section-card .section-title {
+.configuracao-fila .mf-config-page .section-card .section-title {
   font-size: 18px;
   font-weight: 500;
   color: var(--text-color);
@@ -109,23 +102,18 @@ body[data-theme='dark'] .mf-config {
 }
 
 /* ====== INPUTS ====== */
-.mf-config .input-field {
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.mf-config .input-field label {
+.configuracao-fila .mf-config-page .input-field { margin-bottom: 20px; position: relative; }
+.configuracao-fila .mf-config-page .input-field label {
   display: block;
   font-size: 14px;
   color: var(--gray-text);
   margin-bottom: 8px;
   font-weight: 500;
 }
-
-.mf-config .input-field input[type="text"],
-.mf-config .input-field input[type="number"],
-.mf-config .input-field input[type="date"],
-.mf-config textarea {
+.configuracao-fila .mf-config-page .input-field input[type="text"],
+.configuracao-fila .mf-config-page .input-field input[type="number"],
+.configuracao-fila .mf-config-page .input-field input[type="date"],
+.configuracao-fila .mf-config-page textarea {
   width: 100%;
   padding: 12px 15px;
   border: 1px solid var(--border-color);
@@ -134,39 +122,34 @@ body[data-theme='dark'] .mf-config {
   color: var(--text-color);
   box-sizing: border-box;
   transition: border-color 0.2s ease-in-out;
-  background: var(--white); /* MODIFICADO */
+  background: var(--white);
 }
-
-.mf-config .input-field input[type="text"]:focus,
-.mf-config .input-field input[type="number"]:focus,
-.mf-config .input-field input[type="date"]:focus,
-.mf-config textarea:focus {
+.configuracao-fila .mf-config-page .input-field input[type="text"]:focus,
+.configuracao-fila .mf-config-page .input-field input[type="number"]:focus,
+.configuracao-fila .mf-config-page .input-field input[type="date"]:focus,
+.configuracao-fila .mf-config-page textarea:focus {
   outline: none;
   border-color: var(--primary-purple);
 }
-
-.mf-config .input-field input[type="number"][disabled] {
+.configuracao-fila .mf-config-page .input-field input[type="number"][disabled] {
   background-color: var(--background-gray);
   color: var(--gray-text);
   cursor: not-allowed;
 }
+.configuracao-fila .mf-config-page textarea { min-height: 100px; resize: vertical; }
 
-.mf-config textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.mf-config .group-inputs {
+.configuracao-fila .mf-config-page .group-inputs {
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
 }
-.mf-config .group-inputs .input-field {
+.configuracao-fila .mf-config-page .group-inputs .input-field {
   flex: 1;
   margin-bottom: 0;
 }
 
-.mf-config .input-field input[name="temp_tol"] + span {
+/* Sufixo de unidade no campo tolerância */
+.configuracao-fila .mf-config-page .input-field input[name="temp_tol"] + span {
   position: absolute;
   right: 15px;
   top: 50%;
@@ -176,151 +159,86 @@ body[data-theme='dark'] .mf-config {
 }
 
 /* ====== PERMISSÕES / TOGGLES ====== */
-.mf-config .permissoes {
+.configuracao-fila .mf-config-page .permissoes {
   padding-top: 20px;
   border-top: 1px solid var(--border-color);
   margin-top: 20px;
 }
-
-.mf-config .permissoes-title {
+.configuracao-fila .mf-config-page .permissoes-title {
   font-size: 16px;
   font-weight: 500;
   color: var(--text-color);
   margin-bottom: 15px;
   display: block;
 }
-
-.mf-config .toggle-switch-container {
+.configuracao-fila .mf-config-page .toggle-switch-container {
   display: flex;
   align-items: flex-start;
   gap: 15px;
   margin-bottom: 20px;
 }
-.mf-config .toggle-switch-container:last-child {
-  margin-bottom: 0;
-}
+.configuracao-fila .mf-config-page .toggle-switch-container:last-child { margin-bottom: 0; }
 
-.mf-config .toggle-text {
-  flex: 1;
-}
-.mf-config .toggle-text p {
+.configuracao-fila .mf-config-page .toggle-text { flex: 1; }
+.configuracao-fila .mf-config-page .toggle-text p {
   font-size: 16px;
   font-weight: 500;
   color: var(--text-color);
   margin: 0 0 5px;
 }
-.mf-config .toggle-text span {
+.configuracao-fila .mf-config-page .toggle-text span {
   font-size: 13px;
   color: var(--gray-text);
   line-height: 1.4;
 }
 
-.mf-config .switch {
-  position: relative;
-  display: inline-block;
-  width: 45px;
-  height: 25px;
+/* Switch */
+.configuracao-fila .mf-config-page .switch { position: relative; display: inline-block; width: 45px; height: 25px; }
+.configuracao-fila .mf-config-page .switch input { opacity: 0; width: 0; height: 0; }
+.configuracao-fila .mf-config-page .slider {
+  position: absolute; inset: 0; cursor: pointer;
+  background-color: var(--border-color); transition: 0.4s;
 }
-.mf-config .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+.configuracao-fila .mf-config-page .slider:before {
+  position: absolute; content: "";
+  height: 17px; width: 17px; left: 4px; bottom: 4px;
+  background-color: var(--white); transition: 0.4s;
 }
-.mf-config .slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: var(--border-color); /* MODIFICADO */
-  transition: 0.4s;
-}
-.mf-config .slider:before {
-  position: absolute;
-  content: "";
-  height: 17px;
-  width: 17px;
-  left: 4px;
-  bottom: 4px;
-  background-color: var(--white); /* MODIFICADO */
-  transition: 0.4s;
-}
-.mf-config input:checked + .slider {
-  background-color: var(--primary-purple);
-}
-.mf-config input:focus + .slider {
-  box-shadow: 0 0 1px var(--primary-purple);
-}
-.mf-config input:checked + .slider:before {
-  transform: translateX(20px);
-}
-.mf-config .slider.round {
-  border-radius: 25px;
-}
-.mf-config .slider.round:before {
-  border-radius: 50%;
-}
+.configuracao-fila .mf-config-page input:checked + .slider { background-color: var(--primary-purple); }
+.configuracao-fila .mf-config-page input:focus + .slider { box-shadow: 0 0 1px var(--primary-purple); }
+.configuracao-fila .mf-config-page input:checked + .slider:before { transform: translateX(20px); }
+.configuracao-fila .mf-config-page .slider.round { border-radius: 25px; }
+.configuracao-fila .mf-config-page .slider.round:before { border-radius: 50%; }
 
 /* ====== UPLOAD ====== */
-.mf-config .upload-box {
-  margin-bottom: 20px;
+.configuracao-fila .mf-config-page .upload-box { margin-bottom: 20px; }
+.configuracao-fila .mf-config-page .upload-box label {
+  display: block; font-size: 14px; color: var(--gray-text); margin-bottom: 8px; font-weight: 500;
 }
-.mf-config .upload-box label {
-  display: block;
-  font-size: 14px;
-  color: var(--gray-text);
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.mf-config .upload-area {
+.configuracao-fila .mf-config-page .upload-area {
   border: 2px dashed var(--border-color);
   border-radius: 8px;
   padding: 30px 20px;
   text-align: center;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   background-color: var(--background-gray);
   transition: border-color 0.2s ease-in-out;
-  min-height: 120px;
-  box-sizing: border-box;
+  min-height: 120px; box-sizing: border-box;
 }
-.mf-config .upload-area:hover {
-  border-color: var(--primary-purple);
-}
-
-.mf-config .upload-area .upload-icon {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 10px;
-  opacity: 0.7;
-}
-.mf-config .upload-area span {
-  font-size: 14px;
-  color: var(--gray-text);
-}
-
-.mf-config .uploaded-image-preview {
-  max-width: 100%;
-  max-height: 100px;
-  object-fit: contain;
-  border-radius: 4px;
+.configuracao-fila .mf-config-page .upload-area:hover { border-color: var(--primary-purple); }
+.configuracao-fila .mf-config-page .upload-area .upload-icon { width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.7; }
+.configuracao-fila .mf-config-page .upload-area span { font-size: 14px; color: var(--gray-text); }
+.configuracao-fila .mf-config-page .uploaded-image-preview {
+  max-width: 100%; max-height: 100px; object-fit: contain; border-radius: 4px;
 }
 
 /* ====== CAMPOS DO CLIENTE ====== */
-.mf-config .campos-cliente-section .subtitle {
-  margin-top: -15px;
-  margin-bottom: 25px;
+.configuracao-fila .mf-config-page .campos-cliente-section .subtitle { margin-top: -15px; margin-bottom: 25px; }
+.configuracao-fila .mf-config-page .campos-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;
 }
-
-.mf-config .campos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 15px;
-}
-
-.mf-config .campo-box {
+.configuracao-fila .mf-config-page .campo-box {
   background-color: var(--white);
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -328,191 +246,67 @@ body[data-theme='dark'] .mf-config {
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100px;
-  box-sizing: border-box;
-  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100px; box-sizing: border-box; position: relative;
 }
-.mf-config .campo-box:hover {
-  border-color: var(--primary-purple);
-  background-color: var(--light-purple);
+.configuracao-fila .mf-config-page .campo-box:hover {
+  border-color: var(--primary-purple); background-color: var(--light-purple);
 }
-.mf-config .campo-box.ativo {
-  border-color: var(--primary-purple);
-  background-color: var(--light-purple);
+.configuracao-fila .mf-config-page .campo-box.ativo {
+  border-color: var(--primary-purple); background-color: var(--light-purple);
   box-shadow: 0 0 0 3px rgba(123, 62, 188, 0.2);
 }
-.mf-config .campo-box.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: var(--background-gray);
+.configuracao-fila .mf-config-page .campo-box.disabled {
+  opacity: 0.6; cursor: not-allowed; background-color: var(--background-gray);
 }
-.mf-config .campo-box.disabled:hover {
-  border-color: var(--border-color);
-  background-color: var(--background-gray);
+.configuracao-fila .mf-config-page .campo-box.disabled:hover {
+  border-color: var(--border-color); background-color: var(--background-gray);
 }
-
-.mf-config .campo-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.configuracao-fila .mf-config-page .campo-content { display: flex; flex-direction: column; align-items: center; }
+.configuracao-fila .mf-config-page .campo-icon {
+  width: 20px; height: 20px; object-fit: contain; margin-bottom: 8px;
 }
-
-.mf-config .campo-icon {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-  margin-bottom: 8px;
+.configuracao-fila .mf-config-page .campo-box span {
+  font-size: 14px; font-weight: 500; color: var(--text-color); text-align: center;
 }
-.mf-config .campo-box span {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-color);
-  text-align: center;
-}
-
-.mf-config .campo-box.ativo::after {
-  content: '✓';
-  position: absolute;
-  top: 5px;
-  right: 8px;
-  color: var(--primary-purple);
-  font-size: 20px;
-  font-weight: bold;
+.configuracao-fila .mf-config-page .campo-box.ativo::after {
+  content: '✓'; position: absolute; top: 5px; right: 8px;
+  color: var(--primary-purple); font-size: 20px; font-weight: bold;
 }
 
 /* ====== BOTÕES DO FORM ====== */
-.mf-config .botoes {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
+.configuracao-fila .mf-config-page .botoes {
+  display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;
 }
-.mf-config .botoes button {
-  padding: 12px 25px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+.configuracao-fila .mf-config-page .botoes button {
+  padding: 12px 25px; border-radius: 8px; font-size: 16px; font-weight: 500;
+  cursor: pointer; transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
-.mf-config .cancel-btn {
-  background-color: var(--white);
-  border: 1px solid var(--border-color);
-  color: var(--gray-text);
+.configuracao-fila .mf-config-page .cancel-btn { background-color: var(--white); border: 1px solid var(--border-color); color: var(--gray-text); }
+.configuracao-fila .mf-config-page .cancel-btn:hover { background-color: var(--background-gray); border-color: var(--gray-text); }
+.configuracao-fila .mf-config-page .save-btn {
+  background-color: var(--primary-purple); border: 1px solid var(--primary-purple); color: var(--white);
 }
-.mf-config .cancel-btn:hover {
-  background-color: var(--background-gray);
-  border-color: var(--gray-text);
+body[data-theme='light'] .configuracao-fila .mf-config-page .save-btn:hover {
+  background-color: #6a34a0; border-color: #6a34a0;
 }
-.mf-config .save-btn {
-  background-color: var(--primary-purple);
-  border: 1px solid var(--primary-purple);
-  color: var(--white);
-}
-body[data-theme='light'] .mf-config .save-btn:hover {
-  background-color: #6a34a0;
-  border-color: #6a34a0;
-}
-body[data-theme='dark'] .mf-config .save-btn:hover {
-  background-color: var(--brand-primary-hover);
-  border-color: var(--brand-primary-hover);
-  color: var(--brand-primary);
+body[data-theme='dark'] .configuracao-fila .mf-config-page .save-btn:hover {
+  background-color: var(--brand-primary-hover); border-color: var(--brand-primary-hover); color: var(--brand-primary);
 }
 
-
-/* ====== MODAIS SIMPLES ====== */
-.mf-config .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(17, 24, 39, 0.45); /* Funciona bem em ambos os temas */
-  display: grid;
-  place-items: center;
-  z-index: 1050;
-}
-.mf-config .modal {
-  background: var(--white); /* MODIFICADO */
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 560px;
-  width: calc(100% - 32px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-}
-.mf-config .modal.sucesso .mensagem-sucesso {
-  color: #15803d;
-  font-weight: 600;
-}
-.mf-config .modal.erro .mensagem-erro {
-  color: #b91c1c;
-  font-weight: 600;
-}
-.mf-config .btn-fechar-modal {
-  margin-top: 14px;
-  background: var(--primary-purple);
-  color: var(--white);
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-/* ====== RESPONSIVO ====== */
-@media (max-width: 768px) {
-  .mf-config.configuracao-fila {
-    padding: 20px;
-  }
-
-  .mf-config .group-inputs {
-    flex-direction: column;
-    gap: 0;
-  }
-  .mf-config .group-inputs .input-field {
-    width: 100%;
-  }
-
-  .mf-config .campos-grid {
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  }
-
-  .mf-config .botoes {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .mf-config .botoes button {
-    width: 100%;
-  }
-}
-.mf-config .modal {
-  display: block !important;
-  position: relative !important;
-}
-/* ====== MODAIS — mantendo .modal/.modal-overlay, mas bonitos :) ====== */
-.mf-config .modal-overlay {
-  position: fixed;
-  inset: 0;
+/* ====== MODAIS ====== */
+.configuracao-fila .mf-config-page .modal-overlay {
+  position: fixed; inset: 0;
   background: rgba(17, 24, 39, 0.45);
-  display: grid;
-  place-items: center;
+  display: grid; place-items: center;
   z-index: 9999; /* acima de navbar/sidebar */
   backdrop-filter: blur(1.5px);
 }
+.configuracao-fila .mf-config-page .modal {
+  /* neutralização (se usar Bootstrap) */
+  display: block !important; position: relative !important; opacity: 1 !important; visibility: visible !important;
+  margin: 0 !important; inset: auto !important; transform: none !important; pointer-events: auto !important;
 
-/* Reset/neutralização do Bootstrap e visual custom */
-.mf-config .modal {
-  /* força aparecer mesmo com Bootstrap */
-  display: block !important;
-  position: relative !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  margin: 0 !important;
-  inset: auto !important;
-  transform: none !important;
-  pointer-events: auto !important;
-
-  /* visual */
   background: var(--white);
   border-radius: 14px;
   padding: 20px 22px;
@@ -520,40 +314,26 @@ body[data-theme='dark'] .mf-config .save-btn:hover {
   box-shadow: 0 22px 60px rgba(0,0,0,0.18);
   animation: mf-modal-pop .16s ease-out;
 }
-
 @keyframes mf-modal-pop {
   from { transform: translateY(6px); opacity: .96; }
-  to   { transform: translateY(0);   opacity: 1; }
+  to   { transform: translateY(0);   opacity: 1;   }
+}
+.configuracao-fila .mf-config-page .modal.sucesso .mensagem-sucesso { color: #15803d; font-weight: 600; margin: 0 0 10px; line-height: 1.35; }
+.configuracao-fila .mf-config-page .modal.erro .mensagem-erro       { color: #b91c1c; font-weight: 600; margin: 0 0 10px; line-height: 1.35; }
+.configuracao-fila .mf-config-page .btn-fechar-modal {
+  margin-top: 14px; background: var(--primary-purple); color: var(--white);
+  border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer;
 }
 
-/* Tipografia das mensagens */
-.mf-config .modal.sucesso .mensagem-sucesso {
-  color: #15803d;
-  font-weight: 600;
-  margin: 0 0 10px;
-  line-height: 1.35;
-}
-.mf-config .modal.erro .mensagem-erro {
-  color: #b91c1c;
-  font-weight: 600;
-  margin: 0 0 10px;
-  line-height: 1.35;
-}
+/* ====== RESPONSIVO ====== */
+@media (max-width: 768px) {
+  .configuracao-fila .mf-config-page { padding: 20px; }
 
+  .configuracao-fila .mf-config-page .group-inputs { flex-direction: column; gap: 0; }
+  .configuracao-fila .mf-config-page .group-inputs .input-field { width: 100%; }
 
-@media (max-width: 480px) {
-  .mf-config .header h2 {
-    font-size: 20px;
-  }
-  .mf-config .subtitle,
-  .mf-config .toggle-text span,
-  .mf-config .upload-area span,
-  .mf-config .campo-box span {
-    font-size: 13px;
-  }
+  .configuracao-fila .mf-config-page .campos-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
 
-  .mf-config .input-field label,
-  .mf-config .section-card .section-title {
-    font-size: 13px;
-  }
+  .configuracao-fila .mf-config-page .botoes { flex-direction: column; gap: 10px; }
+  .configuracao-fila .mf-config-page .botoes button { width: 100%; }
 }
