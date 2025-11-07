@@ -1,40 +1,54 @@
-/* Estilo base para o container */
+/* Base */
 .language-selector-container {
-  display: inline-block; /* Garante que o container não ocupe a largura toda */
+  display: inline-flex;     /* para ficar lado a lado com o botão de tema */
+  gap: 10px;
 }
 
-/* Variante "FIXED": para flutuar no canto da página */
+/* Variante FIXED deixou de ser necessária (vamos usar o contêiner global fixo).
+   Se quiser manter para reuso, pode deixar, mas não usaremos agora. */
 .language-selector-container.fixed {
-  position: fixed;
-  z-index: 1000;
+  position: static;
 }
 
-/* Variante "INLINE": para ficar dentro de outros elementos (como o menu) */
+/* Variante inline (padrão) */
 .language-selector-container.inline {
-  position: static; /* Comportamento padrão, fica onde for colocado */
+  position: static;
 }
 
-/* Estilos dos botões (permanecem os mesmos) */
+/* Botões de idioma */
 .language-button {
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
+  background-color: var(--background-secondary, #f0f0f0);
+  border: 1px solid var(--border-color, #ccc);
   border-radius: 5px;
-  padding: 7px ;
-  margin-left: 10px;
+  padding: 7px;
   cursor: pointer;
   font-weight: bold;
-  color: #333;
-  transition: all 0.3s ease;
+  color: var(--text-secondary, #333);
+  transition: all 0.2s ease;
   width: 35px;
   height: 35px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .language-button:hover {
-  background-color: #e0e0e0;
+  background-color: var(--hover-bg, #e0e0e0);
 }
 
 .language-button.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+  background-color: var(--brand-primary, #007bff);
+  color: #fff;
+  border-color: var(--brand-primary, #007bff);
+}
+
+/* Modo escuro (se usar data-theme no <html> ou :root) */
+:root[data-theme='dark'] .language-button {
+  background-color: var(--background-secondary, #1f2937);
+  color: var(--text-secondary, #e5e7eb);
+  border-color: var(--border-color, #374151);
+}
+
+:root[data-theme='dark'] .language-button:hover {
+  background-color: var(--hover-bg, #111827);
 }

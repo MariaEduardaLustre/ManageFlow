@@ -14,7 +14,7 @@
 }
 
 /* ===== Card base (todos os cards full width + padding 20px) ===== */
-.card {
+.relatorio-page .card {
   background: #fff;
   border-radius: 12px;
   border: 1px solid #e5e7eb;

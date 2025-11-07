@@ -1,11 +1,12 @@
+// src/App.jsx
 import React, { useState } from 'react';
-import { Route, BrowserRouter as Router, Routes, Navigate } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes, Navigate, useLocation } from 'react-router-dom';
 import './App.css'; 
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 
-// Importe todos os seus componentes
+// Componentes
 import LanguageSelectorConditional from './components/LanguageSelectorConditional/LanguageSelectorConditional';
 import Cadastro from './components/Cadastro/Cadastro';
 import ConfiguracaoFila from './components/ConfiguracaoFila/ConfiguracaoFila';
@@ -23,16 +24,47 @@ import Dashboard from './components/Dashboard/Dashboard';
 import Relatorio from './components/Relatorio/Relatorio';
 import Forbidden from './pages/Forbidden';
 import EntrarFilaPage from './pages/EntrarFilaPage';
-import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao'; // <-- Confirme se o import existe
+import PainelFilaExibicao from './components/PainelFilaExibicao/PainelFilaExibicao';
 import FilaStatus from './pages/FilaStatus';
 import FilaChamado from './pages/FilaChamado';
 import EditarEmpresa from './pages/EditarEmpresa/EditarEmpresa';
 import AvaliacaoEmpresaPage from './pages/AvaliacaoEmpresaPage/AvaliacaoEmpresaPage';
 import EmpresaPublicaPorToken from './pages/EmpresaPublica/EmpresaPublicaPorToken';
-
-// <-- ADICIONADO: Import da nova página de avaliações
-import AvaliacoesPage from './pages/AvaliacoesPage/AvaliacoesPage'; // Ajuste o caminho se necessário
+import AvaliacoesPage from './pages/AvaliacoesPage/AvaliacoesPage';
 import PerfilUsuario from './components/PerfilUsuario/PerfilUsuario';
+
+function TopBarLanguageGate({ isAuthenticated }) {
+  const { pathname } = useLocation();
+
+  // Rotas públicas onde NÃO queremos mostrar o seletor global
+  const hideOnPublic = [
+    '/login',
+    '/cadastro',
+    '/landing',
+    '/esqueci-senha'
+  ];
+
+  // Rotas com parâmetros: usa startsWith para cobrir variações
+  const hideStartsWith = [
+    '/redefinir-senha/',
+    '/entrar-fila/',
+    '/fila/',            // /fila/:token/chamado
+    '/avaliar/',
+    '/perfil/',          // perfil público por token
+    '/painel-fila/'      // painel público
+  ];
+
+  const isInHideList =
+    hideOnPublic.includes(pathname) ||
+    hideStartsWith.some(p => pathname.startsWith(p));
+
+  // Regras:
+  // - se não estiver autenticado → esconde (evita aparecer no login)
+  // - se rota pública/hide → esconde
+  const show = isAuthenticated && !isInHideList;
+
+  return show ? <LanguageSelectorConditional /> : null;
+}
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -50,10 +82,12 @@ function App() {
     <I18nextProvider i18n={i18n}>
       <ThemeProvider>
         <Router>
-          <LanguageSelectorConditional />
+          {/* ✅ Só mostra o seletor global quando autenticado e fora das rotas públicas */}
+          <TopBarLanguageGate isAuthenticated={isAuthenticated} />
+
           <Routes>
             {!isAuthenticated ? (
-              // --- ROTAS PÚBLICAS (se o usuário NÃO estiver autenticado) ---
+              // --- ROTAS PÚBLICAS ---
               <>
                 <Route path="/login" element={<Login onLoginSuccess={handleLogin} />} />
                 <Route path="/cadastro" element={<Cadastro />} />
@@ -64,38 +98,33 @@ function App() {
                 <Route path="/entrar-fila/:token/status" element={<FilaStatus />} />
                 <Route path="/fila/:token/chamado" element={<FilaChamado />} />
                 <Route path="/avaliar/:token" element={<AvaliacaoEmpresaPage />} />
-                <Route path="/perfil/:token" element={<EmpresaPublicaPorToken />} />                
-                {/* A rota do painel também deve ser acessível publicamente caso seja compartilhada */}
+                <Route path="/perfil/:token" element={<EmpresaPublicaPorToken />} />
+                {/* Painel também público */}
                 <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
-
                 <Route path="*" element={<Navigate to="/login" />} />
               </>
             ) : (
-              // --- ROTAS PRIVADAS (se o usuário ESTIVER autenticado) ---
+              // --- ROTAS PRIVADAS ---
               <>
                 <Route path="/home" element={<Home onLogout={handleLogout} />} />
                 <Route path="/empresa/editar/:idEmpresa" element={<EditarEmpresa onLogout={handleLogout} />} />
                 <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />} />
-                
-                {/* <-- ADICIONADO: Rota para a nova página de avaliações */}
                 <Route path="/dashboard/avaliacoes" element={<AvaliacoesPage onLogout={handleLogout} />} />
-
                 <Route path="/filas-cadastradas" element={<FilasCadastradas onLogout={handleLogout} />} />
                 <Route path="/filas" element={<FilaLista onLogout={handleLogout} />} />
                 <Route path="/relatorio" element={<Relatorio onLogout={handleLogout} />} />
                 <Route path="/gestao-fila/:idEmpresa/:dtMovto/:idFila" element={<GestaoFilaClientes onLogout={handleLogout} />} />
                 <Route path="/configuracao/:id?" element={<ConfiguracaoFila onLogout={handleLogout} />} />
-                
-                {/* NOVO: Adicionada a rota do Painel de Exibição aqui também */}
+                {/* Painel também disponível autenticado */}
                 <Route path="/painel-fila/:idEmpresa/:dtMovto/:idFila" element={<PainelFilaExibicao />} />
                 <Route
-            path="/perfil"
-            element={
-              <PrivateRoute resource="profile" action="view">
-                <PerfilUsuario />
-              </PrivateRoute>
-            }
-          />
+                  path="/perfil"
+                  element={
+                    <PrivateRoute resource="profile" action="view">
+                      <PerfilUsuario />
+                    </PrivateRoute>
+                  }
+                />
                 <Route path="/escolher-empresa" element={<Empresa />} />
                 <Route path="/login" element={<Navigate to="/home" />} />
                 <Route path="/403" element={<Forbidden />} />

@@ -1,25 +1,30 @@
+/* Botão de tema SEM position: fixed (quem fixa é o contêiner externo) */
 .theme-toggle-button {
-    background-color: var(--background-secondary); /* Fundo branco/escuro */
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary); /* Cor do ícone */
-    
-    /* Tamanho e forma */
-    width: 35px;
-    height: 35px;
-    border-radius: 5px; /* Bordas arredondadas */
-    padding: 0; /* Removemos o preenchimento para centralizar o ícone */
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
 
-    /* Alinhamento do ícone */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    font-size: 1.1rem; /* Tamanho do ícone */
-    cursor: pointer;
-    transition: all 0.2s ease;
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .theme-toggle-button:hover {
-    border-color: var(--brand-primary);
-    color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* estados tema (opcional) */
+:root[data-theme='dark'] .theme-toggle-button {
+  background-color: var(--background-secondary);
+  color: var(--text-secondary);
 }

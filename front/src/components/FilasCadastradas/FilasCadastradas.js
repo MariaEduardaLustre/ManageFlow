@@ -16,6 +16,16 @@ import api from "../../services/api";
 import "./FilasCadastradas.css";
 import { useTranslation } from "react-i18next";
 
+// Toast simples
+function Toast({ show, message, onClose }) {
+  if (!show) return null;
+  return (
+    <div className="mf-toast" role="status" aria-live="polite" onClick={onClose}>
+      {message}
+    </div>
+  );
+}
+
 // ALTERADO: A página agora recebe 'onLogout' como uma propriedade
 const FilasCadastradas = ({ onLogout }) => {
   const { t } = useTranslation();
@@ -31,6 +41,15 @@ const FilasCadastradas = ({ onLogout }) => {
   const [qrLoading, setQrLoading] = useState(false);
   const [qrError, setQrError] = useState(null);
   const [search, setSearch] = useState("");
+
+  // ✅ estado do toast
+  const [toast, setToast] = useState({ show: false, message: "" });
+  const showToast = (message, ms = 2500) => {
+    setToast({ show: true, message });
+    window.clearTimeout(showToast._t);
+    showToast._t = window.setTimeout(() => setToast({ show: false, message: "" }), ms);
+  };
+
   const navigate = useNavigate();
 
   const empresaSelecionada = JSON.parse(
@@ -79,10 +98,15 @@ const FilasCadastradas = ({ onLogout }) => {
         document.body.removeChild(ta);
         if (!ok) throw new Error("execCommand failed");
       }
-      alert(t('filasCadastradas.feedback.linkCopiado'));
+      // ✅ só toast (sem alert)
+      showToast(t('filasCadastradas.feedback.linkCopiado'));
     } catch (e) {
       console.error("Falha ao copiar", e);
-      window.prompt(t('filasCadastradas.feedback.copieOlink'), text);
+      // fallback discreto
+      try {
+        window.prompt(t('filasCadastradas.feedback.copieOlink'), text);
+      } catch {}
+      showToast(t('filasCadastradas.feedback.copiaFalhou') || 'Não foi possível copiar.');
     }
   };
   
@@ -159,10 +183,11 @@ const FilasCadastradas = ({ onLogout }) => {
       setFilas((prev) => prev.filter((x) => x.id_conf_fila !== id));
       setConfirmOpen(false);
       setConfirmTarget(null);
+      showToast(t('filasCadastradas.feedback.excluida') || 'Fila excluída.');
     } catch (err) {
       const msg = err.response?.data?.erro || err.response?.data?.message || err.message;
-      alert(t('filasCadastradas.erros.excluir', { message: msg }));
       console.error("Excluir configuração erro:", err);
+      showToast(t('filasCadastradas.erros.excluir', { message: msg }));
     } finally {
       setDeletingId(null);
     }
@@ -186,7 +211,6 @@ const FilasCadastradas = ({ onLogout }) => {
 
   return (
     <div className="mf-queues dashboard-container">
-      {/* ALTERADO: A propriedade 'onLogout' é passada para o componente Menu */}
       <Menu onLogout={onLogout} />
 
       <main className="main-content">
@@ -356,6 +380,13 @@ const FilasCadastradas = ({ onLogout }) => {
           </div>
         </div>
       )}
+
+      {/* ✅ Toast global da página */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        onClose={() => setToast({ show: false, message: "" })}
+      />
     </div>
   );
 };
