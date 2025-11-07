@@ -55,7 +55,6 @@ function normalizeImg(v) {
 function withCacheBuster(url, seed = Date.now()) {
   if (!url) return url;
   try {
-    // mantém querystring existente e só adiciona v=
     const hasQ = url.includes('?');
     return `${url}${hasQ ? '&' : '?'}v=${encodeURIComponent(seed)}`;
   } catch {
@@ -119,7 +118,6 @@ const EditarEmpresa = ({ onLogout }) => {
         const cnpjToValidate = String(emp.CNPJ || emp.cnpj || '');
         if (cnpjToValidate) setIsCnpjValid(validarCNPJ(cnpjToValidate));
 
-        // 🔧 aceita string OU objeto { url }
         const img =
           normalizeImg(emp.img_perfil) ||
           normalizeImg(emp.img_perfil_url) ||
@@ -127,8 +125,6 @@ const EditarEmpresa = ({ onLogout }) => {
           normalizeImg(emp.LOGO) ||
           '';
 
-        // ⚠️ ao carregar do backend, não coloca cache-buster
-        // (só usamos após upload para forçar troca visual)
         setPerfilPreview(img);
       } catch (err) {
         setError(err?.response?.data?.error || 'Não foi possível carregar os dados da empresa.');
@@ -174,6 +170,11 @@ const EditarEmpresa = ({ onLogout }) => {
   const handleVoltar = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate('/home');
+  };
+
+  // ➕ Novo: Ir para seleção de empresa
+  const handleIrSelecionarEmpresa = () => {
+    navigate('/escolher-empresa');
   };
 
   // Avaliações
@@ -287,10 +288,7 @@ const EditarEmpresa = ({ onLogout }) => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      // 🔧 backend pode devolver string ou { url, key }
       const rawUrl = normalizeImg(data.img_perfil);
-
-      // 🔥 cache-buster: força o <img> a recarregar a nova versão
       const url = withCacheBuster(rawUrl);
 
       setPerfilPreview(url || '');
@@ -301,7 +299,6 @@ const EditarEmpresa = ({ onLogout }) => {
         LOGO_URL: url || prev.LOGO_URL
       }));
 
-      // opcional: limpar o input
       setPerfilFile(null);
 
       setSuccess('Foto de perfil da empresa atualizada com sucesso!');
@@ -348,9 +345,6 @@ const EditarEmpresa = ({ onLogout }) => {
           <div className="editar-header-row">
             <h2>Dados da Empresa</h2>
             <div className="editar-header-actions">
-              <Button variant="outline-secondary" className="btn-voltar" onClick={handleVoltar}>
-                <FaArrowLeft />&nbsp;Voltar
-              </Button>
             </div>
           </div>
         </section>
@@ -394,7 +388,7 @@ const EditarEmpresa = ({ onLogout }) => {
                         <img
                           src={perfilPreview || defaultAvatar}
                           alt="Foto de Perfil"
-                          crossOrigin="anonymous" // ajuda em ambientes com CDN
+                          crossOrigin="anonymous"
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={(e) => { e.currentTarget.src = defaultAvatar; }}
                         />
@@ -537,6 +531,21 @@ const EditarEmpresa = ({ onLogout }) => {
             </div>
           </Card.Body>
         </Card>
+
+        {/* ✅ Botão final para escolher a empresa */}
+        <section className="mt-4 mb-5">
+          <div className="d-flex justify-content-rigth">
+            <Button
+              variant="outline-secondary"
+              onClick={handleIrSelecionarEmpresa}
+              className="px-4"
+              title="Voltar para a seleção de empresas"
+            >
+              <FaBuilding className="me-2" />
+              Escolher outra empresa
+            </Button>
+          </div>
+        </section>
       </Container>
 
       {/* Modal de confirmação */}
