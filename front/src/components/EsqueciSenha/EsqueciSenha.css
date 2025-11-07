@@ -1,96 +1,195 @@
-.esqueci-senha-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #f9f9f9;
-    padding: 20px;
-  }
-  
-  .esqueci-senha-container h2 {
-    text-align: center;
-    font-size: 2rem;
-    color: #1e73be;
-    margin-bottom: 30px;
-  }
-  
-  .esqueci-senha-container form {
-    background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .esqueci-senha-container .form-group {
-    margin-bottom: 20px;
-  }
-  
-  .esqueci-senha-container .form-group input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 25px;
-    font-size: 1rem;
-    margin-top: 5px;
-    outline: none;
-  }
-  
-  .esqueci-senha-container .form-group input:focus {
-    border-color: #4254cb;
-    box-shadow: 0 0 5px rgba(66, 84, 203, 0.5);
-  }
-  
-  .esqueci-senha-container button.btn-primary {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    background-color: #1e73be;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    margin-top: 20px;
-  }
-  
-  .esqueci-senha-container button.btn-primary:hover {
-    background-color: #1e41a5;
-  }
-  
-  .esqueci-senha-container .mensagem-sucesso {
-    color: green;
-    text-align: center;
-    margin-bottom: 15px;
-  }
-  
-  .esqueci-senha-container .mensagem-erro {
-    color: red;
-    text-align: center;
-    margin-bottom: 15px;
-  }
-  
-  .esqueci-senha-container p {
-    text-align: center;
-    margin-top: 20px;
-    color: #555;
-  }
-  
-  .esqueci-senha-container p a {
-    color: #4254cb;
-    text-decoration: none;
-  }
-  
-  .esqueci-senha-container p a:hover {
-    text-decoration: underline;
-  }
+/* ============================================== */
+/* --- 1. DEFINIÇÃO DAS VARIÁVEIS DE TEMA   --- */
+/* ============================================== */
 
-  @media (max-width: 768px) {
-    .esqueci-senha-container form {
-      padding: 25px;
-      max-width: 90%;
-    }
+/* --- TEMA CLARO (LIGHT) --- */
+/* A MUDANÇA ESTÁ AQUI: O seletor agora ouve o body */
+body[data-theme="light"] .esqueci-senha-container {
+  --cor-fundo-pagina: #f9f9f9;
+  --cor-fundo-card: #ffffff;
+  --cor-texto-primario: #555;
+  --cor-texto-titulo: #4254cb;
+  --cor-primaria: #4254cb;
+  --cor-primaria-hover: #3a4ab7;
+  --cor-primaria-desativado: #b0b8d7;
+  --cor-texto-botao: #ffffff;
+  --cor-fundo-input: #f8f9fa;
+  --cor-borda-input: #f8f9fa;
+  --cor-fundo-input-focus: #ffffff;
+  --cor-borda-input-focus: #4254cb;
+  --cor-sombra-input-focus: rgba(66, 84, 203, 0.2);
+  --cor-sombra-card: rgba(0, 0, 0, 0.1);
+  --cor-texto-sucesso: #0f5132;
+  --cor-texto-erro: #d9534f;
+  --cor-texto-link: #4254cb;
+}
+
+/* --- TEMA ESCURO (DARK) --- */
+/* A MUDANÇA ESTÁ AQUI: O seletor agora ouve o body */
+body[data-theme="dark"] .esqueci-senha-container {
+  --cor-fundo-pagina: #121212;
+  --cor-fundo-card: #1e1e1e;
+  --cor-texto-primario: #e0e0e0;
+  --cor-texto-titulo: #6a7ff0;
+  --cor-primaria: #6a7ff0;
+  --cor-primaria-hover: #8a9cff;
+  --cor-primaria-desativado: #4a4e69;
+  --cor-texto-botao: #1e1e1e;
+  --cor-fundo-input: #2a2a2a;
+  --cor-borda-input: #2a2a2a;
+  --cor-fundo-input-focus: #1e1e1e;
+  --cor-borda-input-focus: #6a7ff0;
+  --cor-sombra-input-focus: rgba(106, 127, 240, 0.3);
+  --cor-sombra-card: rgba(0, 0, 0, 0.5);
+  --cor-texto-sucesso: #2a9d8f;
+  --cor-texto-erro: #f07167;
+  --cor-texto-link: #6a7ff0;
+}
+
+
+/* ============================================== */
+/* --- 2. ESTILOS REATORIZADOS USANDO VARIÁVEIS --- */
+/* ============================================== */
+/* O seletor .esqueci-senha-container "herda" as variáveis
+  definidas nos blocos acima, dependendo do data-theme do body
+*/
+.esqueci-senha-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: var(--cor-fundo-pagina); 
+  padding: 20px;
+  transition: background-color 0.3s ease;
+}
+  
+.esqueci-senha-container h2 {
+  text-align: center;
+  font-size: 2rem;
+  color: var(--cor-texto-titulo); 
+  margin-bottom: 30px;
+}
+  
+.esqueci-senha-container form {
+  background-color: var(--cor-fundo-card);
+  box-shadow: 0 2px 4px var(--cor-sombra-card);
+  padding: 30px;
+  border-radius: 8px; 
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+  
+.esqueci-senha-container .form-group {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.esqueci-senha-container .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: var(--cor-texto-primario);
+}
+  
+.esqueci-senha-container .form-group input {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--cor-fundo-input);
+  border: 1px solid var(--cor-borda-input);
+  color: var(--cor-texto-primario); 
+  border-radius: 10px;        
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
+}
+  
+.esqueci-senha-container .form-group input:focus {
+  border-color: var(--cor-borda-input-focus);
+  background-color: var(--cor-fundo-input-focus);
+  box-shadow: 0 0 0 3px var(--cor-sombra-input-focus); 
+}
+  
+.esqueci-senha-container button.btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: bold; 
+  background-color: var(--cor-primaria); 
+  color: var(--cor-texto-botao);
+  border: none;
+  border-radius: 25px; 
+  cursor: pointer;
+  margin-top: 10px; 
+}
+  
+.esqueci-senha-container button.btn-primary:hover {
+  background-color: var(--cor-primaria-hover); 
+}
+
+.esqueci-senha-container button.btn-primary:disabled {
+  background-color: var(--cor-primaria-desativado);
+  cursor: not-allowed;
+}
+  
+.esqueci-senha-container .mensagem-sucesso {
+  color: var(--cor-texto-sucesso);
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+  
+.esqueci-senha-container .mensagem-erro {
+  color: var(--cor-texto-erro);
+  text-align: center;
+  margin-top: 15px;
+}
+  
+.esqueci-senha-container p {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--cor-texto-primario);
+}
+  
+.esqueci-senha-container p a {
+  color: var(--cor-texto-link); 
+  text-decoration: none;
+  font-weight: 600; 
+}
+  
+.esqueci-senha-container p a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .esqueci-senha-container form {
+    padding: 25px;
+    max-width: 90%;
   }
+}
+
+.esqueci-senha-container .mensagem-card {
+  background-color: var(--cor-fundo-card);
+  box-shadow: 0 2px 4px var(--cor-sombra-card);
+  padding: 30px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center; 
+  box-sizing: border-box;
+  text-align: center; 
+}
+
+.esqueci-senha-container .mensagem-card .mensagem-sucesso {
+  margin-bottom: 20px; 
+}
+
+.esqueci-senha-container .mensagem-card p {
+    margin-top: 0;
+}

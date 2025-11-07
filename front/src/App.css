@@ -106,3 +106,11 @@ h1, h2, h3, h4, h5, h6 {
 /* ================== AJUSTES PONTUAIS ================== */
 /* Sidebar transita apenas layout/cor (não fonte) */
 .sidebar { transition: width .3s ease, padding .3s ease, background-color .2s ease; }
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

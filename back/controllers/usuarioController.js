@@ -112,7 +112,7 @@ exports.loginUsuario = async (req, res) => {
 };
 
 /* ============================================================
- *  CADASTRO
+ * CADASTRO
  * ============================================================ */
 exports.cadastrarUsuario = async (req, res) => {
   const {
@@ -154,7 +154,7 @@ exports.cadastrarUsuario = async (req, res) => {
 };
 
 /* ============================================================
- *  ESQUECI SENHA
+ * ESQUECI SENHA
  * ============================================================ */
 exports.solicitarRedefinicaoSenha = async (req, res) => {
   const { email } = req.body;
@@ -198,21 +198,29 @@ exports.solicitarRedefinicaoSenha = async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    // Responder em JSON (padronização)
+    
+    // ================== MELHORIA AQUI ==================
+    // Envia resposta JSON também para esta rota (boa prática)
     res.status(200).json({ message: 'Um link para redefinição de senha foi enviado para o seu e-mail.' });
+    // ===================================================
+
   } catch (err) {
     console.error('[FORGOT] 500 error:', err);
+    // ================== MELHORIA AQUI ==================
     res.status(500).json({ error: 'Erro interno ao processar solicitação de senha.' });
+    // ===================================================
   }
 };
 
 /* ============================================================
- *  REDEFINIR SENHA
+ * REDEFINIR SENHA
  * ============================================================ */
 exports.redefinirSenha = async (req, res) => {
   const { token, novaSenha } = req.body;
   if (!token || !novaSenha) {
+    // ================== MELHORIA AQUI ==================
     return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
+    // ===================================================
   }
 
   try {
@@ -221,7 +229,9 @@ exports.redefinirSenha = async (req, res) => {
       [token, new Date()]
     );
     if (results.length === 0) {
+      // ================== MELHORIA AQUI ==================
       return res.status(400).json({ error: 'Token inválido ou expirado.' });
+      // ===================================================
     }
 
     const usuario = results[0];
@@ -234,10 +244,17 @@ exports.redefinirSenha = async (req, res) => {
       [senhaCriptografada, usuario.ID]
     );
 
+    // ================== CORREÇÃO PRINCIPAL ==================
+    // Alterado de res.send() para res.json()
     res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+    // ========================================================
+
   } catch (error) {
     console.error('[RESET] 500 error:', error);
+    // ================== CORREÇÃO PRINCIPAL ==================
+    // Alterado de res.send() para res.json()
     res.status(500).json({ error: 'Erro interno ao redefinir a senha.' });
+    // ========================================================
   }
 };
 
@@ -245,6 +262,7 @@ exports.redefinirSenha = async (req, res) => {
  *  FOTO DE PERFIL (S3) — multipart/form-data (campo: img_perfil)
  * ============================================================ */
 exports.uploadFotoPerfil = async (req, res) => {
+  // ... (código inalterado)
   const idUsuario = parseInt(req.params.id, 10);
   if (!Number.isFinite(idUsuario)) {
     return res.status(400).json({ error: 'ID de usuário inválido.' });
@@ -279,6 +297,7 @@ exports.uploadFotoPerfil = async (req, res) => {
  *  GET USUÁRIO POR ID (retorna URL de acesso da foto)
  * ============================================================ */
 exports.getUsuarioPorId = async (req, res) => {
+  // ... (código inalterado)
   const idUsuario = parseInt(req.params.id, 10);
   if (!Number.isFinite(idUsuario)) {
     return res.status(400).json({ error: 'ID de usuário inválido.' });

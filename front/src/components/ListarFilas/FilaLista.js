@@ -12,23 +12,6 @@ const REFRESH_MS = 10000;
 /* Utils de data */
 const pad2 = (n) => String(n).padStart(2, '0');
 
-const formatarDataParaExibicao = (val) => {
-  if (val === null || val === undefined || val === '') return 'N/A';
-  const d = new Date(val);
-  if (!isNaN(d.getTime())) {
-    const dd = pad2(d.getDate());
-    const mm = pad2(d.getMonth() + 1);
-    const yy = d.getFullYear();
-    return `${dd}/${mm}/${yy}`;
-  }
-  const s = String(val);
-  if (/^\d{8}$/.test(s)) {
-    const yy = s.slice(0, 4), mm = s.slice(4, 6), dd = s.slice(6, 8);
-    return `${dd}/${mm}/${yy}`;
-  }
-  return s;
-};
-
 const yyyymmdd = (val) => {
   if (val === null || val === undefined || val === '') return '';
   const d = new Date(val);
@@ -57,14 +40,34 @@ const isAtivo = (valor) => {
   return n === 1;
 };
 
-/**
- * Regras:
- * - Mostrar apenas a fila do DIA (DT_MOVTO === hoje)
- * - ATIVA (SITUACAO=1) e NÃO BLOQUEADA (BLOCK=0)
- * - Se não houver DT_MOVTO, usa vigência (DT_INI/FIM_VIG) como backup
- */
 const FilaLista = ({ onLogout }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  // Locale atual para formatação de datas
+  const idiomaAtual = i18n.language || 'pt-BR';
+  const formatadorData = useMemo(
+    () =>
+      new Intl.DateTimeFormat(
+        idiomaAtual.startsWith('en') ? 'en-US' : 'pt-BR',
+        { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' }
+      ),
+    [idiomaAtual]
+  );
+
+  // Substitui a antiga formatarDataParaExibicao usando Intl + fallback yyyymmdd
+  const formatarDataExibicao = (val) => {
+    if (val === null || val === undefined || val === '') return 'N/A';
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return formatadorData.format(d);
+    const s = String(val);
+    if (/^\d{8}$/.test(s)) {
+      const yy = s.slice(0, 4), mm = s.slice(4, 6), dd = s.slice(6, 8);
+      const manual = new Date(`${yy}-${mm}-${dd}T00:00:00Z`);
+      return isNaN(manual.getTime()) ? s : formatadorData.format(manual);
+    }
+    return s;
+  };
+
   const [filasRaw, setFilasRaw] = useState([]);
   const [contagens, setContagens] = useState({}); // { [ID_FILA]: { aguardando?: number, chamadas?: number } }
   const [loading, setLoading] = useState(true);
@@ -190,7 +193,9 @@ const FilaLista = ({ onLogout }) => {
     if (!idEmpresa) return;
 
     if (!socket.connected) {
-      try { socket.connect(); } catch {}
+      try {
+        socket.connect();
+      } catch {}
     }
 
     if (!joinedRoomRef.current) {
@@ -244,7 +249,10 @@ const FilaLista = ({ onLogout }) => {
             <div className="fila-header-meta">
               {lastUpdated ? (
                 <span className="mf-last-updated">
-                  {t('geral.atualizadoEm') || 'Atualizado às'} {new Date(lastUpdated).toLocaleTimeString()}
+                  {(t('geral.atualizadoEm') || 'Atualizado às')}{' '}
+                  {new Date(lastUpdated).toLocaleTimeString(
+                    idiomaAtual.startsWith('en') ? 'en-US' : 'pt-BR'
+                  )}
                 </span>
               ) : null}
             </div>
@@ -293,7 +301,7 @@ const FilaLista = ({ onLogout }) => {
                       style={{ cursor: 'pointer' }}
                     >
                       <td>{fila.NOME_FILA}</td>
-                      <td>{formatarDataParaExibicao(fila.DT_INI)}</td>
+                      <td>{formatarDataExibicao(fila.DT_INI)}</td>
                       <td>{aguardando}</td>
                       <td>{chamadas}</td>
                       <td>{isAtivo(fila.BLOCK) ? t('geral.sim') : t('geral.nao')}</td>

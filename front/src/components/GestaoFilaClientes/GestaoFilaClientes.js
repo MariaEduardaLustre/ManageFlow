@@ -19,11 +19,11 @@ import { Modal, Button, Form, Alert, Spinner } from "react-bootstrap";
 import Menu from "../Menu/Menu";
 import "./GestaoFilaClientes.css";
 
-// ALTERADO: A página agora recebe 'onLogout' como uma propriedade
+// Página recebe 'onLogout' como prop
 const GestaoFilaClientes = ({ onLogout }) => {
   const { idEmpresa, dtMovto, idFila } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [clientesFila, setClientesFila] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,25 @@ const GestaoFilaClientes = ({ onLogout }) => {
   });
   const [abaAtiva, setAbaAtiva] = useState("aguardando");
 
+  // ======== Garante idioma do HTML para inputs nativos (date) ========
+  useEffect(() => {
+    const htmlLang = i18n.language?.startsWith("en") ? "en" : "pt-BR";
+    document.documentElement.lang = htmlLang;
+  }, [i18n.language]);
+
+  // ======== Locale helpers ========
+  const getLocale = () => {
+    const lang = (i18n.language || "pt-BR").toLowerCase();
+    if (lang.startsWith("en")) return "en-US";
+    if (lang.startsWith("pt")) return "pt-BR";
+    return "en-US";
+  };
+  const getDateInputLang = () =>
+    i18n.language?.startsWith("en") ? "en-US" : "pt-BR";
+  const getDatePlaceholder = () =>
+    i18n.language?.startsWith("en") ? "mm/dd/yyyy" : "dd/mm/aaaa";
+
+  // ======== Validações CPF/CNPJ ========
   const isValidCPF = (cpf) => {
     if (typeof cpf !== "string") return false;
     cpf = cpf.replace(/[^\d]+/g, "");
@@ -79,8 +98,8 @@ const GestaoFilaClientes = ({ onLogout }) => {
       if (pos < 2) pos = 9;
     }
     let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-    if (resultado != digitos.charAt(0)) return false;
-    tamanho = tamanho + 1;
+    if (resultado !== Number(digitos.charAt(0))) return false;
+    tamanho += 1;
     numeros = cnpj.substring(0, tamanho);
     soma = 0;
     pos = tamanho - 7;
@@ -89,16 +108,18 @@ const GestaoFilaClientes = ({ onLogout }) => {
       if (pos < 2) pos = 9;
     }
     resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-    if (resultado != digitos.charAt(1)) return false;
+    if (resultado !== Number(digitos.charAt(1))) return false;
     return true;
   };
 
+  // ======== Feedback Modal ========
   const openFeedbackModal = (message, variant = "info") => {
     setFeedbackMessage(message);
     setFeedbackVariant(variant);
     setShowFeedbackModal(true);
   };
 
+  // ======== Formatação de data/hora/documento ========
   const formatarData = (dataSQL) => {
     if (!dataSQL) return "N/A";
     const date = new Date(dataSQL);
@@ -107,17 +128,18 @@ const GestaoFilaClientes = ({ onLogout }) => {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
-      timeZone: "UTC",
+      timeZone: "UTC", // evita off-by-one em datas "puras"
     };
-    return new Intl.DateTimeFormat("pt-BR", options).format(date);
+    return new Intl.DateTimeFormat(getLocale(), options).format(date);
   };
 
   const formatarHora = (timestampSQL) => {
     if (!timestampSQL) return "N/A";
     const date = new Date(timestampSQL);
     if (isNaN(date.getTime())) return "N/A";
-    const options = { hour: "2-digit", minute: "2-digit", hour12: false };
-    return new Intl.DateTimeFormat("pt-BR", options).format(date);
+    const isEnglish = getLocale() === "en-US";
+    const options = { hour: "2-digit", minute: "2-digit", hour12: isEnglish };
+    return new Intl.DateTimeFormat(getLocale(), options).format(date);
   };
 
   const formatarCpfCnpj = (valor) => {
@@ -133,6 +155,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
     return valor;
   };
 
+  // ======== Fetchers ========
   const fetchClientesFilaCompleta = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -168,6 +191,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
     }
   }, [idEmpresa, idFila]);
 
+  // ======== Efeito inicial + Socket ========
   useEffect(() => {
     if (!idEmpresa || !dtMovto || !idFila) {
       navigate("/filas");
@@ -209,6 +233,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
     fetchFilaStatus,
   ]);
 
+  // ======== UI helpers ========
   const getSituacaoText = (situacao) => {
     switch (Number(situacao)) {
       case 0:
@@ -243,6 +268,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
     }
   };
 
+  // ======== Actions ========
   const handleUpdateSituacao = async (
     cliente,
     novaSituacao,
@@ -319,7 +345,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
       return;
     }
 
-    const doc = novoCliente.CPFCNPJ.replace(/[^\d]+/g, "");
+    const doc = (novoCliente.CPFCNPJ || "").replace(/[^\d]+/g, "");
     if (doc.length === 11) {
       if (!isValidCPF(doc)) {
         openFeedbackModal(
@@ -385,6 +411,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
     const desired = !isBlocked;
     try {
       await api.put(`/filas/${idFila}/block`, { block: desired });
+      // Opcional: sincronizar SITUACAO diária junto ao BLOCK
       const situacao = desired ? false : true;
       await api.put(`/filas/${idFila}/status`, { situacao });
       setIsBlocked(desired);
@@ -432,6 +459,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
     else navigate("/filas");
   };
 
+  // ======== Render ========
   return (
     <div className="home-container">
       <Menu onLogout={onLogout} />
@@ -651,6 +679,9 @@ const GestaoFilaClientes = ({ onLogout }) => {
                 name="DT_NASC"
                 value={novoCliente.DT_NASC}
                 onChange={handleNovoClienteChange}
+                lang={getDateInputLang()}
+                placeholder={getDatePlaceholder()}
+                inputMode="numeric"
               />
             </Form.Group>
             <Form.Group className="mb-3">

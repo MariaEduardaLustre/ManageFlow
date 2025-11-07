@@ -82,6 +82,43 @@
       }
     }
   },
+  "esqueciSenha": {
+    "titulo": "Esqueci minha senha",
+    "labelEmail": "E-mail:",
+    "placeholderEmail": "Digite seu e-mail",
+    "botoes": {
+      "enviar": "Enviar link de recuperação",
+      "enviando": "Enviando..."
+    },
+    "links": {
+      "voltarLogin": "Voltar para o Login",
+      "lembrouSenha": "Lembrou a senha? <1>Fazer login</1>"
+    },
+    "mensagens": {
+      "sucessoPadrao": "Link enviado com sucesso!",
+      "erroPadrao": "Ocorreu um erro ao solicitar a redefinição de senha."
+    }
+  },
+  "redefinirSenha": {
+    "titulo": "Redefinir Senha",
+    "labels": {
+      "novaSenha": "Nova Senha:",
+      "confirmarNovaSenha": "Confirmar Nova Senha:"
+    },
+    "botoes": {
+      "redefinir": "Redefinir Senha",
+      "salvando": "Salvando...",
+      "irLogin": "Ir para Login"
+    },
+    "mensagens": {
+      "sucessoPadrao": "Senha redefinida com sucesso!",
+      "erroPadrao": "Ocorreu um erro ao redefinir a senha.",
+      "alerta": {
+        "senhaInvalida": "A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.",
+        "senhasNaoCoincidem": "As senhas não coincidem!"
+      }
+    }
+  },
   "landing": {
     "nav": {
       "home": "Home",
