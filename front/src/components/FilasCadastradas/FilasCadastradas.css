@@ -43,7 +43,6 @@ body[data-theme='dark'] .mf-queues {
 }
 .mf-queues .content-wrapper {
   width: 100%;
-  max-width: 1200px;
 }
 
 /* ===== Cards ===== */

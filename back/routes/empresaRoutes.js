@@ -43,66 +43,106 @@ module.exports = (io = null) => {
   // CRIAR EMPRESA
   // --------------------------------------------------------------------------------
   router.post('/criar-empresa', async (req, res) => {
-    const {
-      nomeEmpresa,
-      cnpj,
-      email,
-      ddi,
-      ddd,
-      telefone,
-      endereco,
-      numero,
-      logo
-    } = req.body;
-    const idUsuarioCriador = req.body.idUsuario;
+  const {
+    nomeEmpresa,
+    cnpj,
+    email,
+    ddi,
+    ddd,
+    telefone,
+    endereco,
+    numero,
+    logo
+  } = req.body;
+  const idUsuarioCriador = req.body.idUsuario;
 
-    if (!idUsuarioCriador) {
-      return res.status(400).json({ error: 'idUsuario é obrigatório.' });
+  if (!idUsuarioCriador) {
+    return res.status(400).json({ error: 'idUsuario é obrigatório.' });
+  }
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Tenta inserir; se violar UNIQUE, o catch abaixo trata e devolve 409 com mensagem clara
+    const [empresaResult] = await connection.query(
+      `INSERT INTO empresa (NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      [nomeEmpresa, cnpj, email, ddi, ddd, telefone, endereco, numero, logo || null]
+    );
+    const idEmpresa = empresaResult.insertId;
+
+    // cria perfis padrão
+    await connection.query(
+      `INSERT IGNORE INTO perfil (NOME_PERFIL, ID_EMPRESA, NIVEL) VALUES
+         ('Administrador', ?, 1),
+         ('Editor',        ?, 2),
+         ('Leitor',        ?, 3)`,
+      [idEmpresa, idEmpresa, idEmpresa]
+    );
+
+    // busca perfil admin
+    const [[perfilAdmin]] = await connection.query(
+      `SELECT ID_PERFIL FROM perfil WHERE ID_EMPRESA = ? AND NIVEL = 1 LIMIT 1`,
+      [idEmpresa]
+    );
+    if (!perfilAdmin) throw new Error('Perfil Administrador não encontrado após criar empresa.');
+
+    // dá permissão admin ao criador
+    await connection.query(
+      `INSERT IGNORE INTO permissoes (ID_EMPRESA, ID_PERFIL, ID_USUARIO) VALUES (?,?,?)`,
+      [idEmpresa, perfilAdmin.ID_PERFIL, idUsuarioCriador]
+    );
+
+    await connection.commit();
+    return res.json({ message: 'Empresa criada com sucesso!', idEmpresa });
+  } catch (error) {
+    await connection.rollback();
+
+    // 🎯 Tratamento de duplicidade (índices UNIQUE)
+    if (error && error.code === 'ER_DUP_ENTRY') {
+      const msg = String(error.sqlMessage || '').toLowerCase();
+
+      // Ajuste os nomes conforme seu schema (ex.: empresa.uq_empresa_email / empresa.uq_empresa_cnpj)
+      const isEmail =
+        msg.includes('uq_empresa_email') ||
+        msg.includes('unique') && msg.includes('email') ||
+        msg.includes("for key 'email'");
+
+      const isCnpj =
+        msg.includes('uq_empresa_cnpj') ||
+        msg.includes('unique') && msg.includes('cnpj') ||
+        msg.includes("for key 'cnpj'");
+
+      if (isEmail) {
+        return res.status(409).json({
+          error: 'EMAIL_DUPLICADO',
+          field: 'email',
+          message: 'Já existe uma empresa registrada com este e-mail.'
+        });
+      }
+      if (isCnpj) {
+        return res.status(409).json({
+          error: 'CNPJ_DUPLICADO',
+          field: 'cnpj',
+          message: 'Já existe uma empresa registrada com este CNPJ.'
+        });
+      }
+
+      // Fallback: duplicidade genérica
+      return res.status(409).json({
+        error: 'DADO_DUPLICADO',
+        message: 'Já existe um registro com os dados informados.'
+      });
     }
 
-    const connection = await db.getConnection();
-    try {
-      await connection.beginTransaction();
+    console.error('Erro ao criar empresa:', error);
+    return res.status(500).json({ error: 'Erro ao criar empresa' });
+  } finally {
+    connection.release();
+  }
+});
 
-      const [empresaResult] = await connection.query(
-        `INSERT INTO empresa (NOME_EMPRESA, CNPJ, EMAIL, DDI, DDD, TELEFONE, ENDERECO, NUMERO, LOGO)
-         VALUES (?,?,?,?,?,?,?,?,?)`,
-        [nomeEmpresa, cnpj, email, ddi, ddd, telefone, endereco, numero, logo || null]
-      );
-      const idEmpresa = empresaResult.insertId;
-
-      // cria perfis padrão
-      await connection.query(
-        `INSERT IGNORE INTO perfil (NOME_PERFIL, ID_EMPRESA, NIVEL) VALUES
-           ('Administrador', ?, 1),
-           ('Editor',        ?, 2),
-           ('Leitor',        ?, 3)`,
-        [idEmpresa, idEmpresa, idEmpresa]
-      );
-
-      // busca perfil admin
-      const [[perfilAdmin]] = await connection.query(
-        `SELECT ID_PERFIL FROM perfil WHERE ID_EMPRESA = ? AND NIVEL = 1 LIMIT 1`,
-        [idEmpresa]
-      );
-      if (!perfilAdmin) throw new Error('Perfil Administrador não encontrado após criar empresa.');
-
-      // dá permissão admin ao criador
-      await connection.query(
-        `INSERT IGNORE INTO permissoes (ID_EMPRESA, ID_PERFIL, ID_USUARIO) VALUES (?,?,?)`,
-        [idEmpresa, perfilAdmin.ID_PERFIL, idUsuarioCriador]
-      );
-
-      await connection.commit();
-      return res.json({ message: 'Empresa criada com sucesso!', idEmpresa });
-    } catch (error) {
-      await connection.rollback();
-      console.error('Erro ao criar empresa:', error);
-      return res.status(500).json({ error: 'Erro ao criar empresa' });
-    } finally {
-      connection.release();
-    }
-  });
 
   // --------------------------------------------------------------------------------
   // EMPRESAS DO USUÁRIO

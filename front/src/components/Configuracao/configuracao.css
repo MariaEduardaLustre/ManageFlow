@@ -41,7 +41,6 @@ body[data-theme='dark'] .configuracao-fila .mf-config-page {
 
 /* Wrapper principal desta tela */
 .configuracao-fila .mf-config-page {
-  max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
   background-color: var(--background-gray);

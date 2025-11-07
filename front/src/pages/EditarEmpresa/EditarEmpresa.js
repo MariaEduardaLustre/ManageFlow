@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import Menu from '../../components/Menu/Menu';
 import {
-  Form, Button, Container, Card, Alert, Modal, Row, Col, Spinner
+  Form, Button, Container, Card, Alert, Modal, Row, Col, Spinner, Toast, ToastContainer
 } from 'react-bootstrap';
 import {
   FaBuilding, FaIdCard, FaEnvelope, FaHome, FaHashtag, FaStar, FaQrcode,
@@ -93,6 +93,12 @@ const EditarEmpresa = ({ onLogout }) => {
   const [perfilPreview, setPerfilPreview] = useState('');
   const [perfilFile, setPerfilFile] = useState(null);
   const [uploadingPerfil, setUploadingPerfil] = useState(false);
+
+  // 🔔 Toast único para mensagens rápidas (ex.: "Link copiado!")
+  const [toast, setToast] = useState({ show: false, text: '', variant: 'success' });
+  const showToast = (text, variant = 'success') => {
+    setToast({ show: true, text, variant });
+  };
 
   const empresaSelecionada = useMemo(
     () => JSON.parse(localStorage.getItem('empresaSelecionada') || 'null'),
@@ -188,11 +194,15 @@ const EditarEmpresa = ({ onLogout }) => {
     }
   };
 
-  const copiarLink = (text) => {
+  // ✅ Agora usa apenas Toast (sem alert) para "Link copiado!"
+  const copiarLink = async (text) => {
     if (!text) return;
-    navigator.clipboard.writeText(text)
-      .then(() => alert('Link copiado!'))
-      .catch(() => alert('Falha ao copiar.'));
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Link copiado!', 'success');
+    } catch {
+      showToast('Falha ao copiar.', 'danger');
+    }
   };
 
   const exibirQrCode = async () => {
@@ -585,6 +595,21 @@ const EditarEmpresa = ({ onLogout }) => {
           <Button variant="primary" onClick={handleDownloadQrPerfil} disabled={!qrPerfilUrl}><FaDownload /> Baixar</Button>
         </Modal.Footer>
       </Modal>
+
+      {/* 🔔 Toast único (bottom-center) */}
+      <ToastContainer position="bottom-center" className="p-3">
+        <Toast
+          bg={toast.variant}
+          onClose={() => setToast((t) => ({ ...t, show: false }))}
+          show={toast.show}
+          delay={1800}
+          autohide
+        >
+          <Toast.Body className={toast.variant === 'light' ? '' : 'text-white'}>
+            {toast.text}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 };

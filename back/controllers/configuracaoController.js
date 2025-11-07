@@ -993,15 +993,55 @@ exports.getPublicStatusByToken = async (req, res) => {
       }
     }
 
-    const [[avg]] = await db.query(
-      `SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, fc.DT_ENTRA, COALESCE(fc.DT_APRE, fc.DT_SAIDA, NOW())))) AS MEDIA_MIN
-         FROM clientesfila fc
-        WHERE fc.ID_EMPRESA = ?
-          AND fc.ID_FILA = ?
-          AND DATE(fc.DT_MOVTO) = CURDATE()
-          AND fc.SITUACAO NOT IN (0,3)`,
-      [cfg.ID_EMPRESA, cfg.ID_FILA || 0]
-    );
+    // ================== CÁLCULO ROBUSTO DO TEMPO MÉDIO ==================
+    let mediaEsperaMin = null;
+
+    if (cfg.ID_FILA) {
+      // 1) média dos ÚLTIMOS ATENDIDOS do dia (limite 20) -> mais estável
+      const [[servedAvg]] = await db.query(
+        `
+        WITH ultimos AS (
+          SELECT
+            TIMESTAMPDIFF(MINUTE, DT_ENTRA, COALESCE(DT_APRE, DT_SAIDA)) AS minutos
+          FROM clientesfila
+          WHERE ID_EMPRESA = ?
+            AND ID_FILA    = ?
+            AND DATE(DT_MOVTO) = CURDATE()
+            AND COALESCE(DT_APRE, DT_SAIDA) IS NOT NULL
+            AND SITUACAO NOT IN (0,3)           -- exclui aguardando/chamado
+          ORDER BY COALESCE(DT_APRE, DT_SAIDA) DESC
+          LIMIT 20
+        )
+        SELECT ROUND(AVG(minutos)) AS MEDIA_MIN
+        FROM ultimos
+        `,
+        [cfg.ID_EMPRESA, cfg.ID_FILA]
+      );
+
+      if (Number.isFinite(Number(servedAvg?.MEDIA_MIN))) {
+        mediaEsperaMin = Number(servedAvg.MEDIA_MIN);
+      } else {
+        // 2) fallback: média do tempo JÁ AGUARDADO dos que estão esperando agora
+        const [[waitingAvg]] = await db.query(
+          `
+          SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, DT_ENTRA, NOW()))) AS MEDIA_MIN
+            FROM clientesfila
+           WHERE ID_EMPRESA = ?
+             AND ID_FILA    = ?
+             AND DATE(DT_MOVTO) = CURDATE()
+             AND SITUACAO IN (0,3)               -- aguardando/chamado (modelo atual)
+             AND DT_ENTRA IS NOT NULL
+          `,
+          [cfg.ID_EMPRESA, cfg.ID_FILA]
+        );
+        if (Number.isFinite(Number(waitingAvg?.MEDIA_MIN))) {
+          mediaEsperaMin = Number(waitingAvg.MEDIA_MIN);
+        } else {
+          mediaEsperaMin = null;
+        }
+      }
+    }
+    // ====================================================================
 
     return res.json({
       empresa: { ID_EMPRESA: cfg.ID_EMPRESA, NOME: cfg.NOME_FILA },
@@ -1010,8 +1050,8 @@ exports.getPublicStatusByToken = async (req, res) => {
       idFila: cfg.ID_FILA || null,
       dtMovto: new Date().toISOString().slice(0, 10),
       posicaoCliente,
-      mediaEsperaMin: avg?.MEDIA_MIN ?? null,
-      podeSair: !!cfg.PER_SAIR,
+      mediaEsperaMin, // agora sempre número ou null
+      podeSair: !!cfg.PER_SAIR && cfgAtiva && filaHojeAtiva,
       cfgAtiva,
       clienteFilaId: idCliente || null,
       isChamado,
@@ -1022,6 +1062,7 @@ exports.getPublicStatusByToken = async (req, res) => {
     return res.status(500).json({ message: 'Erro ao consultar status.' });
   }
 };
+
 
 exports.publicLeaveByToken = async (req, res, io) => {
   const { token } = req.params;
@@ -1049,7 +1090,7 @@ exports.publicLeaveByToken = async (req, res, io) => {
 
     const [upd] = await conn.query(
       `UPDATE clientesfila
-          SET SITUACAO = 4, DT_SAIDA = NOW()
+          SET SITUACAO = 2, DT_SAIDA = NOW()
         WHERE ID_EMPRESA = ?
           AND ID_FILA = ?
           AND DATE(DT_MOVTO) = CURDATE()

@@ -246,9 +246,6 @@ export default function FilaChamado() {
           {okMsg && <div className="mf-called__ok">{okMsg}</div>}
 
           <div className="mf-called__actions">
-            <button className="mf-called__btn" onClick={confirmarPresenca}>
-              Já estou no local
-            </button>
 
             {/* TROCA: "Ver minha posição" -> "Avaliar atendimento" */}
             <button className="mf-called__ghost" onClick={irAvaliar}>
@@ -256,12 +253,6 @@ export default function FilaChamado() {
             </button>
           </div>
 
-          <button
-            className="mf-called__btn mf-called__btn--danger"
-            onClick={sairDaFila}
-          >
-            Sair da fila
-          </button>
         </div>
       </div>
 

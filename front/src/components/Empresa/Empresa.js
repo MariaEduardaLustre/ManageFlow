@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import "./Empresa.css";
-import ThemeToggleButton from "../ThemeToggleButton/ThemeToggleButton"; // ✨ IMPORTAR O BOTÃO
+import ThemeToggleButton from "../ThemeToggleButton/ThemeToggleButton"; // ✨
 
 const initialEmpresa = {
   nome: "",
@@ -14,7 +14,6 @@ const initialEmpresa = {
   telefone: "",
   endereco: "",
   numero: "",
-  logo: "",
 };
 
 const Empresa = ({ idUsuario }) => {
@@ -27,6 +26,14 @@ const Empresa = ({ idUsuario }) => {
   const [busca, setBusca] = useState("");
   const [ordenacao, setOrdenacao] = useState("nomeAsc");
   const [fetchingPerm, setFetchingPerm] = useState(false);
+
+  // Upload/preview da logo
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState("");
+
+  // Erros do servidor por campo (iguais em UX)
+  const [serverEmailError, setServerEmailError] = useState("");
+  const [serverCnpjError, setServerCnpjError] = useState("");
 
   const logoSrc = "/imagens/logo.png";
   const navigate = useNavigate();
@@ -73,10 +80,11 @@ const Empresa = ({ idUsuario }) => {
       }
     }
     fetchEmpresas();
-    return () => { ativo = false; };
+    return () => {
+      ativo = false;
+    };
   }, [userId, navigate]);
 
-  // Decide rota alvo conforme papel (ROLE/NIVEL)
   const getTargetRoute = (role, nivel) => {
     const r = (role || "").toUpperCase();
     const n = Number(nivel);
@@ -101,11 +109,9 @@ const Empresa = ({ idUsuario }) => {
       };
 
       localStorage.setItem("empresaSelecionada", JSON.stringify(payload));
-      // Redireciona conforme papel retornado pela API (ou NIVEL do payload)
       navigate(getTargetRoute(payload.ROLE, payload.NIVEL));
     } catch (e) {
       console.error("Falha ao obter permissões", e);
-      // Fallback: salva o que temos e decide pela informação do card (empresa.NIVEL)
       localStorage.setItem("empresaSelecionada", JSON.stringify(empresa));
       navigate(getTargetRoute(empresa.ROLE, empresa.NIVEL));
     } finally {
@@ -117,7 +123,7 @@ const Empresa = ({ idUsuario }) => {
     const e = {};
     if (!novaEmpresa.nome?.trim()) e.nome = "Informe o nome da empresa.";
     if (!novaEmpresa.cnpj?.trim()) e.cnpj = "Informe o CNPJ.";
-    if (!/^\d{14}$/.test(novaEmpresa.cnpj.replace(/\D/g, "")))
+    if (!/^\d{14}$/.test((novaEmpresa.cnpj || "").replace(/\D/g, "")))
       e.cnpj = "CNPJ deve ter 14 dígitos (apenas números).";
     if (!novaEmpresa.email?.trim()) e.email = "Informe o e-mail.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(novaEmpresa.email))
@@ -127,49 +133,112 @@ const Empresa = ({ idUsuario }) => {
 
   const podeSalvar = Object.keys(errosForm).length === 0;
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    setLogoFile(file || null);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setLogoPreview(reader.result);
+      reader.readAsDataURL(file);
+    } else {
+      setLogoPreview("");
+    }
+  };
+
   const handleCriar = async () => {
     if (!podeSalvar || !userId) return;
     setSubmitting(true);
+    setServerEmailError("");
+    setServerCnpjError("");
     try {
-      const { nome, cnpj, email, ddi, ddd, telefone, endereco, numero, logo } =
+      const { nome, cnpj, email, ddi, ddd, telefone, endereco, numero } =
         novaEmpresa;
+
       const response = await api.post("/empresas/criar-empresa", {
         nomeEmpresa: nome,
-        cnpj: cnpj.replace(/\D/g, ""),
-        email, ddi, ddd, telefone, endereco, numero, logo,
+        cnpj: (cnpj || "").replace(/\D/g, ""),
+        email,
+        ddi,
+        ddd,
+        telefone,
+        endereco,
+        numero,
+        logo: null,
         idUsuario: userId,
       });
+
       const idEmpresa = response?.data?.idEmpresa;
       if (!idEmpresa) throw new Error("Resposta inválida da API (idEmpresa ausente).");
+
+      // Upload da logo (opcional)
+      let logoUrlSalva = "";
+      if (logoFile) {
+        try {
+          const fd = new FormData();
+          fd.append("img_perfil", logoFile);
+          const up = await api.post(`/empresas/${idEmpresa}/perfil`, fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          logoUrlSalva = up?.data?.img_perfil || "";
+        } catch (errUp) {
+          console.warn("Empresa criada, mas falha ao subir logo:", errUp);
+        }
+      }
+
       const novaSelecionavel = {
         ID_EMPRESA: idEmpresa,
         NOME_EMPRESA: nome,
         NOME_PERFIL: "Administrador",
         NIVEL: 1,
-        LOGO: logo,
+        LOGO: logoUrlSalva || "",
       };
+
       await escolherEmpresa(novaSelecionavel);
     } catch (error) {
       console.error("Erro ao criar empresa", error);
-      alert("Erro ao criar empresa. Verifique os dados e tente novamente.");
+      const status = error?.response?.status;
+      const payload = error?.response?.data;
+
+      if (status === 409) {
+        if (payload?.field === "email" || payload?.error === "EMAIL_DUPLICADO") {
+          setServerEmailError(
+            payload?.message || "Já existe uma empresa registrada com este e-mail."
+          );
+          return;
+        }
+        if (payload?.field === "cnpj" || payload?.error === "CNPJ_DUPLICADO") {
+          setServerCnpjError(
+            payload?.message || "Já existe uma empresa registrada com este CNPJ."
+          );
+          return;
+        }
+      }
+
+      setErro("Não foi possível criar a empresa. Verifique os dados e tente novamente.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleEnter = (e) => { if (e.key === "Enter") handleCriar(); };
+  const handleEnter = (e) => {
+    if (e.key === "Enter") handleCriar();
+  };
 
   const listaFiltrada = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     let base = empresas;
     if (termo) {
       base = empresas.filter((emp) =>
-        `${emp.NOME_EMPRESA ?? ""} ${emp.NOME_PERFIL ?? ""}`.toLowerCase().includes(termo)
+        `${emp.NOME_EMPRESA ?? ""} ${emp.NOME_PERFIL ?? ""}`
+          .toLowerCase()
+          .includes(termo)
       );
     }
     const ordenadores = {
-      nomeAsc: (a, b) => (a.NOME_EMPRESA ?? "").localeCompare(b.NOME_EMPRESA ?? ""),
-      nomeDesc: (a, b) => (b.NOME_EMPRESA ?? "").localeCompare(a.NOME_EMPRESA ?? ""),
+      nomeAsc: (a, b) =>
+        (a.NOME_EMPRESA ?? "").localeCompare(b.NOME_EMPRESA ?? ""),
+      nomeDesc: (a, b) =>
+        (b.NOME_EMPRESA ?? "").localeCompare(a.NOME_EMPRESA ?? ""),
       nivelAsc: (a, b) => (a.NIVEL ?? 0) - (b.NIVEL ?? 0),
       nivelDesc: (a, b) => (b.NIVEL ?? 0) - (a.NIVEL ?? 0),
     };
@@ -183,16 +252,27 @@ const Empresa = ({ idUsuario }) => {
           src={logoUrl}
           alt={nome}
           className="mf-emp-card__logo"
-          onError={(e) => { e.currentTarget.style.display = "none"; }}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
         />
       );
     }
-    const iniciais = (nome || "?").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
-    return <div className="mf-emp-card__avatar" aria-hidden>{iniciais}</div>;
+    const iniciais = (nome || "?")
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+    return (
+      <div className="mf-emp-card__avatar" aria-hidden>
+        {iniciais}
+      </div>
+    );
   };
 
   return (
-    <div className="mf-emp" >
+    <div className="mf-emp">
       <nav className="navbar navbar-expand-lg navbar-light bg-white fixed-top mf-emp__header shadow-sm">
         <div className="container">
           <a className="navbar-brand" href="#home">
@@ -204,7 +284,9 @@ const Empresa = ({ idUsuario }) => {
 
       <section className="mf-emp__heading">
         <h1 className="mf-emp__title">Selecione a sua empresa</h1>
-        <p className="mf-emp__subtitle">Entre numa empresa existente ou crie uma nova para começar.</p>
+        <p className="mf-emp__subtitle">
+          Entre numa empresa existente ou crie uma nova para começar.
+        </p>
 
         <div className="mf-emp__actions">
           <div className="mf-emp__search">
@@ -231,7 +313,12 @@ const Empresa = ({ idUsuario }) => {
 
           <button
             className="mf-emp__btn mf-emp__btn--primary"
-            onClick={() => setMostrarFormulario((v) => !v)}
+            onClick={() => {
+              setMostrarFormulario((v) => !v);
+              setServerEmailError("");
+              setServerCnpjError("");
+              setErro("");
+            }}
             aria-expanded={mostrarFormulario}
           >
             {mostrarFormulario ? "Fechar formulário" : "Criar nova empresa"}
@@ -239,7 +326,11 @@ const Empresa = ({ idUsuario }) => {
         </div>
       </section>
 
-      {erro && <div className="mf-emp__alert" role="alert">{erro}</div>}
+      {erro && (
+        <div className="mf-emp__alert" role="alert">
+          {erro}
+        </div>
+      )}
 
       {loading ? (
         <div className="mf-emp__grid">
@@ -249,7 +340,9 @@ const Empresa = ({ idUsuario }) => {
         </div>
       ) : listaFiltrada.length === 0 ? (
         <div className="mf-emp__empty">
-          <div className="mf-emp__empty-icon" aria-hidden>🏷️</div>
+          <div className="mf-emp__empty-icon" aria-hidden>
+            🏷️
+          </div>
           <h3>Nenhuma empresa encontrada</h3>
           <p>Pode ajustar a pesquisa ou criar uma nova empresa.</p>
         </div>
@@ -266,16 +359,22 @@ const Empresa = ({ idUsuario }) => {
             >
               {avatar(empresa.NOME_EMPRESA, empresa.LOGO)}
               <div className="mf-emp-card__body">
-                <h3 className="mf-emp-card__title">{empresa.NOME_EMPRESA}</h3>
+                <h3 className="mf-emp-card__title">
+                  {empresa.NOME_EMPRESA}
+                </h3>
                 <p className="mf-emp-card__meta">
-                  {empresa.NOME_PERFIL ?? "Perfil"} • Nível {empresa.NIVEL ?? "—"}
+                  {empresa.NOME_PERFIL ?? "Perfil"} • Nível{" "}
+                  {empresa.NIVEL ?? "—"}
                 </p>
               </div>
               <div className="mf-emp-card__footer">
                 <button
                   className="mf-emp__btn mf-emp__btn--ghost"
                   disabled={fetchingPerm}
-                  onClick={(e) => { e.stopPropagation(); escolherEmpresa(empresa); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    escolherEmpresa(empresa);
+                  }}
                 >
                   {fetchingPerm ? "A entrar..." : "Entrar"}
                 </button>
@@ -291,6 +390,7 @@ const Empresa = ({ idUsuario }) => {
             <header className="mf-emp__drawer-header">
               <h2>Criar nova empresa</h2>
             </header>
+
             <div className="mf-emp__form-grid">
               <div className="mf-emp__field">
                 <label>Nome da empresa *</label>
@@ -298,10 +398,15 @@ const Empresa = ({ idUsuario }) => {
                   type="text"
                   placeholder="Ex.: Tech LTDA"
                   value={novaEmpresa.nome}
-                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, nome: e.target.value })}
+                  onChange={(e) =>
+                    setNovaEmpresa({ ...novaEmpresa, nome: e.target.value })
+                  }
                 />
-                {errosForm.nome && <span className="mf-emp__field-error">{errosForm.nome}</span>}
+                {errosForm.nome && (
+                  <span className="mf-emp__field-error">{errosForm.nome}</span>
+                )}
               </div>
+
               <div className="mf-emp__field">
                 <label>CNPJ (14 dígitos) *</label>
                 <input
@@ -313,20 +418,48 @@ const Empresa = ({ idUsuario }) => {
                   onChange={(e) => {
                     const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 14);
                     setNovaEmpresa({ ...novaEmpresa, cnpj: onlyDigits });
+                    if (serverCnpjError) setServerCnpjError("");
                   }}
+                  aria-invalid={!!serverCnpjError || !!errosForm.cnpj}
+                  aria-describedby="cnpj-help cnpj-error"
                 />
-                {errosForm.cnpj && <span className="mf-emp__field-error">{errosForm.cnpj}</span>}
+                {errosForm.cnpj && (
+                  <span id="cnpj-error" className="mf-emp__field-error">
+                    {errosForm.cnpj}
+                  </span>
+                )}
+                {serverCnpjError && !errosForm.cnpj && (
+                  <span id="cnpj-help" className="mf-emp__field-error">
+                    {serverCnpjError}
+                  </span>
+                )}
               </div>
+
               <div className="mf-emp__field">
                 <label>E-mail *</label>
                 <input
                   type="email"
                   placeholder="contacto@empresa.com"
                   value={novaEmpresa.email}
-                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, email: e.target.value })}
+                  onChange={(e) => {
+                    setNovaEmpresa({ ...novaEmpresa, email: e.target.value });
+                    if (serverEmailError) setServerEmailError("");
+                  }}
+                  aria-invalid={!!serverEmailError || !!errosForm.email}
+                  aria-describedby="email-help email-error"
                 />
-                {errosForm.email && <span className="mf-emp__field-error">{errosForm.email}</span>}
+                {errosForm.email && (
+                  <span id="email-error" className="mf-emp__field-error">
+                    {errosForm.email}
+                  </span>
+                )}
+                {serverEmailError && !errosForm.email && (
+                  <span id="email-help" className="mf-emp__field-error">
+                    {serverEmailError}
+                  </span>
+                )}
               </div>
+
               <div className="mf-emp__field">
                 <label>DDI</label>
                 <input
@@ -334,9 +467,15 @@ const Empresa = ({ idUsuario }) => {
                   inputMode="numeric"
                   placeholder="55"
                   value={novaEmpresa.ddi}
-                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, ddi: e.target.value.replace(/\D/g, "").slice(0, 3) })}
+                  onChange={(e) =>
+                    setNovaEmpresa({
+                      ...novaEmpresa,
+                      ddi: e.target.value.replace(/\D/g, "").slice(0, 3),
+                    })
+                  }
                 />
               </div>
+
               <div className="mf-emp__field">
                 <label>DDD</label>
                 <input
@@ -344,9 +483,15 @@ const Empresa = ({ idUsuario }) => {
                   inputMode="numeric"
                   placeholder="11"
                   value={novaEmpresa.ddd}
-                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, ddd: e.target.value.replace(/\D/g, "").slice(0, 3) })}
+                  onChange={(e) =>
+                    setNovaEmpresa({
+                      ...novaEmpresa,
+                      ddd: e.target.value.replace(/\D/g, "").slice(0, 3),
+                    })
+                  }
                 />
               </div>
+
               <div className="mf-emp__field">
                 <label>Telefone</label>
                 <input
@@ -354,18 +499,27 @@ const Empresa = ({ idUsuario }) => {
                   inputMode="numeric"
                   placeholder="999999999"
                   value={novaEmpresa.telefone}
-                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, telefone: e.target.value.replace(/\D/g, "").slice(0, 11) })}
+                  onChange={(e) =>
+                    setNovaEmpresa({
+                      ...novaEmpresa,
+                      telefone: e.target.value.replace(/\D/g, "").slice(0, 11),
+                    })
+                  }
                 />
               </div>
+
               <div className="mf-emp__field mf-emp__field--col2">
                 <label>Endereço</label>
                 <input
                   type="text"
                   placeholder="Rua, bairro, cidade"
                   value={novaEmpresa.endereco}
-                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, endereco: e.target.value })}
+                  onChange={(e) =>
+                    setNovaEmpresa({ ...novaEmpresa, endereco: e.target.value })
+                  }
                 />
               </div>
+
               <div className="mf-emp__field">
                 <label>Número</label>
                 <input
@@ -373,23 +527,59 @@ const Empresa = ({ idUsuario }) => {
                   inputMode="numeric"
                   placeholder="123"
                   value={novaEmpresa.numero}
-                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, numero: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                  onChange={(e) =>
+                    setNovaEmpresa({
+                      ...novaEmpresa,
+                      numero: e.target.value.replace(/\D/g, "").slice(0, 6),
+                    })
+                  }
                 />
               </div>
+
+              {/* Upload da logo */}
               <div className="mf-emp__field mf-emp__field--col2">
-                <label>Logo (URL)</label>
-                <input
-                  type="url"
-                  placeholder="https://.../logo.png"
-                  value={novaEmpresa.logo}
-                  onChange={(e) => setNovaEmpresa({ ...novaEmpresa, logo: e.target.value })}
-                />
+                <label>Logo da empresa (imagem)</label>
+                <div className="mf-emp__logo-upload">
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                    onChange={handleLogoChange}
+                    aria-label="Selecionar arquivo de imagem para a logo da empresa"
+                  />
+                  {logoPreview && (
+                    <div className="mf-emp__logo-preview">
+                      <img
+                        src={logoPreview}
+                        alt="Pré-visualização da logo"
+                        style={{ width: 88, height: 88, objectFit: "cover", borderRadius: 12 }}
+                      />
+                      <button
+                        type="button"
+                        className="mf-emp__btn mf-emp__btn--ghost"
+                        onClick={() => { setLogoFile(null); setLogoPreview(""); }}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <small className="text-muted">
+                  Formatos aceitos: PNG, JPG, WEBP. Tamanho máximo ~5–10MB (conforme backend).
+                </small>
               </div>
             </div>
+
             <footer className="mf-emp__drawer-footer">
               <button
                 className="mf-emp__btn"
-                onClick={() => { setNovaEmpresa(initialEmpresa); setMostrarFormulario(false); }}
+                onClick={() => {
+                  setNovaEmpresa(initialEmpresa);
+                  setLogoFile(null);
+                  setLogoPreview("");
+                  setServerEmailError("");
+                  setServerCnpjError("");
+                  setMostrarFormulario(false);
+                }}
                 disabled={submitting}
               >
                 Cancelar

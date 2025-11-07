@@ -280,6 +280,7 @@ body[data-theme='dark'] .mf-emp .mf-emp-card--skeleton {
 .mf-emp .mf-emp__empty-icon { font-size: 28px; margin-bottom: 8px; }
 
 .mf-emp .mf-emp__drawer-content {
+  margin-top: 20px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 18px;

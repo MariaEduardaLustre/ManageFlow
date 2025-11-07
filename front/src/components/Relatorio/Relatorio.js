@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // <-- importante: importar a função
+import autoTable from "jspdf-autotable";
 import Menu from "../Menu/Menu";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./Relatorio.css";
@@ -45,7 +45,6 @@ export default function Relatorio() {
   const token = localStorage.getItem("token");
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-  // Efeito principal: busca dados quando filtros ou token mudam
   useEffect(() => {
     if (!token) return;
 
@@ -106,7 +105,7 @@ export default function Relatorio() {
       tempoEspera.length > 0
         ? Math.round(
             tempoEspera.reduce((acc, cur) => acc + Number(cur.media || 0), 0) /
-              tempoEspera.length
+            tempoEspera.length
           )
         : 0;
 
@@ -139,7 +138,7 @@ export default function Relatorio() {
       tempoAtendimento.length > 0
         ? Math.round(
             tempoAtendimento.reduce((acc, cur) => acc + Number(cur.media || 0), 0) /
-              tempoAtendimento.length
+            tempoAtendimento.length
           )
         : "-";
 
@@ -191,7 +190,7 @@ export default function Relatorio() {
     }));
   }, [desempenhoFila]);
 
-  // Exportar Excel (mantive sua lógica)
+  // Exportar Excel
   const exportarPainel = () => {
     const wb = XLSX.utils.book_new();
 
@@ -246,7 +245,7 @@ export default function Relatorio() {
     XLSX.writeFile(wb, `Relatorios_Atendimento_${dataFiltro}.xlsx`);
   };
 
-  // Gerar PDF - usa autoTable(doc, ...)
+  // Gerar PDF
   const gerarPDF = () => {
     const doc = new jsPDF("p", "mm", "a4");
     const dataGeracao = new Date().toLocaleString("pt-BR");
@@ -291,7 +290,6 @@ export default function Relatorio() {
 
     y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : y + 30;
 
-    // Função auxiliar para adicionar tabelas grandes e ajustar paginação
     const adicionaTabela = ({ titulo, head, body }) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
@@ -303,29 +301,23 @@ export default function Relatorio() {
         theme: "striped",
         styles: { fontSize: 9, cellPadding: 2 },
         headStyles: { fillColor: [99, 102, 241], textColor: 255 },
-        willDrawCell: function (data) {
-          // nada por enquanto — hook disponível se precisar ajustar largura
-        },
         margin: { left: 14, right: 14 },
       });
       y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : y + 60;
     };
 
-    // Tempo de Espera - Detalhado
     adicionaTabela({
       titulo: "Tempo de Espera - Detalhado",
       head: [["Data", "Fila", "Tempo Médio (min)", "Atendidos", "Desistências"]],
       body: tempoEspera.map((r) => [r.data, r.nome_fila, r.media, r.totalAtendidos, r.desistencias]),
     });
 
-    // Tempo de Atendimento - Detalhado
     adicionaTabela({
       titulo: "Tempo de Atendimento - Detalhado",
       head: [["Data", "Fila", "Tempo Médio (min)", "Total Atendidos"]],
       body: tempoAtendimento.map((r) => [r.data, r.nome_fila, r.media, r.totalAtendidos]),
     });
 
-    // Desempenho por Fila
     adicionaTabela({
       titulo: "Desempenho por Fila",
       head: [["Fila", "Atendidos", "Desistentes", "Em Espera", "Média Espera Atend. (min)", "Média Espera Desist. (min)"]],
@@ -339,21 +331,18 @@ export default function Relatorio() {
       ]),
     });
 
-    // Distribuição de Avaliações
     adicionaTabela({
       titulo: "Distribuição de Avaliações",
       head: [["Nota", "Quantidade"]],
       body: distribuicaoNotas.map((n) => [n.nota, n.quantidade]),
     });
 
-    // Avaliações Detalhadas (últimas 20)
     adicionaTabela({
       titulo: "Avaliações Detalhadas (Últimas 20)",
       head: [["Data", "Nota", "Comentário"]],
       body: avaliacoesDetalhadas.slice(0, 20).map((a) => [a.data, a.nota, a.comentario || "—"]),
     });
 
-    // Rodapé com paginação
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
@@ -369,6 +358,13 @@ export default function Relatorio() {
     <div className="relatorio-page">
       <Menu />
       <div className="relatorio-content container">
+
+        {/* 🔵 Card de título "Relatórios" */}
+        <div className="card full-card">
+          <h2>Relatórios</h2>
+          <p className="card-sub">Exportações, gráficos e indicadores do período selecionado.</p>
+        </div>
+
         <div className="relatorio-header">
           <div>
             <p className="subtitle">Análise completa de desempenho e indicadores de atendimento</p>
