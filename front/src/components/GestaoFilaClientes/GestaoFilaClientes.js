@@ -1,4 +1,4 @@
-// src/components/GestaoFilaClientes/GestaoFilaClientes.jsx
+// Arquivo: src/components/GestaoFilaClientes/GestaoFilaClientes.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
@@ -128,7 +128,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
-      timeZone: "UTC", // evita off-by-one em datas "puras"
+      timeZone: "UTC",
     };
     return new Intl.DateTimeFormat(getLocale(), options).format(date);
   };
@@ -166,8 +166,7 @@ const GestaoFilaClientes = ({ onLogout }) => {
       setClientesFila(response.data || []);
     } catch (err) {
       setClientesFila([]);
-      if (err.response?.status !== 404)
-        setError(t("gestaoFila.erros.carregarClientes"));
+      if (err.response?.status !== 404) setError(t("gestaoFila.erros.carregarClientes"));
       else setError(t("gestaoFila.erros.nenhumCliente"));
     } finally {
       setLoading(false);
@@ -319,20 +318,44 @@ const GestaoFilaClientes = ({ onLogout }) => {
 
   const handleEnviarNotificacao = async (cliente) => {
     const url = `/empresas/fila/${idEmpresa}/${dtMovto}/${idFila}/cliente/${cliente.ID_CLIENTE}/enviar-notificacao`;
+    
+    // Lógica para Contorno (Clique para Conversar)
+    const isWhatsapp = cliente.MEIO_NOTIFICACAO === 'whatsapp';
+    const nomeCliente = cliente.NOME || 'Cliente';
+    const numeroCompleto = `55${cliente.DDDCEL}${cliente.NR_CEL}`;
+    const mensagemPronta = encodeURIComponent(`Olá, ${nomeCliente}! Sua vez está chegando. Por favor, dirija-se à área de espera.`);
+    const whatsappLink = `https://wa.me/${numeroCompleto}?text=${mensagemPronta}`;
+
+
     try {
-      const response = await api.post(url, {});
+      // 1. CHAMA O BACKEND: Atualiza o status e agenda o timeout (e tenta o envio automático)
+      await api.post(url, {}); 
+      
+      // 2. CONTORNO (APENAS PARA WHATSAPP): Abre o link no frontend para envio manual pelo gerente
+      if (isWhatsapp) {
+          window.open(whatsappLink, '_blank'); 
+          openFeedbackModal(t("gestaoFila.feedback.notificado") + ' (Aguardando envio manual no WhatsApp)', "info");
+      } else {
+          // Se for SMS/Email, a notificação automática já foi tentada no backend
+          openFeedbackModal(t("gestaoFila.feedback.notificado"), "success");
+      }
+
+      // Atualiza o estado no frontend (Status 3: Chamado)
       setClientesFila((prev) =>
         prev.map((c) =>
           c.ID_CLIENTE === cliente.ID_CLIENTE ? { ...c, SITUACAO: 3 } : c
         )
       );
-      openFeedbackModal(
-        response?.data?.message || t("gestaoFila.feedback.notificado"),
-        "success"
-      );
+
     } catch (err) {
       const errorMessage =
         err.response?.data?.error || t("gestaoFila.erros.agendarTimeout");
+      
+      // Se o erro for do WhatsApp (API bloqueada), a janela wa.me deve ser aberta como último recurso
+      if (isWhatsapp && errorMessage.includes('Falha na tentativa de envio automático') && window.confirm('O envio automático falhou. Deseja abrir o WhatsApp para notificar manualmente?')) {
+          window.open(whatsappLink, '_blank');
+      }
+
       openFeedbackModal(errorMessage, "danger");
     }
   };

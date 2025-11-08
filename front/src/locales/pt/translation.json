@@ -26,7 +26,7 @@
         "nomeInvalido": "Digite um nome válido com pelo menos 3 letras.",
         "emailInvalido": "Digite um e-mail válido.",
         "cpfCnpjInvalido": "CPF ou CNPJ inválidos!",
-        "senhaInvalida": "A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caracter especial.",
+        "senhaInvalida": "A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.",
         "senhasNaoCoincidem": "As senhas não coincidem!",
         "camposObrigatorios": "Por favor, preencha todos os campos obrigatórios.",
         "erroCep": "CEP não encontrado.",
@@ -250,6 +250,8 @@
     "fechar": "Fechar",
     "carregando": "Carregando...",
     "carregandoClientes": "Carregando clientes...",
+    "ativa": "Ativa",
+    "inativa": "Inativa",
     "atualizadoEm": "Atualizado às",
     "tempoReal": "Tempo real",
     "offline": "Offline",
@@ -267,7 +269,8 @@
       "dataInicio": "DATA INÍCIO FILA",
       "aguardando": "AGUARDANDO",
       "chamadas": "CHAMADOS (NÃO APRESENTADOS)",
-      "bloqueada": "BLOQUEADA"
+      "bloqueada": "BLOQUEADA",
+      "situacao": "SITUAÇÃO"
     }
   },
   "gestaoFila": {

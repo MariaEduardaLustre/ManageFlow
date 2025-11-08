@@ -248,7 +248,13 @@
     "cancelar": "Cancel",
     "fechar": "Close",
     "carregando": "Loading...",
-    "carregandoClientes": "Loading customers..."
+    "carregandoClientes": "Loading customers...",
+    "ativa": "Active",
+    "inativa": "Inactive",
+    "atualizadoEm": "Updated at",
+    "tempoReal": "Real time",
+    "offline": "Offline",
+    "voltar": "Back"
   },
   "filaLista": {
     "titulo": "Queues",
@@ -260,9 +266,10 @@
     "tabela": {
       "nomeFila": "QUEUE NAME",
       "dataInicio": "QUEUE START DATE",
-      "dataFim": "QUEUE END DATE",
       "aguardando": "WAITING",
-      "bloqueada": "BLOCKED"
+      "chamadas": "CALLED (NO SHOW)",
+      "bloqueada": "BLOCKED",
+      "situacao": "STATUS"
     }
   },
   "gestaoFila": {

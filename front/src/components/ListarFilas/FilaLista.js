@@ -1,4 +1,3 @@
-// src/components/Fila/FilaLista.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -95,8 +94,9 @@ const FilaLista = ({ onLogout }) => {
 
     setError(null);
     try {
+      // ✅ Front-end envia requisição sem parâmetros para que o Back-end envie TODAS as filas da empresa.
       const { data } = await api.get(`/empresas/filas/${idEmpresa}`, {
-        params: { hoje: 1, apenasAtivas: 1 },
+        params: { /* NENHUM PARÂMETRO */ }, 
         signal: controller.signal,
       });
       setFilasRaw(Array.isArray(data) ? data : []);
@@ -121,25 +121,19 @@ const FilaLista = ({ onLogout }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idEmpresa, navigate]);
 
+  /**
+   * 🚨 FILTRO DESATIVADO: Exibe TODAS as filas retornadas (ativas, inativas, bloqueadas).
+   */
   const filasHojeAtivas = useMemo(() => {
     return (filasRaw || []).filter((f) => {
-      const movto = yyyymmdd(f.DT_MOVTO);
-      const temMovtoHoje = movto && movto === hoje;
-
-      const ini = yyyymmdd(f.DT_INI);
-      const fim = yyyymmdd(f.FIM_VIG);
-      const dentroVigencia = ini && fim ? ini <= hoje && hoje <= fim : false;
-
-      const situacaoOk = isAtivo(f.SITUACAO);
-      const naoBloqueada = !isAtivo(f.BLOCK);
-
-      const eDoDia = temMovtoHoje || (!movto && dentroVigencia);
-      return eDoDia && situacaoOk && naoBloqueada;
+      // Apenas retorna TRUE para que todas as filas passem pelo filtro.
+      return true; 
     });
   }, [filasRaw, hoje]);
 
   // Buscar contagens (fallback) caso a API não traga
   useEffect(() => {
+    // Este useEffect continua buscando contagens para todas as filas na lista (ativas e inativas)
     const ids = filasHojeAtivas.map((f) => f.ID_FILA);
     if (ids.length === 0) return;
 
@@ -276,6 +270,7 @@ const FilaLista = ({ onLogout }) => {
                   <th>{t('filaLista.tabela.aguardando')}</th>
                   <th>{t('filaLista.tabela.chamadas') || 'Chamados'}</th>
                   <th>{t('filaLista.tabela.bloqueada')}</th>
+                  <th>{t('filaLista.tabela.situacao') || 'Situação'}</th> 
                 </tr>
               </thead>
               <tbody>
@@ -291,6 +286,17 @@ const FilaLista = ({ onLogout }) => {
                     fila.QTDE_CHAMADAS !== undefined && fila.QTDE_CHAMADAS !== null
                       ? Number(fila.QTDE_CHAMADAS) || 0
                       : (contagens[fila.ID_FILA]?.chamadas ?? 0);
+                  
+                  // Adicionando flags de status para estilização e exibição
+                  const isBlocked = isAtivo(fila.BLOCK);
+                  const isActive = isAtivo(fila.SITUACAO);
+                  
+                  const rowStyle = {
+                      cursor: 'pointer',
+                      // Destaca inativas (incluindo as bloqueadas que ficam inativas)
+                      backgroundColor: isActive ? 'inherit' : '#f0f0f0',
+                      color: isActive ? 'inherit' : '#999',
+                  };
 
                   return (
                     <tr
@@ -298,13 +304,14 @@ const FilaLista = ({ onLogout }) => {
                       onClick={() =>
                         navigate(`/gestao-fila/${fila.ID_EMPRESA}/${dtMovto}/${fila.ID_FILA}`)
                       }
-                      style={{ cursor: 'pointer' }}
+                      style={rowStyle}
                     >
                       <td>{fila.NOME_FILA}</td>
                       <td>{formatarDataExibicao(fila.DT_INI)}</td>
                       <td>{aguardando}</td>
                       <td>{chamadas}</td>
-                      <td>{isAtivo(fila.BLOCK) ? t('geral.sim') : t('geral.nao')}</td>
+                      <td>{isBlocked ? t('geral.sim') : t('geral.nao')}</td>
+                      <td>{isActive ? t('geral.ativa') || 'Ativa' : t('geral.inativa') || 'Inativa'}</td>
                     </tr>
                   );
                 })}

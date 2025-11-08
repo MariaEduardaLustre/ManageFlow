@@ -1,3 +1,4 @@
+// Arquivo: services/notificationService.js
 const twilio = require('twilio');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
@@ -34,7 +35,10 @@ const sendEmailNotification = async (email, subject, bodyHtml) => {
 
 /**
  * Envia uma notificação por WhatsApp usando a Cloud API (Modelo Genérico).
+ * ESTA FUNÇÃO FOI COMENTADA PORQUE O ENVIO SERÁ FEITO PELO FRONTEND (wa.me).
+ * Se o envio automático for necessário, descomente ESTA FUNÇÃO e a CHAME no switch/case.
  */
+/*
 const sendWhatsappNotification = async (cliente, templateName) => {
     console.log('Dados do cliente para o WhatsApp:', cliente);
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -44,7 +48,7 @@ const sendWhatsappNotification = async (cliente, templateName) => {
         throw new Error('Credenciais da WhatsApp Cloud API ausentes.');
     }
     
-    // ESTRUTURA SIMPLIFICADA E CORRIGIDA: usa o modelo genérico
+    // ESTRUTURA FINAL CORRIGIDA: Usa o modelo genérico
     const payload = {
         messaging_product: 'whatsapp',
         to: `+55${cliente.DDDCEL}${cliente.NR_CEL}`,
@@ -64,10 +68,11 @@ const sendWhatsappNotification = async (cliente, templateName) => {
         const response = await axios.post(url, payload, config);
         console.log(`Mensagem do WhatsApp enviada para +55${cliente.DDDCEL}${cliente.NR_CEL}.`, response.data);
     } catch (error) {
-        console.error('Erro ao enviar mensagem do WhatsApp:', error.response ? error.response.data : error.message);
-        throw new Error('Falha no envio da mensagem do WhatsApp.');
+        console.error('Erro ao enviar mensagem do WhatsApp (API):', error.response ? error.response.data : error.message);
+        throw new Error('Falha na tentativa de envio automático pelo WhatsApp. Código de erro: ' + (error.response?.data?.error?.code || 'Desconhecido'));
     }
 };
+*/
 
 /**
  * Envia uma notificação por SMS usando a API da Twilio.
@@ -104,8 +109,9 @@ const sendNotification = async (cliente) => {
     switch (cliente.MEIO_NOTIFICACAO) {
         case 'whatsapp':
             if (!cliente.DDDCEL || !cliente.NR_CEL) throw new Error('Número de telefone do cliente ausente.');
-            // Usa o modelo genérico 'aviso_generico'
-            await sendWhatsappNotification(cliente, 'aviso_generico'); 
+            // CONTORNO ATIVO: Apenas valida os dados e avisa o frontend.
+            console.log(`[WHATSAPP - ABERTO NO FRONTEND] Dados validados para o cliente: ${nome}.`);
+            // Se quiser reativar a API, chame: await sendWhatsappNotification(cliente, 'aviso_generico');
             break;
         case 'sms':
             if (!cliente.DDDCEL || !cliente.NR_CEL) throw new Error('Número de telefone do cliente ausente.');
@@ -133,8 +139,9 @@ const sendInitialNotification = async (cliente, posicaoNaFila) => {
     switch (cliente.MEIO_NOTIFICACAO) {
         case 'whatsapp':
              if (!cliente.DDDCEL || !cliente.NR_CEL) throw new Error('Número de telefone do cliente ausente.');
-             // Usa o modelo genérico 'aviso_generico'
-             await sendWhatsappNotification(cliente, 'aviso_generico'); 
+             // CONTORNO ATIVO
+             console.log(`[WHATSAPP - ABERTO NO FRONTEND] Dados validados para o cliente: ${nome} (Notificação Inicial).`);
+             // Se quiser reativar a API, chame: await sendWhatsappNotification(cliente, 'aviso_generico');
              break;
         case 'sms':
             if (!cliente.DDDCEL || !cliente.NR_CEL) throw new Error('Número de telefone do cliente ausente.');
