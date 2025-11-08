@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import "./Configuracao.css"
+import "./configuracao.css"
 import Menu from "../Menu/Menu";
 const FormularioConfiguracaoFila = ({ onLogout }) => {
   const { id } = useParams();
