@@ -55,7 +55,7 @@ body[data-theme='dark'] .mf-login {
 .mf-login__top-controls {
     position: absolute;
     top: 20px;
-    right: 130px;    /* Mais para a ESQUERDA (antes era 40px) */
+    right: 40px;    /* Ajustado para 40px para encostar na borda direita */
     display: flex;
     align-items: center;
     gap: 10px;

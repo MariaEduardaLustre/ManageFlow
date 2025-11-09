@@ -26,7 +26,7 @@ exports.tempoEsperaTodasFilas = async (req, res) => {
         COUNT(*) AS totalAtendidos,
         SUM(CASE WHEN c.SITUACAO = 2 OR c.DT_CHAMA IS NULL THEN 1 ELSE 0 END) AS desistencias
       FROM clientesfila c
-      JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
+      JOIN configuracaofila cf ON cf.ID_CONF_FILA = c.ID_FILA /* <--- CORRIGIDO */
       ${where}
       GROUP BY cf.NOME_FILA, DATE(c.DT_ENTRA)
       ORDER BY data ASC
@@ -62,7 +62,7 @@ exports.tempoAtendimentoTodasFilas = async (req, res) => {
         CAST(AVG(TIMESTAMPDIFF(MINUTE, c.DT_CHAMA, c.DT_SAIDA)) AS DECIMAL(10,2)) AS media,
         COUNT(*) AS totalAtendidos
       FROM clientesfila c
-      JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
+      JOIN configuracaofila cf ON cf.ID_CONF_FILA = c.ID_FILA /* <--- CORRIGIDO */
       ${where}
       GROUP BY cf.NOME_FILA, DATE(c.DT_ENTRA)
       ORDER BY data ASC
@@ -99,7 +99,7 @@ exports.desistenciasTodasFilas = async (req, res) => {
         COUNT(*) AS totalClientes,
         ROUND((SUM(CASE WHEN c.SITUACAO = 2 OR c.DT_CHAMA IS NULL THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) AS percentualDesistencia
       FROM clientesfila c
-      JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
+      JOIN configuracaofila cf ON cf.ID_CONF_FILA = c.ID_FILA /* <--- CORRIGIDO */
       ${where}
       GROUP BY cf.NOME_FILA, DATE(c.DT_ENTRA)
       ORDER BY data ASC
@@ -142,7 +142,7 @@ exports.avaliacoesTodasFilas = async (req, res) => {
   }
 };
 // 5) Desempenho por fila (atendidos / desistentes / em espera)
-//    ✨ ATUALIZADO: Adicionadas médias de tempo de espera para atendidos e desistentes
+//    ✨ ATUALIZADO: Adicionadas médias de tempo de espera para atendidos e desistentes
 exports.desempenhoPorFila = async (req, res) => {
   try {
     const { inicio, fim } = req.query;
@@ -180,7 +180,7 @@ exports.desempenhoPorFila = async (req, res) => {
         ) AS DECIMAL(10,1)) AS media_espera_desistentes
 
       FROM clientesfila c
-      JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
+      JOIN configuracaofila cf ON cf.ID_CONF_FILA = c.ID_FILA /* <--- CORRIGIDO */
       ${where}
       GROUP BY cf.NOME_FILA
       ORDER BY atendidos DESC
@@ -262,5 +262,3 @@ exports.listarAvaliacoesDetalhadas = async (req, res) => {
     res.status(500).json({ erro: 'Erro ao buscar avaliações detalhadas.' });
   }
 };
-
-

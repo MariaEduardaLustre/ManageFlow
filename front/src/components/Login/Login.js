@@ -9,7 +9,8 @@ import { BsEyeFill, BsEyeSlashFill } from "react-icons/bs";
 
 // Componentes de Tema e Idioma
 import ThemeToggleButton from "../ThemeToggleButton/ThemeToggleButton";
-import LanguageSelector from "../LanguageSelector/LanguageSelector";
+// LanguageSelector foi removido daqui para evitar duplicação.
+// import LanguageSelector from "../LanguageSelector/LanguageSelector"; 
 
 // Estilos (isolado)
 import "./Login.css";
@@ -92,7 +93,7 @@ const Login = ({ onLoginSuccess }) => {
       <div className="mf-login__form-section">
         <div className="mf-login__top-controls">
           <ThemeToggleButton />
-          <LanguageSelector />
+          {/* O LanguageSelector é agora renderizado condicionalmente pelo App.js */}
         </div>
 
         <div className="mf-login__wrapper">
