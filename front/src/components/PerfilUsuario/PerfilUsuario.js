@@ -4,6 +4,8 @@ import axios from 'axios';
 import { FaArrowLeft, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import './PerfilUsuario.css';
 import Menu from '../Menu/Menu';
+// ⭐️ 1. Importa o hook de tradução
+import { useTranslation } from 'react-i18next'; 
 
 const API_BASE =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
@@ -14,6 +16,8 @@ const API_BASE =
 
 export default function PerfilUsuario() {
   const navigate = useNavigate();
+  // ⭐️ 2. Obtém a função de tradução 't'
+  const { t } = useTranslation(); 
 
   const token = localStorage.getItem('token');
   const idUsuario = Number(localStorage.getItem('idUsuario') || 0);
@@ -72,15 +76,15 @@ export default function PerfilUsuario() {
         setForm(loaded);
         setOriginal(loaded);
         setImgPreview(data.img_perfil || '');
-        // atualiza header do menu rapidamente
         if (data?.nome) localStorage.setItem('nomeUsuario', data.nome);
       } catch (err) {
-        setErro(err?.response?.data?.error || 'Falha ao carregar perfil.');
+        // ⭐️ Tradução para mensagem de erro
+        setErro(err?.response?.data?.error || t('perfil.erroCarregar'));
       } finally {
         setLoading(false);
       }
     })();
-  }, [api, idUsuario]);
+  }, [api, idUsuario, t]); // Adiciona 't' como dependência
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -105,11 +109,10 @@ export default function PerfilUsuario() {
     setMsg('');
     setErro('');
     try {
-      // Envia apenas campos editáveis (email/cpf permanecem do original e são ignorados pelo back se vierem iguais)
       const payload = {
         nome: form.nome,
-        email: original.email,      // congela
-        cpfCnpj: original.cpfCnpj,  // congela
+        email: original.email,
+        cpfCnpj: original.cpfCnpj,
         cep: form.cep,
         endereco: form.endereco,
         numero: form.numero,
@@ -135,11 +138,12 @@ export default function PerfilUsuario() {
       setOriginal(normalized);
       if (data?.img_perfil) setImgPreview(data.img_perfil);
       setIsEditing(false);
-      setMsg('Perfil atualizado com sucesso.');
-      // Atualiza nome no header/menu
+      // ⭐️ Tradução para mensagem de sucesso
+      setMsg(t('perfil.msgSucesso'));
       if (data?.nome) localStorage.setItem('nomeUsuario', data.nome);
     } catch (err) {
-      setErro(err?.response?.data?.error || 'Falha ao salvar.');
+      // ⭐️ Tradução para mensagem de erro
+      setErro(err?.response?.data?.error || t('perfil.erroSalvar'));
     } finally {
       setSaving(false);
     }
@@ -157,9 +161,11 @@ export default function PerfilUsuario() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setImgPreview(data.img_perfil || '');
-      setMsg('Foto atualizada.');
+      // ⭐️ Tradução para mensagem de sucesso da foto
+      setMsg(t('perfil.msgFotoSucesso'));
     } catch (err) {
-      setErro(err?.response?.data?.error || 'Falha ao subir foto.');
+      // ⭐️ Tradução para mensagem de erro da foto
+      setErro(err?.response?.data?.error || t('perfil.erroFoto'));
     }
   };
 
@@ -168,10 +174,12 @@ export default function PerfilUsuario() {
       <div className="perfil-page">
         <div className="topbar">
           <button className="btn ghost" onClick={() => navigate(-1)}>
-            <FaArrowLeft /> Voltar
+            {/* ⭐️ Tradução para Voltar */}
+            <FaArrowLeft /> {t('geral.voltar')}
           </button>
         </div>
-        <div className="skeleton">Carregando perfil...</div>
+        {/* ⭐️ Tradução para Carregando perfil... */}
+        <div className="skeleton">{t('perfil.carregando')}</div>
       </div>
     );
   }
@@ -182,24 +190,30 @@ export default function PerfilUsuario() {
       {/* Cabeçalho */}
       <div className="topbar">
         <div className="title-wrap">
-          <h2>Meu Perfil</h2>
+          {/* ⭐️ Tradução para Meu Perfil */}
+          <h2>{t('perfil.titulo')}</h2>
           <span className={`badge ${isEditing ? 'editing' : 'view'}`}>
-            {isEditing ? 'Editando' : 'Visualização'}
+            {/* ⭐️ Tradução para Editando/Visualização */}
+            {isEditing ? t('perfil.tituloEdicao') : t('perfil.tituloVisualizacao')}
           </span>
         </div>
 
         <div className="actions">
           {!isEditing ? (
             <button className="btn primary" onClick={handleEdit}>
-              <FaEdit /> Editar perfil
+              {/* ⭐️ Tradução para Editar perfil */}
+              <FaEdit /> {t('perfil.botaoEditar')}
             </button>
           ) : (
             <>
               <button className="btn primary" onClick={handleSave} disabled={saving}>
-                <FaSave /> {saving ? 'Salvando...' : 'Salvar'}
+                <FaSave /> 
+                {/* ⭐️ Tradução para Salvando.../Salvar */}
+                {saving ? t('perfil.botaoSalvando') : t('perfil.botaoSalvar')}
               </button>
               <button className="btn ghost danger" onClick={handleCancel}>
-                <FaTimes /> Cancelar
+                {/* ⭐️ Tradução para Cancelar (usando chave 'geral' ou 'perfil') */}
+                <FaTimes /> {t('geral.cancelar')}
               </button>
             </>
           )}
@@ -217,57 +231,70 @@ export default function PerfilUsuario() {
             <div className="avatar">
               <img
                 src={imgPreview || defaultAvatar}
-                alt="Foto do usuário"
+                // ⭐️ Tradução para alt da imagem
+                alt={t('perfil.fotoTitulo')}
                 onError={(e) => {
                   e.currentTarget.src = defaultAvatar;
                 }}
               />
             </div>
             <label className="btn neutral file-btn">
-              Alterar foto
+              {/* ⭐️ Tradução para Alterar foto */}
+              {t('perfil.fotoBotao')}
               <input type="file" accept="image/*" onChange={handlePhoto} hidden />
             </label>
-            <small className="help">PNG, JPG até 5MB</small>
+            {/* ⭐️ Tradução para dica da foto */}
+            <small className="help">{t('perfil.fotoAjuda')}</small>
           </div>
 
           {/* Form */}
           <div className="card form-card">
             <div className="form-grid">
               <div className="field">
-                <label>Nome</label>
+                {/* ⭐️ Tradução para Nome */}
+                <label>{t('perfil.nomeLabel')}</label>
                 <input
                   name="nome"
                   value={form.nome}
                   onChange={onChange}
                   disabled={!isEditing}
-                  placeholder="Seu nome completo"
+                  // ⭐️ Tradução para placeholder
+                  placeholder={t('perfil.nomePlaceholder')}
                 />
               </div>
 
               <div className="field disabled">
-                <label>E-mail</label>
+                {/* ⭐️ Tradução para E-mail */}
+                <label>{t('perfil.emailLabel')}</label>
                 <input
                   name="email"
                   value={form.email}
                   readOnly
                   disabled
-                  title="E-mail não pode ser alterado"
+                  // ⭐️ Tradução para title (tooltip)
+                  title={t('perfil.emailTitle')}
                 />
               </div>
 
               <div className="field disabled">
-                <label>CPF/CNPJ</label>
+                {/* ⭐️ Tradução para CPF/CNPJ */}
+                <label>{t('perfil.cpfCnpjLabel')}</label>
                 <input
                   name="cpfCnpj"
                   value={form.cpfCnpj}
                   readOnly
                   disabled
-                  title="CPF/CNPJ não pode ser alterado"
+                  // ⭐️ Tradução para title (tooltip)
+                  title={t('perfil.cpfCnpjTitle')}
                 />
               </div>
+              
+              {/* Note que podemos reutilizar placeholders do 'cadastro' se a chave for a mesma!
+                  Ex: t('cadastro.placeholder.cep') */}
 
               <div className="field">
-                <label>CEP</label>
+                {/* ⭐️ Tradução para CEP */}
+                <label>{t('perfil.cepLabel')}</label>
                 <input
                   name="cep"
                   value={form.cep}
@@ -277,7 +304,8 @@ export default function PerfilUsuario() {
               </div>
 
               <div className="field">
-                <label>Endereço</label>
+                {/* ⭐️ Tradução para Endereço */}
+                <label>{t('perfil.enderecoLabel')}</label>
                 <input
                   name="endereco"
                   value={form.endereco}
@@ -287,7 +315,8 @@ export default function PerfilUsuario() {
               </div>
 
               <div className="field">
-                <label>Número</label>
+                {/* ⭐️ Tradução para Número */}
+                <label>{t('perfil.numeroLabel')}</label>
                 <input
                   name="numero"
                   value={form.numero}
@@ -297,7 +326,8 @@ export default function PerfilUsuario() {
               </div>
 
               <div className="field">
-                <label>Complemento</label>
+                {/* ⭐️ Tradução para Complemento */}
+                <label>{t('perfil.complementoLabel')}</label>
                 <input
                   name="complemento"
                   value={form.complemento}
@@ -307,7 +337,8 @@ export default function PerfilUsuario() {
               </div>
 
               <div className="field">
-                <label>DDI</label>
+                {/* ⭐️ Tradução para DDI */}
+                <label>{t('perfil.ddiLabel')}</label>
                 <input
                   name="ddi"
                   value={form.ddi}
@@ -317,7 +348,8 @@ export default function PerfilUsuario() {
               </div>
 
               <div className="field">
-                <label>DDD</label>
+                {/* ⭐️ Tradução para DDD */}
+                <label>{t('perfil.dddLabel')}</label>
                 <input
                   name="ddd"
                   value={form.ddd}
@@ -327,7 +359,8 @@ export default function PerfilUsuario() {
               </div>
 
               <div className="field">
-                <label>Telefone</label>
+                {/* ⭐️ Tradução para Telefone */}
+                <label>{t('perfil.telefoneLabel')}</label>
                 <input
                   name="telefone"
                   value={form.telefone}
@@ -341,7 +374,8 @@ export default function PerfilUsuario() {
 
         {/* Segurança extra: dica para senha */}
         <div className="tip">
-          Dica: Altere sua senha periodicamente na área de segurança da conta.
+          {/* ⭐️ Tradução para Dica de segurança */}
+          {t('perfil.dicaSeguranca')}
         </div>
       </div>
     </div>
