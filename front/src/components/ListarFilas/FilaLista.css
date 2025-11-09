@@ -1,8 +1,9 @@
 /* ================== FILAS — LISTA (ESCOPO) ================== */
 /* Envolva a página com .filas-list-page para isolar estilos */
 .filas-list-page{
-    padding: 24px;
+  padding: clamp(16px, 2.5vw, 24px);
 }
+
 /* Badge com nome da empresa (topo da página) */
 .filas-list-page .empresa-titulo-container {
   background-color: var(--brand-primary);
@@ -19,12 +20,14 @@
   cursor: pointer;
   margin-left: auto; /* alinha à direita, como no seu layout */
 }
+
 .filas-list-page .empresa-titulo-container:hover {
   filter: brightness(1.1);
   transform: none;
 }
+
 .filas-list-page .empresa-nome {
-  font-size: 1.1em;
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
   font-weight: bold;
   line-height: 1;
   white-space: nowrap;
@@ -34,7 +37,7 @@
 /* Card de cabeçalho da página */
 .filas-list-page .fila-header-card {
   background-color: var(--background-secondary);
-  padding: 25px;
+  padding: clamp(16px, 2.5vw, 25px);
   border-radius: 12px;
   border: 1px solid var(--border-color);
   margin: 0 0 10px 0;
@@ -45,19 +48,21 @@
 /* Seção que contém a tabela de filas */
 .filas-list-page .filas-section {
   background-color: var(--background-secondary);
-  padding: 25px;
+  padding: clamp(16px, 2.5vw, 25px);
   border-radius: 12px;
   border: 1px solid var(--border-color);
   margin-top: 0;
   align-self: flex-start;
   width: 100%;
+  /* melhora acessibilidade no mobile sem layout shift */
+  overflow-x: hidden;
 }
 
 /* Título da seção */
 .filas-list-page .section-title {
-  font-size: 1.8em;
+  font-size: clamp(1.25rem, 2.2vw, 1.8rem);
   color: var(--text-primary);
-  margin-bottom: 25px;
+  margin-bottom: clamp(14px, 2vw, 25px);
   padding-bottom: 10px;
   text-align: left;
   padding-left: 10px;
@@ -72,40 +77,47 @@
   background-color: var(--background-secondary);
   border-radius: 12px;
   overflow: hidden;
-  table-layout: fixed;
+  table-layout: fixed; /* evita saltos e força truncar */
 }
 
 .filas-list-page .filas-table th,
 .filas-list-page .filas-table td {
   border: none;
-  padding: 15px 20px;
+  padding: clamp(10px, 1.6vw, 15px) clamp(12px, 2vw, 20px);
   text-align: left;
   background-color: var(--background-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
 .filas-list-page .filas-table th {
+  position: sticky;      /* cabeçalho gruda quando houver scroll horizontal */
+  top: 0;                /* (não interfere no scroll horizontal) */
+  z-index: 1;
   background-color: var(--background-primary);
   color: var(--text-secondary);
   font-weight: 600;
   text-transform: uppercase;
-  font-size: 0.9em;
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
   letter-spacing: 0.5px;
 }
 
 .filas-list-page .filas-table tr {
   transition: transform .2s ease, box-shadow .2s ease;
 }
+
 body[data-theme='light'] .filas-list-page .filas-table tr {
   box-shadow: 0 2px 5px rgba(0,0,0,0.03);
 }
+
 body[data-theme='light'] .filas-list-page .filas-table tr:hover {
   background-color: #fcfcfc;
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
+
 body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
   background-color: rgba(255,255,255,0.05);
 }
@@ -114,6 +126,19 @@ body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
 .filas-list-page .filas-table th:last-child  { border-top-right-radius: 10px; }
 .filas-list-page .filas-table tbody tr td:first-child { border-bottom-left-radius: 10px; border-top-left-radius: 10px; }
 .filas-list-page .filas-table tbody tr td:last-child  { border-bottom-right-radius: 10px; border-top-right-radius: 10px; }
+
+/* Melhor quebra de conteúdos longos em colunas apertadas */
+.filas-list-page .filas-table td,
+.filas-list-page .filas-table th {
+  overflow-wrap: anywhere; /* permite quebrar palavras grandes (URLs, IDs) */
+}
+
+/* Wrapper de rolagem horizontal (sem precisar mexer no HTML) */
+.filas-list-page .filas-section {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable both-edges;
+}
 
 /* Erro da listagem */
 .filas-list-page .fila-lista-error {
@@ -133,15 +158,15 @@ body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
   align-items: center;
   z-index: 1000;
   animation: fadeIn .3s ease-out;
+  padding: 16px; /* evita corte lateral em celulares com notch/barras */
 }
 
 .filas-list-page .modal-content {
   background-color: var(--background-secondary);
-  padding: 30px;
+  padding: clamp(16px, 2.5vw, 30px);
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-  width: 90%;
-  max-width: 500px;
+  width: min(100%, 720px);
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
@@ -154,24 +179,27 @@ body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 15px;
-  margin-bottom: 20px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
 }
+
 .filas-list-page .modal-header h2 {
   margin: 0;
   color: var(--text-primary);
+  font-size: clamp(1.1rem, 2.2vw, 1.4rem);
 }
 
 .filas-list-page .modal-close-button {
   background: none;
   border: none;
-  font-size: 2em;
+  font-size: clamp(1.4rem, 3vw, 2rem);
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 5px;
+  padding: 6px 10px; /* maior área de toque */
+  border-radius: 8px;
   transition: color .2s ease, background-color .2s ease;
 }
+
 .filas-list-page .modal-close-button:hover {
   color: var(--text-primary);
   background-color: var(--brand-primary-hover);
@@ -179,15 +207,16 @@ body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
 
 .filas-list-page .modal-body {
   flex-grow: 1;
-  font-size: 1.1em;
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
   line-height: 1.6;
   color: var(--text-secondary);
 }
+
 .filas-list-page .modal-body p { margin-bottom: 10px; }
 .filas-list-page .modal-body strong { color: var(--text-primary); }
 
 .filas-list-page .modal-empresa-logo {
-  max-width: 150px;
+  max-width: clamp(120px, 25vw, 150px);
   height: auto;
   margin-top: 10px;
   border: 1px solid var(--border-color);
@@ -198,20 +227,22 @@ body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
 
 .filas-list-page .modal-footer {
   border-top: 1px solid var(--border-color);
-  padding-top: 20px;
-  margin-top: 20px;
+  padding-top: 16px;
+  margin-top: 16px;
   text-align: right;
 }
+
 .filas-list-page .modal-close-button-footer {
   background-color: var(--brand-primary);
   color: var(--background-secondary);
-  padding: 10px 20px;
+  padding: 10px 16px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 1em;
+  font-size: clamp(0.95rem, 1.6vw, 1rem);
   transition: background-color .2s ease, transform .1s ease;
 }
+
 .filas-list-page .modal-close-button-footer:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
@@ -222,19 +253,126 @@ body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
 @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 /* ================== RESPONSIVO ================== */
-@media (max-width: 768px) {
+
+/* Larguras intermediárias: diminui paddings da tabela e cabeçalho */
+@media (max-width: 1200px) {
+  .filas-list-page .filas-table th,
+  .filas-list-page .filas-table td {
+    padding: 12px 14px;
+  }
+}
+
+/* Layout confortável em tablets */
+@media (max-width: 992px) {
+  .filas-list-page .empresa-titulo-container {
+    margin-left: 0;          /* não força alinhado à direita */
+    width: 100%;             /* mais fácil de tocar */
+    justify-content: center; /* centraliza no tablet */
+  }
+
   .filas-list-page .filas-section {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Ponto principal mobile */
+@media (max-width: 768px) {
+  .filas-list-page .filas-section {
     align-self: stretch;
   }
 
+  /* Badge vira “chip” grande alinhado à esquerda (coerente com listas) */
   .filas-list-page .empresa-titulo-container {
-    border-radius: 8px !important;
-    font-weight: 500 !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
     background-color: var(--background-secondary) !important;
     border: 1px solid var(--border-color) !important;
-    padding: 10px 20px !important;
+    padding: 10px 16px !important;
     color: var(--text-primary) !important;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Tabela com scroll horizontal facilitado */
+  .filas-list-page .filas-table {
+    display: table;
+    min-width: 720px; /* força scroll suave caso tenha muitas colunas */
+  }
+
+  .filas-list-page .filas-table th,
+  .filas-list-page .filas-table td {
+    padding: 10px 12px;
+    font-size: 0.95rem;
   }
 }
+
+/* Smartphones pequenos — mais compacto, modal quase fullscreen */
+@media (max-width: 480px) {
+  .filas-list-page {
+    padding: 12px;
+  }
+
+  .filas-list-page .section-title {
+    padding-left: 6px;
+    margin-bottom: 14px;
+  }
+
+  .filas-list-page .modal-content {
+    width: 100%;
+    max-height: calc(100vh - 32px);
+    border-radius: 10px;
+  }
+
+  .filas-list-page .modal-header {
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  .filas-list-page .modal-close-button {
+    padding: 8px 12px;
+  }
+}
+
+/* ================== (OPCIONAL) TABELA EMPILHADA NO MOBILE ==================
+   Se você puder adicionar data-label nos <td> (ex.: <td data-label="Status">Ativa</td>),
+   descomente este bloco para transformar as linhas em “cards” no mobile.
+--------------------------------------------------------------------------- */
+/*
+@media (max-width: 640px) {
+  .filas-list-page .filas-table,
+  .filas-list-page .filas-table thead,
+  .filas-list-page .filas-table tbody,
+  .filas-list-page .filas-table th,
+  .filas-list-page .filas-table td,
+  .filas-list-page .filas-table tr { display: block; }
+
+  .filas-list-page .filas-table thead { display: none; }
+
+  .filas-list-page .filas-table tr {
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .filas-list-page .filas-table td {
+    white-space: normal;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 10px;
+  }
+
+  .filas-list-page .filas-table td:last-child { border-bottom: none; }
+
+  .filas-list-page .filas-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .3px;
+  }
+}
+*/

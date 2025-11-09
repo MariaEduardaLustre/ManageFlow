@@ -1,15 +1,129 @@
+/* ============================================== */
+/* 1) VARIÁVEIS DE TEMA (LIGHT/DARK via data-theme)
+/* ============================================== */
+
+/* -------- TEMA CLARO -------- */
+body[data-theme="light"] .relatorio-page {
+  --bg-pagina: #f9fafb;
+  --bg-conteudo: #f9fafb;
+
+  --texto-titulo: #111827;
+  --texto-secundario: #6b7280;
+  --texto-suave: #9ca3af;
+  --texto-card: #111827;
+
+  --card-bg: #ffffff;
+  --card-borda: #e5e7eb;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.05);
+
+  --filtro-bg: #ffffff;
+  --filtro-borda: #e5e7eb;
+  --filtro-input-texto: #111827;
+  --filtro-dash: #6b7280;
+  --shadow-filtro: 0 1px 2px rgba(0,0,0,0.05);
+
+  --select-bg: #ffffff;
+  --select-texto: #111827;
+  --select-borda: #e5e7eb;
+  --shadow-select: 0 1px 2px rgba(0,0,0,0.05);
+
+  --btn-primario-bg: #2563eb;
+  --btn-primario-hover: #1d4ed8;
+  --btn-primario-texto: #ffffff;
+  --btn-primario-shadow: 0 2px 6px rgba(37,99,235,0.3);
+
+  --kpi-titulo: #6b7280;
+  --kpi-valor: #111827;
+  --kpi-sub: #9ca3af;
+
+  /* cores dos valores KPI (mantidas) */
+  --kpi1: #2563eb;
+  --kpi2: #13b887;
+  --kpi3: #8b5cf6;
+  --kpi4: #ef4444;
+  --kpi5: #3b82f6;
+
+  --chart-card-bg: #ffffff;
+  --chart-card-borda: #e5e7eb;
+  --chart-card-titulo: #111827;
+
+  --erro-bg: #fef2f2;
+  --erro-borda: #fecaca;
+  --erro-texto: #b91c1c;
+
+  --placeholder-texto: #9ca3af;
+}
+
+/* -------- TEMA ESCURO -------- */
+body[data-theme="dark"] .relatorio-page {
+  --bg-pagina: #121212;         /* segue sua paleta de redefinir senha */
+  --bg-conteudo: #121212;
+
+  --texto-titulo: #f1f5f9;
+  --texto-secundario: #cbd5e1;
+  --texto-suave: #94a3b8;
+  --texto-card: #f8fafc;
+
+  --card-bg: #1e1e1e;
+  --card-borda: #2c2c2c;
+  --shadow-card: none;
+
+  --filtro-bg: #2a2a2a;
+  --filtro-borda: #2a2a2a;
+  --filtro-input-texto: #f1f5f9;
+  --filtro-dash: #94a3b8;
+  --shadow-filtro: none;
+
+  --select-bg: #2a2a2a;
+  --select-texto: #f1f5f9;
+  --select-borda: #2a2a2a;
+  --shadow-select: none;
+
+  --btn-primario-bg: #6a7ff0;          /* mesma família roxa/azulada do exemplo */
+  --btn-primario-hover: #8a9cff;
+  --btn-primario-texto: #1e1e1e;
+  --btn-primario-shadow: 0 2px 6px rgba(106,127,240,0.3);
+
+  --kpi-titulo: #cbd5e1;
+  --kpi-valor: #f8fafc;
+  --kpi-sub: #94a3b8;
+
+  /* cores dos valores KPI mantidas para consistência visual */
+  --kpi1: #6a7ff0;
+  --kpi2: #2dd4bf;
+  --kpi3: #a78bfa;
+  --kpi4: #f87171;
+  --kpi5: #60a5fa;
+
+  --chart-card-bg: #1e1e1e;
+  --chart-card-borda: #2c2c2c;
+  --chart-card-titulo: #f1f5f9;
+
+  --erro-bg: #7f1d1d;
+  --erro-borda: #b91c1c;
+  --erro-texto: #fecaca;
+
+  --placeholder-texto: #94a3b8;
+}
+
+/* ============================================== */
+/* 2) ESTILOS USANDO AS VARIÁVEIS DO TEMA         */
+/* ============================================== */
+
 /* ===== Layout Geral ===== */
 .relatorio-page {
   display: flex;
-  background-color: #f9fafb;
+  background-color: var(--bg-pagina);
   min-height: 100vh;
+  transition: background-color .25s ease, color .25s ease;
 }
 
 /* ===== Conteúdo ===== */
 .relatorio-content.container {
   flex: 1;
   padding: 32px 48px;
-  background: #f9fafb;
+  background: var(--bg-conteudo);
+  transition: background-color .25s ease;
 }
 
 /* ===== Cabeçalho ===== */
@@ -24,13 +138,15 @@
 .relatorio-header h1 {
   font-size: 28px;
   font-weight: 600;
-  color: #111827;
+  color: var(--texto-titulo);
+  transition: color .25s ease;
 }
 
 .subtitle {
   font-size: 15px;
-  color: #6b7280;
+  color: var(--texto-secundario);
   margin-top: 4px;
+  transition: color .25s ease;
 }
 
 /* ===== Filtros ===== */
@@ -45,17 +161,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--filtro-bg);
+  border: 1px solid var(--filtro-borda);
   border-radius: 10px;
   padding: 6px 10px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-filtro);
+  transition: background-color .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 
 .filtro-datas input {
   border: none;
   font-size: 14px;
-  color: #111827;
+  color: var(--filtro-input-texto);
   background: transparent;
 }
 
@@ -64,37 +181,39 @@
 }
 
 .filtro-datas .dash {
-  color: #6b7280;
+  color: var(--filtro-dash);
   font-weight: 500;
 }
 
 .filtros-area select {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--select-borda);
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 14px;
-  background: #fff;
-  color: #111827;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  background: var(--select-bg);
+  color: var(--select-texto);
+  box-shadow: var(--shadow-select);
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 
+/* ===== Botões ===== */
 .btn-export {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #2563eb;
-  color: #fff;
+  background-color: var(--btn-primario-bg);
+  color: var(--btn-primario-texto);
   border: none;
   border-radius: 10px;
   padding: 10px 18px;
   font-size: 14px;
   font-weight: 500;
-  transition: background-color 0.2s ease;
-  box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+  transition: background-color 0.2s ease, box-shadow .25s ease, color .25s ease;
+  box-shadow: var(--btn-primario-shadow);
 }
 
 .btn-export:hover {
-  background-color: #1d4ed8;
+  background-color: var(--btn-primario-hover);
 }
 
 /* ===== KPIs ===== */
@@ -106,13 +225,13 @@
 }
 
 .kpi-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 18px 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--card-borda);
   text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color .25s ease, border-color .25s ease;
 }
 
 .kpi-card:hover {
@@ -123,77 +242,70 @@
 .kpi-title {
   font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--kpi-titulo);
   margin-bottom: 6px;
+  transition: color .25s ease;
 }
 
 .kpi-value {
   font-size: 24px;
   font-weight: 600;
-  color: #111827;
+  color: var(--kpi-valor);
+  transition: color .25s ease;
 }
 
 .kpi-sub {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--kpi-sub);
   margin-top: 6px;
+  transition: color .25s ease;
 }
 
 /* Cores específicas dos KPIs */
-.kpi-card:nth-child(1) .kpi-value {
-  color: #2563eb; /* azul */
-}
-
-.kpi-card:nth-child(2) .kpi-value {
-  color: #13b887; /* verde */
-}
-
-.kpi-card:nth-child(3) .kpi-value {
-  color: #8b5cf6; /* lilás */
-}
-
-.kpi-card:nth-child(4) .kpi-value {
-  color: #ef4444; /* vermelho */
-}
-
-.kpi-card:nth-child(5) .kpi-value {
-  color: #3b82f6; /* azul mais claro */
-}
+.kpi-card:nth-child(1) .kpi-value { color: var(--kpi1); }
+.kpi-card:nth-child(2) .kpi-value { color: var(--kpi2); }
+.kpi-card:nth-child(3) .kpi-value { color: var(--kpi3); }
+.kpi-card:nth-child(4) .kpi-value { color: var(--kpi4); }
+.kpi-card:nth-child(5) .kpi-value { color: var(--kpi5); }
 
 /* ===== Cards de gráficos ===== */
 .card.chart-card {
-  background: #fff;
+  background: var(--chart-card-bg);
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--chart-card-borda);
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-card);
+  transition: background-color .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 
 .card.chart-card h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: var(--chart-card-titulo);
   margin-bottom: 16px;
+  transition: color .25s ease;
 }
 
 /* ===== Alertas de erro ===== */
 .alert-error {
-  background-color: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background-color: var(--erro-bg);
+  color: var(--erro-texto);
+  border: 1px solid var(--erro-borda);
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 14px;
   margin-bottom: 24px;
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease;
 }
 
 /* ===== Placeholder ===== */
 .placeholder {
   text-align: center;
-  color: #9ca3af;
+  color: var(--placeholder-texto);
   font-size: 15px;
   padding: 40px;
+  transition: color .25s ease;
 }
 
 /* ===== Responsividade ===== */

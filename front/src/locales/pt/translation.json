@@ -503,30 +503,167 @@
   "dicaSeguranca": "Dica: Altere sua senha periodicamente na área de segurança da conta."
 },
 "empresaConfig": {
-    "tituloPrincipal": "Configurações da Empresa",
-    "fotoTitulo": "Foto de Perfil da Empresa (exibida no Perfil Público)",
-    "fotoDescricaoBackend": "O backend retorna URL de acesso no campo IMG_PERFIL.",
-    "botaoEnviarFoto": "Enviar foto",
-    "botaoEnviandoFoto": "Enviando...",
-    "erroUploadFoto": "Erro ao enviar a foto de perfil.",
-    "erroSalvarGeral": "Erro ao atualizar os dados.",
-    "sucessoSalvarGeral": "Dados da empresa atualizados com sucesso!",
-    "avisoVisualizacao": "Você está em modo de visualização.",
-    "modalConfirmarTitulo": "Confirmar Alterações",
-    "modalConfirmarCorpo": "Você tem certeza de que deseja salvar as alterações?",
-    "modalAvaliacaoTitulo": "QR Code de Avaliação",
-    "modalAvaliacaoDescricao": "Aponte a câmera do celular para o código para abrir o link.",
-    "modalAvaliacaoBotaoBaixar": "Baixar",
-    "modalPerfilTitulo": "QR Code do Perfil Público",
-    "modalPerfilDescricao": "Aponte a câmera do celular para o código para abrir o perfil.",
-    "linkAvaliacaoGerar": "Gerar Link",
-    "linkAvaliacaoGerarNovo": "Gerar Novo Link",
-    "linkAvaliacaoCopiar": "Copiar",
-    "linkAvaliacaoQr": "QR Code",
-    "linkPerfilGerar": "Gerar Link",
-    "linkPerfilGerarNovo": "Gerar Novo Link",
-    "linkPerfilQr": "QR Code",
-    "botaoEscolherOutraEmpresa": "Escolher outra empresa",
-    "erroCNPJInvalido": "O CNPJ informado não é válido."
+  "tituloPrincipal": "Configurações da Empresa",
+  "nomeLabel": "Nome da Empresa",
+  "cnpjLabel": "CNPJ",
+  "emailLabel": "E-mail",
+  "enderecoLabel": "Endereço",
+  "numeroLabel": "Número",
+
+  "avisoVisualizacao": "Você está em modo de visualização.",
+  "erroCNPJInvalido": "O CNPJ informado não é válido.",
+
+  "botaoSalvar": "Salvar Alterações",
+  "erroSalvarGeral": "Erro ao atualizar os dados.",
+  "sucessoSalvarGeral": "Dados da empresa atualizados com sucesso!",
+
+  "fotoTitulo": "Foto de Perfil da Empresa (exibida no Perfil Público)",
+  "fotoDescricaoBackend": "O backend retorna URL de acesso no campo IMG_PERFIL.",
+  "botaoEnviarFoto": "Enviar foto",
+  "botaoEnviandoFoto": "Enviando...",
+  "erroUploadFoto": "Erro ao enviar a foto de perfil.",
+  "sucessoUploadFoto": "Foto de perfil da empresa atualizada com sucesso!",
+
+  "avaliacoesTitulo": "Avaliações de Clientes",
+  "avaliacoesDescricao": "Use o link ou QR Code para que seus clientes possam avaliar o atendimento.",
+  "modalAvaliacaoTitulo": "QR Code de Avaliação",
+  "modalAvaliacaoDescricao": "Aponte a câmera do celular para o código para abrir o link.",
+  "modalAvaliacaoBotaoBaixar": "Baixar",
+
+  "perfilTitulo": "Perfil Público",
+  "perfilDescricao": "Link público com foto de perfil, nome e avaliações da sua empresa (acesso por token).",
+  "modalPerfilTitulo": "QR Code do Perfil Público",
+  "modalPerfilDescricao": "Aponte a câmera do celular para o código para abrir o perfil.",
+
+  "linkAvaliacaoGerar": "Gerar Link",
+  "linkAvaliacaoGerarNovo": "Gerar Novo Link",
+  "linkAvaliacaoCopiar": "Copiar",
+  "linkAvaliacaoQr": "QR Code",
+
+  "linkPerfilGerar": "Gerar Link",
+  "linkPerfilGerarNovo": "Gerar Novo Link",
+  "linkPerfilCopiar": "Copiar",
+  "linkPerfilQr": "QR Code",
+
+  "botaoEscolherOutraEmpresa": "Escolher outra empresa",
+
+  "modalConfirmarTitulo": "Confirmar Alterações",
+  "modalConfirmarCorpo": "Você tem certeza de que deseja salvar as alterações?"
+},
+"relatorios": {
+  "subtitulo": "Análise completa de desempenho e indicadores de atendimento",
+  "filtros": {
+    "todasFilas": "Todas as filas",
+    "exportarExcel": "Exportar Excel",
+    "imprimirPdf": "Imprimir PDF"
+  },
+  "kpis": {
+    "tempoMedioEspera": "Tempo Médio de Espera",
+    "clientesAtendidos": "Clientes Atendidos",
+    "avaliacaoMedia": "Avaliação Média",
+    "taxaDesistencia": "Taxa de Desistência",
+    "tempoMedioAtendimento": "Tempo Médio de Atendimento",
+    "vsPeriodoAnterior": "vs. período anterior",
+    "baseFeedbacks": "Base: {{qtd}} feedbacks",
+    "taxaMediaPeriodo": "Taxa média no período",
+    "comparativoPeriodo": "Comparativo com período anterior"
+  },
+  "graficos": {
+    "linhaTitulo": "Tempo Médio de Espera e Atendimento (minutos)",
+    "espera": "Tempo de Espera",
+    "atendimento": "Tempo de Atendimento",
+    "desempenhoPorFila": "Desempenho por Fila",
+    "atendidos": "Atendidos",
+    "desistentes": "Desistentes",
+    "emEspera": "Em Espera",
+    "distAvaliacoes": "Distribuição de Avaliações",
+    "quantidade": "Quantidade",
+    "nenhumDado": "Nenhum dado disponível para o filtro selecionado."
+  },
+  "excel": {
+    "arquivo": "Relatorios_Atendimento_{{inicio}}.xlsx",
+    "abaEspera": "Tempo de Espera",
+    "colEspera": {
+      "data": "Data",
+      "fila": "Fila",
+      "media": "Tempo Médio Espera (min)",
+      "totalAtendidos": "Total Atendidos",
+      "desistencias": "Desistências"
+    },
+    "abaAtendimento": "Tempo de Atendimento",
+    "colAtendimento": {
+      "data": "Data",
+      "fila": "Fila",
+      "media": "Tempo Médio Atendimento (min)",
+      "totalAtendidos": "Total Atendidos"
+    },
+    "abaDesempenho": "Desempenho por Fila",
+    "colDesempenho": {
+      "fila": "Fila",
+      "atendidos": "Atendidos",
+      "desistentes": "Desistentes",
+      "em_espera": "Em Espera",
+      "media_espera_atendidos": "Média Espera Atendidos (min)",
+      "media_espera_desistentes": "Média Espera Desistentes (min)"
+    },
+    "abaDistNotas": "Distr. Avaliações (Notas)",
+    "colDistNotas": {
+      "nota": "Nota",
+      "quantidade": "Quantidade"
+    },
+    "abaAvalDetalhadas": "Avaliações Detalhadas",
+    "colAvalDetalhadas": {
+      "data": "Data Avaliação",
+      "nota": "Nota",
+      "comentario": "Comentário"
+    }
+  },
+  "pdf": {
+    "titulo": "Relatório de Atendimento",
+    "periodo": "Período",
+    "todosRegistros": "Todos os registros",
+    "fila": "Fila",
+    "geradoEm": "Gerado em",
+    "indicadoresPrincipais": "Indicadores Principais",
+    "indicador": "Indicador",
+    "valor": "Valor",
+    "kpiEspera": "Tempo Médio de Espera",
+    "kpiAtendidos": "Clientes Atendidos",
+    "kpiAvaliacao": "Avaliação Média",
+    "kpiDesistencia": "Taxa de Desistência",
+    "kpiAtendimento": "Tempo Médio de Atendimento",
+    "detEspera": "Tempo de Espera - Detalhado",
+    "detAtendimento": "Tempo de Atendimento - Detalhado",
+    "detDesempenho": "Desempenho por Fila",
+    "detDist": "Distribuição de Avaliações",
+    "detAval20": "Avaliações Detalhadas (Últimas 20)",
+    "thData": "Data",
+    "thFila": "Fila",
+    "thMediaMin": "Média (min)",
+    "thDesistencias": "Desistências",
+    "thTotalAtendidos": "Total Atendidos",
+    "thEmEspera": "Em Espera",
+    "thMediaEsperaAtend": "Média Espera Atend. (min)",
+    "thMediaEsperaDesist": "Média Espera Desist. (min)",
+    "thNota": "Nota",
+    "thComentario": "Comentário",
+    "paginaXdeY": "Página {{x}} de {{y}}"
+  },
+  "erros": {
+    "carregar": "Não foi possível carregar os relatórios."
+  }
+},
+"avaliacoes": {
+  "title": "Painel de Avaliações",
+  "subtitle": "Veja a média geral, distribuição e comentários da sua empresa.",
+  "subtitleWithCompany": "Veja a média geral, distribuição e comentários da sua empresa — {{companyName}}.",
+  "company": "Empresa",
+  "companyLogoAlt": "Logo da empresa",
+  "showCharts": "Exibir Gráficos",
+  "hideCharts": "Ocultar Gráficos",
+  "logoLoadFail": "Não foi possível carregar a imagem de perfil. ({{error}})",
+  "logoLoadFailFallback": "Falha ao carregar a imagem.",
+  "noCompanySelected": "Empresa não selecionada."
 }
+
 }

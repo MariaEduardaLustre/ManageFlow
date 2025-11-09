@@ -502,36 +502,169 @@
     "erroFoto": "Failed to upload photo.",
     "dicaSeguranca": "Tip: Change your password periodically in the account security area."
   },
-  "empresaConfig": {
-    "tituloPrincipal": "Company Settings",
-    "nomeLabel": "Company Name",
-    "fotoTitulo": "Company Profile Photo (displayed on Public Profile)",
-    "fotoDescricaoBackend": "The backend returns the access URL in the 'img_perfil' field.",
-    "botaoEnviarFoto": "Upload Photo",
-    "botaoEnviandoFoto": "Uploading...",
-    "erroUploadFoto": "Error uploading profile photo.",
-    "erroSalvarGeral": "Error updating data.",
-    "sucessoSalvarGeral": "Company data updated successfully!",
-    "avisoVisualizacao": "You are in view-only mode.",
-    "modalConfirmarTitulo": "Confirm Changes",
-    "modalConfirmarCorpo": "Are you sure you want to save the changes?",
-    "modalAvaliacaoTitulo": "Review QR Code",
-    "modalAvaliacaoDescricao": "Point your phone camera at the code to open the link.",
-    "modalAvaliacaoBotaoBaixar": "Download",
-    "modalPerfilTitulo": "Public Profile QR Code",
-    "modalPerfilDescricao": "Point your phone camera at the code to open the profile.",
-    "perfilTitulo": "Public Profile",
-    "perfilDescricao": "Public link with profile photo, name, and reviews of your company (token access).",
-    "linkAvaliacaoGerar": "Generate Link",
-    "linkAvaliacaoGerarNovo": "Generate New Link",
-    "linkAvaliacaoCopiar": "Copy",
-    "linkAvaliacaoQr": "QR Code",
-    "linkPerfilGerar": "Generate Link",
-    "linkPerfilGerarNovo": "Generate New Link",
-    "linkPerfilCopiar": "Copy",
-    "linkPerfilQr": "QR Code",
-    "botaoEscolherOutraEmpresa": "Choose another company",
-    "erroCNPJInvalido": "The Tax ID (CNPJ) provided is invalid.",
-    "botaoSalvar": "Save Changes"
+"empresaConfig": {
+  "tituloPrincipal": "Company Settings",
+  "nomeLabel": "Company Name",
+  "cnpjLabel": "Tax ID (CNPJ)",
+  "emailLabel": "E-mail",
+  "enderecoLabel": "Address",
+  "numeroLabel": "Number",
+
+  "avisoVisualizacao": "You are in view-only mode.",
+  "erroCNPJInvalido": "The Tax ID (CNPJ) provided is invalid.",
+
+  "botaoSalvar": "Save Changes",
+  "erroSalvarGeral": "Error updating data.",
+  "sucessoSalvarGeral": "Company data updated successfully!",
+
+  "fotoTitulo": "Company Profile Photo (displayed on Public Profile)",
+  "fotoDescricaoBackend": "The backend returns the access URL in the field IMG_PERFIL.",
+  "botaoEnviarFoto": "Upload Photo",
+  "botaoEnviandoFoto": "Uploading...",
+  "erroUploadFoto": "Error uploading profile photo.",
+  "sucessoUploadFoto": "Company profile photo updated successfully!",
+
+  "avaliacoesTitulo": "Customer Reviews",
+  "avaliacoesDescricao": "Use the link or QR Code so your customers can rate the service.",
+  "modalAvaliacaoTitulo": "Review QR Code",
+  "modalAvaliacaoDescricao": "Point your phone camera at the code to open the link.",
+  "modalAvaliacaoBotaoBaixar": "Download",
+
+  "perfilTitulo": "Public Profile",
+  "perfilDescricao": "Public link with profile photo, company name and customer reviews (token access).",
+  "modalPerfilTitulo": "Public Profile QR Code",
+  "modalPerfilDescricao": "Point your phone camera at the code to open the profile.",
+
+  "linkAvaliacaoGerar": "Generate Link",
+  "linkAvaliacaoGerarNovo": "Generate New Link",
+  "linkAvaliacaoCopiar": "Copy",
+  "linkAvaliacaoQr": "QR Code",
+
+  "linkPerfilGerar": "Generate Link",
+  "linkPerfilGerarNovo": "Generate New Link",
+  "linkPerfilCopiar": "Copy",
+  "linkPerfilQr": "QR Code",
+
+  "botaoEscolherOutraEmpresa": "Choose another company",
+
+  "modalConfirmarTitulo": "Confirm Changes",
+  "modalConfirmarCorpo": "Are you sure you want to save the changes?"
+},
+  "relatorios": {
+  "subtitulo": "Comprehensive analysis of service performance and KPIs",
+  "filtros": {
+    "todasFilas": "All queues",
+    "exportarExcel": "Export Excel",
+    "imprimirPdf": "Print PDF"
+  },
+  "kpis": {
+    "tempoMedioEspera": "Average Wait Time",
+    "clientesAtendidos": "Customers Served",
+    "avaliacaoMedia": "Average Rating",
+    "taxaDesistencia": "Abandonment Rate",
+    "tempoMedioAtendimento": "Average Handle Time",
+    "vsPeriodoAnterior": "vs. previous period",
+    "baseFeedbacks": "Base: {{qtd}} feedbacks",
+    "taxaMediaPeriodo": "Average rate in the period",
+    "comparativoPeriodo": "Comparison with previous period"
+  },
+  "graficos": {
+    "linhaTitulo": "Average Wait & Handle Time (minutes)",
+    "espera": "Wait Time",
+    "atendimento": "Handle Time",
+    "desempenhoPorFila": "Performance by Queue",
+    "atendidos": "Served",
+    "desistentes": "Abandoned",
+    "emEspera": "Waiting",
+    "distAvaliacoes": "Ratings Distribution",
+    "quantidade": "Quantity",
+    "nenhumDado": "No data available for the selected filter."
+  },
+  "excel": {
+    "arquivo": "ServiceReports_{{inicio}}.xlsx",
+    "abaEspera": "Wait Time",
+    "colEspera": {
+      "data": "Date",
+      "fila": "Queue",
+      "media": "Average Wait (min)",
+      "totalAtendidos": "Total Served",
+      "desistencias": "Abandoned"
+    },
+    "abaAtendimento": "Handle Time",
+    "colAtendimento": {
+      "data": "Date",
+      "fila": "Queue",
+      "media": "Average Handle (min)",
+      "totalAtendidos": "Total Served"
+    },
+    "abaDesempenho": "Performance by Queue",
+    "colDesempenho": {
+      "fila": "Queue",
+      "atendidos": "Served",
+      "desistentes": "Abandoned",
+      "em_espera": "Waiting",
+      "media_espera_atendidos": "Avg Wait Served (min)",
+      "media_espera_desistentes": "Avg Wait Abandoned (min)"
+    },
+    "abaDistNotas": "Ratings (Distribution)",
+    "colDistNotas": {
+      "nota": "Score",
+      "quantidade": "Quantity"
+    },
+    "abaAvalDetalhadas": "Ratings (Details)",
+    "colAvalDetalhadas": {
+      "data": "Rating Date",
+      "nota": "Score",
+      "comentario": "Comment"
+    }
+  },
+  "pdf": {
+    "titulo": "Service Report",
+    "periodo": "Period",
+    "todosRegistros": "All records",
+    "fila": "Queue",
+    "geradoEm": "Generated at",
+    "indicadoresPrincipais": "Main Indicators",
+    "indicador": "Indicator",
+    "valor": "Value",
+    "kpiEspera": "Average Wait Time",
+    "kpiAtendidos": "Customers Served",
+    "kpiAvaliacao": "Average Rating",
+    "kpiDesistencia": "Abandonment Rate",
+    "kpiAtendimento": "Average Handle Time",
+    "detEspera": "Wait Time — Detailed",
+    "detAtendimento": "Handle Time — Detailed",
+    "detDesempenho": "Performance by Queue",
+    "detDist": "Ratings Distribution",
+    "detAval20": "Ratings — Last 20",
+    "thData": "Date",
+    "thFila": "Queue",
+    "thMediaMin": "Average (min)",
+    "thDesistencias": "Abandoned",
+    "thTotalAtendidos": "Total Served",
+    "thEmEspera": "Waiting",
+    "thMediaEsperaAtend": "Avg Wait Served (min)",
+    "thMediaEsperaDesist": "Avg Wait Abandoned (min)",
+    "thNota": "Score",
+    "thComentario": "Comment",
+    "paginaXdeY": "Page {{x}} of {{y}}"
+  },
+  "erros": {
+    "carregar": "Could not load reports."
   }
+},
+"avaliacoes": {
+  "title": "Reviews Dashboard",
+  "subtitle": "See your company's overall average, distribution, and comments.",
+  "subtitleWithCompany": "See overall average, distribution, and comments — {{companyName}}.",
+  "company": "Company",
+  "companyLogoAlt": "Company logo",
+  "showCharts": "Show Charts",
+  "hideCharts": "Hide Charts",
+  "logoLoadFail": "Could not load profile image. ({{error}})",
+  "logoLoadFailFallback": "Failed to load image.",
+  "noCompanySelected": "No company selected."
+}
+
+
 }

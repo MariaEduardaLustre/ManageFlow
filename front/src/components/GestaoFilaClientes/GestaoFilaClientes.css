@@ -1,27 +1,48 @@
-/* Escopo da página */
+/* ================== ESCOPO DA PÁGINA ================== */
 .gestao-fila-page {
-    padding: 24px;
+  padding: clamp(16px, 2.5vw, 24px);
 }
 
 /* =================== HEADER DA PÁGINA (CARD) =================== */
 .gestao-fila-page .gestao-header-card{
   background-color: var(--background-secondary);
-  padding: 16px;
+  padding: clamp(12px, 2vw, 16px);
   border-radius: 12px;
   border: 1px solid var(--border-color);
   width: 100%;
   margin: 0 0 12px 0;
 }
+
 .gestao-fila-page .gestao-header-row{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: clamp(8px, 1.2vw, 12px);
   flex-wrap: wrap;
 }
-.gestao-fila-page .gestao-header-left{ display: inline-flex; align-items: center; gap: 10px; }
-.gestao-fila-page .gestao-header-title{ font-size: 1.6rem; color: var(--text-primary); margin: 0; }
-.gestao-fila-page .gestao-header-right{ display: inline-flex; align-items: center; gap: 8px; }
+
+.gestao-fila-page .gestao-header-left{
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(8px, 1vw, 10px);
+  min-width: 0;
+}
+
+.gestao-fila-page .gestao-header-title{
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gestao-fila-page .gestao-header-right{
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(6px, 1vw, 8px);
+  margin-left: auto;
+}
 
 /* =================== BADGE DA EMPRESA =================== */
 .gestao-fila-page .empresa-titulo-container{
@@ -35,125 +56,182 @@
   width: fit-content;
   margin-bottom: 25px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color .2s ease, transform .2s ease;
   cursor: default;
 }
 .gestao-fila-page .empresa-titulo-container:hover{
   filter: brightness(1.1);
-  background-color: unset;
   transform: none;
 }
 .gestao-fila-page .empresa-nome{
-  font-size: 1.1em;
+  font-size: clamp(1rem, 1.2vw, 1.1em);
   font-weight: bold;
-  line-height: 1;
   white-space: nowrap;
-  text-align: center;
+}
+
+/* Adaptação em telas menores */
+@media (max-width: 992px){
+  .gestao-fila-page .empresa-titulo-container{
+    width: 100%;
+    justify-content: flex-start;
+    border: 1px solid var(--border-color);
+    background: var(--background-secondary);
+    color: var(--text-primary);
+    border-radius: 10px;
+  }
 }
 
 /* =================== SEÇÃO LISTA / TABELA =================== */
 .gestao-fila-page .clientes-fila-section{
   background: var(--background-secondary);
-  padding: 20px;
+  padding: clamp(14px, 2.5vw, 20px);
   border-radius: 12px;
   border: 1px solid var(--border-color);
   width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable both-edges;
+  padding-right: 18px;  /* respiro no fim do scroll */
+  padding-bottom: 14px; /* evita que a barra cubra o conteúdo */
 }
-.gestao-fila-page .clientes-fila-section .section-header{
+
+/* Header da seção */
+.gestao-fila-page .section-header{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: clamp(10px, 2vw, 20px);
 }
-.gestao-fila-page .clientes-fila-section .section-title{
-  font-size: 1.5rem;
+.gestao-fila-page .section-title{
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
   font-weight: bold;
   color: var(--text-primary);
-  text-align: left;
+  margin: 0;
 }
 
-/* Tabela */
+/* =================== TABELA =================== */
 .gestao-fila-page .clientes-fila-table{
   width: 100%;
   border-collapse: collapse;
-  overflow: hidden;
   border-radius: 8px;
-  table-layout: fixed;
+  table-layout: fixed;  /* truncamento controlado */
+  min-width: 720px;     /* ativa scroll em telas estreitas */
+  overflow: visible;    /* não corta filhos (sombra/hover dos botões) */
 }
+
 .gestao-fila-page .clientes-fila-table th,
 .gestao-fila-page .clientes-fila-table td{
-  padding: 12px;
+  padding: clamp(10px, 1.5vw, 12px);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  line-height: 1.35;
   vertical-align: middle;
 }
+
 .gestao-fila-page .clientes-fila-table th{
+  position: sticky;
+  top: 0;
   background-color: var(--background-primary);
   color: var(--text-secondary);
-  font-weight: 600;
+  font-size: clamp(0.8rem, 1.1vw, 0.9rem);
   text-transform: uppercase;
-  font-size: 0.9em;
-  letter-spacing: 0.5px;
+  font-weight: 600;
   border-bottom: 1px solid var(--border-color);
-  text-align: center;
+  z-index: 1;
 }
+
 body[data-theme='light'] .gestao-fila-page .clientes-fila-table tbody tr:hover{ background-color: #f5f5f5; }
 body[data-theme='dark']  .gestao-fila-page .clientes-fila-table tbody tr:hover{ background-color: rgba(255, 255, 255, 0.05); }
-.gestao-fila-page .clientes-fila-table tbody tr{ border-bottom: 1px solid var(--border-color); }
-.gestao-fila-page .clientes-fila-table tbody tr:last-child{ border-bottom: none; }
-.gestao-fila-page .clientes-fila-table tr{ height: 55px; }
 
-/* Larguras/alinhamentos (4 colunas) */
-.gestao-fila-page .clientes-fila-table th:nth-child(1),
-.gestao-fila-page .clientes-fila-table td:nth-child(1){ width: 25%; text-align: left; }   /* Nome */
-.gestao-fila-page .clientes-fila-table th:nth-child(2),
-.gestao-fila-page .clientes-fila-table td:nth-child(2){ width: 20%; text-align: left; }   /* CPF/CNPJ */
-.gestao-fila-page .clientes-fila-table th:nth-child(3),
-.gestao-fila-page .clientes-fila-table td:nth-child(3){ width: 20%; text-align: center; } /* Entrada */
-.gestao-fila-page .clientes-fila-table th:nth-child(4),
-.gestao-fila-page .clientes-fila-table td:nth-child(4){
-  width: 35%;
-  min-width: 250px;
+.gestao-fila-page .clientes-fila-table tbody tr{
+  border-bottom: 1px solid var(--border-color);
+}
+.gestao-fila-page .clientes-fila-table tbody tr:last-child{
+  border-bottom: none;
 }
 
-/* Conteúdo combinando status + ações (coluna final) */
+/* REMOÇÃO DE ALTURA FIXA: deixa a linha crescer se precisar */
+.gestao-fila-page .clientes-fila-table tr{
+  height: auto;
+}
+
+/* Larguras das colunas (4 colunas) */
+.gestao-fila-page .clientes-fila-table th:nth-child(1),
+.gestao-fila-page .clientes-fila-table td:nth-child(1){ width: 28%; text-align: left; }   /* Nome */
+
+.gestao-fila-page .clientes-fila-table th:nth-child(2),
+.gestao-fila-page .clientes-fila-table td:nth-child(2){ width: 22%; text-align: left; }   /* CPF/CNPJ */
+
+.gestao-fila-page .clientes-fila-table th:nth-child(3),
+.gestao-fila-page .clientes-fila-table td:nth-child(3){ width: 20%; text-align: center; } /* Entrada */
+
+/* Última coluna — garante espaço e visibilidade total dos botões */
+.gestao-fila-page .clientes-fila-table th:nth-child(4),
+.gestao-fila-page .clientes-fila-table td:nth-child(4){
+  width: 30%;
+  min-width: 280px;
+  overflow: visible;        /* NÃO corta os botões/hover */
+  white-space: normal;      /* permite quebra caso precise */
+  text-overflow: clip;      /* sem reticências aqui */
+}
+
+/* Melhor quebra para conteúdos longos (IDs/nomes) nas demais colunas */
+.gestao-fila-page .clientes-fila-table th,
+.gestao-fila-page .clientes-fila-table td{
+  overflow-wrap: anywhere;
+}
+
+/* =================== COLUNA FINAL (status + ações) =================== */
 .gestao-fila-page .conteudo-status-acoes{
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding-left: 40px;
-}
-.gestao-fila-page .situacao-wrapper{
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 160px;
-}
-.gestao-fila-page .botoes-acoes-contexto{
-  display: flex;
-  gap: 8px;
-  opacity: 1;
-  pointer-events: auto;
-  transition: none;
-  flex-shrink: 0;
+  gap: clamp(8px, 1.2vw, 15px);
+  padding-left: clamp(8px, 2vw, 40px);
+  min-width: max(320px, 34vw); /* largura segura para botões */
+  overflow: visible;            /* deixa sombras/transform aparecerem */
+  flex-wrap: wrap;              /* permite quebrar botões na linha de baixo, se necessário */
 }
 
-/* Botões de ação */
+.gestao-fila-page .situacao-wrapper{
+  flex: 0 0 auto;
+  min-width: 150px;
+}
+
+.gestao-fila-page .botoes-acoes-contexto{
+  display: flex;
+  gap: clamp(6px, 1vw, 10px);
+  flex: 1 1 auto;      /* deixa ocupar o restante do espaço */
+  min-width: 180px;
+  justify-content: flex-start;
+  flex-wrap: wrap;     /* *** importante para mobile *** */
+}
+
+/* =================== BOTÕES =================== */
 .gestao-fila-page .btn-acao{
   padding: 8px;
-  border: none;
-  border-radius: 5px;
-  width: 38px;
-  height: 38px;
-  display: flex;
+  width: clamp(36px, 5.2vw, 42px);
+  height: clamp(36px, 5.2vw, 42px);
+  display: inline-flex;
   justify-content: center;
   align-items: center;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 1.1em;
-  transition: all 0.2s ease;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  border: none;
+  transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  line-height: 1; /* centraliza melhor ícone */
 }
+.gestao-fila-page .btn-acao i,
+.gestao-fila-page .btn-acao svg{
+  pointer-events: none;
+}
+
 .gestao-fila-page .btn-acao:hover{
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 .gestao-fila-page .btn-acao:active{
@@ -168,40 +246,37 @@ body[data-theme='dark']  .gestao-fila-page .clientes-fila-table tbody tr:hover{ 
   transform: none;
   opacity: 0.7;
 }
-.gestao-fila-page .btn-confirmar{ background-color: #28a745; color: white; }
+
+.gestao-fila-page .btn-confirmar{ background-color: #28a745; color: #fff; }
 .gestao-fila-page .btn-confirmar:hover{ background-color: #218838; }
-.gestao-fila-page .btn-notificar{ background-color: #007bff; color: white; }
+.gestao-fila-page .btn-notificar{ background-color: #007bff; color: #fff; }
 .gestao-fila-page .btn-notificar:hover{ background-color: #0056b3; }
-.gestao-fila-page .btn-nao-compareceu{ background-color: #dc3545; color: white; }
+.gestao-fila-page .btn-nao-compareceu{ background-color: #dc3545; color: #fff; }
 .gestao-fila-page .btn-nao-compareceu:hover{ background-color: #c82333; }
 
 .gestao-fila-page .acao-disabled-message{
   color: var(--text-primary);
   font-style: italic;
-  font-size: 0.9em;
+  font-size: clamp(0.85rem, 1.3vw, 0.95rem);
   padding: 8px 12px;
   background-color: var(--border-color);
-  border-radius: 5px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
-  box-shadow: none;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
-/* Badges de situação */
+/* =================== BADGES =================== */
 .gestao-fila-page .situacao-badge{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
+  font-size: clamp(0.78rem, 1.2vw, 0.9rem);
   font-weight: bold;
-  font-size: 0.85em;
-  color: white;
-  white-space: nowrap;
+  width: clamp(120px, 16vw, 160px);
+  color: #fff;
   text-align: center;
-  width: 160px;
+  white-space: nowrap;
 }
 .gestao-fila-page .situacao-badge.aguardando{          background-color: #6c757d; }
 .gestao-fila-page .situacao-badge.presenca-confirmada{ background-color: #28a745; }
@@ -218,19 +293,24 @@ body[data-theme='dark']  .gestao-fila-page .clientes-fila-table tbody tr:hover{ 
 .gestao-fila-page .tabs-list{
   display: flex;
   justify-content: flex-start;
-  gap: 10px;
+  gap: clamp(6px, 1vw, 10px);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
 }
 .gestao-fila-page .tab-button{
   background-color: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  padding: 10px 20px;
-  font-size: 1em;
+  padding: 10px clamp(12px, 2vw, 20px);
+  font-size: clamp(0.9rem, 1.4vw, 1rem);
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
   transition: color .2s ease, background-color .2s ease, border-color .2s ease;
   border-radius: 4px 4px 0 0;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 .gestao-fila-page .tab-button:hover{
   color: var(--text-primary);
@@ -243,11 +323,49 @@ body[data-theme='dark']  .gestao-fila-page .clientes-fila-table tbody tr:hover{ 
   background-color: var(--background-secondary);
 }
 
-/* =================== RESPONSIVIDADE =================== */
+/* =================== BREAKPOINTS =================== */
+@media (max-width: 992px){
+  .gestao-fila-page .conteudo-status-acoes{
+    padding-left: 12px;
+    min-width: max(300px, 45vw);
+  }
+  .gestao-fila-page .situacao-wrapper{ min-width: 140px; }
+}
+
 @media (max-width: 768px){
-  .gestao-fila-page .clientes-fila-section{ padding: 16px; }
+  .gestao-fila-page .clientes-fila-section{
+    padding-right: 22px;  /* mais respiro no final do scroll */
+    padding-bottom: 16px;
+  }
+  .gestao-fila-page .clientes-fila-table{
+    min-width: 640px;
+  }
   .gestao-fila-page .clientes-fila-table th,
-  .gestao-fila-page .clientes-fila-table td{ padding: 10px; }
-  .gestao-fila-page .conteudo-status-acoes{ padding-left: 8px; gap: 10px; }
-  .gestao-fila-page .situacao-wrapper{ min-width: 130px; }
+  .gestao-fila-page .clientes-fila-table td{
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 560px){
+  .gestao-fila-page .btn-acao{
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+  .gestao-fila-page .situacao-badge{
+    width: 140px;
+  }
+  .gestao-fila-page .clientes-fila-table th:nth-child(4),
+  .gestao-fila-page .clientes-fila-table td:nth-child(4){
+    min-width: 320px;  /* ainda mais espaço para botões */
+  }
+}
+
+@media (max-width: 400px){
+  .gestao-fila-page{
+    padding: 12px;
+  }
+  .gestao-fila-page .clientes-fila-table{
+    min-width: 600px;
+  }
 }
