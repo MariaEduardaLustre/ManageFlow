@@ -646,6 +646,7 @@ exports.listarConfiguracoesDaEmpresa = async (req, res) => {
   }
 };
 
+// controllers/configuracaoController.js
 exports.getPublicInfoByToken = async (req, res) => {
   const { token } = req.params;
 
@@ -655,7 +656,7 @@ exports.getPublicInfoByToken = async (req, res) => {
       cf.INI_VIG, cf.FIM_VIG, cf.CAMPOS, cf.MENSAGEM,
       cf.IMG_BANNER, cf.IMG_LOGO, cf.TEMP_TOL, cf.QTDE_MAX,
       cf.PER_SAIR, cf.PER_LOC, cf.SITUACAO,
-      e.NOME_EMPRESA,
+      e.NOME_EMPRESA AS NOME_EMPRESA,
       cf.QDTE_MIN AS QTDE_MIN
     FROM ConfiguracaoFila cf
     JOIN empresa e ON e.ID_EMPRESA = cf.ID_EMPRESA
@@ -663,17 +664,46 @@ exports.getPublicInfoByToken = async (req, res) => {
     LIMIT 1
   `;
 
+  // helper: converte objeto booleans -> array [{campo, tipo}]
+  const normalizeCamposToArray = (raw) => {
+    try {
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if (Array.isArray(parsed)) {
+        // Garante CPF presente
+        const hasCpf = parsed.some(c => String(c.campo || '').toLowerCase().includes('cpf'));
+        return hasCpf ? parsed : [{ campo: 'CPF', tipo: 'numero' }, ...parsed];
+      }
+      if (parsed && typeof parsed === 'object') {
+        const toPretty = (k) =>
+          String(k).replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+        const arr = Object.entries(parsed)
+          .filter(([, v]) => !!v)
+          .map(([k]) => {
+            let tipo = 'texto';
+            if (k === 'cpf' || k === 'qtde_pessoas') tipo = 'numero';
+            else if (k === 'data_nascimento') tipo = 'data';
+            else if (k === 'email') tipo = 'email';
+            return { campo: toPretty(k), tipo };
+          });
+        // Garante CPF presente
+        const hasCpf = arr.some(c => String(c.campo || '').toLowerCase().includes('cpf'));
+        return hasCpf ? arr : [{ campo: 'CPF', tipo: 'numero' }, ...arr];
+      }
+    } catch {}
+    // fallback com CPF
+    return [{ campo: 'CPF', tipo: 'numero' }];
+  };
+
   try {
     const [rows] = await db.execute(sql, [token]);
     if (!rows.length) return res.status(404).json({ erro: 'config_not_found' });
 
     const r = rows[0];
 
-    // Campos dinâmicos
-    let campos = [];
-    try { campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : []; } catch {}
+    // Campos dinâmicos normalizados para ARRAY
+    const campos = normalizeCamposToArray(r.CAMPOS);
 
-    // Imagens -> gerar URL de acesso
+    // Imagens -> URL de acesso
     const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
     const logo   = parseJsonKeyOrUrl(r.IMG_LOGO);
     const bannerUrl = banner.key ? await makeImageAccessUrl(banner.key) : (banner.url || '');
@@ -685,7 +715,6 @@ exports.getPublicInfoByToken = async (req, res) => {
     const effective_active = situacao_raw === 1 && within_range;
     const situacao = effective_active ? 1 : 0;
 
-    // Localização
     const permitir_localizacao = toBool1(r.PER_LOC);
     const radius_meters = DEFAULT_RADIUS_METERS;
 
@@ -704,16 +733,16 @@ exports.getPublicInfoByToken = async (req, res) => {
       effective_active,
       situacao_exibicao: situacao,
 
-      campos,
-      mensagem: r.MENSAGEM || '',
+      campos,                 // <- SEMPRE ARRAY A PARTIR DE AGORA
+      mensagem: r.MENSAGEM,
       temp_tol: r.TEMP_TOL ?? null,
       qtde_min: Number.isFinite(Number(r.QTDE_MIN)) ? Number(r.QTDE_MIN) : 1,
       qtde_max: Number.isFinite(Number(r.QTDE_MAX)) ? Number(r.QTDE_MAX) : 10,
 
       per_sair: toBool1(r.PER_SAIR),
-      per_loc: toBool1(r.PER_LOC),          // retrocompat
-      permitir_localizacao,                 // novo, padronizado
-      radius_meters,                        // vindo de env/default
+      per_loc: toBool1(r.PER_LOC),
+      permitir_localizacao,
+      radius_meters,
 
       img_banner: bannerUrl ? { url: bannerUrl, ...(banner.key ? { key: banner.key } : {}) } : null,
       img_logo:   logoUrl   ? { url: logoUrl,   ...(logo.key   ? { key: logo.key }   : {}) } : null,
@@ -727,6 +756,7 @@ exports.getPublicInfoByToken = async (req, res) => {
     return res.status(500).json({ erro: 'internal_error' });
   }
 };
+
 
 exports.publicJoinByToken = async (req, res, io) => {
   const { token } = req.params;

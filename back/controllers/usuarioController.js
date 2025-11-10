@@ -33,7 +33,7 @@ async function empresasOndeUsuarioEhUnicoAdmin(idUsuario) {
   // SELECTs compatíveis com ONLY_FULL_GROUP_BY
   const [rows] = await db.query(
     `
-    SELECT pe.ID_EMPRESA, e.NOME AS NOME_EMPRESA
+    SELECT pe.ID_EMPRESA, e.NOME_EMPRESA AS NOME_EMPRESA
       FROM permissoes pe
       JOIN perfil p   ON p.ID_PERFIL = pe.ID_PERFIL
       JOIN empresa e  ON e.ID_EMPRESA = pe.ID_EMPRESA
