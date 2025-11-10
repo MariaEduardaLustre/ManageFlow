@@ -117,21 +117,21 @@ exports.avaliacoesTodasFilas = async (req, res) => {
   try {
     const { inicio, fim } = req.query;
     const params = [];
-    let where = 'WHERE a.DATA_AVALIACAO IS NOT NULL';
+    let where = 'WHERE a.DATA IS NOT NULL';
 
     if (inicio && fim) {
-      where += ' AND DATE(a.DATA_AVALIACAO) BETWEEN ? AND ?';
+      where += ' AND DATE(a.DATA) BETWEEN ? AND ?';
       params.push(inicio, fim);
     }
 
     const sql = `
       SELECT
-        DATE(a.DATA_AVALIACAO) AS data,
+        DATE(a.DATA) AS data,
         CAST(AVG(a.NOTA) AS DECIMAL(3,1)) AS media,
         COUNT(*) AS totalFeedbacks
       FROM avaliacoes a
       ${where}
-      GROUP BY DATE(a.DATA_AVALIACAO)
+      GROUP BY DATE(a.DATA)
       ORDER BY data ASC
     `;
     const [rows] = await db.query(sql, params);
@@ -200,7 +200,7 @@ exports.distribuicaoNotas = async (req, res) => {
     const params = [];
     let where = '';
     if (inicio && fim) {
-      where = 'WHERE DATE(DATA_AVALIACAO) BETWEEN ? AND ?';
+      where = 'WHERE DATE(DATA) BETWEEN ? AND ?';
       params.push(inicio, fim);
     }
 
@@ -240,7 +240,7 @@ exports.listarAvaliacoesDetalhadas = async (req, res) => {
     let where = 'WHERE 1=1';
 
     if (inicio && fim) {
-      where += ' AND DATE(a.DATA_AVALIACAO) BETWEEN ? AND ?';
+      where += ' AND DATE(a.DATA) BETWEEN ? AND ?';
       params.push(inicio, fim);
     }
     // Nota: A tabela 'avaliacoes' não parece ter ID_FILA,
@@ -248,12 +248,12 @@ exports.listarAvaliacoesDetalhadas = async (req, res) => {
 
     const sql = `
       SELECT
-        a.DATA_AVALIACAO AS data,
+        a.DATA AS data,
         a.NOTA AS nota,
         a.COMENTARIO AS comentario
       FROM avaliacoes a
       ${where}
-      ORDER BY a.DATA_AVALIACAO DESC
+      ORDER BY a.DATA DESC
     `;
     const [rows] = await db.query(sql, params);
     res.json(rows);

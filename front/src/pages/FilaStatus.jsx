@@ -42,6 +42,78 @@ export default function FilaStatus() {
   const pollRef = useRef(null);
   const joinedRoomRef = useRef(null);
 
+  // ---------- utils ----------
+  const toIsoDate = (v) => {
+    if (!v) return null;
+    try {
+      if (v instanceof Date && !isNaN(v)) return v.toISOString().slice(0, 10);
+      if (typeof v === "string") return v.slice(0, 10);
+      if (typeof v?.toISOString === "function") return v.toISOString().slice(0, 10);
+      return String(v).slice(0, 10);
+    } catch {
+      return null;
+    }
+  };
+
+  // tenta descobrir o endpoint do dashboard, lendo várias rotas candidatas
+  const fetchTempoMedioDashboard = async (idFila, dataAlvoIso) => {
+    if (!idFila) return;
+
+    const base = API_BASE.replace(/\/$/, "");
+    const candidates = [
+      // rota mais provável conforme seu controller mostrado
+      `${base}/dashboard/obter-dados-graficos/${idFila}`,
+      // alternativas comuns caso a rota tenha sido exposta com outro path
+      `${base}/dashboard/dados/${idFila}`,
+      `${base}/dashboard/graficos/${idFila}`,
+      `${base}/analytics/obter-dados-graficos/${idFila}`
+    ];
+
+    for (const url of candidates) {
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) continue;
+        const payload = await resp.json();
+
+        // o controller que você mandou retorna: { fluxoPorHora, fluxoPorDiaHora, tempoEsperaMedia }
+        const arr =
+          payload?.tempoEsperaMedia ||
+          payload?.tempo_espera_media || // caso venha snake_case
+          payload?.tempo || [];
+
+        if (!Array.isArray(arr) || arr.length === 0) continue;
+
+        const alvo = dataAlvoIso || new Date().toISOString().slice(0, 10);
+
+        // cada item tem { data, media_espera }
+        let match = null;
+        for (const row of arr) {
+          const dIso = toIsoDate(row?.data);
+          const media =
+            row?.media_espera ??
+            row?.media ??
+            row?.mediaMin ??
+            row?.MEDIA_ESPERA ??
+            null;
+
+          if (dIso && dIso === alvo && media != null && Number.isFinite(Number(media))) {
+            match = Math.round(Number(media));
+            break;
+          }
+        }
+
+        if (match != null) {
+          setTempoMedio(match);
+          return; // achou numa das rotas
+        }
+      } catch {
+        // tenta próxima rota
+      }
+    }
+    // se nada encontrado, mantém o valor atual (fallback do endpoint público)
+  };
+
+  // ---------- efeitos ----------
   useEffect(() => {
     const raw = localStorage.getItem(LS_TICKET);
     if (raw) {
@@ -76,7 +148,6 @@ export default function FilaStatus() {
       const base = API_BASE.replace(/\/$/, "");
       const url = new URL(`${base}/configuracao/public/status/${token}`);
       if (ticketRef.current?.clienteFilaId) {
-        // ambos aceitos pelo back
         url.searchParams.set("idCliente", ticketRef.current.clienteFilaId);
       }
       const resp = await fetch(url.toString());
@@ -86,7 +157,7 @@ export default function FilaStatus() {
       setEmpresa(data.empresa || null);
       setFila(data.fila || null);
       setPosicao(Number.isFinite(data.posicaoCliente) ? data.posicaoCliente : null);
-      setTempoMedio(Number.isFinite(data.mediaEsperaMin) ? data.mediaEsperaMin : null);
+      setTempoMedio(Number.isFinite(data.mediaEsperaMin) ? data.mediaEsperaMin : null); // fallback do back público
       setPodeSair(!!data.podeSair);
       setLastUpdate(new Date());
 
@@ -100,12 +171,21 @@ export default function FilaStatus() {
       ticketRef.current = t;
       localStorage.setItem(LS_TICKET, JSON.stringify(t));
 
-      // 👇 redireciona se estiver "chamado" (vindo do back)
+      // 👉 aqui buscamos o mesmo cálculo do dashboard e sobrescrevemos
+      // usa a data do movimento vinda do back para casar com o GROUP BY DATE(DT_ENTRA)
+      const alvoIso = toIsoDate(t.dtMovto) || new Date().toISOString().slice(0, 10);
+      if (t.idFila) {
+        // não bloqueia a tela caso falhe — apenas tenta melhorar a estimativa
+        fetchTempoMedioDashboard(t.idFila, alvoIso);
+      }
+
+      // 👇 redireciona se estiver "chamado"
       if (data.isChamado === true) {
         navigate(`/fila/${token}/chamado`);
         return;
       }
 
+      // rooms do socket
       if (socketRef.current && socketRef.current.connected && t.idEmpresa && joinedRoomRef.current !== t.idEmpresa) {
         socketRef.current.emit("dashboard:join", { sala: `empresa:${t.idEmpresa}` });
         joinedRoomRef.current = t.idEmpresa;

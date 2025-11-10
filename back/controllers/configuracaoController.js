@@ -771,6 +771,7 @@ exports.publicJoinByToken = async (req, res, io) => {
   try {
     await conn.beginTransaction();
 
+    // 1) valida configuração/vigência
     const [cfgRows] = await conn.execute(
       `SELECT ID_CONF_FILA, ID_EMPRESA, NOME_FILA, SITUACAO, INI_VIG, FIM_VIG
          FROM ConfiguracaoFila
@@ -789,6 +790,7 @@ exports.publicJoinByToken = async (req, res, io) => {
     const idEmpresa = cfg.ID_EMPRESA;
     const idConfFila = cfg.ID_CONF_FILA;
 
+    // 2) garante fila do dia ativa
     const [filaRows] = await conn.execute(
       `SELECT ID_FILA, DT_MOVTO, BLOCK, SITUACAO
          FROM fila
@@ -815,14 +817,14 @@ exports.publicJoinByToken = async (req, res, io) => {
       idFila = insFila.insertId;
     }
 
-    // Evitar duplicidade no dia
+    // 3) verifica último status do CPF na fila de hoje
     const [dup] = await conn.execute(
-      `SELECT ID_CLIENTE, DT_ENTRA
+      `SELECT ID_CLIENTE, DT_ENTRA, SITUACAO, DT_CHAMA
          FROM clientesfila
         WHERE ID_EMPRESA = ?
-          AND ID_FILA = ?
+          AND ID_FILA    = ?
           AND DATE(DT_MOVTO) = CURDATE()
-          AND CPFCNPJ = ?
+          AND CPFCNPJ    = ?
      ORDER BY DT_ENTRA DESC
         LIMIT 1`,
       [idEmpresa, idFila, cpf]
@@ -830,44 +832,74 @@ exports.publicJoinByToken = async (req, res, io) => {
 
     if (dup.length) {
       const mine = dup[0];
-      const [[ahead]] = await conn.query(
-        `SELECT COUNT(*) AS ahead
-           FROM clientesfila
-          WHERE ID_EMPRESA = ?
-            AND ID_FILA = ?
-            AND DATE(DT_MOVTO) = CURDATE()
-            AND SITUACAO IN (0,3)
-            AND DT_ENTRA < ?`,
-        [idEmpresa, idFila, mine.DT_ENTRA]
-      );
-      const posicao = (ahead?.ahead ?? 0) + 1;
-      await conn.commit();
-      return res.status(200).json({
-        mensagem: 'Você já está na fila hoje.',
-        duplicated: true,
-        id_empresa: idEmpresa,
-        id_fila: idFila,
-        id_cliente: mine.ID_CLIENTE,
-        dt_movto: new Date().toISOString().slice(0, 10),
-        posicao
-      });
+
+      // Confirmado (1) => NÃO pode entrar novamente; direciona para "chamado"
+      if (Number(mine.SITUACAO) === 1) {
+        await conn.commit();
+        return res.status(200).json({
+          mensagem: 'Você já confirmou presença hoje nesta fila.',
+          duplicated: true,
+          already_confirmed: true,
+          redirect: 'chamado',
+          id_empresa: idEmpresa,
+          id_fila: idFila,
+          id_cliente: mine.ID_CLIENTE,
+          dt_movto: new Date().toISOString().slice(0, 10)
+        });
+      }
+
+      // Aguardando (0) ou Chamado (3) => já está na fila; retorna posição
+      if (Number(mine.SITUACAO) === 0 || Number(mine.SITUACAO) === 3) {
+        const [[ahead]] = await conn.query(
+          `SELECT COUNT(*) AS ahead
+             FROM clientesfila
+            WHERE ID_EMPRESA = ?
+              AND ID_FILA    = ?
+              AND DATE(DT_MOVTO) = CURDATE()
+              AND SITUACAO IN (0,3)
+              AND DT_ENTRA < ?`,
+          [idEmpresa, idFila, mine.DT_ENTRA]
+        );
+        const posicao = (ahead?.ahead ?? 0) + 1;
+
+        await conn.commit();
+        return res.status(200).json({
+          mensagem: 'Você já está na fila hoje.',
+          duplicated: true,
+          id_empresa: idEmpresa,
+          id_fila: idFila,
+          id_cliente: mine.ID_CLIENTE,
+          dt_movto: new Date().toISOString().slice(0, 10),
+          posicao
+        });
+      }
+      // Se chegou aqui, SITUACAO = 2 (saiu/não compareceu) => pode reentrar,
+      // mas PRECISA de um NOVO ID_CLIENTE para não colidir na PK (mesmo dia).
     }
 
-    // Reaproveitar ID_CLIENTE global (ou gerar próximo)
-    const [clienteExist] = await conn.execute(
-      `SELECT ID_CLIENTE
-         FROM clientesfila
-        WHERE CPFCNPJ = ?
-     ORDER BY DT_ENTRA DESC
-        LIMIT 1`,
-      [cpf]
-    );
+    // 4) definir ID_CLIENTE para inserção
     let idCliente;
-    if (clienteExist.length) {
-      idCliente = clienteExist[0].ID_CLIENTE;
-    } else {
+
+    if (dup.length) {
+      // Já existia registro hoje (qualquer status) -> aloca NOVO ID_CLIENTE
       const [[mx]] = await conn.query(`SELECT COALESCE(MAX(ID_CLIENTE),0)+1 AS nextId FROM clientesfila`);
       idCliente = mx.nextId;
+    } else {
+      // Não existe registro hoje. Tentar reaproveitar ID_CLIENTE global do CPF
+      const [clienteExist] = await conn.execute(
+        `SELECT ID_CLIENTE
+           FROM clientesfila
+          WHERE CPFCNPJ = ?
+       ORDER BY DT_ENTRA DESC
+          LIMIT 1`,
+        [cpf]
+      );
+      if (clienteExist.length) {
+        idCliente = clienteExist[0].ID_CLIENTE;
+      } else {
+        const [[mx]] = await conn.query(`SELECT COALESCE(MAX(ID_CLIENTE),0)+1 AS nextId FROM clientesfila`);
+        idCliente = mx.nextId;
+      }
     }
 
     const qtd = Number.isFinite(Number(nr_qtdpes)) ? Number(nr_qtdpes) : 1;
@@ -885,7 +917,7 @@ exports.publicJoinByToken = async (req, res, io) => {
       `SELECT COUNT(*) AS ahead
          FROM clientesfila
         WHERE ID_EMPRESA = ?
-          AND ID_FILA = ?
+          AND ID_FILA    = ?
           AND DATE(DT_MOVTO) = CURDATE()
           AND SITUACAO IN (0,3)
           AND DT_ENTRA < (
@@ -916,13 +948,14 @@ exports.publicJoinByToken = async (req, res, io) => {
       posicao
     });
   } catch (e) {
-    await conn.rollback();
+    try { await conn.rollback(); } catch {}
     console.error('[publicJoinByToken] ERRO:', e);
     return res.status(500).json({ erro: 'internal_error' });
   } finally {
     conn.release();
   }
 };
+
 
 exports.contarFilasPorEmpresa = async (req, res) => {
   const { id_empresa } = req.params;
