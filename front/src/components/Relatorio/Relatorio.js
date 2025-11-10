@@ -19,17 +19,20 @@ import autoTable from "jspdf-autotable";
 import Menu from "../Menu/Menu";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./Relatorio.css";
+import { useTranslation } from "react-i18next";
 
 const apiBase = "http://localhost:3001/api/relatorios";
 
 export default function Relatorio() {
+  const { t, i18n } = useTranslation();
+
   // Estados de Dados
   const [tempoEspera, setTempoEspera] = useState([]);
   const [desistencias, setDesistencias] = useState([]);
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [tempoAtendimento, setTempoAtendimento] = useState([]);
   const [desempenhoFila, setDesempenhoFila] = useState([]);
-  const [filasDisponiveis, setFilasDisponiveis] = useState(["Todas as filas"]);
+  const [filasDisponiveis, setFilasDisponiveis] = useState([t("relatorios.filtros.todasFilas")]);
   const [avaliacoesDetalhadas, setAvaliacoesDetalhadas] = useState([]);
   const [distribuicaoNotas, setDistribuicaoNotas] = useState([]);
   const [statusFilas, setStatusFilas] = useState([]);
@@ -37,7 +40,7 @@ export default function Relatorio() {
   // Estados de Filtro (Controlados)
   const [filtroDataInicio, setFiltroDataInicio] = useState("");
   const [filtroDataFim, setFiltroDataFim] = useState("");
-  const [filtroFila, setFiltroFila] = useState("Todas as filas");
+  const [filtroFila, setFiltroFila] = useState(t("relatorios.filtros.todasFilas"));
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -58,7 +61,7 @@ export default function Relatorio() {
     }
 
     const paramsCompletos = { ...paramsData };
-    if (filtroFila && filtroFila !== "Todas as filas") {
+    if (filtroFila && filtroFila !== t("relatorios.filtros.todasFilas")) {
       paramsCompletos.fila = filtroFila;
     }
 
@@ -88,16 +91,18 @@ export default function Relatorio() {
         setStatusFilas(Array.isArray(respAtivas.data) ? respAtivas.data : []);
 
         if (Array.isArray(respFilas.data) && respFilas.data.length) {
-          const nomes = ["Todas as filas", ...respFilas.data.map((f) => f.nome_fila)];
+          const nomes = [t("relatorios.filtros.todasFilas"), ...respFilas.data.map((f) => f.nome_fila)];
           setFilasDisponiveis(nomes);
+          if (!nomes.includes(filtroFila)) setFiltroFila(t("relatorios.filtros.todasFilas"));
         }
       })
       .catch((err) => {
         console.error(err);
-        setError("Não foi possível carregar os relatórios.");
+        setError(t("relatorios.erros.carregar"));
       })
       .finally(() => setLoading(false));
-  }, [token, filtroDataInicio, filtroDataFim, filtroFila]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, filtroDataInicio, filtroDataFim, filtroFila, i18n.language]);
 
   // KPIs
   const kpis = useMemo(() => {
@@ -190,6 +195,9 @@ export default function Relatorio() {
     }));
   }, [desempenhoFila]);
 
+  // Locale
+  const currentLocale = i18n.language?.startsWith("en") ? "en-US" : "pt-BR";
+
   // Exportar Excel
   const exportarPainel = () => {
     const wb = XLSX.utils.book_new();
@@ -206,86 +214,89 @@ export default function Relatorio() {
       XLSX.utils.book_append_sheet(wb, ws, nomePlanilha);
     };
 
-    adicionaPlanilha(tempoEspera, "Tempo de Espera", [
-      { key: "data", label: "Data" },
-      { key: "nome_fila", label: "Fila" },
-      { key: "media", label: "Tempo Médio Espera (min)" },
-      { key: "totalAtendidos", label: "Total Atendidos" },
-      { key: "desistencias", label: "Desistências" },
+    adicionaPlanilha(tempoEspera, t("relatorios.excel.abaEspera"), [
+      { key: "data", label: t("relatorios.excel.colEspera.data") },
+      { key: "nome_fila", label: t("relatorios.excel.colEspera.fila") },
+      { key: "media", label: t("relatorios.excel.colEspera.media") },
+      { key: "totalAtendidos", label: t("relatorios.excel.colEspera.totalAtendidos") },
+      { key: "desistencias", label: t("relatorios.excel.colEspera.desistencias") },
     ]);
 
-    adicionaPlanilha(tempoAtendimento, "Tempo de Atendimento", [
-      { key: "data", label: "Data" },
-      { key: "nome_fila", label: "Fila" },
-      { key: "media", label: "Tempo Médio Atendimento (min)" },
-      { key: "totalAtendidos", label: "Total Atendidos" },
+    adicionaPlanilha(tempoAtendimento, t("relatorios.excel.abaAtendimento"), [
+      { key: "data", label: t("relatorios.excel.colAtendimento.data") },
+      { key: "nome_fila", label: t("relatorios.excel.colAtendimento.fila") },
+      { key: "media", label: t("relatorios.excel.colAtendimento.media") },
+      { key: "totalAtendidos", label: t("relatorios.excel.colAtendimento.totalAtendidos") },
     ]);
 
-    adicionaPlanilha(desempenhoFila, "Desempenho por Fila", [
-      { key: "fila", label: "Fila" },
-      { key: "atendidos", label: "Atendidos" },
-      { key: "desistentes", label: "Desistentes" },
-      { key: "em_espera", label: "Em Espera" },
-      { key: "media_espera_atendidos", label: "Média Espera Atendidos (min)" },
-      { key: "media_espera_desistentes", label: "Média Espera Desistentes (min)" },
+    adicionaPlanilha(desempenhoFila, t("relatorios.excel.abaDesempenho"), [
+      { key: "fila", label: t("relatorios.excel.colDesempenho.fila") },
+      { key: "atendidos", label: t("relatorios.excel.colDesempenho.atendidos") },
+      { key: "desistentes", label: t("relatorios.excel.colDesempenho.desistentes") },
+      { key: "em_espera", label: t("relatorios.excel.colDesempenho.em_espera") },
+      { key: "media_espera_atendidos", label: t("relatorios.excel.colDesempenho.media_espera_atendidos") },
+      { key: "media_espera_desistentes", label: t("relatorios.excel.colDesempenho.media_espera_desistentes") },
     ]);
 
-    adicionaPlanilha(distribuicaoNotas, "Distr. Avaliações (Notas)", [
-      { key: "nota", label: "Nota" },
-      { key: "quantidade", label: "Quantidade" },
+    adicionaPlanilha(distribuicaoNotas, t("relatorios.excel.abaDistNotas"), [
+      { key: "nota", label: t("relatorios.excel.colDistNotas.nota") },
+      { key: "quantidade", label: t("relatorios.excel.colDistNotas.quantidade") },
     ]);
 
-    adicionaPlanilha(avaliacoesDetalhadas, "Avaliações Detalhadas", [
-      { key: "data", label: "Data Avaliação" },
-      { key: "nota", label: "Nota" },
-      { key: "comentario", label: "Comentário" },
+    adicionaPlanilha(avaliacoesDetalhadas, t("relatorios.excel.abaAvalDetalhadas"), [
+      { key: "data", label: t("relatorios.excel.colAvalDetalhadas.data") },
+      { key: "nota", label: t("relatorios.excel.colAvalDetalhadas.nota") },
+      { key: "comentario", label: t("relatorios.excel.colAvalDetalhadas.comentario") },
     ]);
 
     const dataFiltro = filtroDataInicio || "inicio";
-    XLSX.writeFile(wb, `Relatorios_Atendimento_${dataFiltro}.xlsx`);
+    XLSX.writeFile(wb, t("relatorios.excel.arquivo", { inicio: dataFiltro }));
   };
 
   // Gerar PDF
   const gerarPDF = () => {
     const doc = new jsPDF("p", "mm", "a4");
-    const dataGeracao = new Date().toLocaleString("pt-BR");
+    const dataGeracao = new Date().toLocaleString(currentLocale);
 
     // Cabeçalho
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
-    doc.text("Relatório de Atendimento", 14, 20);
+    doc.text(t("relatorios.pdf.titulo"), 14, 20);
 
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text(
-      `Período: ${filtroDataInicio && filtroDataFim ? `${filtroDataInicio} a ${filtroDataFim}` : "Todos os registros"}`,
+      `${t("relatorios.pdf.periodo")}: ${
+        filtroDataInicio && filtroDataFim ? `${filtroDataInicio} - ${filtroDataFim}` : t("relatorios.pdf.todosRegistros")
+      }`,
       14,
       28
     );
-    doc.text(`Fila: ${filtroFila}`, 14, 34);
-    doc.text(`Gerado em: ${dataGeracao}`, 14, 40);
+    doc.text(`${t("relatorios.pdf.fila")}: ${filtroFila}`, 14, 34);
+    doc.text(`${t("relatorios.pdf.geradoEm")}: ${dataGeracao}`, 14, 40);
 
     let y = 46;
 
     // Indicadores Principais
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
-    doc.text("Indicadores Principais", 14, y);
+    doc.text(t("relatorios.pdf.indicadoresPrincipais"), 14, y);
     y += 4;
 
     autoTable(doc, {
       startY: y + 2,
-      head: [["Indicador", "Valor"]],
+      head: [[t("relatorios.pdf.indicador"), t("relatorios.pdf.valor")]],
       body: [
-        ["Tempo Médio de Espera", `${kpis.tempoMedioEspera} min`],
-        ["Clientes Atendidos", kpis.totalAtendidos],
-        ["Avaliação Média", kpis.avaliacaoMedia],
-        ["Taxa de Desistência", `${kpis.taxaDesistencia}%`],
-        ["Tempo Médio de Atendimento", `${kpis.tempoMedioAtendimento} min`],
+        [t("relatorios.pdf.kpiEspera"), `${kpis.tempoMedioEspera} min`],
+        [t("relatorios.pdf.kpiAtendidos"), kpis.totalAtendidos],
+        [t("relatorios.pdf.kpiAvaliacao"), kpis.avaliacaoMedia],
+        [t("relatorios.pdf.kpiDesistencia"), `${kpis.taxaDesistencia}%`],
+        [t("relatorios.pdf.kpiAtendimento"), `${kpis.tempoMedioAtendimento} min`],
       ],
       theme: "striped",
       styles: { fontSize: 10, cellPadding: 3 },
       headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+      margin: { left: 14, right: 14 },
     });
 
     y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : y + 30;
@@ -307,20 +318,38 @@ export default function Relatorio() {
     };
 
     adicionaTabela({
-      titulo: "Tempo de Espera - Detalhado",
-      head: [["Data", "Fila", "Tempo Médio (min)", "Atendidos", "Desistências"]],
+      titulo: t("relatorios.pdf.detEspera"),
+      head: [[
+        t("relatorios.pdf.thData"),
+        t("relatorios.pdf.thFila"),
+        t("relatorios.pdf.thMediaMin"),
+        t("relatorios.pdf.thTotalAtendidos"),
+        t("relatorios.pdf.thDesistencias")
+      ]],
       body: tempoEspera.map((r) => [r.data, r.nome_fila, r.media, r.totalAtendidos, r.desistencias]),
     });
 
     adicionaTabela({
-      titulo: "Tempo de Atendimento - Detalhado",
-      head: [["Data", "Fila", "Tempo Médio (min)", "Total Atendidos"]],
+      titulo: t("relatorios.pdf.detAtendimento"),
+      head: [[
+        t("relatorios.pdf.thData"),
+        t("relatorios.pdf.thFila"),
+        t("relatorios.pdf.thMediaMin"),
+        t("relatorios.pdf.thTotalAtendidos")
+      ]],
       body: tempoAtendimento.map((r) => [r.data, r.nome_fila, r.media, r.totalAtendidos]),
     });
 
     adicionaTabela({
-      titulo: "Desempenho por Fila",
-      head: [["Fila", "Atendidos", "Desistentes", "Em Espera", "Média Espera Atend. (min)", "Média Espera Desist. (min)"]],
+      titulo: t("relatorios.pdf.detDesempenho"),
+      head: [[
+        t("relatorios.pdf.thFila"),
+        t("relatorios.pdf.thTotalAtendidos"),
+        t("relatorios.pdf.thDesistencias"),
+        t("relatorios.pdf.thEmEspera"),
+        t("relatorios.pdf.thMediaEsperaAtend"),
+        t("relatorios.pdf.thMediaEsperaDesist")
+      ]],
       body: desempenhoFila.map((r) => [
         r.fila,
         r.atendidos,
@@ -332,14 +361,14 @@ export default function Relatorio() {
     });
 
     adicionaTabela({
-      titulo: "Distribuição de Avaliações",
-      head: [["Nota", "Quantidade"]],
-      body: distribuicaoNotas.map((n) => [n.nota, n.quantidade]),
+      titulo: t("relatorios.pdf.detDist"),
+      head: [[t("relatorios.pdf.thNota"), t("relatorios.pdf.valor")]],
+      body: distribucaoNotasToBody(distribuicaoNotas),
     });
 
     adicionaTabela({
-      titulo: "Avaliações Detalhadas (Últimas 20)",
-      head: [["Data", "Nota", "Comentário"]],
+      titulo: t("relatorios.pdf.detAval20"),
+      head: [[t("relatorios.pdf.thData"), t("relatorios.pdf.thNota"), t("relatorios.pdf.thComentario")]],
       body: avaliacoesDetalhadas.slice(0, 20).map((a) => [a.data, a.nota, a.comentario || "—"]),
     });
 
@@ -348,11 +377,19 @@ export default function Relatorio() {
       doc.setPage(i);
       doc.setFontSize(9);
       doc.setTextColor(150);
-      doc.text(`Página ${i} de ${totalPages}`, 200 - 14, 287, { align: "right" });
+      const txt =
+        i18n.language?.startsWith("en")
+          ? `Page ${i} of ${totalPages}`
+          : t("relatorios.pdf.paginaXdeY", { x: i, y: totalPages });
+      doc.text(txt, 200 - 14, 287, { align: "right" });
     }
 
-    doc.save(`Relatorio_Atendimento_${new Date().toISOString().slice(0, 10)}.pdf`);
+    const iso = new Date().toISOString().slice(0, 10);
+    const nomeArquivo = i18n.language?.startsWith("en") ? `Report_${iso}.pdf` : `Relatorio_${iso}.pdf`;
+    doc.save(nomeArquivo);
   };
+
+  const distribucaoNotasToBody = (arr) => arr.map((n) => [n.nota, n.quantidade]);
 
   return (
     <div className="relatorio-page">
@@ -367,7 +404,7 @@ export default function Relatorio() {
 
         <div className="relatorio-header">
           <div>
-            <p className="subtitle">Análise completa de desempenho e indicadores de atendimento</p>
+            <p className="subtitle">{t("relatorios.subtitulo")}</p>
           </div>
 
           <div className="filtros-area">
@@ -386,11 +423,11 @@ export default function Relatorio() {
             </select>
 
             <button className="btn-export" onClick={exportarPainel}>
-              <i className="bi bi-download"></i> Exportar Excel
+              <i className="bi bi-download"></i> {t("relatorios.filtros.exportarExcel")}
             </button>
 
             <button className="btn-export" style={{ backgroundColor: "#10b981" }} onClick={gerarPDF}>
-              <i className="bi bi-printer"></i> Imprimir PDF
+              <i className="bi bi-printer"></i> {t("relatorios.filtros.imprimirPdf")}
             </button>
           </div>
         </div>
@@ -400,35 +437,37 @@ export default function Relatorio() {
         {/* KPIs */}
         <div className="kpi-cards">
           <div className="kpi-card">
-            <div className="kpi-title">Tempo Médio de Espera</div>
+            <div className="kpi-title">{t("relatorios.kpis.tempoMedioEspera")}</div>
             <div className="kpi-value">
               {kpis.tempoMedioEspera} <small>min</small>
             </div>
-            <div className="kpi-sub">Comparativo com período anterior</div>
+            <div className="kpi-sub">{t("relatorios.kpis.comparativoPeriodo")}</div>
           </div>
 
           <div className="kpi-card">
-            <div className="kpi-title">Clientes Atendidos</div>
+            <div className="kpi-title">{t("relatorios.kpis.clientesAtendidos")}</div>
             <div className="kpi-value">{kpis.totalAtendidos}</div>
-            <div className="kpi-sub">vs. período anterior</div>
+            <div className="kpi-sub">{t("relatorios.kpis.vsPeriodoAnterior")}</div>
           </div>
 
           <div className="kpi-card">
-            <div className="kpi-title">Avaliação Média</div>
+            <div className="kpi-title">{t("relatorios.kpis.avaliacaoMedia")}</div>
             <div className="kpi-value">{kpis.avaliacaoMedia}</div>
             <div className="kpi-sub">
-              Base: {avaliacoes.reduce((a, b) => a + Number(b.totalFeedbacks || 0), 0)} feedbacks
+              {t("relatorios.kpis.baseFeedbacks", {
+                qtd: avaliacoes.reduce((a, b) => a + Number(b.totalFeedbacks || 0), 0),
+              })}
             </div>
           </div>
 
           <div className="kpi-card">
-            <div className="kpi-title">Taxa de Desistência</div>
+            <div className="kpi-title">{t("relatorios.kpis.taxaDesistencia")}</div>
             <div className="kpi-value">{kpis.taxaDesistencia}%</div>
-            <div className="kpi-sub">Taxa média no período</div>
+            <div className="kpi-sub">{t("relatorios.kpis.taxaMediaPeriodo")}</div>
           </div>
 
           <div className="kpi-card wide-card">
-            <div className="kpi-title">Tempo Médio de Atendimento</div>
+            <div className="kpi-title">{t("relatorios.kpis.tempoMedioAtendimento")}</div>
             <div className="kpi-value">
               {kpis.tempoMedioAtendimento}
               {kpis.tempoMedioAtendimento !== "-" ? " min" : ""}
@@ -438,7 +477,7 @@ export default function Relatorio() {
 
         {/* Gráfico 1 */}
         <div className="card chart-card">
-          <h3>Tempo Médio de Espera e Atendimento (minutos)</h3>
+          <h3>{t("relatorios.graficos.linhaTitulo")}</h3>
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={linhasTempo} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -449,7 +488,7 @@ export default function Relatorio() {
               <Line
                 type="monotone"
                 dataKey="tempoEspera"
-                name="Tempo de Espera"
+                name={t("relatorios.graficos.espera")}
                 stroke="#2563eb"
                 strokeWidth={3}
                 dot={{ r: 4 }}
@@ -457,7 +496,7 @@ export default function Relatorio() {
               <Line
                 type="monotone"
                 dataKey="tempoAtendimento"
-                name="Tempo de Atendimento"
+                name={t("relatorios.graficos.atendimento")}
                 stroke="#13b887"
                 strokeWidth={3}
                 dot={{ r: 4 }}
@@ -468,7 +507,7 @@ export default function Relatorio() {
 
         {/* Gráfico 2 */}
         <div className="card chart-card">
-          <h3>Desempenho por Fila</h3>
+          <h3>{t("relatorios.graficos.desempenhoPorFila")}</h3>
           {desempenhoPorFilaData.length ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={desempenhoPorFilaData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
@@ -477,25 +516,25 @@ export default function Relatorio() {
                 <YAxis stroke="#9ca3af" />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="atendidos" name="Atendidos" fill="#16A249" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="desistentes" name="Desistentes" fill="#EF4343" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="em_espera" name="Em Espera" fill="#F59F0A" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="atendidos" name={t("relatorios.graficos.atendidos")} fill="#16A249" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="desistentes" name={t("relatorios.graficos.desistentes")} fill="#EF4343" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="em_espera" name={t("relatorios.graficos.emEspera")} fill="#F59F0A" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="placeholder">Nenhum dado disponível para o filtro selecionado.</div>
+            <div className="placeholder">{t("relatorios.graficos.nenhumDado")}</div>
           )}
         </div>
 
         {/* Gráfico 3 */}
         <div className="card chart-card">
-          <h3>Distribuição de Avaliações</h3>
+          <h3>{t("relatorios.graficos.distAvaliacoes")}</h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={distribuicaoNotas} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="nota" stroke="#9ca3af" />
               <Tooltip />
-              <Bar dataKey="quantidade" name="Quantidade" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="quantidade" name={t("relatorios.graficos.quantidade")} fill="#8b5cf6" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

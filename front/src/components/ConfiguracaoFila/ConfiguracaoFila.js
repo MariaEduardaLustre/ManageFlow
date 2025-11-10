@@ -1,6 +1,6 @@
 // src/components/LandingPage/LandingPage.js
 import React from 'react';
-import './Configuracaofila.css';
+import './configuracaofila.css';
 
 import FormularioConfiguracaoFila from '../Configuracao/Configuracao';
 

@@ -1,6 +1,7 @@
 // src/pages/EditarEmpresa/EditarEmpresa.js
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import Menu from '../../components/Menu/Menu';
 import {
@@ -41,7 +42,7 @@ const validarCNPJ = (cnpj) => {
   return true;
 };
 
-// 🔧 aceita string ou objeto { url, key }
+// aceita string ou objeto { url, key }
 function normalizeImg(v) {
   if (!v) return '';
   if (typeof v === 'string') return v;
@@ -51,7 +52,7 @@ function normalizeImg(v) {
   return '';
 }
 
-// 🔥 cache-buster: evita imagem antiga do cache do navegador/CDN
+// cache-buster para evitar imagem antiga
 function withCacheBuster(url, seed = Date.now()) {
   if (!url) return url;
   try {
@@ -63,6 +64,9 @@ function withCacheBuster(url, seed = Date.now()) {
 }
 
 const EditarEmpresa = ({ onLogout }) => {
+  const { t } = useTranslation();
+  const ns = 'empresaConfig';
+
   const { idEmpresa } = useParams();
   const navigate = useNavigate();
 
@@ -89,7 +93,7 @@ const EditarEmpresa = ({ onLogout }) => {
   const [qrPerfilLoading, setQrPerfilLoading] = useState(false);
   const [showQrPerfilModal, setShowQrPerfilModal] = useState(false);
 
-  // Foto de Perfil (empresa)
+  // Foto de Perfil
   const [perfilPreview, setPerfilPreview] = useState('');
   const [perfilFile, setPerfilFile] = useState(null);
   const [uploadingPerfil, setUploadingPerfil] = useState(false);
@@ -133,12 +137,12 @@ const EditarEmpresa = ({ onLogout }) => {
 
         setPerfilPreview(img);
       } catch (err) {
-        setError(err?.response?.data?.error || 'Não foi possível carregar os dados da empresa.');
+        setError(err?.response?.data?.error || t(`${ns}.erroSalvarGeral`));
       } finally {
         setLoading(false);
       }
     })();
-  }, [idEmpresa]);
+  }, [idEmpresa, t]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -153,7 +157,7 @@ const EditarEmpresa = ({ onLogout }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isCnpjValid) {
-      setError('O CNPJ informado não é válido.');
+      setError(t(`${ns}.erroCNPJInvalido`));
       return;
     }
     setError('');
@@ -165,20 +169,18 @@ const EditarEmpresa = ({ onLogout }) => {
     setError(''); setSuccess('');
     try {
       await api.put(`/empresas/detalhes/${idEmpresa}`, empresa);
-      setSuccess('Dados da empresa atualizados com sucesso!');
+      setSuccess(t(`${ns}.sucessoSalvarGeral`));
       setTimeout(() => navigate('/home'), 2000);
     } catch (err) {
-      setError(err?.response?.data?.error || 'Erro ao atualizar os dados.');
+      setError(err?.response?.data?.error || t(`${ns}.erroSalvarGeral`));
     }
   };
 
-  // Voltar (header)
   const handleVoltar = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate('/home');
   };
 
-  // ➕ Novo: Ir para seleção de empresa
   const handleIrSelecionarEmpresa = () => {
     navigate('/escolher-empresa');
   };
@@ -190,7 +192,7 @@ const EditarEmpresa = ({ onLogout }) => {
       setAvaliacaoUrl(data.url);
       setAvaliacaoToken(data.token);
     } catch (error) {
-      alert(`Erro ao gerar o link de avaliação: ${error?.response?.data?.error || error.message}`);
+      alert(`${t(`${ns}.avaliacoesTitulo`)}: ${t(`${ns}.erroSalvarGeral`)}`);
     }
   };
 
@@ -207,7 +209,7 @@ const EditarEmpresa = ({ onLogout }) => {
 
   const exibirQrCode = async () => {
     if (!avaliacaoToken) {
-      alert('Gere o link de avaliação primeiro.');
+      alert(t(`${ns}.linkAvaliacaoGerar`));
       return;
     }
     setShowQrModal(true);
@@ -218,7 +220,7 @@ const EditarEmpresa = ({ onLogout }) => {
       const url = URL.createObjectURL(response.data);
       setQrCodeUrl(url);
     } catch (error) {
-      alert('Erro ao gerar QR Code.');
+      alert(t(`${ns}.erroSalvarGeral`));
     } finally {
       setQrLoading(false);
     }
@@ -234,20 +236,20 @@ const EditarEmpresa = ({ onLogout }) => {
     document.body.removeChild(a);
   };
 
-  // Perfil Público — APENAS TOKEN
+  // Perfil público (token)
   const gerarLinkPerfil = async () => {
     try {
       const { data } = await api.get(`/public/perfil-link/${idEmpresa}`);
       setPerfilUrlByToken(data.urlByToken);
       setPerfilToken(data.token);
     } catch {
-      alert('Erro ao gerar o link do perfil público.');
+      alert(t(`${ns}.erroSalvarGeral`));
     }
   };
 
   const exibirQrCodePerfil = async () => {
     if (!perfilToken) {
-      alert('Gere o link do perfil público primeiro.');
+      alert(t(`${ns}.linkPerfilGerar`));
       return;
     }
     setShowQrPerfilModal(true);
@@ -258,7 +260,7 @@ const EditarEmpresa = ({ onLogout }) => {
       const url = URL.createObjectURL(response.data);
       setQrPerfilUrl(url);
     } catch {
-      alert('Erro ao gerar QR Code do perfil.');
+      alert(t(`${ns}.erroSalvarGeral`));
     } finally {
       setQrPerfilLoading(false);
     }
@@ -274,19 +276,19 @@ const EditarEmpresa = ({ onLogout }) => {
     document.body.removeChild(a);
   };
 
-  // Upload da foto de perfil
+  // Upload
   const handlePerfilChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setPerfilFile(file);
     const reader = new FileReader();
-    reader.onload = () => setPerfilPreview(reader.result); // preview local
+    reader.onload = () => setPerfilPreview(reader.result);
     reader.readAsDataURL(file);
   };
 
   const enviarPerfil = async () => {
     if (!perfilFile) {
-      alert('Selecione uma imagem para o perfil.');
+      alert(t(`${ns}.botaoEnviarFoto`));
       return;
     }
     try {
@@ -302,18 +304,16 @@ const EditarEmpresa = ({ onLogout }) => {
       const url = withCacheBuster(rawUrl);
 
       setPerfilPreview(url || '');
-
       setEmpresa((prev) => ({
         ...prev,
         LOGO: data.key || prev.LOGO,
         LOGO_URL: url || prev.LOGO_URL
       }));
-
       setPerfilFile(null);
 
-      setSuccess('Foto de perfil da empresa atualizada com sucesso!');
+      setSuccess(t(`${ns}.sucessoUploadFoto`));
     } catch (err) {
-      setError(err?.response?.data?.error || 'Erro ao enviar a foto de perfil.');
+      setError(err?.response?.data?.error || t(`${ns}.erroUploadFoto`));
     } finally {
       setUploadingPerfil(false);
     }
@@ -326,10 +326,10 @@ const EditarEmpresa = ({ onLogout }) => {
         <Container as="main" className="editar-empresa-main-content">
           <section className="editar-header-card">
             <div className="editar-header-row">
-              <h1 className="editar-header-title">Dados da Empresa</h1>
+              <h1 className="editar-header-title">{t(`${ns}.tituloPrincipal`)}</h1>
               <div className="editar-header-actions">
                 <Button variant="outline-secondary" className="btn-voltar" onClick={handleVoltar}>
-                  <FaArrowLeft />&nbsp;Voltar
+                  <FaArrowLeft />&nbsp;{t('geral.voltar')}
                 </Button>
               </div>
             </div>
@@ -338,7 +338,7 @@ const EditarEmpresa = ({ onLogout }) => {
           <Card>
             <Card.Body>
               <Alert variant="info" className="mb-0 d-flex align-items-center gap-2">
-                <Spinner animation="border" size="sm" />&nbsp;Carregando...
+                <Spinner animation="border" size="sm" />&nbsp;{t('geral.carregando')}
               </Alert>
             </Card.Body>
           </Card>
@@ -353,21 +353,20 @@ const EditarEmpresa = ({ onLogout }) => {
       <Container as="main" className="editar-empresa-main-content">
         <section className="editar-header-card">
           <div className="editar-header-row">
-            <h2>Dados da Empresa</h2>
-            <div className="editar-header-actions">
-            </div>
+            <h2>{t(`${ns}.tituloPrincipal`)}</h2>
+            <div className="editar-header-actions" />
           </div>
         </section>
 
         <Card>
           <Card.Body>
-            {!isAdmin && (<Alert variant="info">Você está em modo de visualização.</Alert>)}
+            {!isAdmin && (<Alert variant="info">{t(`${ns}.avisoVisualizacao`)}</Alert>)}
             {error && <Alert variant="danger">{error}</Alert>}
             {success && <Alert variant="success">{success}</Alert>}
 
             <Form onSubmit={handleSubmit} noValidate>
               <Form.Group className="mb-3">
-                <Form.Label>Nome da Empresa</Form.Label>
+                <Form.Label>{t(`${ns}.nomeLabel`)}</Form.Label>
                 <div className="form-group-with-icon">
                   <FaBuilding className="form-icon" />
                   <Form.Control
@@ -377,13 +376,14 @@ const EditarEmpresa = ({ onLogout }) => {
                     onChange={handleChange}
                     disabled={!isAdmin}
                     required
+                    aria-label={t(`${ns}.nomeLabel`)}
                   />
                 </div>
               </Form.Group>
 
               {/* Foto de Perfil */}
               <Form.Group className="mb-3">
-                <Form.Label>Foto de Perfil da Empresa (exibida no Perfil Público)</Form.Label>
+                <Form.Label>{t(`${ns}.fotoTitulo`)}</Form.Label>
                 <Row className="align-items-center g-3">
                   <Col xs="auto">
                     <div
@@ -397,7 +397,7 @@ const EditarEmpresa = ({ onLogout }) => {
                       {perfilPreview ? (
                         <img
                           src={perfilPreview || defaultAvatar}
-                          alt="Foto de Perfil"
+                          alt={t(`${ns}.fotoTitulo`)}
                           crossOrigin="anonymous"
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={(e) => { e.currentTarget.src = defaultAvatar; }}
@@ -409,24 +409,38 @@ const EditarEmpresa = ({ onLogout }) => {
                   </Col>
                   <Col>
                     <div className="d-flex gap-2 flex-wrap">
-                      <Form.Control type="file" accept="image/*" onChange={handlePerfilChange} disabled={!isAdmin} />
+                      <Form.Control
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePerfilChange}
+                        disabled={!isAdmin}
+                        aria-label={t(`${ns}.fotoTitulo`)}
+                      />
                       <Button
                         variant="outline-secondary"
                         onClick={enviarPerfil}
                         disabled={!isAdmin || !perfilFile || uploadingPerfil}
                       >
-                        {uploadingPerfil ? (<><Spinner size="sm" className="me-2" /> Enviando...</>) : (<><FaUpload className="me-2" /> Enviar foto</>)}
+                        {uploadingPerfil ? (
+                          <>
+                            <Spinner size="sm" className="me-2" /> {t(`${ns}.botaoEnviandoFoto`)}
+                          </>
+                        ) : (
+                          <>
+                            <FaUpload className="me-2" /> {t(`${ns}.botaoEnviarFoto`)}
+                          </>
+                        )}
                       </Button>
                     </div>
                     <Form.Text className="text-muted">
-                      O backend retorna URL de acesso no campo <code>img_perfil</code>.
+                      {t(`${ns}.fotoDescricaoBackend`)} <code>IMG_PERFIL</code>.
                     </Form.Text>
                   </Col>
                 </Row>
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>CNPJ</Form.Label>
+                <Form.Label>{t(`${ns}.cnpjLabel`)}</Form.Label>
                 <div className="form-group-with-icon">
                   <FaIdCard className="form-icon" />
                   <Form.Control
@@ -438,15 +452,17 @@ const EditarEmpresa = ({ onLogout }) => {
                     required
                     maxLength={14}
                     isInvalid={!isCnpjValid && (empresa.CNPJ || '').length > 0}
+                    aria-invalid={!isCnpjValid}
+                    aria-label={t(`${ns}.cnpjLabel`)}
                   />
                 </div>
                 {!isCnpjValid && (empresa.CNPJ || '').length > 0 && (
-                  <Form.Text className="text-danger">CNPJ inválido.</Form.Text>
+                  <Form.Text className="text-danger">{t(`${ns}.erroCNPJInvalido`)}</Form.Text>
                 )}
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>Email</Form.Label>
+                <Form.Label>{t(`${ns}.emailLabel`)}</Form.Label>
                 <div className="form-group-with-icon">
                   <FaEnvelope className="form-icon" />
                   <Form.Control
@@ -455,13 +471,14 @@ const EditarEmpresa = ({ onLogout }) => {
                     value={empresa.EMAIL || ''}
                     onChange={handleChange}
                     disabled={!isAdmin}
+                    aria-label={t(`${ns}.emailLabel`)}
                   />
                 </div>
               </Form.Group>
 
               <div className="form-row">
                 <Form.Group className="mb-3 form-group-endereco">
-                  <Form.Label>Endereço</Form.Label>
+                  <Form.Label>{t(`${ns}.enderecoLabel`)}</Form.Label>
                   <div className="form-group-with-icon">
                     <FaHome className="form-icon" />
                     <Form.Control
@@ -470,12 +487,13 @@ const EditarEmpresa = ({ onLogout }) => {
                       value={empresa.ENDERECO || ''}
                       onChange={handleChange}
                       disabled={!isAdmin}
+                      aria-label={t(`${ns}.enderecoLabel`)}
                     />
                   </div>
                 </Form.Group>
 
                 <Form.Group className="mb-3 form-group-numero">
-                  <Form.Label>Número</Form.Label>
+                  <Form.Label>{t(`${ns}.numeroLabel`)}</Form.Label>
                   <div className="form-group-with-icon">
                     <FaHashtag className="form-icon" />
                     <Form.Control
@@ -484,6 +502,7 @@ const EditarEmpresa = ({ onLogout }) => {
                       value={empresa.NUMERO || ''}
                       onChange={handleChange}
                       disabled={!isAdmin}
+                      aria-label={t(`${ns}.numeroLabel`)}
                     />
                   </div>
                 </Form.Group>
@@ -491,7 +510,7 @@ const EditarEmpresa = ({ onLogout }) => {
 
               {isAdmin && (
                 <Button variant="primary" type="submit" className="mt-2">
-                  Salvar Alterações
+                  {t(`${ns}.botaoSalvar`)}
                 </Button>
               )}
             </Form>
@@ -501,58 +520,70 @@ const EditarEmpresa = ({ onLogout }) => {
         {/* Avaliações */}
         <Card className="mt-4">
           <Card.Body>
-            <Card.Title className="card-title-icon"><FaStar /> Avaliações de Clientes</Card.Title>
-            <Card.Text>Use o link ou QR Code para que seus clientes possam avaliar o atendimento.</Card.Text>
+            <Card.Title className="card-title-icon">
+              <FaStar /> {t(`${ns}.avaliacoesTitulo`)}
+            </Card.Title>
+            <Card.Text>{t(`${ns}.avaliacoesDescricao`)}</Card.Text>
+
             {avaliacaoUrl && (
-              <div className="url-display-box"><FaLink /><span>{avaliacaoUrl}</span></div>
+              <div className="url-display-box">
+                <FaLink /><span>{avaliacaoUrl}</span>
+              </div>
             )}
+
             <div className="botoes-acao">
               <Button variant="secondary" onClick={gerarLinkAvaliacao}>
-                {avaliacaoUrl ? 'Gerar Novo Link' : 'Gerar Link'}
+                {avaliacaoUrl ? t(`${ns}.linkAvaliacaoGerarNovo`) : t(`${ns}.linkAvaliacaoGerar`)}
               </Button>
               <Button variant="outline-primary" onClick={() => copiarLink(avaliacaoUrl)} disabled={!avaliacaoUrl}>
-                <FaCopy /> Copiar
+                <FaCopy /> {t(`${ns}.linkAvaliacaoCopiar`)}
               </Button>
               <Button variant="outline-primary" onClick={exibirQrCode} disabled={!avaliacaoUrl}>
-                <FaQrcode /> QR Code
+                <FaQrcode /> {t(`${ns}.linkAvaliacaoQr`)}
               </Button>
             </div>
           </Card.Body>
         </Card>
 
-        {/* Perfil Público — APENAS TOKEN */}
+        {/* Perfil Público — token */}
         <Card className="mt-4">
           <Card.Body>
-            <Card.Title className="card-title-icon"><FaGlobeAmericas /> Perfil Público</Card.Title>
-            <Card.Text>Link público com foto de perfil, nome e avaliações da sua empresa (acesso por token).</Card.Text>
+            <Card.Title className="card-title-icon">
+              <FaGlobeAmericas /> {t(`${ns}.perfilTitulo`)}
+            </Card.Title>
+            <Card.Text>{t(`${ns}.perfilDescricao`)}</Card.Text>
+
             {perfilUrlByToken && (
-              <div className="url-display-box alt"><FaLink /><span>{perfilUrlByToken}</span></div>
+              <div className="url-display-box alt">
+                <FaLink /><span>{perfilUrlByToken}</span>
+              </div>
             )}
+
             <div className="botoes-acao">
               <Button variant="secondary" onClick={gerarLinkPerfil}>
-                {perfilUrlByToken ? 'Gerar Novo Link' : 'Gerar Link'}
+                {perfilUrlByToken ? t(`${ns}.linkPerfilGerarNovo`) : t(`${ns}.linkPerfilGerar`)}
               </Button>
               <Button variant="outline-primary" onClick={() => copiarLink(perfilUrlByToken)} disabled={!perfilUrlByToken}>
-                <FaCopy /> Copiar
+                <FaCopy /> {t(`${ns}.linkPerfilCopiar`)}
               </Button>
               <Button variant="outline-primary" onClick={exibirQrCodePerfil} disabled={!perfilToken}>
-                <FaQrcode /> QR Code
+                <FaQrcode /> {t(`${ns}.linkPerfilQr`)}
               </Button>
             </div>
           </Card.Body>
         </Card>
 
-        {/* ✅ Botão final para escolher a empresa */}
+        {/* botão escolher outra empresa */}
         <section className="mt-4 mb-5">
           <div className="d-flex justify-content-rigth">
             <Button
               variant="outline-secondary"
               onClick={handleIrSelecionarEmpresa}
               className="px-4"
-              title="Voltar para a seleção de empresas"
+              title={t(`${ns}.botaoEscolherOutraEmpresa`)}
             >
               <FaBuilding className="me-2" />
-              Escolher outra empresa
+              {t(`${ns}.botaoEscolherOutraEmpresa`)}
             </Button>
           </div>
         </section>
@@ -560,39 +591,39 @@ const EditarEmpresa = ({ onLogout }) => {
 
       {/* Modal de confirmação */}
       <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
-        <Modal.Header closeButton><Modal.Title>Confirmar Alterações</Modal.Title></Modal.Header>
-        <Modal.Body>Você tem certeza de que deseja salvar as alterações?</Modal.Body>
+        <Modal.Header closeButton><Modal.Title>{t(`${ns}.modalConfirmarTitulo`)}</Modal.Title></Modal.Header>
+        <Modal.Body>{t(`${ns}.modalConfirmarCorpo`)}</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>Cancelar</Button>
-          <Button variant="primary" onClick={handleConfirmSave}>Sim, Salvar</Button>
+          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>{t('geral.cancelar')}</Button>
+          <Button variant="primary" onClick={handleConfirmSave}>{t(`${ns}.botaoSalvar`)}</Button>
         </Modal.Footer>
       </Modal>
 
       {/* Modal QR de Avaliação */}
       <Modal show={showQrModal} onHide={() => setShowQrModal(false)} centered>
-        <Modal.Header closeButton><Modal.Title>QR Code de Avaliação</Modal.Title></Modal.Header>
+        <Modal.Header closeButton><Modal.Title>{t(`${ns}.modalAvaliacaoTitulo`)}</Modal.Title></Modal.Header>
         <Modal.Body className="text-center">
-          {qrLoading && <p>Gerando...</p>}
-          {qrCodeUrl && <img src={qrCodeUrl} alt="QR Code de Avaliação" className="qr-code-image" />}
-          <p className="mt-3">Aponte a câmera do celular para o código para abrir o link.</p>
+          {qrLoading && <p>{t('geral.carregando')}</p>}
+          {qrCodeUrl && <img src={qrCodeUrl} alt={t(`${ns}.modalAvaliacaoTitulo`)} className="qr-code-image" />}
+          <p className="mt-3">{t(`${ns}.modalAvaliacaoDescricao`)}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowQrModal(false)}><FaTimes /> Fechar</Button>
-          <Button variant="primary" onClick={handleDownloadQr} disabled={!qrCodeUrl}><FaDownload /> Baixar</Button>
+          <Button variant="secondary" onClick={() => setShowQrModal(false)}><FaTimes /> {t('geral.fechar')}</Button>
+          <Button variant="primary" onClick={handleDownloadQr} disabled={!qrCodeUrl}><FaDownload /> {t(`${ns}.modalAvaliacaoBotaoBaixar`)}</Button>
         </Modal.Footer>
       </Modal>
 
       {/* Modal QR do Perfil Público */}
       <Modal show={showQrPerfilModal} onHide={() => setShowQrPerfilModal(false)} centered>
-        <Modal.Header closeButton><Modal.Title>QR Code do Perfil Público</Modal.Title></Modal.Header>
+        <Modal.Header closeButton><Modal.Title>{t(`${ns}.modalPerfilTitulo`)}</Modal.Title></Modal.Header>
         <Modal.Body className="text-center">
-          {qrPerfilLoading && <p>Gerando...</p>}
-          {qrPerfilUrl && <img src={qrPerfilUrl} alt="QR Code do Perfil Público" className="qr-code-image" />}
-          <p className="mt-3">Aponte a câmera do celular para o código para abrir o perfil.</p>
+          {qrPerfilLoading && <p>{t('geral.carregando')}</p>}
+          {qrPerfilUrl && <img src={qrPerfilUrl} alt={t(`${ns}.modalPerfilTitulo`)} className="qr-code-image" />}
+          <p className="mt-3">{t(`${ns}.modalPerfilDescricao`)}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowQrPerfilModal(false)}><FaTimes /> Fechar</Button>
-          <Button variant="primary" onClick={handleDownloadQrPerfil} disabled={!qrPerfilUrl}><FaDownload /> Baixar</Button>
+          <Button variant="secondary" onClick={() => setShowQrPerfilModal(false)}><FaTimes /> {t('geral.fechar')}</Button>
+          <Button variant="primary" onClick={handleDownloadQrPerfil} disabled={!qrPerfilUrl}><FaDownload /> {t(`${ns}.modalAvaliacaoBotaoBaixar`)}</Button>
         </Modal.Footer>
       </Modal>
 
