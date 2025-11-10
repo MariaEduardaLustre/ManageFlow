@@ -12,10 +12,10 @@ const API_BASE =
     process.env &&
     process.env.REACT_APP_API_BASE) ||
   (typeof window !== "undefined" &&
-  window.location &&
-  window.location.hostname
-    ? `http://${window.location.hostname}:3001/api`
-    : "http://localhost:3001/api");
+    window.location &&
+    window.location.hostname
+      ? `http://${window.location.hostname}:3001/api`
+      : "http://localhost:3001/api");
 
 const LS_TICKET = "mf.queueEntry";
 
@@ -42,78 +42,7 @@ export default function FilaStatus() {
   const pollRef = useRef(null);
   const joinedRoomRef = useRef(null);
 
-  // ---------- utils ----------
-  const toIsoDate = (v) => {
-    if (!v) return null;
-    try {
-      if (v instanceof Date && !isNaN(v)) return v.toISOString().slice(0, 10);
-      if (typeof v === "string") return v.slice(0, 10);
-      if (typeof v?.toISOString === "function") return v.toISOString().slice(0, 10);
-      return String(v).slice(0, 10);
-    } catch {
-      return null;
-    }
-  };
-
-  // tenta descobrir o endpoint do dashboard, lendo várias rotas candidatas
-  const fetchTempoMedioDashboard = async (idFila, dataAlvoIso) => {
-    if (!idFila) return;
-
-    const base = API_BASE.replace(/\/$/, "");
-    const candidates = [
-      // rota mais provável conforme seu controller mostrado
-      `${base}/dashboard/obter-dados-graficos/${idFila}`,
-      // alternativas comuns caso a rota tenha sido exposta com outro path
-      `${base}/dashboard/dados/${idFila}`,
-      `${base}/dashboard/graficos/${idFila}`,
-      `${base}/analytics/obter-dados-graficos/${idFila}`
-    ];
-
-    for (const url of candidates) {
-      try {
-        const resp = await fetch(url);
-        if (!resp.ok) continue;
-        const payload = await resp.json();
-
-        // o controller que você mandou retorna: { fluxoPorHora, fluxoPorDiaHora, tempoEsperaMedia }
-        const arr =
-          payload?.tempoEsperaMedia ||
-          payload?.tempo_espera_media || // caso venha snake_case
-          payload?.tempo || [];
-
-        if (!Array.isArray(arr) || arr.length === 0) continue;
-
-        const alvo = dataAlvoIso || new Date().toISOString().slice(0, 10);
-
-        // cada item tem { data, media_espera }
-        let match = null;
-        for (const row of arr) {
-          const dIso = toIsoDate(row?.data);
-          const media =
-            row?.media_espera ??
-            row?.media ??
-            row?.mediaMin ??
-            row?.MEDIA_ESPERA ??
-            null;
-
-          if (dIso && dIso === alvo && media != null && Number.isFinite(Number(media))) {
-            match = Math.round(Number(media));
-            break;
-          }
-        }
-
-        if (match != null) {
-          setTempoMedio(match);
-          return; // achou numa das rotas
-        }
-      } catch {
-        // tenta próxima rota
-      }
-    }
-    // se nada encontrado, mantém o valor atual (fallback do endpoint público)
-  };
-
-  // ---------- efeitos ----------
+  // ---------- effects ----------
   useEffect(() => {
     const raw = localStorage.getItem(LS_TICKET);
     if (raw) {
@@ -139,8 +68,31 @@ export default function FilaStatus() {
         console.warn("[FilaStatus] Falha ao carregar visual:", e);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [token]);
+
+  // Chama endpoint dedicado para pegar a média do dia atual.
+  const fetchTempoMedioHoje = async () => {
+    try {
+      const base = API_BASE.replace(/\/$/, "");
+      const resp = await fetch(`${base}/configuracao/public/daily-avg-wait/${token}`);
+      if (!resp.ok) return; // mantém fallback do /status
+      const json = await resp.json();
+      const v =
+        json?.mediaHojeMin ??
+        json?.media_hoje_min ??
+        json?.avgMinutes ??
+        json?.avg ??
+        null;
+      if (v != null && Number.isFinite(Number(v))) {
+        setTempoMedio(Math.round(Number(v)));
+      }
+    } catch {
+      // silencioso — mantém valor atual
+    }
+  };
 
   const fetchStatus = async () => {
     try {
@@ -157,7 +109,10 @@ export default function FilaStatus() {
       setEmpresa(data.empresa || null);
       setFila(data.fila || null);
       setPosicao(Number.isFinite(data.posicaoCliente) ? data.posicaoCliente : null);
-      setTempoMedio(Number.isFinite(data.mediaEsperaMin) ? data.mediaEsperaMin : null); // fallback do back público
+
+      // Fallback (mantemos caso o endpoint dedicado não exista/caia)
+      setTempoMedio(Number.isFinite(data.mediaEsperaMin) ? data.mediaEsperaMin : null);
+
       setPodeSair(!!data.podeSair);
       setLastUpdate(new Date());
 
@@ -166,27 +121,27 @@ export default function FilaStatus() {
         idEmpresa: data.idEmpresa ?? ticketRef.current?.idEmpresa ?? null,
         idFila: data.idFila ?? ticketRef.current?.idFila ?? null,
         dtMovto: data.dtMovto ?? ticketRef.current?.dtMovto ?? null,
-        clienteFilaId: ticketRef.current?.clienteFilaId ?? data.clienteFilaId ?? null
+        clienteFilaId: ticketRef.current?.clienteFilaId ?? data.clienteFilaId ?? null,
       };
       ticketRef.current = t;
       localStorage.setItem(LS_TICKET, JSON.stringify(t));
 
-      // 👉 aqui buscamos o mesmo cálculo do dashboard e sobrescrevemos
-      // usa a data do movimento vinda do back para casar com o GROUP BY DATE(DT_ENTRA)
-      const alvoIso = toIsoDate(t.dtMovto) || new Date().toISOString().slice(0, 10);
-      if (t.idFila) {
-        // não bloqueia a tela caso falhe — apenas tenta melhorar a estimativa
-        fetchTempoMedioDashboard(t.idFila, alvoIso);
-      }
+      // 👉 sobrescreve com a MÉDIA DO DIA ATUAL (cálculo novo, sem usar dashboard)
+      fetchTempoMedioHoje();
 
-      // 👇 redireciona se estiver "chamado"
+      // 🔔 se foi chamado, redireciona
       if (data.isChamado === true) {
         navigate(`/fila/${token}/chamado`);
         return;
       }
 
-      // rooms do socket
-      if (socketRef.current && socketRef.current.connected && t.idEmpresa && joinedRoomRef.current !== t.idEmpresa) {
+      // Rooms do socket
+      if (
+        socketRef.current &&
+        socketRef.current.connected &&
+        t.idEmpresa &&
+        joinedRoomRef.current !== t.idEmpresa
+      ) {
         socketRef.current.emit("dashboard:join", { sala: `empresa:${t.idEmpresa}` });
         joinedRoomRef.current = t.idEmpresa;
       }
@@ -212,9 +167,7 @@ export default function FilaStatus() {
     socketRef.current = io(SOCKET_URL, { transports: ["websocket"] });
 
     socketRef.current.on("connect", () => {
-      const sala = ticketRef.current?.idEmpresa
-        ? `empresa:${ticketRef.current.idEmpresa}`
-        : null;
+      const sala = ticketRef.current?.idEmpresa ? `empresa:${ticketRef.current.idEmpresa}` : null;
       if (sala) {
         socketRef.current.emit("dashboard:join", { sala });
         joinedRoomRef.current = ticketRef.current.idEmpresa;
@@ -225,10 +178,10 @@ export default function FilaStatus() {
       const t = ticketRef.current;
       if (!t) return;
 
-      const isSameClient = p?.clienteFilaId && t.clienteFilaId && p.clienteFilaId === t.clienteFilaId;
-      const isSameQueue  = p?.idEmpresa === t.idEmpresa && p?.idFila === t.idFila;
+      const isSameClient =
+        p?.clienteFilaId && t.clienteFilaId && p.clienteFilaId === t.clienteFilaId;
+      const isSameQueue = p?.idEmpresa === t.idEmpresa && p?.idFila === t.idFila;
 
-      // 🔔 se eu fui chamado via socket => redireciona
       if (isSameClient && (p?.acao === "chamado" || p?.acao === "chamar")) {
         navigate(`/fila/${token}/chamado`);
         return;
@@ -244,7 +197,9 @@ export default function FilaStatus() {
     pollRef.current = setInterval(fetchStatus, 10000);
 
     const onFocus = () => fetchStatus();
-    const onVis = () => { if (document.visibilityState === "visible") fetchStatus(); };
+    const onVis = () => {
+      if (document.visibilityState === "visible") fetchStatus();
+    };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVis);
 
@@ -265,7 +220,7 @@ export default function FilaStatus() {
       const resp = await fetch(`${base}/configuracao/public/leave/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idCliente: ticketRef.current.clienteFilaId })
+        body: JSON.stringify({ idCliente: ticketRef.current.clienteFilaId }),
       });
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(data?.message || "Falha ao sair da fila.");
@@ -292,8 +247,16 @@ export default function FilaStatus() {
       const y2 = cy + (r + (i % 2 === 0 ? 16 : 10)) * Math.sin(angle);
       const on = i % 3 !== 0;
       return (
-        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
-          stroke={on ? "#2f6bff" : "#E9ECF2"} strokeWidth="2" strokeLinecap="round" />
+        <line
+          key={i}
+          x1={x1}
+          y1={y1}
+          x2={x2}
+          y2={y2}
+          stroke={on ? "#2f6bff" : "#E9ECF2"}
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       );
     });
 
@@ -301,9 +264,15 @@ export default function FilaStatus() {
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <g>{ticks}</g>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F7F8FA" strokeWidth="12" />
-        <text x={cx} y={cy + 14} textAnchor="middle"
+        <text
+          x={cx}
+          y={cy + 14}
+          textAnchor="middle"
           fontFamily="Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial"
-          fontSize="88" fontWeight="700" fill="#000">
+          fontSize="88"
+          fontWeight="700"
+          fill="#000"
+        >
           {Number.isFinite(posicao) ? posicao : "–"}
         </text>
       </svg>
@@ -322,16 +291,12 @@ export default function FilaStatus() {
         style={{
           background: bannerUrl
             ? `url(${bannerUrl}) center/cover no-repeat`
-            : "linear-gradient(135deg,#111827,#1f2937)"
+            : "linear-gradient(135deg,#111827,#1f2937)",
         }}
       />
       <div className="mf-status__logoDock">
         <div className="mf-status__logoCircle">
-          {logoUrl ? (
-            <img src={logoUrl} alt="logo" />
-          ) : (
-            <span>🏬</span>
-          )}
+          {logoUrl ? <img src={logoUrl} alt="logo" /> : <span>🏬</span>}
         </div>
       </div>
 
@@ -367,7 +332,9 @@ export default function FilaStatus() {
           <span className="mf-status__hint">
             {lastUpdate ? `Atualizado às ${lastUpdate.toLocaleTimeString()}` : "Carregando…"}
           </span>
-          <Link className="mf-status__back" to={`/entrar-fila/${token}`}>Voltar</Link>
+          <Link className="mf-status__back" to={`/entrar-fila/${token}`}>
+            Voltar
+          </Link>
         </div>
       </div>
 

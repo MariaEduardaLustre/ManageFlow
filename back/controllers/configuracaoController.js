@@ -1,14 +1,18 @@
 // controllers/configuracaoController.js
-const db = require('../database/connection');
-const { v4: uuidv4 } = require('uuid');
-const QRCode = require('qrcode');
-const { getPublicFrontBaseUrl } = require('../utils/url');
+const db = require("../database/connection");
+const { v4: uuidv4 } = require("uuid");
+const QRCode = require("qrcode");
+const { getPublicFrontBaseUrl } = require("../utils/url");
 
 // >>> Usar URL de acesso (pré-assinada ou via CDN) e não pública fixa
-const { makeImageAccessUrl } = require('../utils/image');
+const { makeImageAccessUrl } = require("../utils/image");
 
 // S3 helpers para upload e geração de keys canônicas
-const { putToS3, keyEmpresaLogoConfig, keyEmpresaBannerConfig } = require('../middlewares/s3Upload');
+const {
+  putToS3,
+  keyEmpresaLogoConfig,
+  keyEmpresaBannerConfig,
+} = require("../middlewares/s3Upload");
 
 const DEFAULT_RADIUS_METERS = (() => {
   const n = Number(process.env.QUEUE_RADIUS_METERS_DEFAULT);
@@ -20,38 +24,49 @@ const DEFAULT_RADIUS_METERS = (() => {
 // Conversor robusto para flags vindas como BIT/TINYINT/STRING
 function toBool1(v) {
   if (Buffer.isBuffer(v)) return v.length ? v[0] === 1 : false; // BIT(1)
-  if (typeof v === 'boolean') return v;
+  if (typeof v === "boolean") return v;
   const n = Number(v);
   if (Number.isFinite(n)) return n === 1;
-  const s = String(v ?? '').trim().toLowerCase();
-  return s === '1' || s === 'true';
+  const s = String(v ?? "")
+    .trim()
+    .toLowerCase();
+  return s === "1" || s === "true";
 }
 function parseDateYyyyMmDdToInt(v) {
-  if (v === undefined || v === null || v === '') return null;
+  if (v === undefined || v === null || v === "") return null;
   let s = String(v).trim();
   if (!s) return null;
-  s = s.replace(/-/g, '');
+  s = s.replace(/-/g, "");
   const n = parseInt(s, 10);
   return Number.isFinite(n) ? n : null;
 }
-function boolToTinyint(v) { return v ? 1 : 0; }
+function boolToTinyint(v) {
+  return v ? 1 : 0;
+}
 function toIntOrNull(v) {
-  if (v === undefined || v === null || v === '') return null;
+  if (v === undefined || v === null || v === "") return null;
   const n = parseInt(v, 10);
   return Number.isFinite(n) ? n : null;
 }
 function getApiBase(req) {
-  return (process.env.PUBLIC_API_BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  return (
+    process.env.PUBLIC_API_BASE_URL || `${req.protocol}://${req.get("host")}`
+  ).replace(/\/$/, "");
 }
 function isWithinRange(ini_vig, fim_vig) {
-  const today = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''), 10);
+  const today = parseInt(
+    new Date().toISOString().slice(0, 10).replace(/-/g, ""),
+    10
+  );
   const toInt = (v) => (v == null ? null : parseInt(String(v), 10));
   const ini = toInt(ini_vig);
   const fim = toInt(fim_vig);
   return (ini == null || today >= ini) && (fim == null || today <= fim);
 }
 async function execDb(sql, params = []) {
-  if (typeof db.execute === 'function') { return db.execute(sql, params); }
+  if (typeof db.execute === "function") {
+    return db.execute(sql, params);
+  }
   return new Promise((resolve, reject) => {
     db.query(sql, params, (err, result) => {
       if (err) return reject(err);
@@ -68,17 +83,17 @@ async function execDb(sql, params = []) {
  *  - retorna { url, key } preservando o que der pra inferir
  */
 function parseJsonKeyOrUrl(raw) {
-  if (raw == null || raw === '') return { url: '', key: '' };
+  if (raw == null || raw === "") return { url: "", key: "" };
   try {
-    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    const url = obj?.url ? String(obj.url) : '';
-    const key = obj?.key ? String(obj.key) : '';
+    const obj = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const url = obj?.url ? String(obj.url) : "";
+    const key = obj?.key ? String(obj.key) : "";
     return { url, key };
   } catch {
     const s = String(raw);
-    if (s.startsWith('/uploads/')) return { key: s, url: '' };
-    if (/^https?:\/\//i.test(s)) return { url: s, key: '' };
-    return { url: s, key: '' };
+    if (s.startsWith("/uploads/")) return { key: s, url: "" };
+    if (/^https?:\/\//i.test(s)) return { url: s, key: "" };
+    return { url: s, key: "" };
   }
 }
 
@@ -87,14 +102,16 @@ function parseJsonKeyOrUrl(raw) {
  * fazendo upload para S3 quando necessário e retornando { key }.
  */
 async function ensureImgJsonForConfig(input, { idEmpresa, tipo }) {
-  if (!input) return { key: '' };
+  if (!input) return { key: "" };
 
-  const val = typeof input === 'object' ? input : { url: String(input) };
-  const str = (val.key || val.url || '').trim();
-  if (!str) return { key: '' };
+  const val = typeof input === "object" ? input : { url: String(input) };
+  const str = (val.key || val.url || "").trim();
+  if (!str) return { key: "" };
 
   // Se já veio um caminho interno:
-  if (str.startsWith('/uploads/')) { return { key: str }; }
+  if (str.startsWith("/uploads/")) {
+    return { key: str };
+  }
 
   // Se for uma URL http(s), tentar extrair a key quando for nossa CDN/S3/API,
   // senão mantém como url externa (e não salva key)
@@ -103,7 +120,9 @@ async function ensureImgJsonForConfig(input, { idEmpresa, tipo }) {
       const u = new URL(str);
 
       // CDN pública configurada (mesmo host -> extrai pathname como key)
-      const cdn = (process.env.S3_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
+      const cdn = (process.env.S3_PUBLIC_BASE_URL || "")
+        .trim()
+        .replace(/\/$/, "");
       if (cdn) {
         const cdnUrl = new URL(cdn);
         if (u.host === cdnUrl.host) return { key: u.pathname };
@@ -118,14 +137,19 @@ async function ensureImgJsonForConfig(input, { idEmpresa, tipo }) {
       }
 
       // Nosso API host servindo /uploads
-      const apiBase = getApiBase({ protocol: u.protocol.replace(':', ''), get: () => u.host });
+      const apiBase = getApiBase({
+        protocol: u.protocol.replace(":", ""),
+        get: () => u.host,
+      });
       const apiUrl = new URL(apiBase);
-      if (u.host === apiUrl.host && u.pathname.startsWith('/uploads/')) { return { key: u.pathname }; }
+      if (u.host === apiUrl.host && u.pathname.startsWith("/uploads/")) {
+        return { key: u.pathname };
+      }
 
       // URL externa qualquer -> mantém como url, sem key (não faremos reupload automático)
-      return { url: str, key: '' };
+      return { url: str, key: "" };
     } catch {
-      return { key: '' };
+      return { key: "" };
     }
   }
 
@@ -133,15 +157,16 @@ async function ensureImgJsonForConfig(input, { idEmpresa, tipo }) {
   const m = str.match(/^data:([^/]+)\/([^;]+);base64,(.+)$/i);
   if (m && m[3]) {
     const mimetype = `${m[1]}/${m[2]}`.toLowerCase();
-    const buffer = Buffer.from(m[3].replace(/\s/g, ''), 'base64');
-    const key = tipo === 'logo'
-      ? keyEmpresaLogoConfig(idEmpresa, mimetype)
-      : keyEmpresaBannerConfig(idEmpresa, mimetype);
+    const buffer = Buffer.from(m[3].replace(/\s/g, ""), "base64");
+    const key =
+      tipo === "logo"
+        ? keyEmpresaLogoConfig(idEmpresa, mimetype)
+        : keyEmpresaBannerConfig(idEmpresa, mimetype);
     const savedKey = await putToS3(buffer, key, mimetype);
     return { key: savedKey };
   }
 
-  return { key: '' };
+  return { key: "" };
 }
 
 /**
@@ -154,10 +179,10 @@ async function reflectConfigIntoTodayQueue(conn, idConfFila) {
       WHERE ID_CONF_FILA = ? LIMIT 1`,
     [idConfFila]
   );
-  if (!cfg) throw new Error('config_not_found');
+  if (!cfg) throw new Error("config_not_found");
 
   const within_range = isWithinRange(cfg.INI_VIG, cfg.FIM_VIG);
-  const effective_active = (cfg.SITUACAO === 1) && within_range;
+  const effective_active = cfg.SITUACAO === 1 && within_range;
 
   const [rowsFila] = await conn.execute(
     `SELECT ID_FILA, BLOCK, SITUACAO
@@ -172,7 +197,10 @@ async function reflectConfigIntoTodayQueue(conn, idConfFila) {
 
   if (!effective_active) {
     if (rowsFila.length) {
-      await conn.execute(`UPDATE fila SET BLOCK = 1, SITUACAO = 0 WHERE ID_FILA = ?`, [rowsFila[0].ID_FILA]);
+      await conn.execute(
+        `UPDATE fila SET BLOCK = 1, SITUACAO = 0 WHERE ID_FILA = ?`,
+        [rowsFila[0].ID_FILA]
+      );
     } else {
       await conn.execute(
         `INSERT INTO fila (ID_EMPRESA, ID_CONF_FILA, DT_MOVTO, DT_INI, BLOCK, SITUACAO)
@@ -183,7 +211,10 @@ async function reflectConfigIntoTodayQueue(conn, idConfFila) {
   } else {
     if (rowsFila.length) {
       const currentBlock = rowsFila[0].BLOCK ? 1 : 0;
-      await conn.execute(`UPDATE fila SET BLOCK = ?, SITUACAO = 1 WHERE ID_FILA = ?`, [currentBlock, rowsFila[0].ID_FILA]);
+      await conn.execute(
+        `UPDATE fila SET BLOCK = ?, SITUACAO = 1 WHERE ID_FILA = ?`,
+        [currentBlock, rowsFila[0].ID_FILA]
+      );
     } else {
       await conn.execute(
         `INSERT INTO fila (ID_EMPRESA, ID_CONF_FILA, DT_MOVTO, DT_INI, BLOCK, SITUACAO)
@@ -199,14 +230,17 @@ async function reflectConfigIntoTodayQueue(conn, idConfFila) {
 
 exports.uploadImagensConfiguracao = async (req, res) => {
   const idConfig = parseInt(req.params.id, 10);
-  if (!Number.isFinite(idConfig)) { return res.status(400).json({ error: 'ID da configuração inválido.' }); }
+  if (!Number.isFinite(idConfig)) {
+    return res.status(400).json({ error: "ID da configuração inválido." });
+  }
 
   try {
     const [cfgRows] = await db.query(
-      'SELECT ID_EMPRESA, IMG_LOGO, IMG_BANNER FROM configuracaofila WHERE ID_CONF_FILA = ? LIMIT 1',
+      "SELECT ID_EMPRESA, IMG_LOGO, IMG_BANNER FROM configuracaofila WHERE ID_CONF_FILA = ? LIMIT 1",
       [idConfig]
     );
-    if (!cfgRows.length) return res.status(404).json({ error: 'Configuração não encontrada.' });
+    if (!cfgRows.length)
+      return res.status(404).json({ error: "Configuração não encontrada." });
 
     const idEmpresa = cfgRows[0].ID_EMPRESA;
     const files = req.files || {};
@@ -218,38 +252,53 @@ exports.uploadImagensConfiguracao = async (req, res) => {
       const key = keyEmpresaLogoConfig(idEmpresa, f.mimetype);
       const savedKey = await putToS3(f.buffer, key, f.mimetype);
       updates.IMG_LOGO = JSON.stringify({ key: savedKey });
-      retorno.img_logo = { key: savedKey, url: await makeImageAccessUrl(savedKey) };
+      retorno.img_logo = {
+        key: savedKey,
+        url: await makeImageAccessUrl(savedKey),
+      };
     }
     if (files.img_banner?.[0]) {
       const f = files.img_banner[0];
       const key = keyEmpresaBannerConfig(idEmpresa, f.mimetype);
       const savedKey = await putToS3(f.buffer, key, f.mimetype);
       updates.IMG_BANNER = JSON.stringify({ key: savedKey });
-      retorno.img_banner = { key: savedKey, url: await makeImageAccessUrl(savedKey) };
+      retorno.img_banner = {
+        key: savedKey,
+        url: await makeImageAccessUrl(savedKey),
+      };
     }
 
     if (Object.keys(updates).length === 0) {
-      return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+      return res.status(400).json({ error: "Nenhuma imagem enviada." });
     }
 
-    const fields = Object.keys(updates).map(k => `${k} = ?`).join(', ');
+    const fields = Object.keys(updates)
+      .map((k) => `${k} = ?`)
+      .join(", ");
     const values = Object.values(updates);
-    await db.query(`UPDATE configuracaofila SET ${fields} WHERE ID_CONF_FILA = ?`, [...values, idConfig]);
+    await db.query(
+      `UPDATE configuracaofila SET ${fields} WHERE ID_CONF_FILA = ?`,
+      [...values, idConfig]
+    );
 
     return res.json({
-      message: 'Imagens da configuração atualizadas com sucesso.',
+      message: "Imagens da configuração atualizadas com sucesso.",
       configuracaoId: idConfig,
-      imagens: retorno
+      imagens: retorno,
     });
   } catch (err) {
-    console.error('[uploadImagensConfiguracao] Erro:', err);
-    return res.status(500).json({ error: 'Falha ao subir imagens da configuração.' });
+    console.error("[uploadImagensConfiguracao] Erro:", err);
+    return res
+      .status(500)
+      .json({ error: "Falha ao subir imagens da configuração." });
   }
 };
 
 exports.getConfiguracao = async (req, res) => {
   const idConfig = parseInt(req.params.id, 10);
-  if (!Number.isFinite(idConfig)) { return res.status(400).json({ error: 'ID da configuração inválido.' }); }
+  if (!Number.isFinite(idConfig)) {
+    return res.status(400).json({ error: "ID da configuração inválido." });
+  }
 
   try {
     const [rows] = await db.query(
@@ -258,10 +307,17 @@ exports.getConfiguracao = async (req, res) => {
         WHERE ID_CONF_FILA = ?`,
       [idConfig]
     );
-    if (!rows.length) return res.status(404).json({ error: 'Configuração não encontrada.' });
+    if (!rows.length)
+      return res.status(404).json({ error: "Configuração não encontrada." });
 
     const c = rows[0];
-    const parseJson = (v) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
+    const parseJson = (v) => {
+      try {
+        return v ? JSON.parse(v) : null;
+      } catch {
+        return null;
+      }
+    };
     const logoJson = parseJson(c.IMG_LOGO);
     const bannerJson = parseJson(c.IMG_BANNER);
 
@@ -274,36 +330,54 @@ exports.getConfiguracao = async (req, res) => {
         : null,
       img_banner: bannerJson
         ? { key: bannerJson.key, url: await makeImageAccessUrl(bannerJson.key) }
-        : null
+        : null,
     });
   } catch (err) {
-    console.error('[getConfiguracao] Erro:', err);
-    return res.status(500).json({ error: 'Erro ao buscar configuração.' });
+    console.error("[getConfiguracao] Erro:", err);
+    return res.status(500).json({ error: "Erro ao buscar configuração." });
   }
 };
 
 exports.cadastrarConfiguracaoFila = async (req, res) => {
   const {
-    id_empresa, nome_fila, ini_vig, fim_vig, campos, mensagem,
-    img_banner, img_logo, temp_tol, qtde_min, qtde_max, per_sair, per_loc, situacao
+    id_empresa,
+    nome_fila,
+    ini_vig,
+    fim_vig,
+    campos,
+    mensagem,
+    img_banner,
+    img_logo,
+    temp_tol,
+    qtde_min,
+    qtde_max,
+    per_sair,
+    per_loc,
+    situacao,
   } = req.body;
 
   if (!id_empresa || !nome_fila) {
-    return res.status(400).json({ erro: 'Campos obrigatórios ausentes.' });
+    return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
   }
 
-  const iniVigInt     = parseDateYyyyMmDdToInt(ini_vig);
-  const fimVigInt     = parseDateYyyyMmDdToInt(fim_vig);
-  const perSairTiny   = boolToTinyint(per_sair);
-  const perLocTiny    = boolToTinyint(per_loc);
-  const situacaoInt   = toIntOrNull(situacao) ?? 1;
+  const iniVigInt = parseDateYyyyMmDdToInt(ini_vig);
+  const fimVigInt = parseDateYyyyMmDdToInt(fim_vig);
+  const perSairTiny = boolToTinyint(per_sair);
+  const perLocTiny = boolToTinyint(per_loc);
+  const situacaoInt = toIntOrNull(situacao) ?? 1;
   const parsedTempTol = toIntOrNull(temp_tol);
   const parsedQtdeMin = toIntOrNull(qtde_min);
   const parsedQtdeMax = toIntOrNull(qtde_max);
-  const token_fila    = uuidv4();
+  const token_fila = uuidv4();
 
-  const bannerJson = await ensureImgJsonForConfig(img_banner, { idEmpresa: id_empresa, tipo: 'banner' });
-  const logoJson   = await ensureImgJsonForConfig(img_logo,   { idEmpresa: id_empresa, tipo: 'logo' });
+  const bannerJson = await ensureImgJsonForConfig(img_banner, {
+    idEmpresa: id_empresa,
+    tipo: "banner",
+  });
+  const logoJson = await ensureImgJsonForConfig(img_logo, {
+    idEmpresa: id_empresa,
+    tipo: "logo",
+  });
 
   const conn = await db.getConnection();
   try {
@@ -316,15 +390,27 @@ exports.cadastrarConfiguracaoFila = async (req, res) => {
        VALUES
          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        id_empresa, nome_fila, token_fila, iniVigInt, fimVigInt,
-        JSON.stringify(campos || {}), mensagem || '',
-        JSON.stringify(bannerJson), JSON.stringify(logoJson),
-        parsedTempTol, parsedQtdeMin, parsedQtdeMax, perSairTiny, perLocTiny, situacaoInt
+        id_empresa,
+        nome_fila,
+        token_fila,
+        iniVigInt,
+        fimVigInt,
+        JSON.stringify(campos || {}),
+        mensagem || "",
+        JSON.stringify(bannerJson),
+        JSON.stringify(logoJson),
+        parsedTempTol,
+        parsedQtdeMin,
+        parsedQtdeMax,
+        perSairTiny,
+        perLocTiny,
+        situacaoInt,
       ]
     );
 
     const id_conf_fila = result && (result.insertId ?? null);
-    const { effective_active, within_range } = await reflectConfigIntoTodayQueue(conn, id_conf_fila);
+    const { effective_active, within_range } =
+      await reflectConfigIntoTodayQueue(conn, id_conf_fila);
 
     await conn.commit();
 
@@ -335,22 +421,24 @@ exports.cadastrarConfiguracaoFila = async (req, res) => {
     try {
       qr_data_url = await QRCode.toDataURL(join_url, { margin: 1, width: 256 });
     } catch (e) {
-      console.error('Erro ao gerar QR:', e);
+      console.error("Erro ao gerar QR:", e);
     }
 
     return res.status(201).json({
-      mensagem: 'Fila configurada com sucesso!',
+      mensagem: "Fila configurada com sucesso!",
       token_fila,
       join_url,
       qr_data_url,
       id_conf_fila,
       effective_active,
-      within_range
+      within_range,
     });
   } catch (err) {
     await conn.rollback();
-    console.error('Erro ao inserir ConfiguracaoFila:', err);
-    return res.status(500).json({ erro: 'Erro interno ao salvar configuração.' });
+    console.error("Erro ao inserir ConfiguracaoFila:", err);
+    return res
+      .status(500)
+      .json({ erro: "Erro interno ao salvar configuração." });
   } finally {
     conn.release();
   }
@@ -364,28 +452,36 @@ exports.buscarConfiguracaoFilaPorId = async (req, res) => {
     const [rows] = await execDb(sql, [id]);
     const results = Array.isArray(rows) ? rows : [];
     if (!results.length) {
-      return res.status(404).json({ mensagem: 'Configuração de fila não encontrada.' });
+      return res
+        .status(404)
+        .json({ mensagem: "Configuração de fila não encontrada." });
     }
 
     const r = { ...results[0] };
 
     let campos = {};
-    try { campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : {}; } catch {}
+    try {
+      campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : {};
+    } catch {}
 
     const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
-    const logo   = parseJsonKeyOrUrl(r.IMG_LOGO);
+    const logo = parseJsonKeyOrUrl(r.IMG_LOGO);
 
-    const bannerUrl = banner.key ? await makeImageAccessUrl(banner.key) : (banner.url || '');
-    const logoUrl   = logo.key   ? await makeImageAccessUrl(logo.key)   : (logo.url || '');
+    const bannerUrl = banner.key
+      ? await makeImageAccessUrl(banner.key)
+      : banner.url || "";
+    const logoUrl = logo.key
+      ? await makeImageAccessUrl(logo.key)
+      : logo.url || "";
 
     const toDateStr = (n) => {
-      if (!n) return '';
-      const s = String(n).padStart(8, '0');
-      return `${s.substring(0,4)}-${s.substring(4,6)}-${s.substring(6,8)}`;
+      if (!n) return "";
+      const s = String(n).padStart(8, "0");
+      return `${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)}`;
     };
 
     const within_range = isWithinRange(r.INI_VIG, r.FIM_VIG);
-    const effective_active = (r.SITUACAO === 1) && within_range;
+    const effective_active = r.SITUACAO === 1 && within_range;
     const situacao_exibicao = effective_active ? 1 : 0;
 
     return res.status(200).json({
@@ -397,8 +493,16 @@ exports.buscarConfiguracaoFilaPorId = async (req, res) => {
       fim_vig: toDateStr(r.FIM_VIG),
       campos,
       mensagem: r.MENSAGEM,
-      img_banner: banner.key ? { key: banner.key, url: bannerUrl } : (banner.url ? { url: bannerUrl } : null),
-      img_logo:   logo.key   ? { key: logo.key,   url: logoUrl }   : (logo.url   ? { url: logoUrl }   : null),
+      img_banner: banner.key
+        ? { key: banner.key, url: bannerUrl }
+        : banner.url
+        ? { url: bannerUrl }
+        : null,
+      img_logo: logo.key
+        ? { key: logo.key, url: logoUrl }
+        : logo.url
+        ? { url: logoUrl }
+        : null,
       temp_tol: r.TEMP_TOL,
       qtde_min: r.QDTE_MIN,
       qtde_max: r.QTDE_MAX,
@@ -407,40 +511,69 @@ exports.buscarConfiguracaoFilaPorId = async (req, res) => {
       situacao: r.SITUACAO,
       within_range,
       effective_active,
-      situacao_exibicao
+      situacao_exibicao,
     });
   } catch (err) {
-    console.error('Erro ao buscar configuração de fila por ID:', err);
-    return res.status(500).json({ erro: 'Erro interno ao buscar configuração de fila.', detalhes: err.message });
+    console.error("Erro ao buscar configuração de fila por ID:", err);
+    return res
+      .status(500)
+      .json({
+        erro: "Erro interno ao buscar configuração de fila.",
+        detalhes: err.message,
+      });
   }
 };
 
 exports.atualizarConfiguracaoFila = async (req, res) => {
   const { id } = req.params;
   const {
-    id_empresa, nome_fila, ini_vig, fim_vig, campos, mensagem,
-    img_banner, img_logo, temp_tol, qtde_min, qtde_max, per_sair, per_loc, situacao
+    id_empresa,
+    nome_fila,
+    ini_vig,
+    fim_vig,
+    campos,
+    mensagem,
+    img_banner,
+    img_logo,
+    temp_tol,
+    qtde_min,
+    qtde_max,
+    per_sair,
+    per_loc,
+    situacao,
   } = req.body;
 
   if (!id_empresa || !nome_fila) {
-    return res.status(400).json({ erro: 'Campos obrigatórios ausentes: ID da Empresa e Nome da Fila.' });
+    return res
+      .status(400)
+      .json({
+        erro: "Campos obrigatórios ausentes: ID da Empresa e Nome da Fila.",
+      });
   }
 
-  const iniVigInt   = parseDateYyyyMmDdToInt(ini_vig);
-  const fimVigInt   = parseDateYyyyMmDdToInt(fim_vig);
+  const iniVigInt = parseDateYyyyMmDdToInt(ini_vig);
+  const fimVigInt = parseDateYyyyMmDdToInt(fim_vig);
   const perSairTiny = boolToTinyint(per_sair);
-  const perLocTiny  = boolToTinyint(per_loc);
+  const perLocTiny = boolToTinyint(per_loc);
   const situacaoInt = toIntOrNull(situacao);
   const parsedTempTol = toIntOrNull(temp_tol);
   const parsedQtdeMin = toIntOrNull(qtde_min);
   const parsedQtdeMax = toIntOrNull(qtde_max);
 
   if (situacaoInt !== 0 && situacaoInt !== 1) {
-    return res.status(400).json({ erro: 'Formato inválido para SITUACAO. Esperado 0 ou 1.' });
+    return res
+      .status(400)
+      .json({ erro: "Formato inválido para SITUACAO. Esperado 0 ou 1." });
   }
 
-  const bannerJson = await ensureImgJsonForConfig(img_banner, { idEmpresa: id_empresa, tipo: 'banner' });
-  const logoJson   = await ensureImgJsonForConfig(img_logo,   { idEmpresa: id_empresa, tipo: 'logo' });
+  const bannerJson = await ensureImgJsonForConfig(img_banner, {
+    idEmpresa: id_empresa,
+    tipo: "banner",
+  });
+  const logoJson = await ensureImgJsonForConfig(img_logo, {
+    idEmpresa: id_empresa,
+    tipo: "logo",
+  });
 
   const conn = await db.getConnection();
   try {
@@ -453,36 +586,61 @@ exports.atualizarConfiguracaoFila = async (req, res) => {
               PER_SAIR = ?, PER_LOC = ?, SITUACAO = ?
         WHERE ID_CONF_FILA = ?`,
       [
-        id_empresa, nome_fila, iniVigInt, fimVigInt,
-        JSON.stringify(campos || {}), mensagem || '',
-        JSON.stringify(bannerJson), JSON.stringify(logoJson),
-        parsedTempTol, parsedQtdeMin, parsedQtdeMax,
-        perSairTiny, perLocTiny, situacaoInt,
-        id
+        id_empresa,
+        nome_fila,
+        iniVigInt,
+        fimVigInt,
+        JSON.stringify(campos || {}),
+        mensagem || "",
+        JSON.stringify(bannerJson),
+        JSON.stringify(logoJson),
+        parsedTempTol,
+        parsedQtdeMin,
+        parsedQtdeMax,
+        perSairTiny,
+        perLocTiny,
+        situacaoInt,
+        id,
       ]
     );
 
-    const affected = typeof updResult?.affectedRows === 'number'
-      ? updResult.affectedRows
-      : (Array.isArray(updResult) ? updResult.length : 0);
+    const affected =
+      typeof updResult?.affectedRows === "number"
+        ? updResult.affectedRows
+        : Array.isArray(updResult)
+        ? updResult.length
+        : 0;
 
     if (!affected) {
       await conn.rollback();
-      return res.status(404).json({ mensagem: 'Configuração de fila não encontrada para atualização.' });
+      return res
+        .status(404)
+        .json({
+          mensagem: "Configuração de fila não encontrada para atualização.",
+        });
     }
 
-    const { effective_active, within_range } = await reflectConfigIntoTodayQueue(conn, id);
+    const { effective_active, within_range } =
+      await reflectConfigIntoTodayQueue(conn, id);
 
     await conn.commit();
     return res.status(200).json({
-      mensagem: 'Configuração de fila atualizada com sucesso.',
+      mensagem: "Configuração de fila atualizada com sucesso.",
       effective_active,
-      within_range
+      within_range,
     });
   } catch (err) {
     await conn.rollback();
-    console.error('Erro ao atualizar ConfiguracaoFila (com refletir fila):', err);
-    return res.status(500).json({ erro: 'Erro interno ao atualizar configuração.', detalhes: err.message });
+    console.error(
+      "Erro ao atualizar ConfiguracaoFila (com refletir fila):",
+      err
+    );
+    return res
+      .status(500)
+      .json({
+        erro: "Erro interno ao atualizar configuração.",
+        detalhes: err.message,
+      });
   } finally {
     conn.release();
   }
@@ -490,10 +648,16 @@ exports.atualizarConfiguracaoFila = async (req, res) => {
 
 exports.excluirConfiguracaoFila = async (req, res) => {
   const idConf = parseInt(req.params.id, 10);
-  const idEmpresa = Number(req.query.idEmpresa || req.headers['x-empresa-id'] || req.body?.id_empresa);
+  const idEmpresa = Number(
+    req.query.idEmpresa || req.headers["x-empresa-id"] || req.body?.id_empresa
+  );
 
-  if (!Number.isFinite(idConf)) { return res.status(400).json({ erro: 'ID da configuração inválido.' }); }
-  if (!idEmpresa) { return res.status(400).json({ erro: 'idEmpresa é obrigatório.' }); }
+  if (!Number.isFinite(idConf)) {
+    return res.status(400).json({ erro: "ID da configuração inválido." });
+  }
+  if (!idEmpresa) {
+    return res.status(400).json({ erro: "idEmpresa é obrigatório." });
+  }
 
   const conn = await db.getConnection();
   try {
@@ -505,22 +669,28 @@ exports.excluirConfiguracaoFila = async (req, res) => {
         WHERE ID_CONF_FILA = ? LIMIT 1`,
       [idConf]
     );
-    if (!cfgRows.length) { await conn.rollback(); return res.status(404).json({ erro: 'config_not_found' }); }
-    if (cfgRows[0].ID_EMPRESA !== idEmpresa) { await conn.rollback(); return res.status(403).json({ erro: 'forbidden' }); }
+    if (!cfgRows.length) {
+      await conn.rollback();
+      return res.status(404).json({ erro: "config_not_found" });
+    }
+    if (cfgRows[0].ID_EMPRESA !== idEmpresa) {
+      await conn.rollback();
+      return res.status(403).json({ erro: "forbidden" });
+    }
 
     // Apagar dependências (clientes/fila do dia, etc.)
     const [rowsFilas] = await conn.execute(
       `SELECT ID_FILA FROM fila WHERE ID_EMPRESA = ? AND ID_CONF_FILA = ?`,
       [idEmpresa, idConf]
     );
-    const filaIds = rowsFilas.map(r => r.ID_FILA);
+    const filaIds = rowsFilas.map((r) => r.ID_FILA);
 
     let delClientes = 0;
     let delFilas = 0;
     let delCfg = 0;
 
     if (filaIds.length > 0) {
-      const placeholders = filaIds.map(() => '?').join(',');
+      const placeholders = filaIds.map(() => "?").join(",");
       const params = [idEmpresa, ...filaIds];
 
       const [resDelCli] = await conn.execute(
@@ -547,20 +717,37 @@ exports.excluirConfiguracaoFila = async (req, res) => {
     );
     delCfg = resDelCfg?.affectedRows ?? 0;
 
-    if (!delCfg) { await conn.rollback(); return res.status(404).json({ erro: 'config_not_found' }); }
+    if (!delCfg) {
+      await conn.rollback();
+      return res.status(404).json({ erro: "config_not_found" });
+    }
 
     await conn.commit();
     return res.status(200).json({
-      mensagem: 'Configuração excluída com sucesso.',
-      removidos: { clientes: delClientes, filas: delFilas, configuracao: delCfg }
+      mensagem: "Configuração excluída com sucesso.",
+      removidos: {
+        clientes: delClientes,
+        filas: delFilas,
+        configuracao: delCfg,
+      },
     });
   } catch (err) {
     await conn.rollback();
-    if (err && (err.code === 'ER_ROW_IS_REFERENCED_2' || err.errno === 1451)) {
-      return res.status(409).json({ erro: 'constraint_violation', detalhe: 'Configuração referenciada por outros registros.' });
+    if (err && (err.code === "ER_ROW_IS_REFERENCED_2" || err.errno === 1451)) {
+      return res
+        .status(409)
+        .json({
+          erro: "constraint_violation",
+          detalhe: "Configuração referenciada por outros registros.",
+        });
     }
-    console.error('[excluirConfiguracaoFila] Erro:', err);
-    return res.status(500).json({ erro: 'Erro interno ao excluir configuração.', detalhes: err.message });
+    console.error("[excluirConfiguracaoFila] Erro:", err);
+    return res
+      .status(500)
+      .json({
+        erro: "Erro interno ao excluir configuração.",
+        detalhes: err.message,
+      });
   } finally {
     conn.release();
   }
@@ -571,19 +758,24 @@ exports.qrPngByToken = async (req, res) => {
   const baseUrl = getPublicFrontBaseUrl(req);
   const join_url = `${baseUrl}/entrar-fila/${token}`;
   try {
-    const buffer = await QRCode.toBuffer(join_url, { margin: 1, width: 512, type: 'png' });
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Disposition', `inline; filename="qr-${token}.png"`);
+    const buffer = await QRCode.toBuffer(join_url, {
+      margin: 1,
+      width: 512,
+      type: "png",
+    });
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Disposition", `inline; filename="qr-${token}.png"`);
     return res.send(buffer);
   } catch (e) {
-    console.error('Erro ao gerar QR PNG:', e);
-    return res.status(500).send('Falha ao gerar QR');
+    console.error("Erro ao gerar QR PNG:", e);
+    return res.status(500).send("Falha ao gerar QR");
   }
 };
 
 exports.listarConfiguracoesDaEmpresa = async (req, res) => {
-  const idEmpresa = Number(req.query.idEmpresa || req.headers['x-empresa-id']);
-  if (!idEmpresa) return res.status(400).json({ erro: 'idEmpresa é obrigatório.' });
+  const idEmpresa = Number(req.query.idEmpresa || req.headers["x-empresa-id"]);
+  if (!idEmpresa)
+    return res.status(400).json({ erro: "idEmpresa é obrigatório." });
 
   const sql = `
     SELECT ID_CONF_FILA, ID_EMPRESA, NOME_FILA, TOKEN_FILA, INI_VIG, FIM_VIG,
@@ -594,55 +786,67 @@ exports.listarConfiguracoesDaEmpresa = async (req, res) => {
   ORDER BY NOME_FILA ASC`;
 
   const toDateStr = (n) => {
-    if (!n) return '';
-    const s = String(n).padStart(8, '0');
+    if (!n) return "";
+    const s = String(n).padStart(8, "0");
     return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
   };
 
   try {
     const [rows] = await execDb(sql, [idEmpresa]);
-    const list = await Promise.all(rows.map(async (r) => {
-      let campos = {};
-      try { campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : {}; } catch {}
+    const list = await Promise.all(
+      rows.map(async (r) => {
+        let campos = {};
+        try {
+          campos = r.CAMPOS ? JSON.parse(r.CAMPOS) : {};
+        } catch {}
 
-      const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
-      const logo   = parseJsonKeyOrUrl(r.IMG_LOGO);
+        const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
+        const logo = parseJsonKeyOrUrl(r.IMG_LOGO);
 
-      const bannerUrl = banner.key ? await makeImageAccessUrl(banner.key) : (banner.url || '');
-      const logoUrl   = logo.key   ? await makeImageAccessUrl(logo.key)   : (logo.url || '');
+        const bannerUrl = banner.key
+          ? await makeImageAccessUrl(banner.key)
+          : banner.url || "";
+        const logoUrl = logo.key
+          ? await makeImageAccessUrl(logo.key)
+          : logo.url || "";
 
-      const within_range = isWithinRange(r.INI_VIG, r.FIM_VIG);
-      const effective_active = (r.SITUACAO === 1) && within_range;
-      const situacao_exibicao = effective_active ? 1 : 0;
+        const within_range = isWithinRange(r.INI_VIG, r.FIM_VIG);
+        const effective_active = r.SITUACAO === 1 && within_range;
+        const situacao_exibicao = effective_active ? 1 : 0;
 
-      return {
-        id_conf_fila: r.ID_CONF_FILA,
-        id_empresa: r.ID_EMPRESA,
-        nome_fila: r.NOME_FILA,
-        token_fila: r.TOKEN_FILA,
-        ini_vig: toDateStr(r.INI_VIG),
-        fim_vig: toDateStr(r.FIM_VIG),
-        campos,
-        mensagem: r.MENSAGEM,
-        img_banner: bannerUrl ? { url: bannerUrl, ...(banner.key ? { key: banner.key } : {}) } : null,
-        img_logo:   logoUrl   ? { url: logoUrl,   ...(logo.key   ? { key: logo.key }   : {}) } : null,
-        temp_tol: r.TEMP_TOL,
-        qtde_min: r.QDTE_MIN,
-        qtde_max: r.QTDE_MAX,
-        per_sair: r.PER_SAIR === 1,
-        per_loc: r.PER_LOC === 1,
-        situacao: r.SITUACAO,
-        within_range,
-        effective_active,
-        situacao_exibicao,
-        join_url: `${getPublicFrontBaseUrl(req)}/entrar-fila/${r.TOKEN_FILA}`,
-      };
-    }));
+        return {
+          id_conf_fila: r.ID_CONF_FILA,
+          id_empresa: r.ID_EMPRESA,
+          nome_fila: r.NOME_FILA,
+          token_fila: r.TOKEN_FILA,
+          ini_vig: toDateStr(r.INI_VIG),
+          fim_vig: toDateStr(r.FIM_VIG),
+          campos,
+          mensagem: r.MENSAGEM,
+          img_banner: bannerUrl
+            ? { url: bannerUrl, ...(banner.key ? { key: banner.key } : {}) }
+            : null,
+          img_logo: logoUrl
+            ? { url: logoUrl, ...(logo.key ? { key: logo.key } : {}) }
+            : null,
+          temp_tol: r.TEMP_TOL,
+          qtde_min: r.QDTE_MIN,
+          qtde_max: r.QTDE_MAX,
+          per_sair: r.PER_SAIR === 1,
+          per_loc: r.PER_LOC === 1,
+          situacao: r.SITUACAO,
+          within_range,
+          effective_active,
+          situacao_exibicao,
+          join_url: `${getPublicFrontBaseUrl(req)}/entrar-fila/${r.TOKEN_FILA}`,
+        };
+      })
+    );
 
     return res.json(list);
   } catch (err) {
-    console.error('Erro ao listar configurações de fila:', err);
-    return res.status(500).json({ erro: 'Erro ao listar configurações.' });
+    console.error("Erro ao listar configurações de fila:", err);
+    return res.status(500).json({ erro: "Erro ao listar configurações." });
   }
 };
 
@@ -667,36 +871,46 @@ exports.getPublicInfoByToken = async (req, res) => {
   // helper: converte objeto booleans -> array [{campo, tipo}]
   const normalizeCamposToArray = (raw) => {
     try {
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
       if (Array.isArray(parsed)) {
         // Garante CPF presente
-        const hasCpf = parsed.some(c => String(c.campo || '').toLowerCase().includes('cpf'));
-        return hasCpf ? parsed : [{ campo: 'CPF', tipo: 'numero' }, ...parsed];
+        const hasCpf = parsed.some((c) =>
+          String(c.campo || "")
+            .toLowerCase()
+            .includes("cpf")
+        );
+        return hasCpf ? parsed : [{ campo: "CPF", tipo: "numero" }, ...parsed];
       }
-      if (parsed && typeof parsed === 'object') {
+      if (parsed && typeof parsed === "object") {
         const toPretty = (k) =>
-          String(k).replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+          String(k)
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (m) => m.toUpperCase());
         const arr = Object.entries(parsed)
           .filter(([, v]) => !!v)
           .map(([k]) => {
-            let tipo = 'texto';
-            if (k === 'cpf' || k === 'qtde_pessoas') tipo = 'numero';
-            else if (k === 'data_nascimento') tipo = 'data';
-            else if (k === 'email') tipo = 'email';
+            let tipo = "texto";
+            if (k === "cpf" || k === "qtde_pessoas") tipo = "numero";
+            else if (k === "data_nascimento") tipo = "data";
+            else if (k === "email") tipo = "email";
             return { campo: toPretty(k), tipo };
           });
         // Garante CPF presente
-        const hasCpf = arr.some(c => String(c.campo || '').toLowerCase().includes('cpf'));
-        return hasCpf ? arr : [{ campo: 'CPF', tipo: 'numero' }, ...arr];
+        const hasCpf = arr.some((c) =>
+          String(c.campo || "")
+            .toLowerCase()
+            .includes("cpf")
+        );
+        return hasCpf ? arr : [{ campo: "CPF", tipo: "numero" }, ...arr];
       }
     } catch {}
     // fallback com CPF
-    return [{ campo: 'CPF', tipo: 'numero' }];
+    return [{ campo: "CPF", tipo: "numero" }];
   };
 
   try {
     const [rows] = await db.execute(sql, [token]);
-    if (!rows.length) return res.status(404).json({ erro: 'config_not_found' });
+    if (!rows.length) return res.status(404).json({ erro: "config_not_found" });
 
     const r = rows[0];
 
@@ -705,9 +919,13 @@ exports.getPublicInfoByToken = async (req, res) => {
 
     // Imagens -> URL de acesso
     const banner = parseJsonKeyOrUrl(r.IMG_BANNER);
-    const logo   = parseJsonKeyOrUrl(r.IMG_LOGO);
-    const bannerUrl = banner.key ? await makeImageAccessUrl(banner.key) : (banner.url || '');
-    const logoUrl   = logo.key   ? await makeImageAccessUrl(logo.key)   : (logo.url || '');
+    const logo = parseJsonKeyOrUrl(r.IMG_LOGO);
+    const bannerUrl = banner.key
+      ? await makeImageAccessUrl(banner.key)
+      : banner.url || "";
+    const logoUrl = logo.key
+      ? await makeImageAccessUrl(logo.key)
+      : logo.url || "";
 
     // Vigência / situação efetiva
     const within_range = isWithinRange(r.INI_VIG, r.FIM_VIG);
@@ -728,12 +946,12 @@ exports.getPublicInfoByToken = async (req, res) => {
       fim_vig: r.FIM_VIG || null,
       within_range,
 
-      situacao,               // efetiva
+      situacao, // efetiva
       situacao_raw,
       effective_active,
       situacao_exibicao: situacao,
 
-      campos,                 // <- SEMPRE ARRAY A PARTIR DE AGORA
+      campos, // <- SEMPRE ARRAY A PARTIR DE AGORA
       mensagem: r.MENSAGEM,
       temp_tol: r.TEMP_TOL ?? null,
       qtde_min: Number.isFinite(Number(r.QTDE_MIN)) ? Number(r.QTDE_MIN) : 1,
@@ -744,28 +962,43 @@ exports.getPublicInfoByToken = async (req, res) => {
       permitir_localizacao,
       radius_meters,
 
-      img_banner: bannerUrl ? { url: bannerUrl, ...(banner.key ? { key: banner.key } : {}) } : null,
-      img_logo:   logoUrl   ? { url: logoUrl,   ...(logo.key   ? { key: logo.key }   : {}) } : null,
+      img_banner: bannerUrl
+        ? { url: bannerUrl, ...(banner.key ? { key: banner.key } : {}) }
+        : null,
+      img_logo: logoUrl
+        ? { url: logoUrl, ...(logo.key ? { key: logo.key } : {}) }
+        : null,
 
-      empresa: { id: r.ID_EMPRESA, nome: r.NOME_EMPRESA, logo_url: logoUrl || '' },
+      empresa: {
+        id: r.ID_EMPRESA,
+        nome: r.NOME_EMPRESA,
+        logo_url: logoUrl || "",
+      },
 
-      join_url: `${getPublicFrontBaseUrl(req)}/entrar-fila/${r.TOKEN_FILA}`
+      join_url: `${getPublicFrontBaseUrl(req)}/entrar-fila/${r.TOKEN_FILA}`,
     });
   } catch (e) {
-    console.error('[getPublicInfoByToken] ERRO:', e);
-    return res.status(500).json({ erro: 'internal_error' });
+    console.error("[getPublicInfoByToken] ERRO:", e);
+    return res.status(500).json({ erro: "internal_error" });
   }
 };
-
 
 exports.publicJoinByToken = async (req, res, io) => {
   const { token } = req.params;
   const {
-    nome, cpf, rg = null, dddcel = null, nr_cel = null,
-    email = null, dt_nasc = null, nr_qtdpes = 1
+    nome,
+    cpf,
+    rg = null,
+    dddcel = null,
+    nr_cel = null,
+    email = null,
+    dt_nasc = null,
+    nr_qtdpes = 1,
   } = req.body;
 
-  if (!nome || !cpf) { return res.status(400).json({ erro: 'Nome e CPF são obrigatórios.' }); }
+  if (!nome || !cpf) {
+    return res.status(400).json({ erro: "Nome e CPF são obrigatórios." });
+  }
 
   const conn = await db.getConnection();
   try {
@@ -778,13 +1011,20 @@ exports.publicJoinByToken = async (req, res, io) => {
         WHERE TOKEN_FILA = ? LIMIT 1`,
       [token]
     );
-    if (!cfgRows.length) { await conn.rollback(); return res.status(404).json({ erro: 'config_not_found' }); }
+    if (!cfgRows.length) {
+      await conn.rollback();
+      return res.status(404).json({ erro: "config_not_found" });
+    }
 
     const cfg = cfgRows[0];
     const within_range = isWithinRange(cfg.INI_VIG, cfg.FIM_VIG);
     if (!(cfg.SITUACAO === 1 && within_range)) {
       await conn.rollback();
-      return res.status(409).json({ erro: within_range ? 'config_inactive' : 'config_out_of_range' });
+      return res
+        .status(409)
+        .json({
+          erro: within_range ? "config_inactive" : "config_out_of_range",
+        });
     }
 
     const idEmpresa = cfg.ID_EMPRESA;
@@ -805,8 +1045,14 @@ exports.publicJoinByToken = async (req, res, io) => {
     let idFila;
     if (filaRows.length) {
       const f = filaRows[0];
-      if (f.BLOCK) { await conn.rollback(); return res.status(409).json({ erro: 'fila_blocked' }); }
-      if (f.SITUACAO !== 1) { await conn.rollback(); return res.status(409).json({ erro: 'fila_inactive' }); }
+      if (f.BLOCK) {
+        await conn.rollback();
+        return res.status(409).json({ erro: "fila_blocked" });
+      }
+      if (f.SITUACAO !== 1) {
+        await conn.rollback();
+        return res.status(409).json({ erro: "fila_inactive" });
+      }
       idFila = f.ID_FILA;
     } else {
       const [insFila] = await conn.execute(
@@ -820,61 +1066,48 @@ exports.publicJoinByToken = async (req, res, io) => {
     // 3) verifica último status do CPF na fila de hoje
     const [dup] = await conn.execute(
       `SELECT ID_CLIENTE, DT_ENTRA, SITUACAO, DT_CHAMA
-         FROM clientesfila
-        WHERE ID_EMPRESA = ?
-          AND ID_FILA    = ?
-          AND DATE(DT_MOVTO) = CURDATE()
-          AND CPFCNPJ    = ?
-     ORDER BY DT_ENTRA DESC
-        LIMIT 1`,
+     FROM clientesfila
+    WHERE ID_EMPRESA = ?
+      AND ID_FILA    = ?
+      AND DATE(DT_MOVTO) = CURDATE()
+      AND CPFCNPJ    = ?
+ ORDER BY DT_ENTRA DESC
+    LIMIT 1`,
       [idEmpresa, idFila, cpf]
     );
 
     if (dup.length) {
       const mine = dup[0];
+      const sit = Number(mine.SITUACAO);
 
-      // Confirmado (1) => NÃO pode entrar novamente; direciona para "chamado"
-      if (Number(mine.SITUACAO) === 1) {
-        await conn.commit();
-        return res.status(200).json({
-          mensagem: 'Você já confirmou presença hoje nesta fila.',
-          duplicated: true,
-          already_confirmed: true,
-          redirect: 'chamado',
-          id_empresa: idEmpresa,
-          id_fila: idFila,
-          id_cliente: mine.ID_CLIENTE,
-          dt_movto: new Date().toISOString().slice(0, 10)
-        });
-      }
-
-      // Aguardando (0) ou Chamado (3) => já está na fila; retorna posição
-      if (Number(mine.SITUACAO) === 0 || Number(mine.SITUACAO) === 3) {
+      // Aguardando (0) ou Chamado (3) => já está na fila; retorna posição atual
+      if (sit === 0 || sit === 3) {
         const [[ahead]] = await conn.query(
           `SELECT COUNT(*) AS ahead
-             FROM clientesfila
-            WHERE ID_EMPRESA = ?
-              AND ID_FILA    = ?
-              AND DATE(DT_MOVTO) = CURDATE()
-              AND SITUACAO IN (0,3)
-              AND DT_ENTRA < ?`,
+         FROM clientesfila
+        WHERE ID_EMPRESA = ?
+          AND ID_FILA    = ?
+          AND DATE(DT_MOVTO) = CURDATE()
+          AND SITUACAO IN (0,3)
+          AND DT_ENTRA < ?`,
           [idEmpresa, idFila, mine.DT_ENTRA]
         );
         const posicao = (ahead?.ahead ?? 0) + 1;
 
         await conn.commit();
         return res.status(200).json({
-          mensagem: 'Você já está na fila hoje.',
+          mensagem: "Você já está na fila hoje.",
           duplicated: true,
           id_empresa: idEmpresa,
           id_fila: idFila,
           id_cliente: mine.ID_CLIENTE,
           dt_movto: new Date().toISOString().slice(0, 10),
-          posicao
+          posicao,
         });
       }
-      // Se chegou aqui, SITUACAO = 2 (saiu/não compareceu) => pode reentrar,
-      // mas PRECISA de um NOVO ID_CLIENTE para não colidir na PK (mesmo dia).
+
+      // Confirmado (1) OU Saiu/Não compareceu (2) => pode reentrar
+      // (segue fluxo para alocar NOVO ID_CLIENTE e inserir no fim da fila)
     }
 
     // 4) definir ID_CLIENTE para inserção
@@ -882,7 +1115,9 @@ exports.publicJoinByToken = async (req, res, io) => {
 
     if (dup.length) {
       // Já existia registro hoje (qualquer status) -> aloca NOVO ID_CLIENTE
-      const [[mx]] = await conn.query(`SELECT COALESCE(MAX(ID_CLIENTE),0)+1 AS nextId FROM clientesfila`);
+      const [[mx]] = await conn.query(
+        `SELECT COALESCE(MAX(ID_CLIENTE),0)+1 AS nextId FROM clientesfila`
+      );
       idCliente = mx.nextId;
     } else {
       // Não existe registro hoje. Tentar reaproveitar ID_CLIENTE global do CPF
@@ -897,7 +1132,9 @@ exports.publicJoinByToken = async (req, res, io) => {
       if (clienteExist.length) {
         idCliente = clienteExist[0].ID_CLIENTE;
       } else {
-        const [[mx]] = await conn.query(`SELECT COALESCE(MAX(ID_CLIENTE),0)+1 AS nextId FROM clientesfila`);
+        const [[mx]] = await conn.query(
+          `SELECT COALESCE(MAX(ID_CLIENTE),0)+1 AS nextId FROM clientesfila`
+        );
         idCliente = mx.nextId;
       }
     }
@@ -910,7 +1147,19 @@ exports.publicJoinByToken = async (req, res, io) => {
           NR_QTDPES, DDDCEL, NR_CEL, DT_ENTRA, SITUACAO)
        VALUES
          (?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`,
-      [idEmpresa, idFila, idCliente, cpf, rg, nome, dt_nasc || null, email, qtd, dddcel, nr_cel]
+      [
+        idEmpresa,
+        idFila,
+        idCliente,
+        cpf,
+        rg,
+        nome,
+        dt_nasc || null,
+        email,
+        qtd,
+        dddcel,
+        nr_cel,
+      ]
     );
 
     const [[posRow]] = await conn.query(
@@ -933,33 +1182,39 @@ exports.publicJoinByToken = async (req, res, io) => {
 
     try {
       if (io) {
-        io.emit('cliente_atualizado', {
-          idEmpresa: idEmpresa, idFila: idFila, idCliente: idCliente, novaSituacao: 0
+        io.emit("cliente_atualizado", {
+          idEmpresa: idEmpresa,
+          idFila: idFila,
+          idCliente: idCliente,
+          novaSituacao: 0,
         });
       }
     } catch {}
 
     return res.status(201).json({
-      mensagem: 'Cliente inserido na fila com sucesso.',
+      mensagem: "Cliente inserido na fila com sucesso.",
       id_empresa: idEmpresa,
       id_fila: idFila,
       id_cliente: idCliente,
       dt_movto: new Date().toISOString().slice(0, 10),
-      posicao
+      posicao,
     });
   } catch (e) {
-    try { await conn.rollback(); } catch {}
-    console.error('[publicJoinByToken] ERRO:', e);
-    return res.status(500).json({ erro: 'internal_error' });
+    try {
+      await conn.rollback();
+    } catch {}
+    console.error("[publicJoinByToken] ERRO:", e);
+    return res.status(500).json({ erro: "internal_error" });
   } finally {
     conn.release();
   }
 };
 
-
 exports.contarFilasPorEmpresa = async (req, res) => {
   const { id_empresa } = req.params;
-  if (!id_empresa) { return res.status(400).json({ erro: 'ID da empresa é obrigatório.' }); }
+  if (!id_empresa) {
+    return res.status(400).json({ erro: "ID da empresa é obrigatório." });
+  }
 
   const sql = `SELECT COUNT(*) AS totalFilas FROM ConfiguracaoFila WHERE ID_EMPRESA = ?`;
   try {
@@ -967,14 +1222,18 @@ exports.contarFilasPorEmpresa = async (req, res) => {
     const totalFilas = results[0].totalFilas || 0;
     res.status(200).json({ id_empresa, totalFilas });
   } catch (err) {
-    console.error('Erro ao contar filas por empresa:', err);
-    res.status(500).json({ erro: 'Erro interno ao contar filas.', detalhes: err.message });
+    console.error("Erro ao contar filas por empresa:", err);
+    res
+      .status(500)
+      .json({ erro: "Erro interno ao contar filas.", detalhes: err.message });
   }
 };
 
 exports.listarFilasPorEmpresa = async (req, res) => {
   const { id_empresa } = req.params;
-  if (!id_empresa) { return res.status(400).json({ erro: 'ID da empresa é obrigatório.' }); }
+  if (!id_empresa) {
+    return res.status(400).json({ erro: "ID da empresa é obrigatório." });
+  }
 
   const sql = `
     SELECT cf.ID_CONF_FILA, cf.NOME_FILA,
@@ -991,14 +1250,17 @@ exports.listarFilasPorEmpresa = async (req, res) => {
     const [results] = await db.execute(sql, [id_empresa, id_empresa]);
     res.status(200).json(results);
   } catch (err) {
-    console.error('Erro ao listar filas por empresa:', err);
-    res.status(500).json({ erro: 'Erro interno ao listar filas.', detalhes: err.message });
+    console.error("Erro ao listar filas por empresa:", err);
+    res
+      .status(500)
+      .json({ erro: "Erro interno ao listar filas.", detalhes: err.message });
   }
 };
 
 exports.getPublicStatusByToken = async (req, res) => {
   const { token } = req.params;
-  const idCliente = Number(req.query.idCliente || req.query.clienteFilaId || 0) || null;
+  const idCliente =
+    Number(req.query.idCliente || req.query.clienteFilaId || 0) || null;
 
   try {
     const [[cfg]] = await db.query(
@@ -1014,11 +1276,13 @@ exports.getPublicStatusByToken = async (req, res) => {
         LIMIT 1`,
       [token]
     );
-    if (!cfg) return res.status(404).json({ message: 'Configuração não encontrada.' });
+    if (!cfg)
+      return res.status(404).json({ message: "Configuração não encontrada." });
 
     const vigente = isWithinRange(cfg.INI_VIG, cfg.FIM_VIG);
-    const cfgAtiva = (cfg.SITUACAO === 1) && vigente;
-    const filaHojeAtiva = !!cfg.ID_FILA && cfg.SITUACAO_DIA === 1 && cfg.BLOCK !== 1;
+    const cfgAtiva = cfg.SITUACAO === 1 && vigente;
+    const filaHojeAtiva =
+      !!cfg.ID_FILA && cfg.SITUACAO_DIA === 1 && cfg.BLOCK !== 1;
 
     let posicaoCliente = null;
     let isChamado = false;
@@ -1051,7 +1315,7 @@ exports.getPublicStatusByToken = async (req, res) => {
         posicaoCliente = Number(ahead?.AHEAD || 0) + 1;
       }
       if (mine) {
-        isChamado = (mine.SITUACAO === 3) || !!mine.DT_CHAMA;
+        isChamado = mine.SITUACAO === 3 || !!mine.DT_CHAMA;
         dtChama = mine.DT_CHAMA || null;
       }
     }
@@ -1108,7 +1372,11 @@ exports.getPublicStatusByToken = async (req, res) => {
 
     return res.json({
       empresa: { ID_EMPRESA: cfg.ID_EMPRESA, NOME: cfg.NOME_FILA },
-      fila: { ID_FILA: cfg.ID_FILA || null, ativaHoje: filaHojeAtiva, bloqueadaHoje: cfg.BLOCK === 1 },
+      fila: {
+        ID_FILA: cfg.ID_FILA || null,
+        ativaHoje: filaHojeAtiva,
+        bloqueadaHoje: cfg.BLOCK === 1,
+      },
       idEmpresa: cfg.ID_EMPRESA,
       idFila: cfg.ID_FILA || null,
       dtMovto: new Date().toISOString().slice(0, 10),
@@ -1118,19 +1386,23 @@ exports.getPublicStatusByToken = async (req, res) => {
       cfgAtiva,
       clienteFilaId: idCliente || null,
       isChamado,
-      dtChama
+      dtChama,
     });
   } catch (e) {
-    console.error('[getPublicStatusByToken] ERRO:', e);
-    return res.status(500).json({ message: 'Erro ao consultar status.' });
+    console.error("[getPublicStatusByToken] ERRO:", e);
+    return res.status(500).json({ message: "Erro ao consultar status." });
   }
 };
 
-
 exports.publicLeaveByToken = async (req, res, io) => {
   const { token } = req.params;
-  const idCliente = Number(req.body.idCliente || req.body.clienteFilaId || 0) || null;
-  if (!idCliente) { return res.status(400).json({ message: 'idCliente (ou clienteFilaId) é obrigatório.' }); }
+  const idCliente =
+    Number(req.body.idCliente || req.body.clienteFilaId || 0) || null;
+  if (!idCliente) {
+    return res
+      .status(400)
+      .json({ message: "idCliente (ou clienteFilaId) é obrigatório." });
+  }
 
   const conn = await db.getConnection();
   try {
@@ -1147,9 +1419,20 @@ exports.publicLeaveByToken = async (req, res, io) => {
         LIMIT 1`,
       [token]
     );
-    if (!cfg) { await conn.rollback(); return res.status(404).json({ message: 'Configuração não encontrada.' }); }
-    if (cfg.PER_SAIR !== 1) { await conn.rollback(); return res.status(403).json({ message: 'Esta fila não permite sair pelo público.' }); }
-    if (!cfg.ID_FILA) { await conn.rollback(); return res.status(409).json({ message: 'Fila do dia indisponível.' }); }
+    if (!cfg) {
+      await conn.rollback();
+      return res.status(404).json({ message: "Configuração não encontrada." });
+    }
+    if (cfg.PER_SAIR !== 1) {
+      await conn.rollback();
+      return res
+        .status(403)
+        .json({ message: "Esta fila não permite sair pelo público." });
+    }
+    if (!cfg.ID_FILA) {
+      await conn.rollback();
+      return res.status(409).json({ message: "Fila do dia indisponível." });
+    }
 
     const [upd] = await conn.query(
       `UPDATE clientesfila
@@ -1166,18 +1449,25 @@ exports.publicLeaveByToken = async (req, res, io) => {
 
     try {
       if (io) {
-        io.to(`empresa:${cfg.ID_EMPRESA}`).emit('cliente_atualizado', {
-          idEmpresa: cfg.ID_EMPRESA, idFila: cfg.ID_FILA, clienteFilaId: idCliente, acao: 'desistiu'
+        io.to(`empresa:${cfg.ID_EMPRESA}`).emit("cliente_atualizado", {
+          idEmpresa: cfg.ID_EMPRESA,
+          idFila: cfg.ID_FILA,
+          clienteFilaId: idCliente,
+          acao: "desistiu",
         });
-        io.to(`empresa:${cfg.ID_EMPRESA}`).emit('dashboard:tick', { now: Date.now() });
+        io.to(`empresa:${cfg.ID_EMPRESA}`).emit("dashboard:tick", {
+          now: Date.now(),
+        });
       }
     } catch {}
 
     return res.json({ ok: true, affected: upd?.affectedRows || 0 });
   } catch (e) {
-    try { await conn.rollback(); } catch {}
-    console.error('[publicLeaveByToken] ERRO:', e);
-    return res.status(500).json({ message: 'Erro ao sair da fila.' });
+    try {
+      await conn.rollback();
+    } catch {}
+    console.error("[publicLeaveByToken] ERRO:", e);
+    return res.status(500).json({ message: "Erro ao sair da fila." });
   } finally {
     conn.release();
   }
@@ -1185,8 +1475,13 @@ exports.publicLeaveByToken = async (req, res, io) => {
 
 exports.publicConfirmByToken = async (req, res, io) => {
   const { token } = req.params;
-  const idCliente = Number(req.body.idCliente || req.body.clienteFilaId || 0) || null;
-  if (!idCliente) { return res.status(400).json({ message: 'idCliente (ou clienteFilaId) é obrigatório.' }); }
+  const idCliente =
+    Number(req.body.idCliente || req.body.clienteFilaId || 0) || null;
+  if (!idCliente) {
+    return res
+      .status(400)
+      .json({ message: "idCliente (ou clienteFilaId) é obrigatório." });
+  }
 
   const conn = await db.getConnection();
   try {
@@ -1203,7 +1498,10 @@ exports.publicConfirmByToken = async (req, res, io) => {
         LIMIT 1`,
       [token]
     );
-    if (!cfg || !cfg.ID_FILA) { await conn.rollback(); return res.status(404).json({ message: 'Fila do dia indisponível.' }); }
+    if (!cfg || !cfg.ID_FILA) {
+      await conn.rollback();
+      return res.status(404).json({ message: "Fila do dia indisponível." });
+    }
 
     const [upd] = await conn.query(
       `UPDATE clientesfila
@@ -1220,19 +1518,110 @@ exports.publicConfirmByToken = async (req, res, io) => {
 
     try {
       if (io) {
-        io.to(`empresa:${cfg.ID_EMPRESA}`).emit('cliente_atualizado', {
-          idEmpresa: cfg.ID_EMPRESA, idFila: cfg.ID_FILA, clienteFilaId: idCliente, acao: 'confirmou'
+        io.to(`empresa:${cfg.ID_EMPRESA}`).emit("cliente_atualizado", {
+          idEmpresa: cfg.ID_EMPRESA,
+          idFila: cfg.ID_FILA,
+          clienteFilaId: idCliente,
+          acao: "confirmou",
         });
-        io.to(`empresa:${cfg.ID_EMPRESA}`).emit('dashboard:tick', { now: Date.now() });
+        io.to(`empresa:${cfg.ID_EMPRESA}`).emit("dashboard:tick", {
+          now: Date.now(),
+        });
       }
     } catch {}
 
     return res.json({ ok: true, affected: upd?.affectedRows || 0 });
   } catch (e) {
-    try { await conn.rollback(); } catch {}
-    console.error('[publicConfirmByToken] ERRO:', e);
-    return res.status(500).json({ message: 'Erro ao confirmar presença.' });
+    try {
+      await conn.rollback();
+    } catch {}
+    console.error("[publicConfirmByToken] ERRO:", e);
+    return res.status(500).json({ message: "Erro ao confirmar presença." });
   } finally {
     conn.release();
+  }
+};
+
+// Média de espera do dia atual (somente hoje),
+// priorizando clientes já atendidos/encerrados hoje.
+// Fallback: média do que está aguardando/chamado agora.
+exports.getPublicDailyAvgWaitByToken = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // Descobre empresa/fila de hoje
+    const [[cfg]] = await db.query(
+      `SELECT cf.ID_EMPRESA, f.ID_FILA
+         FROM ConfiguracaoFila cf
+    LEFT JOIN fila f
+           ON f.ID_EMPRESA = cf.ID_EMPRESA
+          AND f.ID_CONF_FILA = cf.ID_CONF_FILA
+          AND f.DT_MOVTO >= CURDATE()
+          AND f.DT_MOVTO <  CURDATE() + INTERVAL 1 DAY
+        WHERE cf.TOKEN_FILA = ?
+        LIMIT 1`,
+      [token]
+    );
+
+    if (!cfg || !cfg.ID_EMPRESA || !cfg.ID_FILA) {
+      return res.json({
+        mediaHojeMin: null,
+        sampleServed: 0,
+        sampleWaiting: 0,
+      });
+    }
+
+    // 1) média de TODOS os atendidos/encerrados hoje
+    const [[served]] = await db.query(
+      `SELECT
+         COUNT(*) AS n,
+         AVG(TIMESTAMPDIFF(MINUTE, DT_ENTRA, COALESCE(DT_APRE, DT_SAIDA))) AS avgMin
+       FROM clientesfila
+      WHERE ID_EMPRESA = ?
+        AND ID_FILA    = ?
+        AND DT_MOVTO  >= CURDATE()
+        AND DT_MOVTO  <  CURDATE() + INTERVAL 1 DAY
+        AND COALESCE(DT_APRE, DT_SAIDA) IS NOT NULL
+        AND SITUACAO NOT IN (0,3)`,
+      [cfg.ID_EMPRESA, cfg.ID_FILA]
+    );
+
+    let mediaHoje = null;
+    let sampleServed = Number(served?.n || 0);
+
+    if (sampleServed > 0 && served?.avgMin != null) {
+      mediaHoje = Math.round(Number(served.avgMin));
+    } else {
+      // 2) fallback: média de quem está aguardando/chamado agora (tempo já aguardado)
+      const [[waiting]] = await db.query(
+        `SELECT
+           COUNT(*) AS n,
+           AVG(TIMESTAMPDIFF(MINUTE, DT_ENTRA, NOW())) AS avgMin
+         FROM clientesfila
+        WHERE ID_EMPRESA = ?
+          AND ID_FILA    = ?
+          AND DT_MOVTO  >= CURDATE()
+          AND DT_MOVTO  <  CURDATE() + INTERVAL 1 DAY
+          AND SITUACAO IN (0,3)
+          AND DT_ENTRA IS NOT NULL`,
+        [cfg.ID_EMPRESA, cfg.ID_FILA]
+      );
+      mediaHoje =
+        waiting?.avgMin != null ? Math.round(Number(waiting.avgMin)) : null;
+      return res.json({
+        mediaHojeMin: mediaHoje,
+        sampleServed: 0,
+        sampleWaiting: Number(waiting?.n || 0),
+      });
+    }
+
+    return res.json({
+      mediaHojeMin: mediaHoje,
+      sampleServed,
+      sampleWaiting: 0,
+    });
+  } catch (e) {
+    console.error("[getPublicDailyAvgWaitByToken] ERRO:", e);
+    return res.status(500).json({ erro: "internal_error" });
   }
 };
