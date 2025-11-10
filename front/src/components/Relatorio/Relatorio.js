@@ -35,7 +35,7 @@ export default function Relatorio() {
   const [filasDisponiveis, setFilasDisponiveis] = useState([t("relatorios.filtros.todasFilas")]);
   const [avaliacoesDetalhadas, setAvaliacoesDetalhadas] = useState([]);
   const [distribuicaoNotas, setDistribuicaoNotas] = useState([]);
-  const [statusFilas, setStatusFilas] = useState([]);
+
 
   // Estados de Filtro (Controlados)
   const [filtroDataInicio, setFiltroDataInicio] = useState("");
@@ -74,7 +74,7 @@ export default function Relatorio() {
       axios.get(`${apiBase}/avaliacoes-detalhadas`, { headers, params: paramsData }).catch(() => ({ data: [] })),
       axios.get(`${apiBase}/distribuicao-notas`, { headers, params: paramsData }).catch(() => ({ data: [] })),
       axios.get(`${apiBase}/filas`, { headers }).catch(() => ({ data: [] })),
-      axios.get(`${apiBase}/filas-ativas`, { headers }).catch(() => ({ data: [] })),
+     
     ])
       .then(([
         respTempo, respDesist, respAtend, respDesem,
@@ -88,7 +88,7 @@ export default function Relatorio() {
         setAvaliacoes(Array.isArray(respAval.data) ? respAval.data : []);
         setAvaliacoesDetalhadas(Array.isArray(respAvalDetalhadas.data) ? respAvalDetalhadas.data : []);
         setDistribuicaoNotas(Array.isArray(respDistNotas.data) ? respDistNotas.data : []);
-        setStatusFilas(Array.isArray(respAtivas.data) ? respAtivas.data : []);
+       
 
         if (Array.isArray(respFilas.data) && respFilas.data.length) {
           const nomes = [t("relatorios.filtros.todasFilas"), ...respFilas.data.map((f) => f.nome_fila)];
@@ -238,9 +238,10 @@ export default function Relatorio() {
       { key: "media_espera_desistentes", label: t("relatorios.excel.colDesempenho.media_espera_desistentes") },
     ]);
 
-    adicionaPlanilha(distribuicaoNotas, t("relatorios.excel.abaDistNotas"), [
-      { key: "nota", label: t("relatorios.excel.colDistNotas.nota") },
-      { key: "quantidade", label: t("relatorios.excel.colDistNotas.quantidade") },
+    adicionaPlanilha(distribuicaoNotas, "Distr. Avaliações (Notas)", [
+      { key: "nota", label: "Nota" },
+      { key: "quantidade", label: "Quantidade" },
+      
     ]);
 
     adicionaPlanilha(avaliacoesDetalhadas, t("relatorios.excel.abaAvalDetalhadas"), [
