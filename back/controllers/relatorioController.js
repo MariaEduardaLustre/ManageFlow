@@ -1,13 +1,20 @@
 // controllers/relatorioController.js
 const db = require('../database/connection'); // mysql2/promise
 
-// 1) Tempo médio de espera por fila/data
+//-------------------------------------------------------------
+// 1) Tempo médio de espera (DT_ENTRA -> DT_CHAMA)
+//-------------------------------------------------------------
 exports.tempoEsperaTodasFilas = async (req, res) => {
   try {
-    // Aceita ?inicio=YYYY-MM-DD&fim=YYYY-MM-DD&fila=NomeDaFila (opcionais)
+    const { id_empresa } = req.user;
     const { inicio, fim, fila } = req.query;
-    const params = [];
-    let where = 'WHERE c.DT_ENTRA IS NOT NULL AND c.DT_CHAMA IS NOT NULL';
+
+    const params = [id_empresa];
+    let where = `
+      WHERE c.ID_EMPRESA = ?
+      AND c.DT_ENTRA IS NOT NULL
+      AND c.DT_CHAMA IS NOT NULL
+    `;
 
     if (inicio && fim) {
       where += ' AND DATE(c.DT_ENTRA) BETWEEN ? AND ?';
@@ -26,11 +33,13 @@ exports.tempoEsperaTodasFilas = async (req, res) => {
         COUNT(*) AS totalAtendidos,
         SUM(CASE WHEN c.SITUACAO = 2 OR c.DT_CHAMA IS NULL THEN 1 ELSE 0 END) AS desistencias
       FROM clientesfila c
-      JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
+      JOIN configuracaofila cf 
+        ON cf.ID_FILA = c.ID_FILA AND cf.ID_EMPRESA = c.ID_EMPRESA
       ${where}
       GROUP BY cf.NOME_FILA, DATE(c.DT_ENTRA)
       ORDER BY data ASC
     `;
+
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (err) {
@@ -39,12 +48,21 @@ exports.tempoEsperaTodasFilas = async (req, res) => {
   }
 };
 
+//-------------------------------------------------------------
 // 2) Tempo médio de atendimento (DT_CHAMA -> DT_SAIDA)
+//-------------------------------------------------------------
 exports.tempoAtendimentoTodasFilas = async (req, res) => {
   try {
+    const { id_empresa } = req.user;
     const { inicio, fim, fila } = req.query;
-    const params = [];
-    let where = 'WHERE c.DT_CHAMA IS NOT NULL AND c.DT_SAIDA IS NOT NULL AND c.SITUACAO = 1';
+
+    const params = [id_empresa];
+    let where = `
+      WHERE c.ID_EMPRESA = ?
+      AND c.DT_CHAMA IS NOT NULL
+      AND c.DT_SAIDA IS NOT NULL
+      AND c.SITUACAO = 1
+    `;
 
     if (inicio && fim) {
       where += ' AND DATE(c.DT_ENTRA) BETWEEN ? AND ?';
@@ -62,11 +80,13 @@ exports.tempoAtendimentoTodasFilas = async (req, res) => {
         CAST(AVG(TIMESTAMPDIFF(MINUTE, c.DT_CHAMA, c.DT_SAIDA)) AS DECIMAL(10,2)) AS media,
         COUNT(*) AS totalAtendidos
       FROM clientesfila c
-      JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
+      JOIN configuracaofila cf
+        ON cf.ID_FILA = c.ID_FILA AND cf.ID_EMPRESA = c.ID_EMPRESA
       ${where}
       GROUP BY cf.NOME_FILA, DATE(c.DT_ENTRA)
       ORDER BY data ASC
     `;
+
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (err) {
@@ -75,12 +95,16 @@ exports.tempoAtendimentoTodasFilas = async (req, res) => {
   }
 };
 
-// 3) Desistências por fila/data (taxa e totais)
+//-------------------------------------------------------------
+// 3) Desistências por fila/data
+//-------------------------------------------------------------
 exports.desistenciasTodasFilas = async (req, res) => {
   try {
+    const { id_empresa } = req.user;
     const { inicio, fim, fila } = req.query;
-    const params = [];
-    let where = 'WHERE 1=1';
+
+    const params = [id_empresa];
+    let where = `WHERE c.ID_EMPRESA = ?`;
 
     if (inicio && fim) {
       where += ' AND DATE(c.DT_ENTRA) BETWEEN ? AND ?';
@@ -99,11 +123,13 @@ exports.desistenciasTodasFilas = async (req, res) => {
         COUNT(*) AS totalClientes,
         ROUND((SUM(CASE WHEN c.SITUACAO = 2 OR c.DT_CHAMA IS NULL THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) AS percentualDesistencia
       FROM clientesfila c
-      JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
+      JOIN configuracaofila cf
+        ON cf.ID_FILA = c.ID_FILA AND cf.ID_EMPRESA = c.ID_EMPRESA
       ${where}
       GROUP BY cf.NOME_FILA, DATE(c.DT_ENTRA)
       ORDER BY data ASC
     `;
+
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (err) {
@@ -112,12 +138,16 @@ exports.desistenciasTodasFilas = async (req, res) => {
   }
 };
 
-// 4) Avaliações (média por dia e total feedbacks)
+//-------------------------------------------------------------
+// 4) Avaliações (média + total)
+//-------------------------------------------------------------
 exports.avaliacoesTodasFilas = async (req, res) => {
   try {
+    const { id_empresa } = req.user;
     const { inicio, fim } = req.query;
-    const params = [];
-    let where = 'WHERE a.DATA_AVALIACAO IS NOT NULL';
+
+    const params = [id_empresa];
+    let where = 'WHERE a.ID_EMPRESA = ?';
 
     if (inicio && fim) {
       where += ' AND DATE(a.DATA_AVALIACAO) BETWEEN ? AND ?';
@@ -134,6 +164,7 @@ exports.avaliacoesTodasFilas = async (req, res) => {
       GROUP BY DATE(a.DATA_AVALIACAO)
       ORDER BY data ASC
     `;
+
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (err) {
@@ -141,13 +172,18 @@ exports.avaliacoesTodasFilas = async (req, res) => {
     res.status(500).json({ erro: 'Erro ao buscar avaliações.' });
   }
 };
-// 5) Desempenho por fila (atendidos / desistentes / em espera)
-//    ✨ ATUALIZADO: Adicionadas médias de tempo de espera para atendidos e desistentes
+
+//-------------------------------------------------------------
+// 5) Desempenho por fila
+//-------------------------------------------------------------
 exports.desempenhoPorFila = async (req, res) => {
   try {
+    const { id_empresa } = req.user;
     const { inicio, fim } = req.query;
-    const params = [];
-    let where = 'WHERE 1=1'; // Inicia com 1=1 para facilitar a adição de filtros
+
+    const params = [id_empresa];
+    let where = 'WHERE c.ID_EMPRESA = ?';
+
     if (inicio && fim) {
       where += ' AND DATE(c.DT_ENTRA) BETWEEN ? AND ?';
       params.push(inicio, fim);
@@ -159,32 +195,24 @@ exports.desempenhoPorFila = async (req, res) => {
         SUM(CASE WHEN c.SITUACAO = 1 THEN 1 ELSE 0 END) AS atendidos,
         SUM(CASE WHEN c.SITUACAO = 2 THEN 1 ELSE 0 END) AS desistentes,
         SUM(CASE WHEN c.SITUACAO = 0 THEN 1 ELSE 0 END) AS em_espera,
-
-        -- Novo: Média de espera de quem foi ATENDIDO (Entrada -> Chamada)
         CAST(AVG(
-          CASE 
-            WHEN c.SITUACAO = 1 AND c.DT_CHAMA IS NOT NULL 
-            THEN TIMESTAMPDIFF(MINUTE, c.DT_ENTRA, c.DT_CHAMA) 
-            ELSE NULL 
-          END
+          CASE WHEN c.SITUACAO = 1 AND c.DT_CHAMA IS NOT NULL
+          THEN TIMESTAMPDIFF(MINUTE, c.DT_ENTRA, c.DT_CHAMA)
+          ELSE NULL END
         ) AS DECIMAL(10,1)) AS media_espera_atendidos,
-
-        -- Novo: Média de espera de quem DESISTIU (Entrada -> Saída)
-        -- (Assumindo que DT_SAIDA é preenchido na desistência)
         CAST(AVG(
-          CASE 
-            WHEN c.SITUACAO = 2 AND c.DT_SAIDA IS NOT NULL 
-            THEN TIMESTAMPDIFF(MINUTE, c.DT_ENTRA, c.DT_SAIDA) 
-            ELSE NULL 
-          END
+          CASE WHEN c.SITUACAO = 2 AND c.DT_SAIDA IS NOT NULL
+          THEN TIMESTAMPDIFF(MINUTE, c.DT_ENTRA, c.DT_SAIDA)
+          ELSE NULL END
         ) AS DECIMAL(10,1)) AS media_espera_desistentes
-
       FROM clientesfila c
-      JOIN configuracaofila cf ON cf.ID_FILA = c.ID_FILA
+      JOIN configuracaofila cf
+        ON cf.ID_FILA = c.ID_FILA AND cf.ID_EMPRESA = c.ID_EMPRESA
       ${where}
       GROUP BY cf.NOME_FILA
       ORDER BY atendidos DESC
     `;
+
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (err) {
@@ -193,14 +221,19 @@ exports.desempenhoPorFila = async (req, res) => {
   }
 };
 
-// 6) Distribuição de notas (agrupada por NOTA)
+//-------------------------------------------------------------
+// 6) Distribuição de notas (1-5)
+//-------------------------------------------------------------
 exports.distribuicaoNotas = async (req, res) => {
   try {
+    const { id_empresa } = req.user;
     const { inicio, fim } = req.query;
-    const params = [];
-    let where = '';
+
+    const params = [id_empresa];
+    let where = 'WHERE ID_EMPRESA = ?';
+
     if (inicio && fim) {
-      where = 'WHERE DATE(DATA_AVALIACAO) BETWEEN ? AND ?';
+      where += ' AND DATE(DATA_AVALIACAO) BETWEEN ? AND ?';
       params.push(inicio, fim);
     }
 
@@ -211,6 +244,7 @@ exports.distribuicaoNotas = async (req, res) => {
       GROUP BY NOTA
       ORDER BY NOTA ASC
     `;
+
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (err) {
@@ -219,11 +253,21 @@ exports.distribuicaoNotas = async (req, res) => {
   }
 };
 
-// 7) Listar filas (para select)
+//-------------------------------------------------------------
+// 7) Listar filas
+//-------------------------------------------------------------
 exports.listarFilas = async (req, res) => {
   try {
-    const sql = `SELECT DISTINCT NOME_FILA AS nome_fila FROM configuracaofila ORDER BY NOME_FILA`;
-    const [rows] = await db.query(sql);
+    const { id_empresa } = req.user;
+
+    const sql = `
+      SELECT DISTINCT NOME_FILA AS nome_fila
+      FROM configuracaofila
+      WHERE ID_EMPRESA = ?
+      ORDER BY NOME_FILA
+    `;
+
+    const [rows] = await db.query(sql, [id_empresa]);
     res.json(rows);
   } catch (err) {
     console.error('Erro listarFilas:', err);
@@ -231,20 +275,21 @@ exports.listarFilas = async (req, res) => {
   }
 };
 
-
-// 8) Listar avaliações detalhadas (para exportação)
+//-------------------------------------------------------------
+// 8) Avaliações detalhadas
+//-------------------------------------------------------------
 exports.listarAvaliacoesDetalhadas = async (req, res) => {
   try {
+    const { id_empresa } = req.user;
     const { inicio, fim } = req.query;
-    const params = [];
-    let where = 'WHERE 1=1';
+
+    const params = [id_empresa];
+    let where = 'WHERE a.ID_EMPRESA = ?';
 
     if (inicio && fim) {
       where += ' AND DATE(a.DATA_AVALIACAO) BETWEEN ? AND ?';
       params.push(inicio, fim);
     }
-    // Nota: A tabela 'avaliacoes' não parece ter ID_FILA,
-    // então não podemos filtrar por fila aqui.
 
     const sql = `
       SELECT
@@ -255,6 +300,7 @@ exports.listarAvaliacoesDetalhadas = async (req, res) => {
       ${where}
       ORDER BY a.DATA_AVALIACAO DESC
     `;
+
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (err) {
@@ -262,5 +308,3 @@ exports.listarAvaliacoesDetalhadas = async (req, res) => {
     res.status(500).json({ erro: 'Erro ao buscar avaliações detalhadas.' });
   }
 };
-
-
