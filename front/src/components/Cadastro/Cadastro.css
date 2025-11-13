@@ -1,94 +1,254 @@
-/* src/components/Cadastro/Cadastro.css */
-.cadastro-container {
-    display: flex; /* Usando flexbox para dividir em duas colunas */
-    align-items: center; /* Alinha o conteúdo verticalmente no centro */
-    justify-content: center; /* Centraliza o conteúdo horizontalmente */
-    height: 100vh; /* Ocupa toda a altura da tela */
-    background-color: #f0f0f0;
-  }
-  
-  .image-container-cad {
-    display: flex;
-  }
-  
-  .responsive-image-cad {
-   margin-top: 150px;
-   width: 80%;
-  }
-  
-  .form-container {
-    flex: 1; /* O formulário ocupa 50% da largura */
-    padding: 40px;
-    width: 300px;
+@import url("https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap");
 
+/* --- Variáveis para TEMA CLARO (Padrão) --- */
+.mf-cad {
+  --cad-primary: #3a5afe;
+  --cad-text: #333a47;
+  --cad-muted: #717885;
+  --cad-border: #e2e8f0;
+  --cad-input: #f7f8fc;
+  --cad-bg: #ffffff;
+}
+
+/* ======================================================= */
+/* ✨ ADIÇÃO PARA O TEMA ESCURO ✨ */
+/* ======================================================= */
+body[data-theme='dark'] .mf-cad {
+  --cad-primary: var(--brand-primary);
+  --cad-text: var(--text-primary);
+  --cad-muted: var(--text-secondary);
+  --cad-border: var(--border-color);
+  --cad-input: var(--background-primary);
+  --cad-bg: var(--background-secondary);
+}
+/* ======================================================= */
+
+
+.mf-cad {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--cad-bg);
+  color: var(--cad-text);
+  font-family: "Mulish", sans-serif;
+}
+
+/* Painel da imagem */
+.mf-cad__image {
+  flex: 0 0 40%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-color: var(--cad-bg);
+}
+
+/* Form section */
+.mf-cad__form-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ✨ NOVO: Posicionamento do botão de tema */
+.mf-cad .theme-toggle-button {
+    position: absolute;
+    top: 20px;
+    right: 130px;
+    z-index: 10;
+}
+
+
+.mf-cad__form-wrapper {
+  width: 100%;
+  max-width: 420px;
+}
+
+.mf-cad__title {
+  text-align: left;
+  font-size: 2.1rem;
+  color: var(--cad-primary);
+  margin-bottom: 30px;
+  font-weight: 800;
+}
+
+/* Grupos e inputs */
+.mf-cad__group {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.mf-cad__wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mf-cad__group input,
+.mf-cad__group select {
+  width: 100%;
+  padding: 13px 18px 13px 50px;
+  border: 1px solid var(--cad-border);
+  border-radius: 30px;
+  background-color: var(--cad-input);
+  font-size: 0.95rem;
+  color: var(--cad-text);
+  box-sizing: border-box;
+}
+
+body[data-theme='dark'] .mf-cad__group select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 1.2rem center;
+    background-size: .65em auto;
+}
+
+.mf-cad__icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--cad-muted);
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.mf-cad__group--password input {
+  padding-right: 46px;
+}
+
+.mf-cad__pass-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--cad-muted);
+  font-size: 1.1rem;
+  z-index: 2;
+}
+
+.mf-cad__row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.mf-cad__row .mf-cad__group {
+  margin-bottom: 0;
+}
+.mf-cad__group--ddi {
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+.mf-cad__group--ddd {
+  flex: 0 0 25%;
+  max-width: 25%;
+}
+.mf-cad__group--fone {
+  flex: 1;
+}
+
+.mf-cad__alert {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #dc3545;
+}
+
+.mf-cad__submit {
+  width: 100%;
+  padding: 13px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background-color: var(--cad-primary);
+  color: var(--cad-bg);
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  margin-top: 25px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+body[data-theme='light'] .mf-cad__submit:hover {
+  background-color: #2a48d8;
+  box-shadow: 0 4px 12px rgba(58, 90, 254, 0.25);
+}
+body[data-theme='dark'] .mf-cad__submit:hover {
+  filter: brightness(1.2);
+}
+
+.mf-cad__login-link {
+  text-align: left;
+  margin-top: 25px;
+  font-size: 0.875rem;
+  color: var(--cad-muted);
+}
+.mf-cad__login-link a {
+  color: var(--cad-primary);
+  text-decoration: none;
+  font-weight: 700;
+}
+.mf-cad__login-link a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 992px) {
+  .mf-cad__image {
+    display: none;
   }
-  
-  .form-container h2 {
+  .mf-cad__form-section {
+    padding: 30px 20px;
+  }
+  .mf-cad .theme-toggle-button {
+      top: 20px;
+      right: 20px;
+  }
+  .mf-cad__form-wrapper {
+    max-width: 420px;
+  }
+  .mf-cad__title {
     text-align: center;
-    font-size: 2rem;
-    margin-bottom: 30px;
   }
-  
-  .form-group {
-    margin-bottom: 20px;
-  }
-  
-  .form-group label {
-    display: block;
-    font-size: 1rem;
-    margin-bottom: 8px;
-  }
-  
-  .form-group input {
-    width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-top: 5px;
-  }
-  
-  .botao {
-    width: 100%;
-    padding: 12px;
-    font-size: 1.2rem;
-    background-color: #1e73be;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-  }
-  
-  button:hover {
-    background-color: #006bb3;
-  }
-  
-  p {
+  .mf-cad__login-link {
     text-align: center;
-    margin-top: 20px;
   }
-  
-  a {
-    color: #1e73be;
-    text-decoration: none;
+}
+
+@media (max-width: 576px) {
+  .mf-cad__form-section {
+    padding: 20px;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: auto;
   }
-  
-  a:hover {
-    text-decoration: underline;
+  .mf-cad__group input,
+  .mf-cad__group select {
+    padding-left: 40px;
   }
-  
-  @media (max-width: 768px) {
-    .cadastro-container {
-      flex-direction: column; /* Para telas pequenas, coloca tudo em uma coluna */
-    }
-  
-    .image-container {
-      height: 200px; /* Ajuste a altura para telas pequenas */
-    }
-  
-    .form-container {
-      padding: 20px;
-    }
+  .mf-cad__icon {
+    left: 12px;
+    font-size: 0.9rem;
   }
-  
+  .mf-cad__group--password input {
+    padding-right: 40px;
+  }
+  .mf-cad__pass-toggle {
+    right: 12px;
+    font-size: 1rem;
+  }
+  .mf-cad__row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .mf-cad__group--ddi,
+  .mf-cad__group--ddd,
+  .mf-cad__group--fone {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}

@@ -1,79 +1,58 @@
- #   ManageFlow 
+# Manage Flow - Gestão que flui, negócio que cresce
 
-
-Sistema web para gestão de filas de espera em estabelecimentos (restaurantes/bebidas), focado em otimizar a operação e a experiência do cliente. 
-
----
-
-### 📖 Índice
-
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Principais Funcionalidades](#-principais-funcionalidades)
-- [Arquitetura e Tecnologias](#-arquitetura-e-tecnologias)
-- [Como Começar (Instalação)](#-como-começar-instalação)
-  - [Pré-requisitos](#pré-requisitos)
-  - [Backend (API)](#backend-api)
-  - [Frontend (Web)](#frontend-web)
-- [Guia de Uso](#-guia-de-uso)
-- [Autor](#-autor)
+## **Sistema web para gerenciamento de filas de espera em estabelecimentos do ramo alimentício e de bebidas.**
 
 ---
 
-### 🎯 Sobre o Projeto
+## 🧭 Visão Geral
 
-O ManageFlow é um sistema projetado para organizar e agilizar o fluxo de clientes em estabelecimentos com alta demanda. O seu principal objetivo é reduzir o tempo de espera percebido, automatizar o processo de chamada e fornecer indicadores de gestão para os administradores do negócio. 
-
-O sistema é composto por uma aplicação administrativa (para o staff) e páginas públicas para os clientes (entrar na fila e painel digital). 
-
-### ✨ Principais Funcionalidades
-
-- **Gestão de Filas:** Organiza clientes em filas de espera por empresa ou filial.
-- **Entrada na Fila (Pública):** Clientes podem registar-se numa página pública e receber a sua posição e tempo estimado. 
-- **Chamada de Cliente:** O staff pode chamar o próximo cliente, atualizando o status de "AGUARDANDO" para "CHAMADO". 
-- **Painel Digital em Tempo Real:** Uma tela pública que exibe as chamadas em tempo real, utilizando Websocket. 
-- **Confirmação de Presença:** Funcionalidade opcional que exige que o cliente confirme a presença (via link ou geolocalização) após ser chamado, para evitar "no-shows". 
-- **Gestão de Papéis (RBAC):** Controlo de acesso por perfis (ADM, STAFF, ANALYST, CUSTOMER). 
-- **Relatórios e Indicadores:** Métricas de tempo médio de espera, desistências e volume de atendimento. 
-- **Configuração de Empresas:** Cadastro de empresas e upload de logos/banners para o AWS S3. 
+- **Objetivo**: Reduzir o tempo de espera dos clientes e melhorar a organização interna dos estabelecimentos.
+- **Slogan**: "Gestão que flui, negócio que cresce"
+- **Categoria**: Sistema web
+- **Público-alvo**: Restaurantes, bares e similares de médio e grande porte.
 
 ---
 
-### 🛠️ Arquitetura e Tecnologias
+## 🧪 Protótipo
 
-O projeto segue um padrão cliente-servidor com uma API RESTful e comunicação em tempo real.
+Visualize o protótipo navegável do sistema:
 
-| Componente | Tecnologia Utilizada |
-| :--- | :--- |
-| **Backend (API)** | Node.js com Express |
-| **Frontend** | React (com React Router e Axios) |
-| **Banco de Dados** | MySQL  |
-| **Tempo Real** | Websocket |
-| **Autenticação** | JSON Web Tokens (JWT)  |
-| **Armazenamento de Ficheiros** | AWS S3 (para logos, banners, etc.)  |
-| **Arquitetura Backend** | Camadas: Controller → Service → Repository  |
+📌 [Protótipo no Figma – ManageFlow](https://www.figma.com/design/q8IjhlXbrDxi6FRkJ1pT1J/ManageFlow?node-id=54-2&t=CsutAkp9eXL7qzyE-1)
 
 ---
 
-### 🏁 Como Começar (Instalação)
+## 🗂️ Dicionário de Dados
 
-Siga estes passos para configurar e executar o projeto localmente.
+📊 A estrutura das tabelas do banco de dados está documentada na planilha a seguir:
 
-#### Pré-requisitos
+📥 [Dicionário de Dados – Google Planilhas](https://docs.google.com/spreadsheets/d/1WQ-retXVX1Ua1iJWaTbLA1Q7ztWhZIHunuzouF3o7oM/edit?usp=sharing)
 
-- [Node.js](https://nodejs.org/) (v16 ou superior)
-- [NPM](https://www.npmjs.com/) ou [Yarn](https://yarnpkg.com/)
-- Um servidor de banco de dados [MySQL](https://www.mysql.com/)
-- (Opcional) Credenciais de um bucket AWS S3 para upload de imagens 
+---
 
-#### 1. Backend (API)
+## 🧾 O que o sistema oferece?
 
-```bash
-# 1. Clone o repositório
-git clone [https://github.com/Maria](https://github.com/Maria) Eduarda Lustre/ManageFlow.git 
+- Gerenciamento da fila em tempo real  
+- Entrada e saída de clientes via app  
+- Notificações automáticas (WhatsApp, SMS, e-mail)  
+- Painel digital para exibição da fila no local  
+- Relatórios e dashboards com dados de operação  
+- Interface amigável e personalizável com logo e mensagens do estabelecimento
 
-# 2. Navegue para a pasta do backend (ajuste o nome da pasta se necessário)
-cd ManageFlow/backend
+---
 
-# 3. Instale as dependências
-npm install
+## 💻 Repositório do Projeto
 
+🔗 [GitHub – MariaEduardaLustre/ManageFlow](https://github.com/MariaEduardaLustre/ManageFlow)
+
+---
+
+## 🔗 Documento Completo
+
+Você também pode acessar a versão completa do documento original:
+
+📥 [Documentação da Aplicação](https://docs.google.com/document/d/1HiEW-S55fjfmX3xQnXbEZkubQP07fLkg7HcX33ZN3xc/edit?usp=sharing)
+📥 [Especificação](https://docs.google.com/document/d/1xTjflLkUwi_r8ItnbCoFVm1m4OGr1jO3/edit?usp=sharing&ouid=103182391609783979555&rtpof=true&sd=true)
+
+---
+
+> O ManageFlow é mais que uma ferramenta de organização — é uma experiência melhorada para clientes e uma operação mais inteligente para os estabelecimentos.

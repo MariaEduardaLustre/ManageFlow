@@ -1,0 +1,700 @@
+/* src/components/PainelFilaExibicao/PainelFilaExibicao.css */
+
+/* --- Variáveis CSS para TEMA CLARO (Padrão) --- */
+:root {
+    --primary-color: #3A5AFE;
+    --secondary-color: #007bff;
+    --text-color: #333;
+    --light-text-color: #6c757d;
+    --background-light: #f4f7f6;
+    --card-background: #ffffff;
+    --border-color: #e0e0e0;
+    --shadow-light: rgba(0, 0, 0, 0.08);
+    --shadow-medium: rgba(0, 0, 0, 0.15);
+    --border-radius-large: 12px;
+    --border-radius-medium: 8px;
+    --border-radius-small: 5px;
+    --gray-color: #6c757d;
+}
+
+/* ======================================================= */
+/* ✨ ADIÇÃO PARA O TEMA ESCURO (GLOBAL) ✨ */
+/* ======================================================= */
+body[data-theme='dark'] {
+    --primary-color: var(--brand-primary);
+    --secondary-color: var(--brand-primary);
+    --text-color: var(--text-primary);
+    --light-text-color: var(--text-secondary);
+    --background-light: var(--background-primary);
+    --card-background: var(--background-secondary);
+    --border-color: var(--border-color);
+    --shadow-light: rgba(0, 0, 0, 0.2);
+    --shadow-medium: rgba(0, 0, 0, 0.3);
+    --gray-color: var(--text-secondary);
+}
+/* ======================================================= */
+
+/* ================================================================= */
+/* ✨ NOVIDADE: FORÇA O TEMA CLARO NA PRÉVIA E TELA CHEIA ✨ */
+/* Estas regras revertem as variáveis para os valores originais 
+   APENAS dentro da prévia e do modo tela cheia, 
+   mesmo quando o tema escuro está ativo no resto da página. */
+/* ================================================================= */
+body[data-theme='dark'] .painel-preview,
+body[data-theme='dark'] .painel-exibicao-container.fullscreen-ativo {
+    --primary-color: #3A5AFE;
+    --secondary-color: #007bff;
+    --text-color: #333;
+    --light-text-color: #6c757d;
+    --background-light: #f4f7f6;
+    --card-background: #ffffff;
+    --border-color: #e0e0e0;
+    --shadow-light: rgba(0, 0, 0, 0.08);
+    --shadow-medium: rgba(0, 0, 0, 0.15);
+    --gray-color: #6c757d;
+}
+/* ================================================================= */
+
+
+body .painel-exibicao-container {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-light);
+    color: var(--text-color);
+}
+
+/* (O restante do arquivo CSS continua exatamente como na versão anterior) */
+/* --- Container Principal do Painel --- */
+.painel-exibicao-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--background-light);
+    padding: 20px;
+    gap: 20px;
+}
+/* --- Cabeçalho do Painel --- */
+.painel-header {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    padding: 25px 30px;
+    color: var(--text-color);
+    margin-bottom: 20px;
+}
+.painel-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+}
+.painel-header h1 {
+    font-size: 2.0rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+    letter-spacing: -0.5px;
+    flex-grow: 1;
+    text-align: center;
+}
+/* --- Estilo para o Logo no Painel de Exibição --- */
+.painel-logo {
+    position: absolute;
+    left: 30px;
+    height: 60px; /* Ajuste o tamanho do logo conforme a necessidade */
+    object-fit: contain;
+}
+/* --- Estilo para o botão de Voltar --- */
+.btn-voltar {
+    background-color: var(--secondary-color);
+    color: var(--card-background);
+    padding: 10px 18px;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: absolute;
+    left: 0;
+}
+body[data-theme='light'] .btn-voltar:hover { background-color: #0056b3; }
+body[data-theme='dark'] .btn-voltar:hover { filter: brightness(1.2); }
+.btn-voltar:active {
+    transform: translateY(0);
+}
+/* --- Estilo para o botão de Tela Cheia, apenas o ícone --- */
+.btn-fullscreen {
+    background-color: transparent; /* Remove o fundo */
+    color: var(--gray-color); /* Tom de cinza sutil para o ícone */
+    border: none; /* Remove a borda */
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    padding: 8px; /* Mantém o preenchimento para a área de clique */
+    transition: color 0.2s ease;
+    position: absolute;
+    right: 0;
+    font-size: 2.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-fullscreen:hover {
+    color: var(--primary-color); /* Muda a cor para o azul principal no hover */
+}
+/* --- Estilo para o botão de alternância do Clima --- */
+.btn-toggle-weather {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 15px;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 5rem; /* Posição à esquerda do botão de tela cheia */
+}
+.btn-toggle-weather:hover {
+    background-color: var(--primary-color);
+    color: var(--card-background);
+}
+/* --- Estilo para o botão de alternância de Notícias --- */
+.btn-toggle-news {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 15px;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 12.5rem; /* Posição à esquerda do botão de clima */
+}
+.btn-toggle-news:hover {
+    background-color: var(--primary-color);
+    color: var(--card-background);
+}
+/* Ocultar botões de navegação no painel de exibição em tela cheia */
+.painel-exibicao-container.fullscreen-ativo .btn-toggle-weather,
+.painel-exibicao-container.fullscreen-ativo .btn-toggle-news,
+.painel-exibicao-container.fullscreen-ativo .btn-voltar {
+    display: none;
+}
+/* --- Estilos para o painel no modo normal (quando não está em tela cheia) --- */
+.coluna-clientes h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+.cartao-cliente {
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-medium);
+    padding: 12px 18px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 5px solid;
+}
+.cartao-cliente:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+.cliente-nome {
+    font-size: 1.0rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+/* Estilos para o painel no modo TELA CHEIA */
+.painel-exibicao-container.fullscreen-ativo .cartao-cliente {
+    padding: 20px 25px; 
+    box-shadow: 0 8px 25px var(--shadow-medium); 
+    transform: scale(1.02);
+}
+.painel-exibicao-container.fullscreen-ativo .cliente-nome {
+    font-size: 1.3rem; 
+    font-weight: 700;
+}
+/* Aumenta a fonte dos nomes das colunas APENAS no modo de tela cheia */
+.painel-exibicao-container.fullscreen-ativo .coluna-clientes h2 {
+    font-size: 2.0rem;
+}
+/* --- Layout das Colunas (Aguardando / Chamados / Confirmados) --- */
+.painel-colunas {
+    display: flex;
+    flex-grow: 1;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+.coluna-clientes {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    padding: 25px;
+    flex: 1;
+    min-width: 300px;
+    max-width: 48%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.coluna-clientes.na-fila h2 {
+    color: var(--gray-color);
+    border-color: var(--gray-color);
+}
+.cartao-cliente.aguardando {
+    border-left-color: var(--gray-color);
+}
+.coluna-clientes.chamados h2 {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+.cartao-cliente.chamado {
+    border-left-color: var(--secondary-color);
+}
+.coluna-clientes.confirmados h2 {
+    color: #28a745;
+    border-color: #28a745;
+}
+.cartao-cliente.confirmado {
+    border-left-color: #28a745;
+}
+.lista-clientes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.loading-message,
+.error-message-panel,
+.no-clients {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--light-text-color);
+    margin-top: 30px;
+    padding: 20px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 2px 8px var(--shadow-light);
+}
+.error-message-panel {
+    color: #dc3545;
+    font-weight: bold;
+}
+/* --- Estilo para o Banner de Mensagens Rotativas --- */
+.mensagens-rotativas-container {
+    width: 100%;
+    padding: 15px 25px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 2px 10px var(--shadow-light);
+    margin-top: 20px;
+    overflow: hidden; /* Garante que o texto que está fora da tela fique invisível */
+    position: relative;
+}
+.mensagem-texto {
+    display: flex;
+    flex-wrap: nowrap;
+    display: inline-block;
+    white-space: nowrap;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    animation: scroll-text 60s linear infinite;
+}
+.mensagem-item {
+    font-size: 1.1rem;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-right: 250px; /* Aumenta o espaço entre as mensagens */
+}
+/* Define a animação de rolagem para um loop contínuo */
+@keyframes scroll-text {
+    from {
+        transform: translateX(0); /* Usa apenas translateX para o scroll horizontal */
+    }
+    to {
+        transform: translateX(-50%); /* Usa apenas translateX para o scroll horizontal */
+    }
+}
+/* --- Widget de Clima --- */
+.weather-widget {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+.weather-icon {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+}
+.weather-icon img {
+    width: 100%;
+    height: 100%;
+}
+.weather-info-text {
+    display: flex;
+    flex-direction: column;
+}
+.weather-temp {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+.weather-description {
+    font-size: 1rem;
+    text-transform: capitalize;
+    color: var(--light-text-color);
+}
+/* --- Widget de Notícias --- */
+.news-widget {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    padding: 15px 20px;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: 250px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+}
+.news-widget h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.news-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    color: var(--text-color);
+}
+.news-list::-webkit-scrollbar {
+    width: 6px;
+}
+.news-list::-webkit-scrollbar-thumb {
+    background-color: var(--gray-color);
+    border-radius: 3px;
+}
+.news-item {
+    margin-bottom: 10px;
+}
+.news-title {
+    font-size: 1rem;
+    font-weight: 500;
+}
+/* --- Estilos para o Painel de Configuração --- */
+.painel-configuracao-wrapper {
+    display: flex;
+    gap: 20px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.painel-configuracao {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    width: 450px;
+    margin: 0;
+    flex-shrink: 0;
+}
+.config-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+/* NOVO: Estilo para o contêiner de todos os campos de cor */
+.color-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+    margin-top: 10px;
+}
+/* NOVO: Estilo para cada item de cor */
+.color-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.color-option label {
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--text-color);
+    margin-right: 10px;
+    white-space: nowrap;
+}
+.painel-configuracao input[type="text"],
+.painel-configuracao textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: 1rem;
+    resize: vertical;
+    background-color: var(--background-light);
+    color: var(--text-color);
+}
+/* Estilo para o campo de cor */
+.painel-configuracao input[type="color"] {
+    width: 35px;
+    height: 35px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+}
+/* NOVO: Estilo para o botão de remover logo */
+.btn-remover-logo {
+    background-color: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    padding: 5px 10px;
+    border-radius: var(--border-radius-small);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-remover-logo:hover {
+    background-color: #dc3545;
+    color: white;
+}
+.file-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+/* NOVO: Estilo para a prévia do logo */
+.painel-configuracao .logo-preview {
+    max-width: 100px;
+    max-height: 100px;
+    margin-top: 10px;
+}
+.btn-save-settings {
+    background-color: var(--primary-color);
+    color: var(--card-background);
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+    align-self: flex-end;
+}
+body[data-theme='light'] .btn-save-settings:hover { background-color: #0047b3; }
+body[data-theme='dark'] .btn-save-settings:hover { filter: brightness(1.2); }
+/* --- Estilos para a Prévia do Painel --- */
+.painel-preview {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 15px var(--shadow-light);
+    flex-grow: 1;
+    max-width: none;
+    height: 700px;
+    overflow-y: auto;
+    position: relative;
+    padding: 10px;
+    box-sizing: border-box;
+}
+.painel-preview-content {
+    transform: scale(0.95);
+    transform-origin: top left;
+    width: 100%;
+    height: 100%;
+}
+.painel-preview .painel-logo {
+    left: 10px;
+}
+.painel-preview .btn-toggle-weather,
+.painel-preview .btn-toggle-news,
+.painel-preview .btn-fullscreen,
+.painel-preview .btn-voltar {
+    display: none;
+}
+.painel-preview .weather-widget,
+.painel-preview .news-widget {
+    display: none;
+}
+/* --- Novo Estilo para a Notificação Customizada --- */
+.custom-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    padding: 15px 25px;
+    border-radius: var(--border-radius-medium);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 1;
+    max-width: 400px;
+    width: fit-content;
+}
+.custom-notification p {
+    margin: 0;
+    font-weight: 500;
+}
+/* Opcional: ajustar a notificação para tela cheia */
+.fullscreen-notification {
+    bottom: 40px;
+    right: 40px;
+    font-size: 1.2rem;
+}
+/* --- Estilo para o Botão Toggle de Ativar/Desativar Banner --- */
+.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; 
+    margin-top: 10px;
+}
+.toggle-switch-container label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px; 
+    height: 22px; 
+}
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--gray-color);
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; 
+    width: 18px; 
+    left: 2px; 
+    bottom: 2px; 
+    background-color: var(--card-background);
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+input:checked + .slider:before {
+    transform: translateX(18px); 
+}
+/* --- Media Queries (Responsividade) --- */
+@media (max-width: 1200px) {
+    .painel-header h1 { font-size: 2.5rem; }
+    .btn-voltar { padding: 8px 15px; font-size: 0.9rem; }
+    .coluna-clientes h2 { font-size: 1.6rem; }
+    .cliente-nome { font-size: 1.2rem; }
+}
+@media (max-width: 768px) {
+    .painel-exibicao-container { padding: 15px; gap: 15px; }
+    .painel-header { padding: 20px 25px; }
+    .painel-header-content { flex-direction: column; gap: 10px; align-items: center; }
+    .btn-voltar { position: static; margin-bottom: 10px; padding: 10px 18px; font-size: 1rem; }
+    .btn-toggle-weather, .btn-toggle-news {
+        position: static;
+        right: auto;
+        margin-bottom: 10px;
+    }
+    .painel-colunas { flex-direction: column; align-items: center; gap: 15px; }
+    .coluna-clientes { max-width: 95%; min-width: unset; width: 100%; padding: 20px; }
+    .coluna-clientes h2 { font-size: 1.5rem; }
+    .cliente-nome { font-size: 1.1rem; }
+    .loading-message, .error-message-panel, .no-clients { font-size: 1.1rem; padding: 15px; }
+    .weather-widget {
+        position: static;
+        padding: 10px 15px;
+        gap: 10px;
+    }
+    .weather-icon {
+        width: 40px;
+        height: 40px;
+    }
+    .weather-temp { font-size: 1.4rem; }
+    .weather-description { font-size: 0.9rem; }
+    .news-widget {
+        position: static;
+        width: 100%;
+        max-width: none;
+        margin-top: 15px;
+    }
+    .painel-configuracao-wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+    .painel-configuracao {
+        padding: 20px;
+    }
+    .painel-preview {
+        width: 100%;
+        height: 500px;
+    }
+}
+@media (max-width: 480px) {
+    .painel-exibicao-container { padding: 10px; }
+    .painel-header { padding: 15px 20px; }
+    .painel-header h1 { font-size: 1.8rem; }
+    .coluna-clientes { padding: 15px; }
+    .coluna-clientes h2 { font-size: 1.3rem; }
+    .cartao-cliente { padding: 12px 15px; }
+    .cliente-nome { font-size: 1rem; }
+    .loading-message, .error-message-panel, .no-clients { font-size: 1rem; padding: 15px; }
+    .painel-logo {
+        height: 50px;
+        left: 20px;
+    }
+    .painel-header-content h1 {
+        font-size: 1.5rem;
+    }
+}
+

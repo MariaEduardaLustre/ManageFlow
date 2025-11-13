@@ -1,0 +1,240 @@
+/* ================== FILAS — LISTA (ESCOPO) ================== */
+/* Envolva a página com .filas-list-page para isolar estilos */
+.filas-list-page{
+    padding: 24px;
+}
+/* Badge com nome da empresa (topo da página) */
+.filas-list-page .empresa-titulo-container {
+  background-color: var(--brand-primary);
+  border-radius: 8px;
+  padding: 8px 15px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  color: var(--background-secondary);
+  width: fit-content;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: background-color .2s ease, transform .2s ease;
+  cursor: pointer;
+  margin-left: auto; /* alinha à direita, como no seu layout */
+}
+.filas-list-page .empresa-titulo-container:hover {
+  filter: brightness(1.1);
+  transform: none;
+}
+.filas-list-page .empresa-nome {
+  font-size: 1.1em;
+  font-weight: bold;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Card de cabeçalho da página */
+.filas-list-page .fila-header-card {
+  background-color: var(--background-secondary);
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin: 0 0 10px 0;
+  align-self: flex-start;
+  width: 100%;
+}
+
+/* Seção que contém a tabela de filas */
+.filas-list-page .filas-section {
+  background-color: var(--background-secondary);
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-top: 0;
+  align-self: flex-start;
+  width: 100%;
+}
+
+/* Título da seção */
+.filas-list-page .section-title {
+  font-size: 1.8em;
+  color: var(--text-primary);
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  text-align: left;
+  padding-left: 10px;
+}
+
+/* ================== TABELA ================== */
+.filas-list-page .filas-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  margin-top: 0;
+  background-color: var(--background-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  table-layout: fixed;
+}
+
+.filas-list-page .filas-table th,
+.filas-list-page .filas-table td {
+  border: none;
+  padding: 15px 20px;
+  text-align: left;
+  background-color: var(--background-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filas-list-page .filas-table th {
+  background-color: var(--background-primary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+}
+
+.filas-list-page .filas-table tr {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+body[data-theme='light'] .filas-list-page .filas-table tr {
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+body[data-theme='light'] .filas-list-page .filas-table tr:hover {
+  background-color: #fcfcfc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+body[data-theme='dark'] .filas-list-page .filas-table tr:hover td {
+  background-color: rgba(255,255,255,0.05);
+}
+
+.filas-list-page .filas-table th:first-child { border-top-left-radius: 10px; }
+.filas-list-page .filas-table th:last-child  { border-top-right-radius: 10px; }
+.filas-list-page .filas-table tbody tr td:first-child { border-bottom-left-radius: 10px; border-top-left-radius: 10px; }
+.filas-list-page .filas-table tbody tr td:last-child  { border-bottom-right-radius: 10px; border-top-right-radius: 10px; }
+
+/* Erro da listagem */
+.filas-list-page .fila-lista-error {
+  color: #dc3545;
+  font-weight: bold;
+  margin-top: 15px;
+  text-align: center;
+}
+
+/* ================== MODAL (detalhes/visualização) ================== */
+.filas-list-page .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn .3s ease-out;
+}
+
+.filas-list-page .modal-content {
+  background-color: var(--background-secondary);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn .3s ease-out;
+}
+
+.filas-list-page .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+.filas-list-page .modal-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.filas-list-page .modal-close-button {
+  background: none;
+  border: none;
+  font-size: 2em;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: color .2s ease, background-color .2s ease;
+}
+.filas-list-page .modal-close-button:hover {
+  color: var(--text-primary);
+  background-color: var(--brand-primary-hover);
+}
+
+.filas-list-page .modal-body {
+  flex-grow: 1;
+  font-size: 1.1em;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.filas-list-page .modal-body p { margin-bottom: 10px; }
+.filas-list-page .modal-body strong { color: var(--text-primary); }
+
+.filas-list-page .modal-empresa-logo {
+  max-width: 150px;
+  height: auto;
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  padding: 5px;
+  border-radius: 5px;
+  background-color: var(--background-primary);
+}
+
+.filas-list-page .modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  margin-top: 20px;
+  text-align: right;
+}
+.filas-list-page .modal-close-button-footer {
+  background-color: var(--brand-primary);
+  color: var(--background-secondary);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color .2s ease, transform .1s ease;
+}
+.filas-list-page .modal-close-button-footer:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Animações */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ================== RESPONSIVO ================== */
+@media (max-width: 768px) {
+  .filas-list-page .filas-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    align-self: stretch;
+  }
+
+  .filas-list-page .empresa-titulo-container {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 10px 20px !important;
+    color: var(--text-primary) !important;
+  }
+}

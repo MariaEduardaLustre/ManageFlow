@@ -1,0 +1,253 @@
+/* Escopo da página */
+.gestao-fila-page {
+    padding: 24px;
+}
+
+/* =================== HEADER DA PÁGINA (CARD) =================== */
+.gestao-fila-page .gestao-header-card{
+  background-color: var(--background-secondary);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  width: 100%;
+  margin: 0 0 12px 0;
+}
+.gestao-fila-page .gestao-header-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.gestao-fila-page .gestao-header-left{ display: inline-flex; align-items: center; gap: 10px; }
+.gestao-fila-page .gestao-header-title{ font-size: 1.6rem; color: var(--text-primary); margin: 0; }
+.gestao-fila-page .gestao-header-right{ display: inline-flex; align-items: center; gap: 8px; }
+
+/* =================== BADGE DA EMPRESA =================== */
+.gestao-fila-page .empresa-titulo-container{
+  background-color: var(--brand-primary);
+  border-radius: 8px;
+  padding: 8px 15px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  color: var(--background-secondary);
+  width: fit-content;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  cursor: default;
+}
+.gestao-fila-page .empresa-titulo-container:hover{
+  filter: brightness(1.1);
+  background-color: unset;
+  transform: none;
+}
+.gestao-fila-page .empresa-nome{
+  font-size: 1.1em;
+  font-weight: bold;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* =================== SEÇÃO LISTA / TABELA =================== */
+.gestao-fila-page .clientes-fila-section{
+  background: var(--background-secondary);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  width: 100%;
+}
+.gestao-fila-page .clientes-fila-section .section-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.gestao-fila-page .clientes-fila-section .section-title{
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+/* Tabela */
+.gestao-fila-page .clientes-fila-table{
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 8px;
+  table-layout: fixed;
+}
+.gestao-fila-page .clientes-fila-table th,
+.gestao-fila-page .clientes-fila-table td{
+  padding: 12px;
+  vertical-align: middle;
+}
+.gestao-fila-page .clientes-fila-table th{
+  background-color: var(--background-primary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+}
+body[data-theme='light'] .gestao-fila-page .clientes-fila-table tbody tr:hover{ background-color: #f5f5f5; }
+body[data-theme='dark']  .gestao-fila-page .clientes-fila-table tbody tr:hover{ background-color: rgba(255, 255, 255, 0.05); }
+.gestao-fila-page .clientes-fila-table tbody tr{ border-bottom: 1px solid var(--border-color); }
+.gestao-fila-page .clientes-fila-table tbody tr:last-child{ border-bottom: none; }
+.gestao-fila-page .clientes-fila-table tr{ height: 55px; }
+
+/* Larguras/alinhamentos (4 colunas) */
+.gestao-fila-page .clientes-fila-table th:nth-child(1),
+.gestao-fila-page .clientes-fila-table td:nth-child(1){ width: 25%; text-align: left; }   /* Nome */
+.gestao-fila-page .clientes-fila-table th:nth-child(2),
+.gestao-fila-page .clientes-fila-table td:nth-child(2){ width: 20%; text-align: left; }   /* CPF/CNPJ */
+.gestao-fila-page .clientes-fila-table th:nth-child(3),
+.gestao-fila-page .clientes-fila-table td:nth-child(3){ width: 20%; text-align: center; } /* Entrada */
+.gestao-fila-page .clientes-fila-table th:nth-child(4),
+.gestao-fila-page .clientes-fila-table td:nth-child(4){
+  width: 35%;
+  min-width: 250px;
+}
+
+/* Conteúdo combinando status + ações (coluna final) */
+.gestao-fila-page .conteudo-status-acoes{
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-left: 40px;
+}
+.gestao-fila-page .situacao-wrapper{
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 160px;
+}
+.gestao-fila-page .botoes-acoes-contexto{
+  display: flex;
+  gap: 8px;
+  opacity: 1;
+  pointer-events: auto;
+  transition: none;
+  flex-shrink: 0;
+}
+
+/* Botões de ação */
+.gestao-fila-page .btn-acao{
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.gestao-fila-page .btn-acao:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+.gestao-fila-page .btn-acao:active{
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.gestao-fila-page .btn-acao:disabled{
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.7;
+}
+.gestao-fila-page .btn-confirmar{ background-color: #28a745; color: white; }
+.gestao-fila-page .btn-confirmar:hover{ background-color: #218838; }
+.gestao-fila-page .btn-notificar{ background-color: #007bff; color: white; }
+.gestao-fila-page .btn-notificar:hover{ background-color: #0056b3; }
+.gestao-fila-page .btn-nao-compareceu{ background-color: #dc3545; color: white; }
+.gestao-fila-page .btn-nao-compareceu:hover{ background-color: #c82333; }
+
+.gestao-fila-page .acao-disabled-message{
+  color: var(--text-primary);
+  font-style: italic;
+  font-size: 0.9em;
+  padding: 8px 12px;
+  background-color: var(--border-color);
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Badges de situação */
+.gestao-fila-page .situacao-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.85em;
+  color: white;
+  white-space: nowrap;
+  text-align: center;
+  width: 160px;
+}
+.gestao-fila-page .situacao-badge.aguardando{          background-color: #6c757d; }
+.gestao-fila-page .situacao-badge.presenca-confirmada{ background-color: #28a745; }
+.gestao-fila-page .situacao-badge.nao-compareceu{      background-color: #dc3545; }
+.gestao-fila-page .situacao-badge.chamado{             background-color: #007bff; }
+.gestao-fila-page .situacao-badge.atendido{            background-color: #007bff; }
+.gestao-fila-page .situacao-badge.desconhecido{        background-color: #6c757d; }
+
+/* =================== ABAS =================== */
+.gestao-fila-page .tabs-container{
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+}
+.gestao-fila-page .tabs-list{
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+}
+.gestao-fila-page .tab-button{
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color .2s ease, background-color .2s ease, border-color .2s ease;
+  border-radius: 4px 4px 0 0;
+}
+.gestao-fila-page .tab-button:hover{
+  color: var(--text-primary);
+  background-color: var(--brand-primary-hover);
+}
+.gestao-fila-page .tab-button.active{
+  color: var(--brand-primary);
+  font-weight: bold;
+  border-bottom: 3px solid var(--brand-primary);
+  background-color: var(--background-secondary);
+}
+
+/* =================== RESPONSIVIDADE =================== */
+@media (max-width: 768px){
+  .gestao-fila-page .clientes-fila-section{ padding: 16px; }
+  .gestao-fila-page .clientes-fila-table th,
+  .gestao-fila-page .clientes-fila-table td{ padding: 10px; }
+  .gestao-fila-page .conteudo-status-acoes{ padding-left: 8px; gap: 10px; }
+  .gestao-fila-page .situacao-wrapper{ min-width: 130px; }
+}

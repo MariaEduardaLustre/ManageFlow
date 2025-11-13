@@ -1,0 +1,116 @@
+/* src/pages/FilaChamado/FilaChamado.css */
+.mf-called {
+  min-height: 100vh;
+  background: #f6f7f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mf-called__hero {
+  width: 100%;
+  height: 160px;
+}
+
+.mf-called__logoDock {
+  margin-top: -48px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.mf-called__logoCircle {
+  width: 96px; height: 96px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(0,0,0,.12);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.mf-called__logoCircle > img { width: 100%; height: 100%; object-fit: cover; }
+.mf-called__logoCircle > span { font-size: 28px; }
+
+.mf-called__heading {
+  margin: 12px 0 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 22px;
+}
+.mf-called__subtitle {
+  margin: 6px 0 0;
+  text-align: center;
+  opacity: .8;
+}
+
+.mf-called__wrap {
+  width: 100%;
+  max-width: 560px;
+  padding: 16px;
+}
+
+.mf-called__card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+  padding: 22px;
+  text-align: center;
+}
+
+.mf-called__icon { font-size: 44px; }
+.mf-called__title {
+  margin: 8px 0 0;
+  font-size: 24px; font-weight: 800;
+}
+.mf-called__text {
+  margin: 8px 0 12px;
+  opacity: .9;
+}
+
+.mf-called__actions {
+  display: flex; gap: 8px; justify-content: center;
+  margin: 8px 0 12px;
+  flex-wrap: wrap;
+}
+
+.mf-called__btn {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  background: #111827;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+.mf-called__btn--danger {
+  margin-top: 6px;
+  background: #b91c1c;
+}
+
+.mf-called__ghost {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  text-decoration: none;
+  color: #111827;
+  font-weight: 600;
+}
+
+.mf-called__alert {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+.mf-called__ok {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+
+.mf-called__loading { margin: 12px; opacity: .8; }

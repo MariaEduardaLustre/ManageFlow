@@ -1,0 +1,471 @@
+{
+  "cadastro": {
+    "titulo": "Cadastre-se",
+    "placeholder": {
+      "nome": "Nome Completo",
+      "email": "E-mail",
+      "cpfCnpj": "CPF/CNPJ",
+      "senha": "Senha",
+      "confirmarSenha": "Confirme sua senha",
+      "ddd": "DDD",
+      "telefone": "Telefone",
+      "cep": "CEP",
+      "numero": "Número",
+      "endereco": "Endereço (Logradouro)",
+      "complemento": "Complemento (Opcional)"
+    },
+    "botoes": {
+      "cadastrar": "Cadastrar"
+    },
+    "links": {
+      "login": "Já possui uma conta?",
+      "loginLink": "Faça o login"
+    },
+    "mensagens": {
+      "alerta": {
+        "nomeInvalido": "Digite um nome válido com pelo menos 3 letras.",
+        "emailInvalido": "Digite um e-mail válido.",
+        "cpfCnpjInvalido": "CPF ou CNPJ inválidos!",
+        "senhaInvalida": "A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caracter especial.",
+        "senhasNaoCoincidem": "As senhas não coincidem!",
+        "camposObrigatorios": "Por favor, preencha todos os campos obrigatórios.",
+        "erroCep": "CEP não encontrado.",
+        "erroGeralCep": "Erro ao buscar CEP.",
+        "erroGenerico": "Ocorreu um erro ao cadastrar o usuário."
+      },
+      "modal": {
+        "confirmacaoTitulo": "Confirmar Cadastro",
+        "confirmacaoBody": "Deseja realmente confirmar o cadastro com os dados informados?",
+        "confirmacaoBotaoCancelar": "Cancelar",
+        "confirmacaoBotaoSim": "Sim, Cadastrar",
+        "sucessoTitulo": "Sucesso!",
+        "sucessoBotaoFechar": "Fechar",
+        "erroTitulo": "Ocorreu um Erro",
+        "erroBotaoFechar": "Fechar"
+      }
+    },
+    "selects": {
+      "pais": "Selecione o país"
+    }
+  },
+  "login": {
+    "titulo": "Entrar na sua conta",
+    "placeholder": {
+      "email": "E-mail",
+      "senha": "Senha"
+    },
+    "links": {
+      "esqueciSenha": "Esqueceu sua senha?",
+      "cliqueAqui": "Clique aqui!",
+      "semConta": "Ainda não possui uma conta?",
+      "cadastreSe": "Cadastre-se"
+    },
+    "botoes": {
+      "entrar": "Entrar",
+      "entrando": "Entrando...",
+      "google": "Entrar com o Google",
+      "apple": "Entrar com a Apple"
+    },
+    "mensagens": {
+      "sucesso": {
+        "titulo": "Login Realizado",
+        "bodyEmpresaUnica": "Login realizado com sucesso! Redirecionando...",
+        "bodyMaisEmpresas": "Login realizado! Agora, escolha sua empresa."
+      },
+      "erro": {
+        "titulo": "Erro no Login",
+        "generico": "E-mail ou senha inválidos."
+      },
+      "modal": {
+        "ok": "OK",
+        "fechar": "Fechar"
+      }
+    }
+  },
+  "esqueciSenha": {
+    "titulo": "Esqueci minha senha",
+    "labelEmail": "E-mail:",
+    "placeholderEmail": "Digite seu e-mail",
+    "botoes": {
+      "enviar": "Enviar link de recuperação",
+      "enviando": "Enviando..."
+    },
+    "links": {
+      "voltarLogin": "Voltar para o Login",
+      "lembrouSenha": "Lembrou a senha? <1>Fazer login</1>"
+    },
+    "mensagens": {
+      "sucessoPadrao": "Link enviado com sucesso!",
+      "erroPadrao": "Ocorreu um erro ao solicitar a redefinição de senha."
+    }
+  },
+  "redefinirSenha": {
+    "titulo": "Redefinir Senha",
+    "labels": {
+      "novaSenha": "Nova Senha:",
+      "confirmarNovaSenha": "Confirmar Nova Senha:"
+    },
+    "botoes": {
+      "redefinir": "Redefinir Senha",
+      "salvando": "Salvando...",
+      "irLogin": "Ir para Login"
+    },
+    "mensagens": {
+      "sucessoPadrao": "Senha redefinida com sucesso!",
+      "erroPadrao": "Ocorreu um erro ao redefinir a senha.",
+      "alerta": {
+        "senhaInvalida": "A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.",
+        "senhasNaoCoincidem": "As senhas não coincidem!"
+      }
+    }
+  },
+  "landing": {
+    "nav": {
+      "home": "Home",
+      "servicos": "Serviços",
+      "sobre": "Sobre Nós",
+      "entrar": "Entrar",
+      "cadastrar": "Cadastrar-se"
+    },
+    "hero": {
+      "titulo": "Gerencie filas de forma inteligente e melhore a experiência de seus clientes",
+      "descricao": "O ManageFlow é a solução digital completa para restaurantes que desejam automatizar o gerenciamento de filas, reduzir o tempo de espera dos clientes e melhorar a organização do atendimento.",
+      "comeceAgora": "Comece Agora"
+    },
+    "servicos": {
+      "titulo": "Nossos Serviços",
+      "subtitulo": "Nosso compromisso é simplificar a gestão do seu estabelecimento, proporcionando uma experiência fluida e organizada.",
+      "fila": {
+        "titulo": "Fila de Espera",
+        "descricao": "Organize sua fila de forma digital e eficiente, informando o tempo estimado de espera."
+      },
+      "reserva": {
+        "titulo": "Reserva de Mesa",
+        "descricao": "Permita que seus clientes reservem mesas com antecedência, otimizando o fluxo."
+      },
+      "painel": {
+        "titulo": "Painel de TV",
+        "descricao": "Exiba o status da fila em tempo real em um painel visível para todos no local."
+      },
+      "avaliacoes": {
+        "titulo": "Avaliações",
+        "descricao": "Colete feedbacks dos seus clientes para aprimorar continuamente seus serviços."
+      }
+    },
+    "sobre": {
+      "titulo": "O que nossos clientes dizem?",
+      "depoimento": "O Flow transformou a maneira como gerenciamos nossos clientes. A organização melhorou 100% e os feedbacks são incríveis!",
+      "cargo": "Founder Circle"
+    },
+    "rodape": {
+      "slogan": "Gerenciamento de filas simplificado para otimizar a experiência do cliente.",
+      "direitos": "2025 ManageFlow. Todos os direitos reservados."
+    }
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "configuracao": "Configuração",
+    "gestao": "Gestão da Fila",
+    "relatorios": "Relatórios",
+    "usuarios": "Usuários",
+    "sair": "Sair",
+    "expandir": "Expandir menu",
+    "recolher": "Recolher menu",
+    "menuLateral": "Menu lateral",
+    "navegacaoInferior": "Navegação inferior",
+    "usuarioPadrao": "Usuário",
+    "semPerfil": "Sem Perfil",
+    "perfil": "Meu perfil",
+    "empresa": "Empresa"
+  },
+  "home": {
+    "saudacao": "Olá {{nome}}",
+    "empresa": "Empresa",
+    "totalMembros": "Total de Membros",
+    "adicionarMembro": "Adicionar membro",
+    "usuariosDaEmpresa": "Usuários da Empresa",
+    "usuarioPadrao": "Usuário",
+    "tabela": {
+      "nome": "Nome",
+      "email": "Email",
+      "permissao": "Permissão",
+      "acoes": "Ações",
+      "removerUsuario": "Remover Usuário"
+    },
+    "botoes": {
+      "cancelar": "Cancelar",
+      "adicionar": "Adicionar",
+      "simExcluir": "Sim, Excluir",
+      "fechar": "Fechar",
+      "ok": "OK"
+    },
+    "modalAdicionar": {
+      "titulo": "Adicionar Novo Membro",
+      "labelCpfEmail": "CPF ou Email do Usuário",
+      "placeholderCpfEmail": "Digite o CPF ou Email",
+      "labelPerfil": "Perfil de Permissão"
+    },
+    "modalExcluir": {
+      "titulo": "Confirmar Exclusão",
+      "confirmacao": "Tem certeza que deseja remover o usuário <strong>{{nome}}</strong> da empresa?"
+    },
+    "modalErro": {
+      "titulo": "Ocorreu um Erro"
+    },
+    "modalSucesso": {
+      "titulo": "Sucesso!"
+    },
+    "modalDetalhes": {
+      "titulo": "Detalhes da Empresa",
+      "nome": "Nome",
+      "cnpj": "CNPJ"
+    },
+    "erros": {
+      "carregarDados": "Não foi possível carregar os dados da página. Tente novamente.",
+      "semPermissaoAdicionar": "Você não tem permissão para adicionar membros.",
+      "preenchaCampos": "Por favor, preencha o CPF/Email e selecione um perfil.",
+      "adicionarUsuario": "Erro ao adicionar usuário.",
+      "semPermissaoRemover": "Você não tem permissão para remover membros.",
+      "autoRemocao": "Você não pode se remover da empresa por aqui.",
+      "removerAdmin": "Não é permitido remover usuários Administradores por aqui.",
+      "removerUsuario": "Erro ao remover usuário. (Dica: não é possível remover o último Administrador.)",
+      "semPermissaoAlterar": "Você não tem permissão para alterar perfis.",
+      "alterarAdmin": "Não é permitido alterar a permissão de um Administrador.",
+      "atualizarPermissao": "Não foi possível atualizar a permissão. (Dica: não é possível rebaixar o último Administrador.)",
+      "carregarDetalhesEmpresa": "Erro ao carregar os detalhes da empresa."
+    },
+    "sucesso": {
+      "usuarioAdicionado": "Usuário adicionado com sucesso!",
+      "usuarioRemovido": "Usuário removido com sucesso!",
+      "permissaoAtualizada": "Permissão atualizada com sucesso!"
+    }
+  },
+  "geral": {
+    "sim": "Sim",
+    "nao": "Não",
+    "ok": "OK",
+    "sucesso": "Sucesso!",
+    "aviso": "Aviso",
+    "cancelar": "Cancelar",
+    "fechar": "Fechar",
+    "carregando": "Carregando...",
+    "carregandoClientes": "Carregando clientes...",
+    "atualizadoEm": "Atualizado às",
+    "tempoReal": "Tempo real",
+    "offline": "Offline",
+    "voltar": "Voltar"
+  },
+  "filaLista": {
+    "titulo": "Filas",
+    "mensagens": {
+      "carregando": "Carregando filas...",
+      "erroCarregar": "Não foi possível carregar as filas. Tente novamente mais tarde.",
+      "nenhumaFila": "Nenhuma fila disponível para esta empresa."
+    },
+    "tabela": {
+      "nomeFila": "NOME DA FILA",
+      "dataInicio": "DATA INÍCIO FILA",
+      "aguardando": "AGUARDANDO",
+      "chamadas": "CHAMADOS (NÃO APRESENTADOS)",
+      "bloqueada": "BLOQUEADA"
+    }
+  },
+  "gestaoFila": {
+    "titulo": "Clientes na Fila",
+    "nenhumCliente": "Nenhum cliente na fila.",
+    "botoes": {
+      "bloquear": "Bloquear fila",
+      "bloquearTitle": "Bloquear fila (impedir novas entradas públicas)",
+      "desbloquear": "Desbloquear fila",
+      "desbloquearTitle": "Desbloquear fila (permitir novas entradas públicas)",
+      "adicionar": "Adicionar Cliente",
+      "verPainel": "Ver Painel"
+    },
+    "alertaBloqueio": {
+      "titulo": "Fila bloqueada hoje:",
+      "texto": "novas entradas estão impedidas. A gestão dos clientes já na fila segue normal."
+    },
+    "abas": {
+      "aguardando": "Aguardando & Chamados",
+      "confirmados": "Confirmados",
+      "naoCompareceu": "Não Compareceu"
+    },
+    "tabela": {
+      "cliente": "NOME CLIENTE",
+      "cpfCnpj": "CPF/CNPJ",
+      "entrada": "ENTRADA",
+      "statusAcoes": "STATUS E AÇÕES"
+    },
+    "status": {
+      "aguardando": "Aguardando",
+      "confirmado": "Presença Confirmada",
+      "naoCompareceu": "Não Compareceu",
+      "chamado": "Chamado",
+      "atendido": "Atendido",
+      "desconhecido": "Desconhecido"
+    },
+    "acoes": {
+      "notificar": "Enviar Notificação",
+      "confirmar": "Confirmar Presença",
+      "naoCompareceu": "Não Compareceu"
+    },
+    "modalAdicionar": {
+      "titulo": "Adicionar Novo Cliente",
+      "nome": "Nome Completo",
+      "cpfCnpj": "CPF/CNPJ",
+      "nascimento": "Data de Nascimento",
+      "notificacao": "Forma de Notificação",
+      "celular": "Celular",
+      "adicionar": "Adicionar à Fila"
+    },
+    "feedback": {
+      "presencaConfirmada": "Presença de {{nome}} confirmada!",
+      "naoCompareceu": "{{nome}} marcado como não compareceu.",
+      "notificado": "Cliente notificado.",
+      "clienteAdicionado": "Cliente adicionado com sucesso!",
+      "filaBloqueada": "Fila bloqueada para novas entradas públicas hoje.",
+      "filaDesbloqueada": "Fila desbloqueada para novas entradas públicas."
+    },
+    "erros": {
+      "carregarClientes": "Não foi possível carregar os clientes da fila.",
+      "nenhumCliente": "Nenhum cliente encontrado para esta fila.",
+      "confirmarPresenca": "Erro ao confirmar presença.",
+      "marcarAusencia": "Erro ao marcar ausência.",
+      "agendarTimeout": "Erro ao agendar o timeout. Tente novamente.",
+      "adicionarCliente": "Erro ao adicionar cliente.",
+      "alterarBloqueio": "Não foi possível alterar o bloqueio da fila."
+    }
+  },
+  "filasCadastradas": {
+    "titulo": "Configurações de fila",
+    "buscaPlaceholder": "Buscar por nome, link ou ID",
+    "ordenarPor": "Ordenar por:",
+    "recente": "Mais recente",
+    "mostrandoItens_one": "Mostrando {{count}} item",
+    "mostrandoItens_other": "Mostrando {{count}} itens",
+    "cards": {
+      "total": "Total de filas",
+      "adicionar": "Adicionar fila"
+    },
+    "tabela": {
+      "nome": "Nome da fila",
+      "id": "ID Conf.",
+      "link": "Link de entrada",
+      "qrCode": "QR Code",
+      "status": "Status",
+      "acoes": "Ações",
+      "nenhumItem": "Nenhum item encontrado."
+    },
+    "status": {
+      "ativa": "Ativa",
+      "inativa": "Inativa"
+    },
+    "botoes": {
+      "copiar": "Copiar",
+      "qrCode": "QR Code",
+      "baixar": "Baixar PNG",
+      "excluirDefinitivamente": "Excluir definitivamente"
+    },
+    "acoes": {
+      "editar": "Editar configuração",
+      "editarLabel": "Editar {{nome}}",
+      "excluir": "Excluir configuração",
+      "excluirLabel": "Excluir {{nome}}",
+      "abrirQr": "Abrir modal do QR (gera automático)"
+    },
+    "modalQr": {
+      "titulo": "QR Code da Fila ({{token}})",
+      "gerando": "Gerando QR…",
+      "alt": "QR Code"
+    },
+    "modalExcluir": {
+      "titulo": "Excluir configuração",
+      "confirmacao": "Tem certeza que deseja excluir a configuração <strong>“{{nome}}”</strong> (ID {{id}})?",
+      "subtexto": "Essa ação removerá também as filas e clientes associados. Não poderá ser desfeita."
+    },
+    "erros": {
+      "nenhumaEmpresa": "Nenhuma empresa selecionada.",
+      "carregar": "Erro ao carregar: {{message}}",
+      "tokenNaoEncontrado": "Token da fila não encontrado.",
+      "gerarQr": "Não foi possível gerar o QR Code.",
+      "excluir": "Não foi possível excluir: {{message}}"
+    },
+    "feedback": {
+      "linkCopiado": "Link copiado!",
+      "copieOlink": "Copie o link:"
+    }
+  },
+  "dashboard": {
+    "titulo": "Dashboard",
+    "subtitulo": "Visão geral em tempo real das suas filas",
+    "selecionarFila": "Selecionar Fila",
+    "analiseFila": "Análise de dados para a fila {{nomeFila}}",
+    "status": {
+      "ativa": "Ativa",
+      "inativa": "Inativa",
+      "bloqueada": "Bloqueada"
+    },
+    "cards": {
+      "total": "Total de Filas",
+      "totalSub": "Todas as filas cadastradas",
+      "ativas": "Filas Ativas",
+      "ativasSub": "Disponíveis para clientes",
+      "inativasBloqueadas": "Inativas/Bloqueadas",
+      "inativasBloqueadasSub": "Indisponíveis agora",
+      "pessoasHoje": "Pessoas Hoje",
+      "pessoasHojeSub": "Entradas nas filas (hoje)",
+      "esperaMedia": "Espera Média",
+      "esperaMediaSub": "Clientes aguardando"
+    },
+    "graficos": {
+      "entradasHoje": "Entradas por hora (hoje)",
+      "statusFilas": "Status das filas",
+      "semDadosHoje": "Sem dados hoje.",
+      "hora": "Hora",
+      "tempoEspera": "Tempo de Espera",
+      "horaDoDia": "Hora do Dia",
+      "numClientes": "Nº de Clientes",
+      "clientes": "Clientes",
+      "minutos": "Minutos",
+      "tempoDeEspera": "Tempo de Espera"
+    },
+    "tabela": {
+      "titulo": "Filas (hoje)",
+      "fila": "Fila",
+      "aguardando": "Aguardando",
+      "status": "Status",
+      "atualizado": "Atualizado",
+      "nenhumaFilaFiltro": "Nenhuma fila no filtro selecionado."
+    },
+    "filtros": {
+      "todas": "Todas",
+      "ativas": "Ativas",
+      "bloqueadas": "Bloqueadas",
+      "inativas": "Inativas"
+    },
+    "horariosPico": {
+      "titulo": "Análise de Horários de Pico",
+      "subtitulo": "Movimento por Hora do Dia",
+      "carregando": "Carregando dados de pico...",
+      "nenhumDado": "Nenhum dado de pico disponível para análise.",
+      "hora": "Hora",
+      "totalClientes": "Total de Clientes"
+    },
+    "tempoEspera": {
+      "titulo": "Tempo Médio de Espera por Hora",
+      "carregando": "Carregando dados de tempo de espera...",
+      "nenhumDado": "Nenhum dado de tempo de espera disponível para análise."
+    },
+    "botoes": {
+      "exportarCsv": "Exportar para CSV",
+      "exportarJson": "Exportar para JSON"
+    },
+    "erros": {
+      "dadosInsuficientes": "Não há dados de fila suficientes para esta empresa.",
+      "carregarDados": "Não foi possível carregar os dados. Tente novamente mais tarde.",
+      "nenhumDadoEspera": "Nenhum dado de tempo de espera encontrado para esta empresa.",
+      "nenhumaFilaAnalise": "Nenhuma fila disponível para análise detalhada.",
+      "selecioneEmpresa": "Selecione uma empresa ou aguarde o carregamento das filas."
+    }
+  }
+}
